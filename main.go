@@ -12,6 +12,7 @@ import (
 	"github.com/oneclickvirt/ecs/network"
 	"github.com/oneclickvirt/ecs/port"
 	"github.com/oneclickvirt/ecs/unlocktest"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -71,8 +72,11 @@ func main() {
 		fmt.Printf(securityInfo)
 		printCenteredTitle("邮件端口检测", width)
 		port.EmailCheck()
-		printCenteredTitle("三网回程", width)
-		backtrace.BackTrace()
+		if runtime.GOOS != "windows" {
+			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
+			printCenteredTitle("三网回程", width)
+			backtrace.BackTrace()
+		}
 		//printCenteredTitle("回程路由", width)
 		//printCenteredTitle("就近节点测速", width)
 		printCenteredTitle("", width)
@@ -105,8 +109,6 @@ func main() {
 		fmt.Printf(securityInfo)
 		printCenteredTitle("Email Port Check", width)
 		port.EmailCheck()
-		printCenteredTitle("Three Network Return Path", width)
-		backtrace.BackTrace()
 		//printCenteredTitle("Return Path Routing", width)
 		//printCenteredTitle("Nearby Node Speed Test", width)
 		printCenteredTitle("", width)
