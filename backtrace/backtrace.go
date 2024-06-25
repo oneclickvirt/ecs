@@ -4,6 +4,6 @@ import (
 	"github.com/oneclickvirt/backtrace/bk"
 )
 
-func BcakTrace() {
+func BackTrace() {
 	backtrace.BackTrace()
 }

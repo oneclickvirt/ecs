@@ -16,5 +16,5 @@ import (
 //}
 
 func TestBackTrace(t *testing.T) {
-	BcakTrace()
+	BackTrace()
 }

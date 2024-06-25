@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	backtrace "github.com/oneclickvirt/backtrace/bk"
+	"github.com/oneclickvirt/ecs/backtrace"
 	"github.com/oneclickvirt/ecs/basic"
 	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
@@ -34,7 +34,7 @@ func main() {
 		memoryTestMethod             string
 		diskTestMethod, diskTestPath string
 		diskMultiCheck               bool
-		width                        = 80
+		width                        = 84
 	)
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
 	flag.StringVar(&language, "l", "zh", "Specify language (supported: en, zh)")
