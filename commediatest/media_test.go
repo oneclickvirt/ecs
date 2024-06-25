@@ -5,5 +5,5 @@ import (
 )
 
 func TestMedia(t *testing.T) {
-	Media()
+	ComMediaTest("zh")
 }

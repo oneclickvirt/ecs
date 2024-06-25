@@ -6,7 +6,7 @@ import (
 )
 
 // 常用端口阻断检测 TCP/UDP/ICMP 协议
-func portcheck() {
+func EmailCheck() {
 	res := email.EmailCheck()
 	fmt.Println(res)
 }

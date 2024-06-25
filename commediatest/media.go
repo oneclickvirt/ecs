@@ -5,7 +5,7 @@ import (
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 )
 
-func Media() {
-	res := commediatests.MediaTests("zh")
+func ComMediaTest(language string) {
+	res := commediatests.MediaTests(language)
 	fmt.Printf(res)
 }
