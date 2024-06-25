@@ -5,5 +5,5 @@ import (
 )
 
 func Test(t *testing.T) {
-	cputest()
+	CpuTest("zh", "sysbench", "1")
 }

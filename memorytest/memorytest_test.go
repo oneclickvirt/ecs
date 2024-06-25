@@ -5,5 +5,5 @@ import (
 )
 
 func Test(t *testing.T) {
-	memorytest()
+	MemoryTest("zh", "sysbench")
 }

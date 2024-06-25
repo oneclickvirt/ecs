@@ -11,11 +11,10 @@ import (
 // TODO
 // 迁移Shell的完整检测逻辑使用执行命令的方式查询，最后都失败才使用gopsutil查询
 
-func basic() {
-	language := "zh"
+func Basic(language string) {
 	ipInfo, _, _ := network.NetworkCheck("both", false, language)
 	res := system.CheckSystemInfo(language)
-	fmt.Println("--------------------------------------------------")
+	//fmt.Println("--------------------------------------------------")
 	fmt.Printf(strings.ReplaceAll(res+ipInfo, "\n\n", "\n"))
-	fmt.Println("--------------------------------------------------")
+	//fmt.Println("--------------------------------------------------")
 }

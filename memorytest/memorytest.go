@@ -6,24 +6,26 @@ import (
 	"runtime"
 )
 
-func memorytest() {
+func MemoryTest(language, testMethod string) {
 	var res string
-	language := "zh"
-	testMethod := ""
 	if runtime.GOOS == "windows" {
-		res = memory.WinsatTest(language)
+		if testMethod != "winsat" && testMethod != "" {
+			res = "Detected host is Windows, using Winsat for testing.\n"
+		}
+		res += memory.WinsatTest(language)
 	} else {
-		if testMethod == "sysbench" {
+		switch testMethod {
+		case "sysbench":
 			res = memory.SysBenchTest(language)
 			if res == "" {
 				res = "sysbench test failed, switch to use dd test.\n"
 				res += memory.DDTest(language)
 			}
-		} else if testMethod == "dd" {
+		case "dd":
 			res = memory.DDTest(language)
+		default:
+			res = "Unsupported test method"
 		}
 	}
-	fmt.Println("--------------------------------------------------")
 	fmt.Printf(res)
-	fmt.Println("--------------------------------------------------")
 }
