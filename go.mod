@@ -3,8 +3,6 @@ module github.com/oneclickvirt/ecs
 go 1.22.4
 
 require (
-	github.com/fatih/color v1.17.0
-	github.com/nxtrace/NTrace-core v1.3.1
 	github.com/oneclickvirt/CommonMediaTests v0.0.1-20240624094420
 	github.com/oneclickvirt/UnlockTests v0.0.7-20240624115527
 	github.com/oneclickvirt/backtrace v0.0.1
@@ -13,6 +11,7 @@ require (
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.2-20240624145436
 	github.com/oneclickvirt/memorytest v0.0.1-20240624151629
+	github.com/oneclickvirt/nt3 v0.0.1-20240627070009
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.1-20240625075931
 )
@@ -22,6 +21,7 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/fatih/color v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
@@ -48,8 +48,8 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
+	github.com/nxtrace/NTrace-core v1.3.1 // indirect
 	github.com/oneclickvirt/gostun v0.0.2-20240625025941 // indirect
-	github.com/oneclickvirt/nt3 v0.0.1-20240627070009 // indirect
 	github.com/onsi/ginkgo/v2 v2.16.0 // indirect
 	github.com/oschwald/maxminddb-golang v1.12.0 // indirect
 	github.com/parnurzeal/gorequest v0.3.0 // indirect
