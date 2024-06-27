@@ -16,7 +16,8 @@
 
 ## TODO
 
-- [ ] 测试网速[借鉴[speedtest-go](https://github.com/showwin/speedtest-go)二次开发]
+- [ ] 测试网速[基于[speedtest.net-爬虫](https://github.com/spiritLHLS/speedtest.net-CN-ID)、[speedtest.cn-爬虫](https://github.com/spiritLHLS/speedtest.cn-CN-ID)的数据，借鉴[speedtest-go](https://github.com/showwin/speedtest-go)二次开发]
+- [ ] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发]
 
 ## 说明
 
