@@ -10,6 +10,7 @@ import (
 	"github.com/oneclickvirt/ecs/disktest"
 	"github.com/oneclickvirt/ecs/memorytest"
 	"github.com/oneclickvirt/ecs/network"
+	"github.com/oneclickvirt/ecs/ntrace"
 	"github.com/oneclickvirt/ecs/port"
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"runtime"
@@ -35,6 +36,7 @@ func main() {
 		memoryTestMethod             string
 		diskTestMethod, diskTestPath string
 		diskMultiCheck               bool
+		nt3CheckType, nt3Location    string
 		width                        = 84
 	)
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
@@ -45,6 +47,11 @@ func main() {
 	flag.StringVar(&diskTestMethod, "diskm", "", "Specify Disk test method (supported: sysbench, dd, winsat)")
 	flag.StringVar(&diskTestPath, "diskp", "", "Specify Disk test path, example: -diskp /root")
 	flag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable multiple disk checks, example: -diskmc=false")
+	flag.Parse()
+	if language == "zh" {
+		flag.StringVar(&nt3Location, "nt3loc", "GZ", "指定三网回程路由检测的地址，支持 GZ, SH, BJ, CD 对应 广州，上海，北京，成都")
+		flag.StringVar(&nt3CheckType, "nt3t", "ipv4", "指定三网回程路由检测的类型，支持 both, ipv4, ipv6")
+	}
 	flag.Parse()
 	if showVersion {
 		fmt.Println(ecsVersion)
@@ -68,7 +75,7 @@ func main() {
 		printCenteredTitle("跨国流媒体解锁", width)
 		unlocktest.MediaTest(language)
 		printCenteredTitle("IP质量检测", width)
-		_, securityInfo, _ := network.NetworkCheck("both", true, language)
+		ipInfo, securityInfo, _ := network.NetworkCheck("both", true, language)
 		fmt.Printf(securityInfo)
 		printCenteredTitle("邮件端口检测", width)
 		port.EmailCheck()
@@ -77,7 +84,17 @@ func main() {
 			printCenteredTitle("三网回程", width)
 			backtrace.BackTrace()
 		}
-		//printCenteredTitle("回程路由", width)
+		printCenteredTitle("三网回程路由", width)
+		if nt3CheckType == "" && strings.Contains(ipInfo, "IPV4") {
+			nt3CheckType = "ipv4"
+		} else if nt3CheckType == "" && strings.Contains(ipInfo, "IPV6") {
+			nt3CheckType = "ipv6"
+		} else if nt3CheckType == "ipv4" && !strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
+			nt3CheckType = "ipv6"
+		} else if nt3CheckType == "ipv6" && !strings.Contains(ipInfo, "IPV6") && strings.Contains(ipInfo, "IPV4") {
+			nt3CheckType = "ipv4"
+		}
+		ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
 		//printCenteredTitle("就近节点测速", width)
 		printCenteredTitle("", width)
 		endTime := time.Now()

@@ -49,6 +49,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moul/http2curl v1.0.0 // indirect
 	github.com/oneclickvirt/gostun v0.0.2-20240625025941 // indirect
+	github.com/oneclickvirt/nt3 v0.0.1-20240627070009 // indirect
 	github.com/onsi/ginkgo/v2 v2.16.0 // indirect
 	github.com/oschwald/maxminddb-golang v1.12.0 // indirect
 	github.com/parnurzeal/gorequest v0.3.0 // indirect
