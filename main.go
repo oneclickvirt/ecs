@@ -12,6 +12,7 @@ import (
 	"github.com/oneclickvirt/ecs/network"
 	"github.com/oneclickvirt/ecs/ntrace"
 	"github.com/oneclickvirt/ecs/port"
+	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"runtime"
 	"strings"
@@ -37,6 +38,7 @@ func main() {
 		diskTestMethod, diskTestPath string
 		diskMultiCheck               bool
 		nt3CheckType, nt3Location    string
+		spNum                        int
 		width                        = 84
 	)
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
@@ -52,6 +54,7 @@ func main() {
 		flag.StringVar(&nt3Location, "nt3loc", "GZ", "指定三网回程路由检测的地址，支持 GZ, SH, BJ, CD 对应 广州，上海，北京，成都")
 		flag.StringVar(&nt3CheckType, "nt3t", "ipv4", "指定三网回程路由检测的类型，支持 both, ipv4, ipv6")
 	}
+	flag.IntVar(&spNum, "spnum", 2, "Specify speedtest each operator servers num")
 	flag.Parse()
 	if showVersion {
 		fmt.Println(ecsVersion)
@@ -95,7 +98,13 @@ func main() {
 			nt3CheckType = "ipv4"
 		}
 		ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
-		//printCenteredTitle("就近节点测速", width)
+		printCenteredTitle("就近节点测速", width)
+		speedtest.ShowHead(language)
+		speedtest.NearbySP()
+		speedtest.CustomSP("net", "global", 4)
+		speedtest.CustomSP("net", "cu", spNum)
+		speedtest.CustomSP("net", "ct", spNum)
+		speedtest.CustomSP("net", "cmcc", spNum)
 		printCenteredTitle("", width)
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
@@ -127,7 +136,10 @@ func main() {
 		printCenteredTitle("Email Port Check", width)
 		port.EmailCheck()
 		//printCenteredTitle("Return Path Routing", width)
-		//printCenteredTitle("Nearby Node Speed Test", width)
+		printCenteredTitle("Nearby Node Speed Test", width)
+		speedtest.ShowHead(language)
+		speedtest.NearbySP()
+		speedtest.CustomSP("net", "global", -1)
 		printCenteredTitle("", width)
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)

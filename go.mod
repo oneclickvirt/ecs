@@ -14,7 +14,7 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.1-20240627070009
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.1-20240625075931
-	github.com/showwin/speedtest-go v1.7.7
+	github.com/oneclickvirt/speedtest v0.0.4-20240629100548
 )
 
 require (
@@ -70,6 +70,7 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.14.4 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
+	github.com/showwin/speedtest-go v1.7.7 // indirect
 	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
