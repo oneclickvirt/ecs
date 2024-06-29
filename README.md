@@ -1,6 +1,12 @@
 # ecs
 
-## Features
+[![goreleaser](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml)
+
+融合怪测评脚本 - GO重构版本
+
+Shell版本： https://github.com/spiritLHLS/ecs
+
+## 功能
 
 - [x] 系统基础信息查询[自研[basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)]
 - [x] IP基础信息并发查询[自研[basics](https://github.com/oneclickvirt/basics)]
