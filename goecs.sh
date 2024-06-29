@@ -2,13 +2,46 @@
 #From https://github.com/oneclickvirt/ecs
 #2024.06.29
 
-# curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs_install.sh -o goecs_install.sh && chmod +x goecs_install.sh && bash goecs_install.sh
+# curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
+cat << "EOF"
+  GGG    OOO   EEEE  CCCC  SSS
+ G   G  O   O  E     C     S
+ G      O   O  EEE   C     SSS
+ G  GG  O   O  E     C        S
+  GGG    OOO   EEEE  CCCC  SSS
+EOF
 cd /root >/dev/null 2>&1
-rm -rf /usr/bin/goecs
-rm -rf goecs
 os=$(uname -s)
 arch=$(uname -m)
+ECS_VERSION=$(curl -m 6 -sSL "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+# 如果 https://api.github.com/ 请求失败，则使用 https://githubapi.spiritlhl.workers.dev/ ，此时可能宿主机无IPV4网络
+if [ -z "$ECS_VERSION" ]; then
+    ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+fi
+# 如果 https://githubapi.spiritlhl.workers.dev/ 请求失败，则使用 https://githubapi.spiritlhl.top/ ，此时可能宿主机在国内
+if [ -z "$ECS_VERSION" ]; then
+    ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+fi
+# 检测原始goecs命令是否存在，若存在则升级，不存在则安装
+version_output=$(goecs -v || ./goecs -v)
+if [ $? -eq 0 ]; then
+    extracted_version=$(echo "$version_output" | grep -oP '^v\d+(\.\d+)+')
+    if [ -n "$extracted_version" ]; then
+        current_version=$(echo "$extracted_version" | cut -c 2-)
+        ecs_version=$ECS_VERSION
+        if [[ "$(echo -e "$current_version\n$ecs_version" | sort -V | tail -n 1)" == "$current_version" ]]; then
+            echo "goecs version ($current_version) is latest, no need to upgrade."
+            exit 1
+        else
+            echo "goecs version ($current_version) < $ecs_version, need to upgrade."
+            rm -rf /usr/bin/goecs
+            rm -rf goecs
+        fi
+    fi
+else
+    echo "Can not find goecs, need to download and install."
+fi
 
 check_cdn() {
   local o_url=$1
@@ -33,15 +66,6 @@ check_cdn_file() {
 
 cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
 check_cdn_file
-ECS_VERSION=$(curl -m 6 -sSL "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
-# 如果 https://api.github.com/ 请求失败，则使用 https://githubapi.spiritlhl.workers.dev/ ，此时可能宿主机无IPV4网络
-if [ -z "$ECS_VERSION" ]; then
-    ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
-fi
-# 如果 https://githubapi.spiritlhl.workers.dev/ 请求失败，则使用 https://githubapi.spiritlhl.top/ ，此时可能宿主机在国内
-if [ -z "$ECS_VERSION" ]; then
-    ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
-fi
 
 case $os in
 Linux)
