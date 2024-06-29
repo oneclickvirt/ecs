@@ -2,7 +2,7 @@
 #From https://github.com/oneclickvirt/ecs
 #2024.06.29
 
-# curl -L https://github.com/oneclickvirt/ecs/raw/main/goecs_install.sh -o goecs_install.sh && chmod +x goecs_install.sh && bash goecs_install.sh
+# curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs_install.sh -o goecs_install.sh && chmod +x goecs_install.sh && bash goecs_install.sh
 
 cd /root >/dev/null 2>&1
 rm -rf /usr/bin/goecs
