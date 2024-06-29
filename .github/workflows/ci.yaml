@@ -78,10 +78,12 @@ jobs:
           git config --global url."git@github.com:".insteadOf "https://github.com/"
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.53.2
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.2
+      - name: Run golangci-lint
+        run: golangci-lint run ./...
         env:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
+
