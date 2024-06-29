@@ -234,10 +234,16 @@ env_check() {
   done
   cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
   check_cdn_file
+  if ! command -v dd >/dev/null 2>&1; then
+      _green "Installing dd"
+      $PACKAGE_INSTALL dd
+    fi
   if ! command -v fio >/dev/null 2>&1; then
+    _green "Installing fio"
     $PACKAGE_INSTALL fio
   fi
   if ! command -v sysbench >/dev/null 2>&1; then
+    _green "Installing sysbench"
     $PACKAGE_INSTALL sysbench
     if [ $? -ne 0 ]; then
       echo "Unable to download sysbench through the system's package manager, speak to try compiling and installing it..."
@@ -253,14 +259,15 @@ env_check() {
     fi
   fi
   if ! commadn -v geekbench >/dev/null 2>&1; then
+    _green "Installing geekbench"
     curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
     bash dgb.sh -v gb5
-    echo "If you not want to use geekbench5, you can use"
+    _blue "If you not want to use geekbench5, you can use"
     echo "bash dgb.sh -v gb6"
     echo "bash dgb.sh -v gb4"
-    echo "to change version, or use"
-    echo "rm -rf /usr/bin/geekbench"
-    echo "to uninstall geekbench"
+    _blue "to change version, or use"
+    echo "rm -rf /usr/bin/geekbench*"
+    _blue "to uninstall geekbench"
   fi
 }
 
@@ -268,7 +275,7 @@ show_help() {
   cat <<"EOF"
 Available commands:
 
-env             Check and install fio sysbench geekbench5
+env             Check and install dd fio sysbench geekbench5
 install         Install goecs command
 help            Show this message
 
