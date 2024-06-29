@@ -31,7 +31,8 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --rm-dist --snapshot --skip-publish --single-target
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security
+          CGO_ENABLED: 0  # 禁用 CGO，强制静态链接
