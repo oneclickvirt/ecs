@@ -64,9 +64,24 @@ jobs:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
+  detect-modules:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22.4
+      - id: set-modules
+        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+
   lint:
     needs: setup
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
     steps:
       - uses: actions/setup-go@v3
         with:
@@ -78,11 +93,10 @@ jobs:
           git config --global url."git@github.com:".insteadOf "https://github.com/"
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.2
-      - name: Run golangci-lint
-        run: golangci-lint run ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: 1.59
         env:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
