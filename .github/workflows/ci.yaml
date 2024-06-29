@@ -59,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
       - name: test
-        run: go test ./goecs -v
+        run: go test -v ./...
         env:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
