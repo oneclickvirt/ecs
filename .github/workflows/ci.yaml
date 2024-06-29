@@ -47,23 +47,6 @@ jobs:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-#  test:
-#    needs: setup
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Configure Git for Private Modules
-#        run: |
-#          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
-#          git config --global url."git@github.com:".insteadOf "https://github.com/"
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GHT }}
-#      - name: test
-#        run: go test -v ./...
-#        env:
-#          GOPRIVATE: github.com/oneclickvirt/security
-#          GITHUB_TOKEN: ${{ secrets.GHT }}
-
   detect-modules:
     runs-on: ubuntu-latest
     outputs:
@@ -74,14 +57,14 @@ jobs:
         with:
           go-version: 1.22.4
       - id: set-modules
-        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=modules::$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')"
 
   lint:
     needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
+        modules: ${{fromJson(needs.detect-modules.outputs.modules)}}
     steps:
       - uses: actions/setup-go@v3
         with:
