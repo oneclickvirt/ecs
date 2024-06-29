@@ -1,6 +1,7 @@
 name: go-ci
 
-on: [push]
+on:
+  workflow_dispatch:
 
 jobs:
   setup:
