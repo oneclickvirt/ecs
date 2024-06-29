@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/oneclickvirt/memorytest/memory"
 	"runtime"
+	"strings"
 )
 
 func MemoryTest(language, testMethod string) {
@@ -26,6 +27,9 @@ func MemoryTest(language, testMethod string) {
 		default:
 			res = "Unsupported test method"
 		}
+	}
+	if !strings.Contains(res, "\n") && res != "" {
+		res += "\n"
 	}
 	fmt.Printf(res)
 }

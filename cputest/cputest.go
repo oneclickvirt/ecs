@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/oneclickvirt/cputest/cpu"
 	"runtime"
+	"strings"
 )
 
 func CpuTest(language, testMethod, testThread string) {
@@ -30,6 +31,9 @@ func CpuTest(language, testMethod, testThread string) {
 		default:
 			res = "Invalid test method specified.\n"
 		}
+	}
+	if !strings.Contains(res, "\n") && res != "" {
+		res += "\n"
 	}
 	fmt.Print(res)
 }

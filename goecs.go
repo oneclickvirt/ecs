@@ -30,7 +30,7 @@ func printCenteredTitle(title string, width int) {
 
 func main() {
 	var (
-		ecsVersion                   = "2024.06.25"
+		ecsVersion                   = "2024.06.29"
 		showVersion                  bool
 		language                     string
 		cpuTestMethod, cpuTestThread string

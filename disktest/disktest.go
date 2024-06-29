@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/oneclickvirt/disktest/disk"
 	"runtime"
+	"strings"
 )
 
 func DiskTest(language, testMethod, testPath string, isMultiCheck bool) {
@@ -32,6 +33,9 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool) {
 		}
 	}
 	//fmt.Println("--------------------------------------------------")
+	if !strings.Contains(res, "\n") && res != "" {
+		res += "\n"
+	}
 	fmt.Printf(res)
 	//fmt.Println("--------------------------------------------------")
 }
