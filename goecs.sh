@@ -5,11 +5,11 @@
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
 cat <<"EOF"
-  GGG    OOO   EEEE  CCCC  SSS
+  GGG    OOO   EEEE  CCCC   SSS
  G   G  O   O  E     C     S
- G      O   O  EEE   C     SSS
- G  GG  O   O  E     C        S
-  GGG    OOO   EEEE  CCCC  SSS
+ G      O   O  EEE   C      SSS
+ G  GG  O   O  E     C         S
+  GGG    OOO   EEEE  CCCC   SSS
 EOF
 cd /root >/dev/null 2>&1
 
@@ -268,7 +268,7 @@ show_help() {
   cat <<"EOF"
 Available commands:
 
-env             Check and install fio sysbench/geekbench5
+env             Check and install fio sysbench geekbench5
 install         Install goecs command
 help            Show this message
 
