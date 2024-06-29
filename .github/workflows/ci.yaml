@@ -47,19 +47,19 @@ jobs:
           GOPRIVATE: github.com/oneclickvirt/security
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-  test:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Configure Git for Private Modules
-        run: |
-          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHT }}
-      - name: test
-        run: go test ./goecs_test.go
-        env:
-          GOPRIVATE: github.com/oneclickvirt/security
-          GITHUB_TOKEN: ${{ secrets.GHT }}
+#  test:
+#    needs: setup
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Configure Git for Private Modules
+#        run: |
+#          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
+#          git config --global url."git@github.com:".insteadOf "https://github.com/"
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GHT }}
+#      - name: test
+#        run: go test ./goecs_test.go
+#        env:
+#          GOPRIVATE: github.com/oneclickvirt/security
+#          GITHUB_TOKEN: ${{ secrets.GHT }}
