@@ -9,18 +9,24 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      -
-        name: Set up Go
+
+      - name: Set up Go
         uses: actions/setup-go@v3
         with:
           go-version: 1.22.4
-      -
-        name: Run GoReleaser
+
+      - name: Configure Git for Private Modules
+        run: |
+          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
+          git config --global url."git@github.com:".insteadOf "https://github.com/"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GHT }}
+
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
           distribution: goreleaser
@@ -28,3 +34,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
+          GOPRIVATE: github.com/oneclickvirt/security
