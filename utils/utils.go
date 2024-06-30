@@ -151,10 +151,11 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 }
 
 // UploadText 上传文本内容到指定URL
-func UploadText(textContent string) (string, error) {
+func UploadText(absPath string) (string, error) {
 	url := "https://paste.spiritlhl.net/api/upload"
 	token := network.SecurityUploadToken
-	client := req.C().SetTimeout(10 * 1000 * 1000) // 10 seconds timeout
+	client := req.DefaultClient()
+	file, _ := os.Open(absPath)
 	resp, err := client.R().
 		SetHeader("Authorization", token).
 		SetHeader("Format", "RANDOM").
@@ -162,7 +163,7 @@ func UploadText(textContent string) (string, error) {
 		SetHeader("UploadText", "true").
 		SetHeader("Content-Type", "multipart/form-data").
 		SetHeader("No-JSON", "true").
-		SetBodyString(textContent).
+		SetFileReader("file", "goecs.txt", file).
 		Post(url)
 	if err != nil {
 		return "", err

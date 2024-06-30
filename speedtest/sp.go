@@ -3,6 +3,7 @@ package speedtest
 import (
 	"github.com/oneclickvirt/speedtest/model"
 	"github.com/oneclickvirt/speedtest/sp"
+	"runtime"
 	"strings"
 )
 
@@ -11,7 +12,11 @@ func ShowHead(language string) {
 }
 
 func NearbySP() {
-	sp.NearbySpeedTest()
+	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
+		sp.NearbySpeedTest()
+	} else {
+		sp.OfficialNearbySpeedTest()
+	}
 }
 
 func CustomSP(platform, operator string, num int) {
@@ -53,5 +58,9 @@ func CustomSP(platform, operator string, num int) {
 		}
 		parseType = "id"
 	}
-	sp.CustomSpeedTest(url, parseType, num)
+	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
+		sp.CustomSpeedTest(url, parseType, num)
+	} else {
+		sp.OfficialCustomSpeedTest(url, parseType, num)
+	}
 }

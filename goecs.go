@@ -13,6 +13,9 @@ import (
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"github.com/oneclickvirt/ecs/utils"
 	"github.com/oneclickvirt/portchecker/email"
+	"os"
+	"path/filepath"
+	"regexp"
 	"runtime"
 	"sync"
 	"time"
@@ -151,7 +154,31 @@ func main() {
 			fmt.Println("Unsupported language")
 		}
 	}, tempOutput, output)
-	shorturl, err := utils.UploadText(output)
+	// 创建文件
+	filePath := "goecs.txt"
+	file, err := os.Create(filePath)
+	if err != nil {
+		fmt.Println("Can not make file:", err)
+		return
+	}
+	defer file.Close()
+	// 将 output 写入文件
+	// 匹配 ANSI 转义序列
+	ansiRegex := regexp.MustCompile("\x1B\\[[0-9;]+[a-zA-Z]")
+	// 移除 ANSI 转义序列
+	cleanedOutput := ansiRegex.ReplaceAllString(output, "")
+	_, err = file.WriteString(cleanedOutput)
+	if err != nil {
+		fmt.Println("Can not write file:", err)
+		return
+	}
+	// 获取文件的绝对路径
+	absPath, err := filepath.Abs(filePath)
+	if err != nil {
+		fmt.Println("Get file absPath failed:", err)
+		return
+	}
+	shorturl, err := utils.UploadText(absPath)
 	if err != nil {
 		fmt.Println("Upload failed, can not generate short URL.")
 		fmt.Println(err.Error())
