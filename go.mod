@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003
-	github.com/oneclickvirt/UnlockTests v0.0.7-20240624115527
+	github.com/oneclickvirt/UnlockTests v0.0.9-20240630032239
 	github.com/oneclickvirt/backtrace v0.0.4-20240624090335
 	github.com/oneclickvirt/basics v0.0.3-20240625075226
 	github.com/oneclickvirt/cputest v0.0.5-20240630022206

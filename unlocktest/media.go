@@ -14,10 +14,10 @@ func MediaTest(language string) {
 	}
 	if uts.IPV4 {
 		fmt.Println(defaultset.Blue("IPV4:"))
-		uts.RunTests(utils.Ipv4HttpClient, "ipv4", language)
+		uts.RunTests(utils.Ipv4HttpClient, "ipv4", language, false)
 	}
 	if uts.IPV6 {
 		fmt.Println(defaultset.Blue("IPV6:"))
-		uts.RunTests(utils.Ipv6HttpClient, "ipv6", language)
+		uts.RunTests(utils.Ipv6HttpClient, "ipv6", language, false)
 	}
 }
