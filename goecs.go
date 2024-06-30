@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/oneclickvirt/UnlockTests/uts"
-	"github.com/oneclickvirt/basics/system"
 	"github.com/oneclickvirt/ecs/backtrace"
 	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
@@ -13,13 +11,11 @@ import (
 	"github.com/oneclickvirt/ecs/ntrace"
 	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
+	"github.com/oneclickvirt/ecs/utils"
 	"github.com/oneclickvirt/portchecker/email"
-	"github.com/oneclickvirt/security/network"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 )
 
 var (
@@ -34,76 +30,6 @@ var (
 	spNum                            int
 	width                            = 84
 )
-
-func printCenteredTitle(title string, width int) {
-	titleLength := utf8.RuneCountInString(title) // 计算字符串的字符数
-	totalPadding := width - titleLength
-	padding := totalPadding / 2
-	paddingStr := strings.Repeat("-", padding)
-	fmt.Println(paddingStr + title + paddingStr + strings.Repeat("-", totalPadding%2))
-}
-
-func securityCheck() (string, string) {
-	var wgt sync.WaitGroup
-	var ipInfo, securityInfo, systemInfo string
-	var err error
-	wgt.Add(2)
-	go func() {
-		defer wgt.Done()
-		ipInfo, securityInfo, err = network.NetworkCheck("both", true, language)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}()
-	go func() {
-		defer wgt.Done()
-		systemInfo = system.CheckSystemInfo(language)
-	}()
-	wgt.Wait()
-	basicInfo := systemInfo + ipInfo
-	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
-		uts.IPV4 = true
-		uts.IPV6 = true
-		if nt3CheckType == "" {
-			nt3CheckType = "ipv4"
-		}
-	} else if strings.Contains(ipInfo, "IPV4") {
-		uts.IPV4 = true
-		uts.IPV6 = false
-		if nt3CheckType == "" {
-			nt3CheckType = "ipv4"
-		}
-	} else if strings.Contains(ipInfo, "IPV6") {
-		uts.IPV6 = true
-		uts.IPV4 = false
-		if nt3CheckType == "" {
-			nt3CheckType = "ipv6"
-		}
-	}
-	if nt3CheckType == "ipv4" && !strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
-		nt3CheckType = "ipv6"
-	} else if nt3CheckType == "ipv6" && !strings.Contains(ipInfo, "IPV6") && strings.Contains(ipInfo, "IPV4") {
-		nt3CheckType = "ipv4"
-	}
-	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
-	return basicInfo, securityInfo
-}
-
-func printHead() {
-	if language == "zh" {
-		printCenteredTitle("融合怪测试", width)
-		fmt.Printf("版本：%s\n", ecsVersion)
-		fmt.Println("测评频道: https://t.me/vps_reviews\n" +
-			"Go项目地址：https://github.com/oneclickvirt/ecs\n" +
-			"Shell项目地址：https://github.com/spiritLHLS/ecs")
-	} else {
-		printCenteredTitle("Fusion Monster Test", width)
-		fmt.Printf("Version: %s\n", ecsVersion)
-		fmt.Println("Review Channel: https://t.me/vps_reviews\n" +
-			"Go Project URL: https://github.com/oneclickvirt/ecs\n" +
-			"Shell Project URL: https://github.com/spiritLHLS/ecs")
-	}
-}
 
 func main() {
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
@@ -125,17 +51,29 @@ func main() {
 	startTime := time.Now()
 	var wg sync.WaitGroup
 	var basicInfo, securityInfo, emailInfo, mediaInfo string
+	var output, tempOutput string
 	if language == "zh" {
-		printHead()
-		printCenteredTitle("基础信息", width)
-		basicInfo, securityInfo = securityCheck()
-		fmt.Printf(basicInfo)
-		printCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
-		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
-		printCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
-		memorytest.MemoryTest(language, memoryTestMethod)
-		printCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
-		disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+		output = utils.PrintAndCapture(func() {
+			utils.PrintHead(language, width, ecsVersion)
+			utils.PrintCenteredTitle("基础信息", width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType)
+			fmt.Printf(basicInfo)
+			utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+			utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			memorytest.MemoryTest(language, memoryTestMethod)
+			utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+			utils.PrintCenteredTitle("御三家流媒体解锁", width)
+		}, tempOutput, output)
 		wg.Add(2)
 		go func() {
 			defer wg.Done()
@@ -145,69 +83,82 @@ func main() {
 			defer wg.Done()
 			mediaInfo = unlocktest.MediaTest(language)
 		}()
-		printCenteredTitle("御三家流媒体解锁", width)
-		commediatest.ComMediaTest(language)
-		printCenteredTitle("跨国流媒体解锁", width)
-		wg.Wait()
-		fmt.Printf(mediaInfo)
-		printCenteredTitle("IP质量检测", width)
-		fmt.Printf(securityInfo)
-		printCenteredTitle("邮件端口检测", width)
-		fmt.Println(emailInfo)
-		printCenteredTitle("三网回程", width)
-		backtrace.BackTrace()
+		output = utils.PrintAndCapture(func() {
+			commediatest.ComMediaTest(language)
+			utils.PrintCenteredTitle("跨国流媒体解锁", width)
+		}, tempOutput, output)
+		wg.Wait() // 后台任务含流媒体测试和邮件测试
+		output = utils.PrintAndCapture(func() {
+			fmt.Printf(mediaInfo)
+			utils.PrintCenteredTitle("IP质量检测", width)
+			fmt.Printf(securityInfo)
+			utils.PrintCenteredTitle("邮件端口检测", width)
+			fmt.Println(emailInfo)
+			utils.PrintCenteredTitle("三网回程", width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			backtrace.BackTrace()
+		}, tempOutput, output)
 		if runtime.GOOS != "windows" {
 			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
-			printCenteredTitle("路由检测", width)
-			ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
+			output = utils.PrintAndCapture(func() {
+				utils.PrintCenteredTitle("路由检测", width)
+				ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
+			}, tempOutput, output)
 		}
-		printCenteredTitle("就近节点测速", width)
-		speedtest.ShowHead(language)
-		speedtest.NearbySP()
-		speedtest.CustomSP("net", "global", 4)
-		speedtest.CustomSP("net", "cu", spNum)
-		speedtest.CustomSP("net", "ct", spNum)
-		speedtest.CustomSP("net", "cmcc", spNum)
-		printCenteredTitle("", width)
+		output = utils.PrintAndCapture(func() {
+			utils.PrintCenteredTitle("就近节点测速", width)
+			speedtest.ShowHead(language)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			speedtest.NearbySP()
+			speedtest.CustomSP("net", "global", 4)
+			speedtest.CustomSP("net", "cu", spNum)
+			speedtest.CustomSP("net", "ct", spNum)
+			speedtest.CustomSP("net", "cmcc", spNum)
+			utils.PrintCenteredTitle("", width)
+		}, tempOutput, output)
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
 		minutes := int(duration.Minutes())
 		seconds := int(duration.Seconds()) % 60
-		fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
 		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-		fmt.Printf("时间          : %s\n", currentTime)
-		printCenteredTitle("", width)
+		output = utils.PrintAndCapture(func() {
+			fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
+			fmt.Printf("时间          : %s\n", currentTime)
+			utils.PrintCenteredTitle("", width)
+		}, tempOutput, output)
 	} else if language == "en" {
-		printHead()
-		printCenteredTitle("Basic Information", width)
-		basicInfo, securityInfo = securityCheck()
+		utils.PrintHead(language, width, ecsVersion)
+		utils.PrintCenteredTitle("Basic Information", width)
+		basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType)
 		fmt.Printf(basicInfo)
-		printCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
+		utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
 		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
-		printCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
+		utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
 		memorytest.MemoryTest(language, memoryTestMethod)
-		printCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
+		utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
 		disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			emailInfo = email.EmailCheck()
 		}()
-		printCenteredTitle("The Three Families Streaming Media Unlock", width)
+		utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
 		commediatest.ComMediaTest(language)
-		printCenteredTitle("Cross-Border Streaming Media Unlock", width)
+		utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
 		unlocktest.MediaTest(language)
-		printCenteredTitle("IP Quality Check", width)
+		utils.PrintCenteredTitle("IP Quality Check", width)
 		fmt.Printf(securityInfo)
-		printCenteredTitle("Email Port Check", width)
+		utils.PrintCenteredTitle("Email Port Check", width)
 		wg.Wait()
 		fmt.Println(emailInfo)
-		//printCenteredTitle("Return Path Routing", width)
-		printCenteredTitle("Nearby Node Speed Test", width)
+		//utils.PrintCenteredTitle("Return Path Routing", width)
+		utils.PrintCenteredTitle("Nearby Node Speed Test", width)
 		speedtest.ShowHead(language)
 		speedtest.NearbySP()
 		speedtest.CustomSP("net", "global", -1)
-		printCenteredTitle("", width)
+		utils.PrintCenteredTitle("", width)
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
 		minutes := int(duration.Minutes())
@@ -215,6 +166,11 @@ func main() {
 		fmt.Printf("Cost    Time          : %d 分 %d 秒\n", minutes, seconds)
 		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 		fmt.Printf("Current Time          : %s\n", currentTime)
-		printCenteredTitle("", width)
+		utils.PrintCenteredTitle("", width)
 	}
+	shorturl, err := utils.UploadText(output)
+	if err != nil {
+		fmt.Println("Upload failed, can not generate short URL.")
+	}
+	fmt.Println("Upload successful, short URL:", shorturl)
 }
