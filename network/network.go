@@ -1,4 +1,4 @@
-package network
+package network1
 
 import "github.com/oneclickvirt/security/network"
 

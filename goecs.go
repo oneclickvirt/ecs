@@ -18,20 +18,20 @@ import (
 	"time"
 )
 
-var (
-	ecsVersion                       = "2024.06.30"
-	showVersion                      bool
-	language                         string
-	cpuTestMethod, cpuTestThreadMode string
-	memoryTestMethod                 string
-	diskTestMethod, diskTestPath     string
-	diskMultiCheck                   bool
-	nt3CheckType, nt3Location        string
-	spNum                            int
-	width                            = 84
-)
-
 func main() {
+	var (
+		ecsVersion                       = "2024.06.30"
+		showVersion                      bool
+		language                         string
+		cpuTestMethod, cpuTestThreadMode string
+		memoryTestMethod                 string
+		diskTestMethod, diskTestPath     string
+		diskMultiCheck                   bool
+		nt3CheckType, nt3Location        string
+		spNum                            int
+		width                            = 84
+	)
+
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
 	flag.StringVar(&language, "l", "zh", "Specify language (supported: en, zh)")
 	flag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Specify CPU test method (supported: sysbench, geekbench, winsat)")
@@ -49,9 +49,11 @@ func main() {
 		return
 	}
 	startTime := time.Now()
-	var wg sync.WaitGroup
-	var basicInfo, securityInfo, emailInfo, mediaInfo string
-	var output, tempOutput string
+	var (
+		wg                                            sync.WaitGroup
+		basicInfo, securityInfo, emailInfo, mediaInfo string
+		output, tempOutput                            string
+	)
 	if language == "zh" {
 		output = utils.PrintAndCapture(func() {
 			utils.PrintHead(language, width, ecsVersion)
@@ -94,12 +96,12 @@ func main() {
 			fmt.Printf(securityInfo)
 			utils.PrintCenteredTitle("邮件端口检测", width)
 			fmt.Println(emailInfo)
-			utils.PrintCenteredTitle("三网回程", width)
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			backtrace.BackTrace()
 		}, tempOutput, output)
 		if runtime.GOOS != "windows" {
+			output = utils.PrintAndCapture(func() {
+				utils.PrintCenteredTitle("三网回程", width)
+				backtrace.BackTrace()
+			}, tempOutput, output)
 			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
 			output = utils.PrintAndCapture(func() {
 				utils.PrintCenteredTitle("路由检测", width)
