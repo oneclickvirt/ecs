@@ -72,6 +72,10 @@ func securityCheck() string {
 	return securityInfo
 }
 
+func mediatest(language string) string {
+	return unlocktest.MediaTest(language)
+}
+
 func printHead() {
 	if language == "zh" {
 		printCenteredTitle("融合怪测试", width)
@@ -110,7 +114,7 @@ func main() {
 	}
 	startTime := time.Now()
 	var wg sync.WaitGroup
-	var securityInfo, emailInfo string
+	var securityInfo, emailInfo, mediaInfo string
 	if language == "zh" {
 		printHead()
 		printCenteredTitle("基础信息", width)
@@ -136,13 +140,17 @@ func main() {
 			emailInfo = email.EmailCheck()
 		}()
 		printCenteredTitle("御三家流媒体解锁", width)
+		go func() {
+			defer wg.Done()
+			mediaInfo = mediatest(language)
+		}()
 		commediatest.ComMediaTest(language)
 		printCenteredTitle("跨国流媒体解锁", width)
-		unlocktest.MediaTest(language)
+		wg.Wait()
+		fmt.Printf(mediaInfo)
 		printCenteredTitle("IP质量检测", width)
 		fmt.Printf(securityInfo)
 		printCenteredTitle("邮件端口检测", width)
-		wg.Wait()
 		fmt.Println(emailInfo)
 		printCenteredTitle("三网回程", width)
 		backtrace.BackTrace()

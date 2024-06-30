@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003
-	github.com/oneclickvirt/UnlockTests v0.0.9-20240630032239
+	github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930
 	github.com/oneclickvirt/backtrace v0.0.4-20240624090335
 	github.com/oneclickvirt/basics v0.0.3-20240625075226
 	github.com/oneclickvirt/cputest v0.0.5-20240630022206
@@ -14,7 +14,7 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.1-20240627070009
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.1-20240625075931
-	github.com/oneclickvirt/speedtest v0.0.4-20240629100548
+	github.com/oneclickvirt/speedtest v0.0.5-20240630045424
 )
 
 require (

@@ -1,7 +1,10 @@
 package unlocktest
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func Test(t *testing.T) {
-	MediaTest("zh")
+	fmt.Printf(MediaTest("zh"))
 }
