@@ -129,7 +129,7 @@ func main() {
 		printHead()
 		printCenteredTitle("基础信息", width)
 		basicInfo, securityInfo = securityCheck()
-		fmt.Println(basicInfo)
+		fmt.Printf(basicInfo)
 		printCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
 		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 		printCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
