@@ -277,6 +277,7 @@ Available commands:
 
 env             Check and install dd fio sysbench geekbench5
 install         Install goecs command
+upgrade         Upgrade goecs command
 help            Show this message
 
 EOF
@@ -289,10 +290,7 @@ case "$1" in
 "env")
   env_check
   ;;
-"install")
-  goecs_check
-  ;;
-"upgrade")
+"install" | "upgrade")
   goecs_check
   ;;
 *)
