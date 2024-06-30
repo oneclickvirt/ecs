@@ -7,6 +7,7 @@ import (
 	"github.com/oneclickvirt/UnlockTests/uts"
 	"github.com/oneclickvirt/basics/system"
 	"github.com/oneclickvirt/security/network"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -87,17 +88,56 @@ func SecurityCheck(language, nt3CheckType string) (string, string, string) {
 	return basicInfo, securityInfo, nt3CheckType
 }
 
-// CaptureOutput 捕获函数输出并返回字符串
+// CaptureOutput 捕获函数输出和错误输出并返回字符串
 func CaptureOutput(f func()) string {
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	// 保存旧的 stdout 和 stderr
+	oldStdout := os.Stdout
+	oldStderr := os.Stderr
+	// 创建管道
+	stdoutPipeR, stdoutPipeW, err := os.Pipe()
+	if err != nil {
+		return "Error creating stdout pipe"
+	}
+	stderrPipeR, stderrPipeW, err := os.Pipe()
+	if err != nil {
+		stdoutPipeW.Close()
+		stdoutPipeR.Close()
+		return "Error creating stderr pipe"
+	}
+	// 替换标准输出和标准错误输出为管道写入端
+	os.Stdout = stdoutPipeW
+	os.Stderr = stderrPipeW
+	// 恢复标准输出和标准错误输出
+	defer func() {
+		os.Stdout = oldStdout
+		os.Stderr = oldStderr
+		stdoutPipeW.Close()
+		stderrPipeW.Close()
+		stdoutPipeR.Close()
+		stderrPipeR.Close()
+	}()
+	// 缓冲区
+	var stdoutBuf, stderrBuf bytes.Buffer
+	// 并发读取 stdout 和 stderr
+	done := make(chan struct{})
+	go func() {
+		io.Copy(&stdoutBuf, stdoutPipeR)
+		done <- struct{}{}
+	}()
+	go func() {
+		io.Copy(&stderrBuf, stderrPipeR)
+		done <- struct{}{}
+	}()
+	// 执行函数
 	f()
-	w.Close()
-	os.Stdout = old
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
-	return buf.String()
+	// 关闭管道写入端，让管道读取端可以读取所有数据
+	stdoutPipeW.Close()
+	stderrPipeW.Close()
+	// 等待两个 goroutine 完成
+	<-done
+	<-done
+	// 返回捕获的输出字符串
+	return stdoutBuf.String() + stderrBuf.String()
 }
 
 // PrintAndCapture 捕获函数输出的同时打印内容

@@ -131,48 +131,77 @@ func main() {
 			utils.PrintCenteredTitle("", width)
 		}, tempOutput, output)
 	} else if language == "en" {
-		utils.PrintHead(language, width, ecsVersion)
-		utils.PrintCenteredTitle("Basic Information", width)
-		basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType)
-		fmt.Printf(basicInfo)
-		utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
-		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
-		utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
-		memorytest.MemoryTest(language, memoryTestMethod)
-		utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
-		disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+		output = utils.PrintAndCapture(func() {
+			utils.PrintHead(language, width, ecsVersion)
+			utils.PrintCenteredTitle("Basic Information", width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType)
+			fmt.Printf(basicInfo)
+			utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+			utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			memorytest.MemoryTest(language, memoryTestMethod)
+			utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			memorytest.MemoryTest(language, memoryTestMethod)
+			utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+		}, tempOutput, output)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			emailInfo = email.EmailCheck()
 		}()
-		utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
-		commediatest.ComMediaTest(language)
-		utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
-		unlocktest.MediaTest(language)
-		utils.PrintCenteredTitle("IP Quality Check", width)
-		fmt.Printf(securityInfo)
-		utils.PrintCenteredTitle("Email Port Check", width)
+		output = utils.PrintAndCapture(func() {
+			utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
+			commediatest.ComMediaTest(language)
+			utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			unlocktest.MediaTest(language)
+			utils.PrintCenteredTitle("IP Quality Check", width)
+			fmt.Printf(securityInfo)
+			utils.PrintCenteredTitle("Email Port Check", width)
+		}, tempOutput, output)
 		wg.Wait()
-		fmt.Println(emailInfo)
-		//utils.PrintCenteredTitle("Return Path Routing", width)
-		utils.PrintCenteredTitle("Nearby Node Speed Test", width)
-		speedtest.ShowHead(language)
-		speedtest.NearbySP()
-		speedtest.CustomSP("net", "global", -1)
-		utils.PrintCenteredTitle("", width)
+		output = utils.PrintAndCapture(func() {
+			fmt.Println(emailInfo)
+			//utils.PrintCenteredTitle("Return Path Routing", width)
+			utils.PrintCenteredTitle("Nearby Node Speed Test", width)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			speedtest.ShowHead(language)
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			speedtest.NearbySP()
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
+			speedtest.CustomSP("net", "global", -1)
+			utils.PrintCenteredTitle("", width)
+		}, tempOutput, output)
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
 		minutes := int(duration.Minutes())
 		seconds := int(duration.Seconds()) % 60
-		fmt.Printf("Cost    Time          : %d 分 %d 秒\n", minutes, seconds)
 		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-		fmt.Printf("Current Time          : %s\n", currentTime)
-		utils.PrintCenteredTitle("", width)
+		output = utils.PrintAndCapture(func() {
+			fmt.Printf("Cost    Time          : %d 分 %d 秒\n", minutes, seconds)
+			fmt.Printf("Current Time          : %s\n", currentTime)
+			utils.PrintCenteredTitle("", width)
+		}, tempOutput, output)
 	}
 	shorturl, err := utils.UploadText(output)
 	if err != nil {
 		fmt.Println("Upload failed, can not generate short URL.")
+		fmt.Println(err.Error())
 	}
 	fmt.Println("Upload successful, short URL:", shorturl)
 }
