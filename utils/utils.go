@@ -139,8 +139,7 @@ func CaptureOutput(f func()) string {
 	<-done
 	<-done
 	// 返回捕获的输出字符串
-	// stderrBuf.String()
-	return stdoutBuf.String()
+	return stdoutBuf.String() + stderrBuf.String()
 }
 
 // PrintAndCapture 捕获函数输出的同时打印内容
