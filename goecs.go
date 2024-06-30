@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/oneclickvirt/UnlockTests/uts"
+	"github.com/oneclickvirt/basics/system"
 	"github.com/oneclickvirt/ecs/backtrace"
-	"github.com/oneclickvirt/ecs/basic"
 	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
 	"github.com/oneclickvirt/ecs/disktest"
@@ -23,16 +23,16 @@ import (
 )
 
 var (
-	ecsVersion                   = "2024.06.30"
-	showVersion                  bool
-	language                     string
-	cpuTestMethod, cpuTestThread string
-	memoryTestMethod             string
-	diskTestMethod, diskTestPath string
-	diskMultiCheck               bool
-	nt3CheckType, nt3Location    string
-	spNum                        int
-	width                        = 84
+	ecsVersion                       = "2024.06.30"
+	showVersion                      bool
+	language                         string
+	cpuTestMethod, cpuTestThreadMode string
+	memoryTestMethod                 string
+	diskTestMethod, diskTestPath     string
+	diskMultiCheck                   bool
+	nt3CheckType, nt3Location        string
+	spNum                            int
+	width                            = 84
 )
 
 func printCenteredTitle(title string, width int) {
@@ -43,8 +43,21 @@ func printCenteredTitle(title string, width int) {
 	fmt.Println(paddingStr + title + paddingStr + strings.Repeat("-", totalPadding%2))
 }
 
-func securityCheck() string {
-	ipInfo, securityInfo, _ := network.NetworkCheck("both", true, language)
+func securityCheck() (string, string) {
+	var wgt sync.WaitGroup
+	var ipInfo, securityInfo, systemInfo string
+	go func() {
+		wgt.Add(1)
+		defer wgt.Done()
+		ipInfo, securityInfo, _ = network.NetworkCheck("both", true, language)
+	}()
+	go func() {
+		wgt.Add(1)
+		defer wgt.Done()
+		systemInfo = system.CheckSystemInfo(language)
+	}()
+	wgt.Wait()
+	basicInfo := systemInfo + ipInfo
 	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
 		uts.IPV4 = true
 		uts.IPV6 = true
@@ -69,11 +82,8 @@ func securityCheck() string {
 	} else if nt3CheckType == "ipv6" && !strings.Contains(ipInfo, "IPV6") && strings.Contains(ipInfo, "IPV4") {
 		nt3CheckType = "ipv4"
 	}
-	return securityInfo
-}
-
-func mediatest(language string) string {
-	return unlocktest.MediaTest(language)
+	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
+	return basicInfo, securityInfo
 }
 
 func printHead() {
@@ -96,7 +106,7 @@ func main() {
 	flag.BoolVar(&showVersion, "v", false, "Show version information")
 	flag.StringVar(&language, "l", "zh", "Specify language (supported: en, zh)")
 	flag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Specify CPU test method (supported: sysbench, geekbench, winsat)")
-	flag.StringVar(&cpuTestThread, "cput", "", "Specify CPU test thread count (supported: 1, 2, ...)")
+	flag.StringVar(&cpuTestThreadMode, "cput", "multi", "Specify CPU test thread mode (supported: single multi)")
 	flag.StringVar(&memoryTestMethod, "memorym", "dd", "Specify Memory test method (supported: sysbench, dd, winsat)")
 	flag.StringVar(&diskTestMethod, "diskm", "fio", "Specify Disk test method (supported: fio, dd, winsat)")
 	flag.StringVar(&diskTestPath, "diskp", "", "Specify Disk test path, example: -diskp /root")
@@ -111,23 +121,14 @@ func main() {
 	}
 	startTime := time.Now()
 	var wg sync.WaitGroup
-	var securityInfo, emailInfo, mediaInfo string
+	var basicInfo, securityInfo, emailInfo, mediaInfo string
 	if language == "zh" {
 		printHead()
 		printCenteredTitle("基础信息", width)
-		go func() {
-			wg.Add(1)
-			defer wg.Done()
-			basic.Basic(language)
-		}()
-		go func() {
-			wg.Add(1)
-			defer wg.Done()
-			securityInfo = securityCheck()
-		}()
-		wg.Wait()
+		basicInfo, securityInfo = securityCheck()
+		fmt.Println(basicInfo)
 		printCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
-		cputest.CpuTest(language, cpuTestMethod, cpuTestThread)
+		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 		printCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
 		memorytest.MemoryTest(language, memoryTestMethod)
 		printCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
@@ -140,7 +141,7 @@ func main() {
 		go func() {
 			wg.Add(1)
 			defer wg.Done()
-			mediaInfo = mediatest(language)
+			mediaInfo = unlocktest.MediaTest(language)
 		}()
 		printCenteredTitle("御三家流媒体解锁", width)
 		commediatest.ComMediaTest(language)
@@ -180,16 +181,12 @@ func main() {
 		go func() {
 			wg.Add(1)
 			defer wg.Done()
-			basic.Basic(language)
-		}()
-		go func() {
-			wg.Add(1)
-			defer wg.Done()
-			securityInfo = securityCheck()
+			basicInfo, securityInfo = securityCheck()
 		}()
 		wg.Wait()
+		fmt.Printf(basicInfo)
 		printCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
-		cputest.CpuTest(language, cpuTestMethod, cpuTestThread)
+		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 		printCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
 		memorytest.MemoryTest(language, memoryTestMethod)
 		printCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
