@@ -3,6 +3,7 @@ module github.com/oneclickvirt/ecs
 go 1.22.4
 
 require (
+	github.com/imroc/req/v3 v3.43.7
 	github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003
 	github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930
 	github.com/oneclickvirt/backtrace v0.0.4-20240624090335
@@ -25,7 +26,7 @@ require (
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
+	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0 // indirect
@@ -35,7 +36,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huin/goupnp v1.2.0 // indirect
-	github.com/imroc/req/v3 v3.43.7 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
