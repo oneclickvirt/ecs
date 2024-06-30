@@ -121,11 +121,13 @@ func CaptureOutput(f func()) string {
 	// 并发读取 stdout 和 stderr
 	done := make(chan struct{})
 	go func() {
-		io.Copy(&stdoutBuf, stdoutPipeR)
+		multiWriter := io.MultiWriter(&stdoutBuf, oldStdout)
+		io.Copy(multiWriter, stdoutPipeR)
 		done <- struct{}{}
 	}()
 	go func() {
-		io.Copy(&stderrBuf, stderrPipeR)
+		multiWriter := io.MultiWriter(&stderrBuf, oldStderr)
+		io.Copy(multiWriter, stderrPipeR)
 		done <- struct{}{}
 	}()
 	// 执行函数
@@ -137,13 +139,13 @@ func CaptureOutput(f func()) string {
 	<-done
 	<-done
 	// 返回捕获的输出字符串
-	return stdoutBuf.String() + stderrBuf.String()
+	// stderrBuf.String()
+	return stdoutBuf.String()
 }
 
 // PrintAndCapture 捕获函数输出的同时打印内容
 func PrintAndCapture(f func(), tempOutput, output string) string {
 	tempOutput = CaptureOutput(f)
-	fmt.Printf(tempOutput)
 	output += tempOutput
 	return output
 }
