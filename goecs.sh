@@ -115,7 +115,10 @@ goecs_check() {
   rm -rf README.md
   rm -rf LICENSE
   mv ecs goecs
+  sleep 1
   chmod 777 goecs
+  rm -rf /usr/bin/goecs
+  sleep 1
   cp goecs /usr/bin/goecs
   echo "goecs version:"
   goecs -v || ./goecs -v
