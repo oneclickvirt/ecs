@@ -10,11 +10,11 @@ import (
 	"github.com/oneclickvirt/ecs/cputest"
 	"github.com/oneclickvirt/ecs/disktest"
 	"github.com/oneclickvirt/ecs/memorytest"
-	"github.com/oneclickvirt/ecs/network"
 	"github.com/oneclickvirt/ecs/ntrace"
 	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"github.com/oneclickvirt/portchecker/email"
+	"github.com/oneclickvirt/security/network"
 	"runtime"
 	"strings"
 	"sync"
@@ -46,13 +46,16 @@ func printCenteredTitle(title string, width int) {
 func securityCheck() (string, string) {
 	var wgt sync.WaitGroup
 	var ipInfo, securityInfo, systemInfo string
+	var err error
+	wgt.Add(2)
 	go func() {
-		wgt.Add(1)
 		defer wgt.Done()
-		ipInfo, securityInfo, _ = network.NetworkCheck("both", true, language)
+		ipInfo, securityInfo, err = network.NetworkCheck("both", true, language)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}()
 	go func() {
-		wgt.Add(1)
 		defer wgt.Done()
 		systemInfo = system.CheckSystemInfo(language)
 	}()
@@ -133,13 +136,12 @@ func main() {
 		memorytest.MemoryTest(language, memoryTestMethod)
 		printCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
 		disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+		wg.Add(2)
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			emailInfo = email.EmailCheck()
 		}()
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			mediaInfo = unlocktest.MediaTest(language)
 		}()
@@ -178,12 +180,7 @@ func main() {
 	} else if language == "en" {
 		printHead()
 		printCenteredTitle("Basic Information", width)
-		go func() {
-			wg.Add(1)
-			defer wg.Done()
-			basicInfo, securityInfo = securityCheck()
-		}()
-		wg.Wait()
+		basicInfo, securityInfo = securityCheck()
 		fmt.Printf(basicInfo)
 		printCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
 		cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
