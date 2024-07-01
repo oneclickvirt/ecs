@@ -6,6 +6,7 @@ import (
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	backtraceori "github.com/oneclickvirt/backtrace/bk"
 	basicmodel "github.com/oneclickvirt/basics/model"
+	cputestmodel "github.com/oneclickvirt/cputest/model"
 	"github.com/oneclickvirt/ecs/backtrace"
 	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
@@ -91,6 +92,7 @@ func main() {
 	}
 	if enableLogger {
 		basicmodel.EnableLoger = true
+		cputestmodel.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 		gostunmodel.EnableLoger = true
 		commediatests.EnableLoger = true
