@@ -248,7 +248,7 @@ func main() {
 			utils.PrintHead(language, width, ecsVersion)
 			if basicStatus || securityTestStatus {
 				if basicStatus {
-					utils.PrintCenteredTitle("基础信息", width)
+					utils.PrintCenteredTitle("系统基础信息", width)
 				}
 				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
@@ -317,14 +317,14 @@ func main() {
 		if runtime.GOOS != "windows" {
 			output = utils.PrintAndCapture(func() {
 				if backtraceStatus {
-					utils.PrintCenteredTitle("三网回程", width)
+					utils.PrintCenteredTitle("三网回程线路检测", width)
 					backtrace.BackTrace()
 				}
 			}, tempOutput, output)
 			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
 			output = utils.PrintAndCapture(func() {
 				if nt3Status {
-					utils.PrintCenteredTitle("路由检测", width)
+					utils.PrintCenteredTitle("三网回程路由检测", width)
 					ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
 				}
 			}, tempOutput, output)
@@ -360,7 +360,7 @@ func main() {
 			utils.PrintHead(language, width, ecsVersion)
 			if basicStatus || securityTestStatus {
 				if basicStatus {
-					utils.PrintCenteredTitle("Basic Information", width)
+					utils.PrintCenteredTitle("System Basic Information", width)
 				}
 				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
@@ -395,7 +395,7 @@ func main() {
 		}
 		output = utils.PrintAndCapture(func() {
 			if commTestStatus {
-				utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
+				utils.PrintCenteredTitle("The Three Main Streaming Media Unlock", width)
 				commediatest.ComMediaTest(language)
 			}
 		}, tempOutput, output)
