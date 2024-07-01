@@ -15,7 +15,7 @@ require (
 	github.com/oneclickvirt/memorytest v0.0.1-20240624151629
 	github.com/oneclickvirt/nt3 v0.0.2-20240630152642
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
-	github.com/oneclickvirt/security v0.0.2-20240630142358
+	github.com/oneclickvirt/security v0.0.3-20240701065755
 	github.com/oneclickvirt/speedtest v0.0.6-20240630114816
 )
 
