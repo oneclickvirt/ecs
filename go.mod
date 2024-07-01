@@ -8,7 +8,7 @@ require (
 	github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930
 	github.com/oneclickvirt/backtrace v0.0.4-20240624090335
 	github.com/oneclickvirt/basics v0.0.3-20240625075226
-	github.com/oneclickvirt/cputest v0.0.6-20240630144058
+	github.com/oneclickvirt/cputest v0.0.7-20240701020012
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.3-20240629152513
 	github.com/oneclickvirt/memorytest v0.0.1-20240624151629
