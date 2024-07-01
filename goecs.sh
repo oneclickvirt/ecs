@@ -61,7 +61,7 @@ goecs_check() {
     # 检测原始goecs命令是否存在，若存在则升级，不存在则安装
     version_output=$(goecs -v || ./goecs -v)
     if [ $? -eq 0 ]; then
-        extracted_version=$(echo "$version_output" | grep -oP '^v\d+(\.\d+)+')
+        extracted_version=$(echo "${version_output//v/}")
         if [ -n "$extracted_version" ]; then
             current_version=$(echo "$extracted_version" | cut -c 2-)
             ecs_version=$ECS_VERSION

@@ -18,15 +18,18 @@ import (
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
+	"os"
+	"os/signal"
 	"regexp"
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
 var (
-	ecsVersion                                                        = "2024.07.01.1"
+	ecsVersion                                                        = "v0.0.19"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -42,6 +45,8 @@ var (
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
 	backtraceStatus, nt3Status, speedTestStatus                       bool
+	filePath                                                          = "goecs.txt"
+	enabelUpload                                                      = true
 )
 
 func main() {
@@ -70,6 +75,8 @@ func main() {
 	flag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	flag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
 	flag.Parse()
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	if showVersion {
 		fmt.Println(ecsVersion)
 		return
@@ -216,6 +223,13 @@ func main() {
 		basicInfo, securityInfo, emailInfo, mediaInfo string
 		output, tempOutput                            string
 	)
+	// 启动一个goroutine来等待信号
+	go func() {
+		// 等待信号
+		<-sig
+		utils.ProcessAndUpload(output, filePath, enabelUpload)
+		os.Exit(1) // 使用非零状态码退出，表示意外退出
+	}()
 	output = utils.PrintAndCapture(func() {
 		switch language {
 		case "zh":
@@ -372,6 +386,5 @@ func main() {
 			fmt.Println("Unsupported language")
 		}
 	}, tempOutput, output)
-	filePath := "goecs.txt"
-	utils.ProcessAndUpload(output, filePath, true)
+	utils.ProcessAndUpload(output, filePath, enabelUpload)
 }
