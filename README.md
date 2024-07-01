@@ -62,3 +62,54 @@ curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt
 ```
 ./goecs.sh delete
 ```
+
+```
+Usage of goecs:
+  -backtrace windows
+        Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
+  -basic
+        Enable/Disable basic test (default true)
+  -comm
+        Enable/Disable common media test (default true)
+  -cpu
+        Enable/Disable CPU test (default true)
+  -cpum string
+        Set CPU test method (supported: sysbench, geekbench, winsat) (default "sysbench")
+  -cput string
+        Set CPU test thread mode (supported: single, multi) (default "multi")
+  -disk
+        Enable/Disable disk test (default true)
+  -diskm string
+        Set disk test method (supported: fio, dd, winsat) (default "fio")
+  -diskmc
+        Enable/Disable multiple disk checks, e.g., -diskmc=false
+  -diskp string
+        Set disk test path, e.g., -diskp /root
+  -email
+        Enable/Disable email port test (default true)
+  -l string
+        Set language (supported: en, zh) (default "zh")
+  -log
+        Enable/Disable logging in the current path
+  -memory
+        Enable/Disable memory test (default true)
+  -memorym string
+        Set memory test method (supported: sysbench, dd, winsat) (default "dd")
+  -menu
+        Enable/Disable menu mode, disable example: -menu=false (default true)
+  -nt3 windows
+        Enable/Disable NT3 test (in 'en' language or on windows it always false) (default true)
+  -nt3loc string
+        Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu) (default "GZ")
+  -nt3t string
+        Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
+  -security
+        Enable/Disable security test (default true)
+  -speed
+        Enable/Disable speed test (default true)
+  -spnum int
+        Set the number of servers per operator for speed test (default 2)
+  -ut
+        Enable/Disable unlock media test (default true)
+  -v    Display version information
+```

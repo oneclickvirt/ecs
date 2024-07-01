@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.24"
+	ecsVersion                                                        = "v0.0.26"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -47,10 +47,12 @@ var (
 	backtraceStatus, nt3Status, speedTestStatus                       bool
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
+	help                                                              bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 )
 
 func main() {
+	goecsFlag.BoolVar(&help, "h", false, "Show help information")
 	goecsFlag.BoolVar(&showVersion, "v", false, "Display version information")
 	goecsFlag.BoolVar(&menuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false") // true 默认启用菜单栏模式
 	goecsFlag.StringVar(&language, "l", "zh", "Set language (supported: en, zh)")
@@ -76,6 +78,11 @@ func main() {
 	goecsFlag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
 	goecsFlag.Parse(os.Args[1:])
+	if help {
+		fmt.Printf("Usage: %s [options]\n", os.Args[0])
+		flag.PrintDefaults()
+		return
+	}
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	if showVersion {
