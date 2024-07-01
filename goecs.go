@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
@@ -19,7 +18,6 @@ import (
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
-	"os"
 	"regexp"
 	"runtime"
 	"strings"
@@ -30,7 +28,7 @@ import (
 var (
 	ecsVersion                                                        = "2024.07.01.1"
 	menuMode                                                          bool
-	choice                                                            string
+	input, choice                                                     string
 	showVersion                                                       bool
 	enableLogger                                                      bool
 	language                                                          string
@@ -87,9 +85,6 @@ func main() {
 		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 		commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
 		backtraceStatus, nt3Status, speedTestStatus = false, false, false
-		// 正则表达式匹配纯数字
-		re := regexp.MustCompile(`^\d+$`)
-		reader := bufio.NewReader(os.Stdin)
 		switch language {
 		case "zh":
 			fmt.Println("1. 融合怪完全体")
@@ -115,8 +110,10 @@ func main() {
 		}
 		for {
 			fmt.Print("请输入选项 / Please enter your choice: ")
-			input, _ := reader.ReadString('\n')
+			fmt.Scanln(&input)
 			input = strings.TrimSpace(input)
+			input = strings.TrimRight(input, "\n")
+			re := regexp.MustCompile(`^\d+$`) // 正则表达式匹配纯数字
 			if re.MatchString(input) {
 				choice = input
 				switch choice {
