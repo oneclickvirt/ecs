@@ -240,9 +240,9 @@ func main() {
 		utils.ProcessAndUpload(output, filePath, enabelUpload)
 		os.Exit(1) // 使用非零状态码退出，表示意外退出
 	}()
-	output = utils.PrintAndCapture(func() {
-		switch language {
-		case "zh":
+	switch language {
+	case "zh":
+		output = utils.PrintAndCapture(func() {
 			utils.PrintHead(language, width, ecsVersion)
 			if basicStatus || securityTestStatus {
 				if basicStatus {
@@ -253,61 +253,81 @@ func main() {
 					fmt.Printf(basicInfo)
 				}
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if cpuTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
 				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if memoryTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
 				memorytest.MemoryTest(language, memoryTestMethod)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if diskTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
 				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 			}
-			if emailTestStatus {
-				wg2.Add(1)
-				go func() {
-					defer wg2.Done()
-					emailInfo = email.EmailCheck()
-				}()
-			}
-			if utTestStatus {
-				wg1.Add(1)
-				go func() {
-					defer wg1.Done()
-					mediaInfo = unlocktest.MediaTest(language)
-				}()
-			}
+		}, tempOutput, output)
+		if emailTestStatus {
+			wg2.Add(1)
+			go func() {
+				defer wg2.Done()
+				emailInfo = email.EmailCheck()
+			}()
+		}
+		if utTestStatus {
+			wg1.Add(1)
+			go func() {
+				defer wg1.Done()
+				mediaInfo = unlocktest.MediaTest(language)
+			}()
+		}
+		output = utils.PrintAndCapture(func() {
 			if commTestStatus {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
 				commediatest.ComMediaTest(language)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if utTestStatus {
 				utils.PrintCenteredTitle("跨国流媒体解锁", width)
 				wg1.Wait()
 				fmt.Printf(mediaInfo)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if securityTestStatus {
 				utils.PrintCenteredTitle("IP质量检测", width)
 				fmt.Printf(securityInfo)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if emailTestStatus {
 				utils.PrintCenteredTitle("邮件端口检测", width)
 				wg2.Wait()
 				fmt.Println(emailInfo)
 			}
-			if runtime.GOOS != "windows" {
+		}, tempOutput, output)
+		if runtime.GOOS != "windows" {
+			output = utils.PrintAndCapture(func() {
 				if backtraceStatus {
 					utils.PrintCenteredTitle("三网回程", width)
 					backtrace.BackTrace()
 				}
-				// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
+			}, tempOutput, output)
+			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
+			output = utils.PrintAndCapture(func() {
 				if nt3Status {
 					utils.PrintCenteredTitle("路由检测", width)
 					ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
 				}
-			}
+			}, tempOutput, output)
+		}
+		output = utils.PrintAndCapture(func() {
 			if speedTestStatus {
 				utils.PrintCenteredTitle("就近节点测速", width)
 				speedtest.ShowHead(language)
@@ -321,16 +341,20 @@ func main() {
 					speedtest.CustomSP("net", "global", 4)
 				}
 			}
+		}, tempOutput, output)
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		minutes := int(duration.Minutes())
+		seconds := int(duration.Seconds()) % 60
+		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+		output = utils.PrintAndCapture(func() {
 			utils.PrintCenteredTitle("", width)
-			endTime := time.Now()
-			duration := endTime.Sub(startTime)
-			minutes := int(duration.Minutes())
-			seconds := int(duration.Seconds()) % 60
-			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 			fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
 			fmt.Printf("时间          : %s\n", currentTime)
 			utils.PrintCenteredTitle("", width)
-		case "en":
+		}, tempOutput, output)
+	case "en":
+		output = utils.PrintAndCapture(func() {
 			utils.PrintHead(language, width, ecsVersion)
 			if basicStatus || securityTestStatus {
 				if basicStatus {
@@ -341,60 +365,79 @@ func main() {
 					fmt.Printf(basicInfo)
 				}
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if cpuTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
 				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if memoryTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
 				memorytest.MemoryTest(language, memoryTestMethod)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if diskTestStatus {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
 				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 			}
-			if emailTestStatus {
-				wg1.Add(1)
-				go func() {
-					defer wg1.Done()
-					emailInfo = email.EmailCheck()
-				}()
-			}
+		}, tempOutput, output)
+		if emailTestStatus {
+			wg1.Add(1)
+			go func() {
+				defer wg1.Done()
+				emailInfo = email.EmailCheck()
+			}()
+		}
+		output = utils.PrintAndCapture(func() {
 			if commTestStatus {
 				utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
 				commediatest.ComMediaTest(language)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if utTestStatus {
 				utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
 				unlocktest.MediaTest(language)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if securityTestStatus {
 				utils.PrintCenteredTitle("IP Quality Check", width)
 				fmt.Printf(securityInfo)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if emailTestStatus {
 				utils.PrintCenteredTitle("Email Port Check", width)
 				wg1.Wait()
 				fmt.Println(emailInfo)
 			}
+		}, tempOutput, output)
+		output = utils.PrintAndCapture(func() {
 			if speedTestStatus {
 				utils.PrintCenteredTitle("Nearby Node Speed Test", width)
 				speedtest.ShowHead(language)
 				speedtest.NearbySP()
 				speedtest.CustomSP("net", "global", -1)
 			}
+		}, tempOutput, output)
+
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		minutes := int(duration.Minutes())
+		seconds := int(duration.Seconds()) % 60
+		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+		output = utils.PrintAndCapture(func() {
 			utils.PrintCenteredTitle("", width)
-			endTime := time.Now()
-			duration := endTime.Sub(startTime)
-			minutes := int(duration.Minutes())
-			seconds := int(duration.Seconds()) % 60
-			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 			fmt.Printf("Cost    Time          : %d 分 %d 秒\n", minutes, seconds)
 			fmt.Printf("Current Time          : %s\n", currentTime)
 			utils.PrintCenteredTitle("", width)
-		default:
-			fmt.Println("Unsupported language")
-		}
-	}, tempOutput, output)
+		}, tempOutput, output)
+	default:
+		fmt.Println("Unsupported language")
+	}
 	utils.ProcessAndUpload(output, filePath, enabelUpload)
 }
