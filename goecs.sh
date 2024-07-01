@@ -230,7 +230,7 @@ prepare_compile_env() {
 env_check() {
     REGEX=("debian|astra" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora" "arch" "freebsd" "alpine" "openbsd")
     RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora" "Arch" "FreeBSD" "Alpine" "OpenBSD")
-    PACKAGE_UPDATE=("! apt-get update && apt-get --fix-broken install -y && apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update" "pacman -Sy" "pkg update" "apk update" "pkg_add -u")
+    PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update" "pacman -Sy" "pkg update" "apk update" "pkg_add -u")
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "" "pkg autoremove" "apk autoremove")
@@ -245,7 +245,8 @@ env_check() {
     done
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
-    $PACKAGE_UPDATE
+    _green "Update system manager."
+    $PACKAGE_UPDATE >/dev/null 2>&1
     if ! command -v tar >/dev/null 2>&1; then
         _green "Installing tar"
         $PACKAGE_INSTALL tar
@@ -300,6 +301,7 @@ env_check() {
         echo "rm -rf /usr/bin/speedtest-go"
         _blue "to uninstall speedtest and speedtest-go"
     fi
+    _green "The environment is ready."
 }
 
 delete_goecs() {
