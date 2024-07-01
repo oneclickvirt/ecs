@@ -29,6 +29,36 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 开发中，勿要使用
 
+下载脚本
+
 ```
 curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+```
+
+```
+curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+```
+
+安装环境
+
+```
+./goecs env
+```
+
+安装goecs
+
+```
+./goecs install
+```
+
+升级goecs
+
+```
+./goecs upgrade
+```
+
+卸载goecs
+
+```
+./goecs delete
 ```
