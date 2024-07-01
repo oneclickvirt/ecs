@@ -163,7 +163,7 @@ InstallSysbench() {
     arch) pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
     freebsd) pkg install -y sysbench ;;
     alpinelinux) echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
-    *) echo "Error: Unknown OS release: $os_release" && exit 1 ;;
+    *) echo "Error: Unknown OS release: $os_release" ;;
     esac
 }
 
