@@ -35,6 +35,8 @@ Shell版本： https://github.com/spiritLHLS/ecs
 curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
 
+或
+
 ```
 curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
