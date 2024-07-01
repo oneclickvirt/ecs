@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.26"
+	ecsVersion                                                        = "v0.0.27"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -80,7 +80,7 @@ func main() {
 	goecsFlag.Parse(os.Args[1:])
 	if help {
 		fmt.Printf("Usage: %s [options]\n", os.Args[0])
-		flag.PrintDefaults()
+		goecsFlag.PrintDefaults()
 		return
 	}
 	sig := make(chan os.Signal, 1)
