@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	backtraceori "github.com/oneclickvirt/backtrace/bk"
@@ -18,6 +17,7 @@ import (
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"os/signal"
 	"regexp"
@@ -29,70 +29,60 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.21"
-	menuMode                                                          bool
-	input, choice                                                     string
-	showVersion                                                       bool
-	enableLogger                                                      bool
-	language                                                          string
-	cpuTestMethod, cpuTestThreadMode                                  string
-	memoryTestMethod                                                  string
-	diskTestMethod, diskTestPath                                      string
-	diskMultiCheck                                                    bool
-	nt3CheckType, nt3Location                                         string
-	spNum                                                             int
-	width                                                             = 84
-	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
-	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
-	backtraceStatus, nt3Status, speedTestStatus                       bool
-	filePath                                                          = "goecs.txt"
-	enabelUpload                                                      = true
+	ecsVersion    = "v0.0.21"
+	input, choice string
+	width         = 84
+	filePath      = "goecs.txt"
+	enabelUpload  = true
+)
+
+var (
+	showVersion        = kingpin.Flag("v", "Display version information").Bool()
+	menuMode           = kingpin.Flag("menu", "Enable/Disable menu mode, disable example: -menu=false").Default("true").Bool()
+	language           = kingpin.Flag("l", "Set language (supported: en, zh)").Default("zh").String()
+	basicStatus        = kingpin.Flag("basic", "Enable/Disable basic test").Default("true").Bool()
+	cpuTestStatus      = kingpin.Flag("cpu", "Enable/Disable CPU test").Default("true").Bool()
+	memoryTestStatus   = kingpin.Flag("memory", "Enable/Disable memory test").Default("true").Bool()
+	diskTestStatus     = kingpin.Flag("disk", "Enable/Disable disk test").Default("true").Bool()
+	commTestStatus     = kingpin.Flag("comm", "Enable/Disable common media test").Default("true").Bool()
+	utTestStatus       = kingpin.Flag("ut", "Enable/Disable unlock media test").Default("true").Bool()
+	securityTestStatus = kingpin.Flag("security", "Enable/Disable security test").Default("true").Bool()
+	emailTestStatus    = kingpin.Flag("email", "Enable/Disable email port test").Default("true").Bool()
+	backtraceStatus    = kingpin.Flag("backtrace", "Enable/Disable backtrace test (in 'en' language or on `windows` it always false)").Default("true").Bool()
+	nt3Status          = kingpin.Flag("nt3", "Enable/Disable NT3 test (in 'en' language or on `windows` it always false)").Default("true").Bool()
+	speedTestStatus    = kingpin.Flag("speed", "Enable/Disable speed test").Default("true").Bool()
+	cpuTestMethod      = kingpin.Flag("cpum", "Set CPU test method (supported: sysbench, geekbench, winsat)").Default("sysbench").String()
+	cpuTestThreadMode  = kingpin.Flag("cput", "Set CPU test thread mode (supported: single, multi)").Default("multi").String()
+	memoryTestMethod   = kingpin.Flag("memorym", "Set memory test method (supported: sysbench, dd, winsat)").Default("dd").String()
+	diskTestMethod     = kingpin.Flag("diskm", "Set disk test method (supported: fio, dd, winsat)").Default("fio").String()
+	diskTestPath       = kingpin.Flag("diskp", "Set disk test path, e.g., -diskp /root").String()
+	diskMultiCheck     = kingpin.Flag("diskmc", "Enable/Disable multiple disk checks, e.g., -diskmc=false").Default("false").Bool()
+	nt3Location        = kingpin.Flag("nt3loc", "Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu)").Default("GZ").String()
+	nt3CheckType       = kingpin.Flag("nt3t", "Set NT3 test type (supported: both, ipv4, ipv6)").Default("ipv4").String()
+	spNum              = kingpin.Flag("spnum", "Set the number of servers per operator for speed test").Default("2").Int()
+	enableLogger       = kingpin.Flag("log", "Enable/Disable logging in the current path").Default("false").Bool()
 )
 
 func main() {
-	flag.BoolVar(&showVersion, "v", false, "Display version information")
-	flag.BoolVar(&menuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false") // true 默认启用菜单栏模式
-	flag.StringVar(&language, "l", "zh", "Set language (supported: en, zh)")
-	flag.BoolVar(&basicStatus, "basic", true, "Enable/Disable basic test")
-	flag.BoolVar(&cpuTestStatus, "cpu", true, "Enable/Disable CPU test")
-	flag.BoolVar(&memoryTestStatus, "memory", true, "Enable/Disable memory test")
-	flag.BoolVar(&diskTestStatus, "disk", true, "Enable/Disable disk test")
-	flag.BoolVar(&commTestStatus, "comm", true, "Enable/Disable common media test")
-	flag.BoolVar(&utTestStatus, "ut", true, "Enable/Disable unlock media test")
-	flag.BoolVar(&securityTestStatus, "security", true, "Enable/Disable security test")
-	flag.BoolVar(&emailTestStatus, "email", true, "Enable/Disable email port test")
-	flag.BoolVar(&backtraceStatus, "backtrace", true, "Enable/Disable backtrace test (in 'en' language or on `windows` it always false)")
-	flag.BoolVar(&nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on `windows` it always false)")
-	flag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
-	flag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
-	flag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
-	flag.StringVar(&memoryTestMethod, "memorym", "dd", "Set memory test method (supported: sysbench, dd, winsat)")
-	flag.StringVar(&diskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
-	flag.StringVar(&diskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
-	flag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
-	flag.StringVar(&nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu)")
-	flag.StringVar(&nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
-	flag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
-	flag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
-	flag.Parse()
+	kingpin.Parse()
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	if showVersion {
+	if *showVersion {
 		fmt.Println(ecsVersion)
 		return
 	}
-	if enableLogger {
+	if *enableLogger {
 		basicmodel.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 		gostunmodel.EnableLoger = true
 		commediatests.EnableLoger = true
 		backtraceori.EnableLoger = true
 	}
-	if menuMode {
-		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
-		commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
-		backtraceStatus, nt3Status, speedTestStatus = false, false, false
-		switch language {
+	if *menuMode {
+		*basicStatus, *cpuTestStatus, *memoryTestStatus, *diskTestStatus = false, false, false, false
+		*commTestStatus, *utTestStatus, *securityTestStatus, *emailTestStatus = false, false, false, false
+		*backtraceStatus, *nt3Status, *speedTestStatus = false, false, false
+		switch *language {
 		case "zh":
 			fmt.Println("1. 融合怪完全体")
 			fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
@@ -126,86 +116,86 @@ func main() {
 				choice = input
 				switch choice {
 				case "1":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					commTestStatus = true
-					utTestStatus = true
-					securityTestStatus = true
-					emailTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
+					*commTestStatus = true
+					*utTestStatus = true
+					*securityTestStatus = true
+					*emailTestStatus = true
+					*backtraceStatus = true
+					*nt3Status = true
+					*speedTestStatus = true
 					break Loop
 				case "2":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					speedTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
+					*speedTestStatus = true
 					break Loop
 				case "3":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					commTestStatus = true
-					utTestStatus = true
-					securityTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
+					*commTestStatus = true
+					*utTestStatus = true
+					*securityTestStatus = true
+					*backtraceStatus = true
+					*nt3Status = true
+					*speedTestStatus = true
 					break Loop
 				case "4":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
+					*backtraceStatus = true
+					*nt3Status = true
+					*speedTestStatus = true
 					break Loop
 				case "5":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					securityTestStatus = true
-					speedTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
+					*securityTestStatus = true
+					*speedTestStatus = true
 					break Loop
 				case "6":
-					speedTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
+					*speedTestStatus = true
+					*backtraceStatus = true
+					*nt3Status = true
 					break Loop
 				case "7":
-					securityTestStatus = true
-					commTestStatus = true
+					*securityTestStatus = true
+					*commTestStatus = true
 					break Loop
 				case "8":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
+					*basicStatus = true
+					*cpuTestStatus = true
+					*memoryTestStatus = true
+					*diskTestStatus = true
 					break Loop
 				case "9":
-					emailTestStatus = true
+					*emailTestStatus = true
 					break Loop
 				case "10":
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
+					*backtraceStatus = true
+					*nt3Status = true
+					*speedTestStatus = true
 					break Loop
 				default:
-					if language == "zh" {
+					if *language == "zh" {
 						fmt.Println("无效的选项")
 					} else {
 						fmt.Println("Invalid choice")
 					}
 				}
 			} else {
-				if language == "zh" {
+				if *language == "zh" {
 					fmt.Println("输入错误，请输入一个纯数字")
 				} else {
 					fmt.Println("Invalid input, please enter a number")
@@ -213,9 +203,9 @@ func main() {
 			}
 		}
 	}
-	if language == "en" {
-		backtraceStatus = false
-		nt3Status = false
+	if *language == "en" {
+		*backtraceStatus = false
+		*nt3Status = false
 	}
 	startTime := time.Now()
 	var (
@@ -231,83 +221,83 @@ func main() {
 		os.Exit(1) // 使用非零状态码退出，表示意外退出
 	}()
 	output = utils.PrintAndCapture(func() {
-		switch language {
+		switch *language {
 		case "zh":
-			utils.PrintHead(language, width, ecsVersion)
-			if basicStatus || securityTestStatus {
-				if basicStatus {
+			utils.PrintHead(*language, width, ecsVersion)
+			if *basicStatus || *securityTestStatus {
+				if *basicStatus {
 					utils.PrintCenteredTitle("基础信息", width)
 				}
-				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
-				if basicStatus {
+				basicInfo, securityInfo, *nt3CheckType = utils.SecurityCheck(*language, *nt3CheckType, *securityTestStatus)
+				if *basicStatus {
 					fmt.Printf(basicInfo)
 				}
 			}
-			if cpuTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
-				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+			if *cpuTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", *cpuTestMethod), width)
+				cputest.CpuTest(*language, *cpuTestMethod, *cpuTestThreadMode)
 			}
-			if memoryTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
-				memorytest.MemoryTest(language, memoryTestMethod)
+			if *memoryTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", *cpuTestMethod), width)
+				memorytest.MemoryTest(*language, *memoryTestMethod)
 			}
-			if diskTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+			if *diskTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", *diskTestMethod), width)
+				disktest.DiskTest(*language, *diskTestMethod, *diskTestPath, *diskMultiCheck)
 			}
-			if emailTestStatus {
+			if *emailTestStatus {
 				wg2.Add(1)
 				go func() {
 					defer wg2.Done()
 					emailInfo = email.EmailCheck()
 				}()
 			}
-			if utTestStatus {
+			if *utTestStatus {
 				wg1.Add(1)
 				go func() {
 					defer wg1.Done()
-					mediaInfo = unlocktest.MediaTest(language)
+					mediaInfo = unlocktest.MediaTest(*language)
 				}()
 			}
-			if commTestStatus {
+			if *commTestStatus {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
-				commediatest.ComMediaTest(language)
+				commediatest.ComMediaTest(*language)
 			}
-			if utTestStatus {
+			if *utTestStatus {
 				utils.PrintCenteredTitle("跨国流媒体解锁", width)
 				wg1.Wait()
 				fmt.Printf(mediaInfo)
 			}
-			if securityTestStatus {
+			if *securityTestStatus {
 				utils.PrintCenteredTitle("IP质量检测", width)
 				fmt.Printf(securityInfo)
 			}
-			if emailTestStatus {
+			if *emailTestStatus {
 				utils.PrintCenteredTitle("邮件端口检测", width)
 				wg2.Wait()
 				fmt.Println(emailInfo)
 			}
 			if runtime.GOOS != "windows" {
-				if backtraceStatus {
+				if *backtraceStatus {
 					utils.PrintCenteredTitle("三网回程", width)
 					backtrace.BackTrace()
 				}
 				// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
-				if nt3Status {
+				if *nt3Status {
 					utils.PrintCenteredTitle("路由检测", width)
-					ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
+					ntrace.TraceRoute3(*language, *nt3Location, *nt3CheckType)
 				}
 			}
-			if speedTestStatus {
+			if *speedTestStatus {
 				utils.PrintCenteredTitle("就近节点测速", width)
-				speedtest.ShowHead(language)
-				if (menuMode && choice == "1") || !menuMode {
+				speedtest.ShowHead(*language)
+				if (*menuMode && choice == "1") || !*menuMode {
 					speedtest.NearbySP()
 					speedtest.CustomSP("net", "global", 2)
-					speedtest.CustomSP("net", "cu", spNum)
-					speedtest.CustomSP("net", "ct", spNum)
-					speedtest.CustomSP("net", "cmcc", spNum)
-				} else if menuMode && choice == "2" || choice == "3" || choice == "4" || choice == "5" {
+					speedtest.CustomSP("net", "cu", *spNum)
+					speedtest.CustomSP("net", "ct", *spNum)
+					speedtest.CustomSP("net", "cmcc", *spNum)
+				} else if *menuMode && choice == "2" || choice == "3" || choice == "4" || choice == "5" {
 					speedtest.CustomSP("net", "global", 4)
 				}
 			}
@@ -321,55 +311,55 @@ func main() {
 			fmt.Printf("时间          : %s\n", currentTime)
 			utils.PrintCenteredTitle("", width)
 		case "en":
-			utils.PrintHead(language, width, ecsVersion)
-			if basicStatus || securityTestStatus {
-				if basicStatus {
+			utils.PrintHead(*language, width, ecsVersion)
+			if *basicStatus || *securityTestStatus {
+				if *basicStatus {
 					utils.PrintCenteredTitle("Basic Information", width)
 				}
-				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
-				if basicStatus {
+				basicInfo, securityInfo, *nt3CheckType = utils.SecurityCheck(*language, *nt3CheckType, *securityTestStatus)
+				if *basicStatus {
 					fmt.Printf(basicInfo)
 				}
 			}
-			if cpuTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
-				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+			if *cpuTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", *cpuTestMethod), width)
+				cputest.CpuTest(*language, *cpuTestMethod, *cpuTestThreadMode)
 			}
-			if memoryTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
-				memorytest.MemoryTest(language, memoryTestMethod)
+			if *memoryTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", *memoryTestMethod), width)
+				memorytest.MemoryTest(*language, *memoryTestMethod)
 			}
-			if diskTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+			if *diskTestStatus {
+				utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", *diskTestMethod), width)
+				disktest.DiskTest(*language, *diskTestMethod, *diskTestPath, *diskMultiCheck)
 			}
-			if emailTestStatus {
+			if *emailTestStatus {
 				wg1.Add(1)
 				go func() {
 					defer wg1.Done()
 					emailInfo = email.EmailCheck()
 				}()
 			}
-			if commTestStatus {
+			if *commTestStatus {
 				utils.PrintCenteredTitle("The Three Families Streaming Media Unlock", width)
-				commediatest.ComMediaTest(language)
+				commediatest.ComMediaTest(*language)
 			}
-			if utTestStatus {
+			if *utTestStatus {
 				utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
-				unlocktest.MediaTest(language)
+				unlocktest.MediaTest(*language)
 			}
-			if securityTestStatus {
+			if *securityTestStatus {
 				utils.PrintCenteredTitle("IP Quality Check", width)
 				fmt.Printf(securityInfo)
 			}
-			if emailTestStatus {
+			if *emailTestStatus {
 				utils.PrintCenteredTitle("Email Port Check", width)
 				wg1.Wait()
 				fmt.Println(emailInfo)
 			}
-			if speedTestStatus {
+			if *speedTestStatus {
 				utils.PrintCenteredTitle("Nearby Node Speed Test", width)
-				speedtest.ShowHead(language)
+				speedtest.ShowHead(*language)
 				speedtest.NearbySP()
 				speedtest.CustomSP("net", "global", -1)
 			}

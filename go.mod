@@ -17,10 +17,13 @@ require (
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.3-20240701065755
 	github.com/oneclickvirt/speedtest v0.0.6-20240630114816
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/cloudflare/circl v1.3.9 // indirect
