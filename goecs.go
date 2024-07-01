@@ -244,7 +244,7 @@ func main() {
 			if emailTestStatus {
 				wg2.Add(1)
 				go func() {
-					defer wg1.Done()
+					defer wg2.Done()
 					emailInfo = email.EmailCheck()
 				}()
 			}
