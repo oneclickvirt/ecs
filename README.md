@@ -64,8 +64,8 @@ curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt
 ```
 
 ```
-Usage of goecs:
-  -backtrace windows
+Usage: goecs [options]
+  -backtrace
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
   -basic
         Enable/Disable basic test (default true)
@@ -87,6 +87,7 @@ Usage of goecs:
         Set disk test path, e.g., -diskp /root
   -email
         Enable/Disable email port test (default true)
+  -h    Show help information
   -l string
         Set language (supported: en, zh) (default "zh")
   -log
@@ -97,7 +98,7 @@ Usage of goecs:
         Set memory test method (supported: sysbench, dd, winsat) (default "dd")
   -menu
         Enable/Disable menu mode, disable example: -menu=false (default true)
-  -nt3 windows
+  -nt3
         Enable/Disable NT3 test (in 'en' language or on windows it always false) (default true)
   -nt3loc string
         Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu) (default "GZ")
