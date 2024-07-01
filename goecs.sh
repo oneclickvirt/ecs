@@ -59,7 +59,7 @@ goecs_check() {
         ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
     fi
     # 检测原始goecs命令是否存在，若存在则升级，不存在则安装
-    version_output=$(goecs -v || ./goecs -v)
+    version_output=$(goecs -v command 2>/dev/null || ./goecs -v command 2>/dev/null)
     if [ $? -eq 0 ]; then
         extracted_version=$(echo "${version_output//v/}")
         if [ -n "$extracted_version" ]; then
@@ -246,7 +246,7 @@ env_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _green "Update system manager."
-    $PACKAGE_UPDATE >/dev/null 2>&1
+    $PACKAGE_UPDATE command 2>/dev/null
     if ! command -v tar >/dev/null 2>&1; then
         _green "Installing tar"
         $PACKAGE_INSTALL tar
