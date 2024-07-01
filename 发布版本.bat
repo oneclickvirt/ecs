@@ -24,6 +24,7 @@ REM 提示用户输入版本号
 set /p version="Enter the version number (e.g., v1.0.0): "
 
 REM 创建并推送标签
+:push_tag
 git tag %version%
 git push origin %version%
 if errorlevel 1 (
