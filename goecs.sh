@@ -319,7 +319,7 @@ Available commands:
                                 dd (Almost all unix-like systems have it.)
                                 fio (Almost all unix-like systems can be installed through the system's package manager.)
                                 sysbench (Almost all unix-like systems can be installed through the system's package manager.)
-                                geekbench5 (Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
+                                geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
                                 speedtest (Use the officially provided binaries for more accurate test results.)
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
