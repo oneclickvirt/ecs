@@ -11,6 +11,7 @@ require (
 	github.com/oneclickvirt/cputest v0.0.7-20240701020012
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.3-20240629152513
+	github.com/oneclickvirt/gostun v0.0.2-20240625025941
 	github.com/oneclickvirt/memorytest v0.0.1-20240624151629
 	github.com/oneclickvirt/nt3 v0.0.2-20240630152642
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
@@ -47,7 +48,6 @@ require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nxtrace/NTrace-core v1.3.1 // indirect
-	github.com/oneclickvirt/gostun v0.0.2-20240625025941 // indirect
 	github.com/onsi/ginkgo/v2 v2.19.0 // indirect
 	github.com/oschwald/maxminddb-golang v1.12.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
