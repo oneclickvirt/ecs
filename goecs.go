@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.21"
+	ecsVersion                                                        = "v0.0.24"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -94,6 +94,7 @@ func main() {
 		backtraceStatus, nt3Status, speedTestStatus = false, false, false
 		switch language {
 		case "zh":
+			fmt.Println("VPS融合怪版本: ", ecsVersion)
 			fmt.Println("1. 融合怪完全体")
 			fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
 			fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+御三家+常用流媒体+回程+路由+测速节点5个)")
@@ -105,6 +106,7 @@ func main() {
 			fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
 			fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
 		case "en":
+			fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
 			fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
 			fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 			fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
