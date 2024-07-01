@@ -245,6 +245,15 @@ env_check() {
     done
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
+    $PACKAGE_UPDATE
+    if ! command -v tar >/dev/null 2>&1; then
+        _green "Installing tar"
+        $PACKAGE_INSTALL tar
+    fi
+    if ! command -v unzip >/dev/null 2>&1; then
+        _green "Installing unzip"
+        $PACKAGE_INSTALL unzip
+    fi
     if ! command -v dd >/dev/null 2>&1; then
         _green "Installing dd"
         $PACKAGE_INSTALL dd
@@ -303,7 +312,9 @@ show_help() {
 Available commands:
 
 ./goecs.sh env             Check and Install package:
-                                dd (Almost all unix-like systems have it, it's only for testing on most systems.)
+                                tar (Almost all unix-like systems have it.)
+                                unzip (Almost all unix-like systems have it.)
+                                dd (Almost all unix-like systems have it.)
                                 fio (Almost all unix-like systems can be installed through the system's package manager.)
                                 sysbench (Almost all unix-like systems can be installed through the system's package manager.)
                                 geekbench5 (Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
