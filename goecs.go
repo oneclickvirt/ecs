@@ -108,6 +108,7 @@ func main() {
 			fmt.Println("8. Hardware-Only Test (Basic System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
 			fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
 		}
+	Loop:
 		for {
 			fmt.Print("请输入选项 / Please enter your choice: ")
 			fmt.Scanln(&input)
@@ -129,14 +130,14 @@ func main() {
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
-					break
+					break Loop
 				case "2":
 					basicStatus = true
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
 					speedTestStatus = true
-					break
+					break Loop
 				case "3":
 					basicStatus = true
 					cpuTestStatus = true
@@ -148,7 +149,7 @@ func main() {
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
-					break
+					break Loop
 				case "4":
 					basicStatus = true
 					cpuTestStatus = true
@@ -157,7 +158,7 @@ func main() {
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
-					break
+					break Loop
 				case "5":
 					basicStatus = true
 					cpuTestStatus = true
@@ -165,30 +166,30 @@ func main() {
 					diskTestStatus = true
 					securityTestStatus = true
 					speedTestStatus = true
-					break
+					break Loop
 				case "6":
 					speedTestStatus = true
 					backtraceStatus = true
 					nt3Status = true
-					break
+					break Loop
 				case "7":
 					securityTestStatus = true
 					commTestStatus = true
-					break
+					break Loop
 				case "8":
 					basicStatus = true
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
-					break
+					break Loop
 				case "9":
 					emailTestStatus = true
-					break
+					break Loop
 				case "10":
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
-					break
+					break Loop
 				default:
 					if language == "zh" {
 						fmt.Println("无效的选项")
