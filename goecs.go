@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.27"
+	ecsVersion                                                        = "v0.0.28"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool

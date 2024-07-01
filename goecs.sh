@@ -300,6 +300,11 @@ env_check() {
         echo "rm -rf /usr/bin/speedtest-go"
         _blue "to uninstall speedtest and speedtest-go"
     fi
+    if [ "$(uname -s)" = "Darwin" ]; then
+        echo "Detected MacOS. Installing sysbench and fio..."
+        # 使用Homebrew安装sysbench和fio（免交互）
+        brew install --force sysbench fio
+      fi
     _green "The environment is ready."
 }
 
