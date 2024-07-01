@@ -215,16 +215,16 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) {
 	}
 	if enableUplaod {
 		// 获取文件的绝对路径
-		absPath, err := filepath.Abs(filePath)
-		if err != nil {
-			fmt.Println("Failed to get absolute file path:", err)
+		absPath, err2 := filepath.Abs(filePath)
+		if err2 != nil {
+			fmt.Println("Failed to get absolute file path:", err2)
 			return
 		}
 		// 上传文件并生成短链接
-		shorturl, err := UploadText(absPath)
-		if err != nil {
+		shorturl, err3 := UploadText(absPath)
+		if err3 != nil {
 			fmt.Println("Upload failed, cannot generate short URL.")
-			fmt.Println(err.Error())
+			fmt.Println(err3.Error())
 			return
 		}
 		fmt.Println("Upload successful, short URL:", shorturl)

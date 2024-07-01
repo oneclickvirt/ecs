@@ -63,13 +63,12 @@ goecs_check() {
     if [ $? -eq 0 ]; then
         extracted_version=$(echo "${version_output//v/}")
         if [ -n "$extracted_version" ]; then
-            current_version=$(echo "$extracted_version" | cut -c 2-)
             ecs_version=$ECS_VERSION
-            if [[ "$(echo -e "$current_version\n$ecs_version" | sort -V | tail -n 1)" == "$current_version" ]]; then
-                echo "goecs version ($current_version) is latest, no need to upgrade."
+            if [[ "$(echo -e "$extracted_version\n$ecs_version" | sort -V | tail -n 1)" == "$extracted_version" ]]; then
+                echo "goecs version ($extracted_version) is latest, no need to upgrade."
                 return
             else
-                echo "goecs version ($current_version) < $ecs_version, need to upgrade, 5 seconds later will start to upgrade"
+                echo "goecs version ($extracted_version) < $ecs_version, need to upgrade, 5 seconds later will start to upgrade"
                 rm -rf /usr/bin/goecs
                 rm -rf goecs
             fi
