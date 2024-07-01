@@ -91,56 +91,6 @@ func SecurityCheck(language, nt3CheckType string, securtyCheckStatus bool) (stri
 	return basicInfo, securityInfo, nt3CheckType
 }
 
-// GetCaptureOutput 仅捕获输出不实时输出
-func GetCaptureOutput(f func()) string {
-	// 保存旧的 stdout 和 stderr
-	oldStdout := os.Stdout
-	oldStderr := os.Stderr
-	// 创建管道
-	stdoutPipeR, stdoutPipeW, err := os.Pipe()
-	if err != nil {
-		return "Error creating stdout pipe"
-	}
-	stderrPipeR, stderrPipeW, err := os.Pipe()
-	if err != nil {
-		stdoutPipeW.Close()
-		stdoutPipeR.Close()
-		return "Error creating stderr pipe"
-	}
-	// 替换标准输出和标准错误输出为管道写入端
-	os.Stdout = stdoutPipeW
-	os.Stderr = stderrPipeW
-	// 恢复标准输出和标准错误输出
-	defer func() {
-		os.Stdout = oldStdout
-		os.Stderr = oldStderr
-		stdoutPipeW.Close()
-		stderrPipeW.Close()
-	}()
-	// 缓冲区
-	var stdoutBuf, stderrBuf bytes.Buffer
-	// 并发读取 stdout 和 stderr
-	done := make(chan struct{})
-	go func() {
-		io.Copy(&stdoutBuf, stdoutPipeR)
-		done <- struct{}{}
-	}()
-	go func() {
-		io.Copy(&stderrBuf, stderrPipeR)
-		done <- struct{}{}
-	}()
-	// 执行函数
-	f()
-	// 关闭管道写入端，让管道读取端可以读取所有数据
-	stdoutPipeW.Close()
-	stderrPipeW.Close()
-	// 等待两个 goroutine 完成
-	<-done
-	<-done
-	// 返回捕获的输出字符串
-	return stdoutBuf.String() + stderrBuf.String()
-}
-
 // CaptureOutput 捕获函数输出和错误输出，实时输出，并返回字符串
 func CaptureOutput(f func()) string {
 	// 保存旧的 stdout 和 stderr

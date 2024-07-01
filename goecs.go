@@ -212,9 +212,9 @@ func main() {
 	}
 	startTime := time.Now()
 	var (
-		wg1, wg2, wg3                                                sync.WaitGroup
-		basicInfo, securityInfo, emailInfo, mediaInfo, backtraceInfo string
-		output, tempOutput                                           string
+		wg1, wg2                                      sync.WaitGroup
+		basicInfo, securityInfo, emailInfo, mediaInfo string
+		output, tempOutput                            string
 	)
 	output = utils.PrintAndCapture(func() {
 		switch language {
@@ -255,17 +255,6 @@ func main() {
 					mediaInfo = unlocktest.MediaTest(language)
 				}()
 			}
-			if runtime.GOOS == "windows" {
-				if backtraceStatus {
-					wg3.Add(1)
-					go func() {
-						defer wg3.Done()
-						backtraceInfo = utils.GetCaptureOutput(func() {
-							backtrace.BackTrace()
-						})
-					}()
-				}
-			}
 			if commTestStatus {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
 				commediatest.ComMediaTest(language)
@@ -287,8 +276,7 @@ func main() {
 			if runtime.GOOS != "windows" {
 				if backtraceStatus {
 					utils.PrintCenteredTitle("三网回程", width)
-					wg3.Wait()
-					fmt.Printf(backtraceInfo)
+					backtrace.BackTrace()
 				}
 				// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
 				if nt3Status {
