@@ -42,23 +42,23 @@ curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt
 安装环境
 
 ```
-./goecs env
+./goecs.sh env
 ```
 
 安装goecs
 
 ```
-./goecs install
+./goecs.sh install
 ```
 
 升级goecs
 
 ```
-./goecs upgrade
+./goecs.sh upgrade
 ```
 
 卸载goecs
 
 ```
-./goecs delete
+./goecs.sh delete
 ```
