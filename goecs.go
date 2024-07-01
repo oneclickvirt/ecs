@@ -1,7 +1,7 @@
 package main
 
 import (
-	ecsFlag "flag"
+	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	backtraceori "github.com/oneclickvirt/backtrace/bk"
@@ -47,34 +47,35 @@ var (
 	backtraceStatus, nt3Status, speedTestStatus                       bool
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
+	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 )
 
 func main() {
-	ecsFlag.BoolVar(&showVersion, "v", false, "Display version information")
-	ecsFlag.BoolVar(&menuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false") // true 默认启用菜单栏模式
-	ecsFlag.StringVar(&language, "l", "zh", "Set language (supported: en, zh)")
-	ecsFlag.BoolVar(&basicStatus, "basic", true, "Enable/Disable basic test")
-	ecsFlag.BoolVar(&cpuTestStatus, "cpu", true, "Enable/Disable CPU test")
-	ecsFlag.BoolVar(&memoryTestStatus, "memory", true, "Enable/Disable memory test")
-	ecsFlag.BoolVar(&diskTestStatus, "disk", true, "Enable/Disable disk test")
-	ecsFlag.BoolVar(&commTestStatus, "comm", true, "Enable/Disable common media test")
-	ecsFlag.BoolVar(&utTestStatus, "ut", true, "Enable/Disable unlock media test")
-	ecsFlag.BoolVar(&securityTestStatus, "security", true, "Enable/Disable security test")
-	ecsFlag.BoolVar(&emailTestStatus, "email", true, "Enable/Disable email port test")
-	ecsFlag.BoolVar(&backtraceStatus, "backtrace", true, "Enable/Disable backtrace test (in 'en' language or on `windows` it always false)")
-	ecsFlag.BoolVar(&nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on `windows` it always false)")
-	ecsFlag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
-	ecsFlag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
-	ecsFlag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
-	ecsFlag.StringVar(&memoryTestMethod, "memorym", "dd", "Set memory test method (supported: sysbench, dd, winsat)")
-	ecsFlag.StringVar(&diskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
-	ecsFlag.StringVar(&diskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
-	ecsFlag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
-	ecsFlag.StringVar(&nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu)")
-	ecsFlag.StringVar(&nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
-	ecsFlag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
-	ecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
-	ecsFlag.Parse()
+	goecsFlag.BoolVar(&showVersion, "v", false, "Display version information")
+	goecsFlag.BoolVar(&menuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false") // true 默认启用菜单栏模式
+	goecsFlag.StringVar(&language, "l", "zh", "Set language (supported: en, zh)")
+	goecsFlag.BoolVar(&basicStatus, "basic", true, "Enable/Disable basic test")
+	goecsFlag.BoolVar(&cpuTestStatus, "cpu", true, "Enable/Disable CPU test")
+	goecsFlag.BoolVar(&memoryTestStatus, "memory", true, "Enable/Disable memory test")
+	goecsFlag.BoolVar(&diskTestStatus, "disk", true, "Enable/Disable disk test")
+	goecsFlag.BoolVar(&commTestStatus, "comm", true, "Enable/Disable common media test")
+	goecsFlag.BoolVar(&utTestStatus, "ut", true, "Enable/Disable unlock media test")
+	goecsFlag.BoolVar(&securityTestStatus, "security", true, "Enable/Disable security test")
+	goecsFlag.BoolVar(&emailTestStatus, "email", true, "Enable/Disable email port test")
+	goecsFlag.BoolVar(&backtraceStatus, "backtrace", true, "Enable/Disable backtrace test (in 'en' language or on `windows` it always false)")
+	goecsFlag.BoolVar(&nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on `windows` it always false)")
+	goecsFlag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
+	goecsFlag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
+	goecsFlag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
+	goecsFlag.StringVar(&memoryTestMethod, "memorym", "dd", "Set memory test method (supported: sysbench, dd, winsat)")
+	goecsFlag.StringVar(&diskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
+	goecsFlag.StringVar(&diskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
+	goecsFlag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
+	goecsFlag.StringVar(&nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu)")
+	goecsFlag.StringVar(&nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	goecsFlag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
+	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
+	goecsFlag.Parse(os.Args[1:])
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	if showVersion {
