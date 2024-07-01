@@ -293,14 +293,26 @@ env_check() {
     fi
 }
 
+delete_goecs() {
+  rm -rf /root/goecs
+  rm -rf /usr/bin/goecs
+}
+
 show_help() {
     cat <<"EOF"
 Available commands:
 
-env             Check and Install package: dd fio sysbench geekbench5 speedtest
-install         Install goecs command
-upgrade         Upgrade goecs command
-help            Show this message
+./goecs.sh env             Check and Install package:
+                                dd (Almost all unix-like systems have it, it's only for testing on most systems.)
+                                fio (Almost all unix-like systems can be installed through the system's package manager.)
+                                sysbench (Almost all unix-like systems can be installed through the system's package manager.)
+                                geekbench5 (Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
+                                speedtest (Use the officially provided binaries for more accurate test results.)
+                           In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
+./goecs.sh install         Install goecs command
+./goecs.sh upgrade         Upgrade goecs command
+./goecs.sh delete          Uninstall goecs command
+./goecs.sh help            Show this message
 
 EOF
 }
@@ -314,6 +326,9 @@ case "$1" in
     ;;
 "install" | "upgrade")
     goecs_check
+    ;;
+"delete")
+    delete_goecs
     ;;
 *)
     echo "No command found."

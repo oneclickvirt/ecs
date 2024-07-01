@@ -28,3 +28,7 @@ Shell版本： https://github.com/spiritLHLS/ecs
 ## 说明
 
 开发中，勿要使用
+
+```
+curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+```
