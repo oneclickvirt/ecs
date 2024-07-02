@@ -25,7 +25,7 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 - [ ] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发]
 
-## 说明
+## Linux/macOS上使用的说明
 
 开发中，勿要使用
 
@@ -150,3 +150,13 @@ Usage: goecs [options]
         Enable/Disable unlock media test (default true)
   -v    Display version information
 ```
+
+## Windows上使用的说明
+
+下载带exe文件的压缩文件
+
+https://github.com/oneclickvirt/ecs/releases
+
+找其中最新的版本，按照对应架构下载对应的 .tar.gz 文件，解压后文件夹内有一个exe文件
+
+选择该exe文件，右键点击选择管理员模式运行(非管理员模式运行无法进行硬件测试)，唤起菜单自选
