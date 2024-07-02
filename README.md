@@ -160,3 +160,5 @@ https://github.com/oneclickvirt/ecs/releases
 找其中最新的版本，按照对应架构下载对应的 .tar.gz 文件，解压后文件夹内有一个exe文件
 
 选择该exe文件，右键点击选择管理员模式运行(非管理员模式运行无法进行硬件测试)，唤起菜单自选
+
+windows测试无需进行环境安装
