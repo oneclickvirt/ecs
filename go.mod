@@ -7,15 +7,15 @@ require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003
 	github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930
 	github.com/oneclickvirt/backtrace v0.0.4-20240624090335
-	github.com/oneclickvirt/basics v0.0.5-20240702021800
+	github.com/oneclickvirt/basics v0.0.5-20240702055351
 	github.com/oneclickvirt/cputest v0.0.8-20240701113350
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.3-20240629152513
-	github.com/oneclickvirt/gostun v0.0.2-20240625025941
+	github.com/oneclickvirt/disktest v0.0.4-20240702061136
+	github.com/oneclickvirt/gostun v0.0.3-20240702054621
 	github.com/oneclickvirt/memorytest v0.0.2-20240702031042
 	github.com/oneclickvirt/nt3 v0.0.2-20240630152642
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
-	github.com/oneclickvirt/security v0.0.4-20240702031253
+	github.com/oneclickvirt/security v0.0.4-20240702055848
 	github.com/oneclickvirt/speedtest v0.0.6-20240630114816
 )
 

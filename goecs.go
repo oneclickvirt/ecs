@@ -17,6 +17,7 @@ import (
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"github.com/oneclickvirt/ecs/utils"
 	gostunmodel "github.com/oneclickvirt/gostun/model"
+	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
 	"os"
@@ -93,6 +94,7 @@ func main() {
 	if enableLogger {
 		basicmodel.EnableLoger = true
 		cputestmodel.EnableLoger = true
+		memorytestmodel.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 		gostunmodel.EnableLoger = true
 		commediatests.EnableLoger = true
