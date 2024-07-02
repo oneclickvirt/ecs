@@ -93,14 +93,16 @@ func main() {
 		return
 	}
 	if enableLogger {
+		gostunmodel.EnableLoger = true
 		basicmodel.EnableLoger = true
 		cputestmodel.EnableLoger = true
 		memorytestmodel.EnableLoger = true
 		disktestmodel.EnableLoger = true
-		speedtestmodel.EnableLoger = true
-		gostunmodel.EnableLoger = true
 		commediatests.EnableLoger = true
+
 		backtraceori.EnableLoger = true
+
+		speedtestmodel.EnableLoger = true
 	}
 	if menuMode {
 		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
