@@ -19,6 +19,7 @@ import (
 	"github.com/oneclickvirt/ecs/utils"
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
+	nt3model "github.com/oneclickvirt/nt3/model"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
 	"os"
@@ -101,7 +102,7 @@ func main() {
 		commediatests.EnableLoger = true
 
 		backtraceori.EnableLoger = true
-
+		nt3model.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 	}
 	if menuMode {
