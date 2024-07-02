@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.28"
+	ecsVersion                                                        = "v0.0.29"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -42,7 +42,7 @@ var (
 	diskMultiCheck                                                    bool
 	nt3CheckType, nt3Location                                         string
 	spNum                                                             int
-	width                                                             = 84
+	width                                                             = 82
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
 	backtraceStatus, nt3Status, speedTestStatus                       bool
@@ -442,4 +442,8 @@ func main() {
 		fmt.Println("Unsupported language")
 	}
 	utils.ProcessAndUpload(output, filePath, enabelUpload)
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		fmt.Println("Press Enter to exit...")
+		fmt.Scanln()
+	}
 }

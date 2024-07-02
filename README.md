@@ -85,7 +85,19 @@ Available commands:
 ./goecs.sh help            Show this message
 ```
 
-goecs命令的说明
+goecs唤起菜单
+
+```
+goecs
+```
+
+或
+
+```
+./goecs
+```
+
+goecs命令参数化
 
 ```
 Usage: goecs [options]
