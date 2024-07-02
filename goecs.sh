@@ -302,9 +302,8 @@ env_check() {
     fi
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS. Installing sysbench and fio..."
-        # 使用Homebrew安装sysbench和fio（免交互）
-        brew install --force sysbench fio
-      fi
+        brew install --force sysbench fio dd
+    fi
     _green "The environment is ready."
 }
 

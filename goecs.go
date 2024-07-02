@@ -7,6 +7,7 @@ import (
 	backtraceori "github.com/oneclickvirt/backtrace/bk"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
+	disktestmodel "github.com/oneclickvirt/disktest/disk"
 	"github.com/oneclickvirt/ecs/backtrace"
 	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
@@ -95,6 +96,7 @@ func main() {
 		basicmodel.EnableLoger = true
 		cputestmodel.EnableLoger = true
 		memorytestmodel.EnableLoger = true
+		disktestmodel.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 		gostunmodel.EnableLoger = true
 		commediatests.EnableLoger = true
