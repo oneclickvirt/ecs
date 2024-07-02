@@ -22,6 +22,7 @@ import (
 	nt3model "github.com/oneclickvirt/nt3/model"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
@@ -33,7 +34,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.31"
+	ecsVersion                                                        = "v0.0.32"
 	menuMode                                                          bool
 	input, choice                                                     string
 	showVersion                                                       bool
@@ -105,6 +106,9 @@ func main() {
 		nt3model.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 	}
+	go func() {
+		http.Get("https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false")
+	}()
 	if menuMode {
 		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 		commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
