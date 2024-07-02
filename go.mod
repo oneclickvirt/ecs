@@ -13,7 +13,7 @@ require (
 	github.com/oneclickvirt/disktest v0.0.4-20240702071738
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
 	github.com/oneclickvirt/memorytest v0.0.2-20240702031042
-	github.com/oneclickvirt/nt3 v0.0.2-20240630152642
+	github.com/oneclickvirt/nt3 v0.0.3-20240702132013
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.4-20240702055848
 	github.com/oneclickvirt/speedtest v0.0.6-20240630114816

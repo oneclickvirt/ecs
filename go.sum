@@ -75,8 +75,6 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/nxtrace/NTrace-core v1.3.1 h1:f4z5UaZEuhUP/g6xElpZ2bo+guWITJVrMKrJTqd27oc=
 github.com/nxtrace/NTrace-core v1.3.1/go.mod h1:0Px/Zc60qk6cssmP+yv4kstFxvX9sXqDduoVqBO+qf8=
-github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003 h1:8jQFqDK5m7V9xlLBk8rSUYDyi3u5xzf5kqwEx5b+/7g=
-github.com/oneclickvirt/CommonMediaTests v0.0.2-20240630023003/go.mod h1:DAmFPRjFV5p9fEzUUSml5jJGn2f1NZJQCzTxITHDjc4=
 github.com/oneclickvirt/CommonMediaTests v0.0.3-20240702073302 h1:JbgWWVL6WR44H/dqpBLdet0M7lM/YrnwGEG40FmawRo=
 github.com/oneclickvirt/CommonMediaTests v0.0.3-20240702073302/go.mod h1:DAmFPRjFV5p9fEzUUSml5jJGn2f1NZJQCzTxITHDjc4=
 github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930 h1:/Sc4Eas1Pso18ak93wlazkuMKRRElCntITja/0opOpM=
@@ -95,8 +93,8 @@ github.com/oneclickvirt/gostun v0.0.3-20240702054621 h1:IE89eEYV9TJbF94SakQDAxTL
 github.com/oneclickvirt/gostun v0.0.3-20240702054621/go.mod h1:f7DPEXAxbmwXSW33dbxtb0/KzqvOBWhTs2Or5xBerQA=
 github.com/oneclickvirt/memorytest v0.0.2-20240702031042 h1:j+LsjOh5glYiidqtSqjZJRw694LYW1PHLMh6AovluTQ=
 github.com/oneclickvirt/memorytest v0.0.2-20240702031042/go.mod h1:+YNzy+NeVg61d0kNwSyVDqHyVtKzjuRe1NvMzsDLg0I=
-github.com/oneclickvirt/nt3 v0.0.2-20240630152642 h1:BkpR1j9JaDxMzx7iIwtsnFDxSldjYr2TUYpZE7m8z/Y=
-github.com/oneclickvirt/nt3 v0.0.2-20240630152642/go.mod h1:UojPmtangn17TiQaDccVrZbn6sZwJOtzBgg3idp68cA=
+github.com/oneclickvirt/nt3 v0.0.3-20240702132013 h1:zPI/zqqCraIVwRnYz07hMkBKDRJVkEBb6gZpZ4M9CjI=
+github.com/oneclickvirt/nt3 v0.0.3-20240702132013/go.mod h1:UojPmtangn17TiQaDccVrZbn6sZwJOtzBgg3idp68cA=
 github.com/oneclickvirt/portchecker v0.0.1-20240624155429 h1:+wapaOcFrg1iWJDhBKThDzppyIMY7hWxK7F5RBkZg4o=
 github.com/oneclickvirt/portchecker v0.0.1-20240624155429/go.mod h1:HQxSTrqM8/QFqHMTBZ7S8H9eEO5FkUXU1eb7ZX5Mk+k=
 github.com/oneclickvirt/security v0.0.4-20240702055848 h1:UCfjfoslcfKhCvJm37jQmhJ+O8d4lL+uvBJVcLAXc2s=
