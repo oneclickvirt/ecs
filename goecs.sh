@@ -304,6 +304,11 @@ env_check() {
         echo "rm -rf /usr/bin/speedtest-go"
         _blue "to uninstall speedtest and speedtest-go"
     fi
+    if ! command -v ping >/dev/null 2>&1; then
+        _green "Installing ping"
+        ${PACKAGE_INSTALL[int]} iputils-ping >/dev/null 2>&1
+        ${PACKAGE_INSTALL[int]} ping >/dev/null 2>&1
+    fi
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS. Installing sysbench and fio..."
         brew install --force sysbench fio dd
@@ -335,6 +340,7 @@ Available commands:
                                 sysbench (Almost all unix-like systems can be installed through the system's package manager.)
                                 geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
                                 speedtest (Use the officially provided binaries for more accurate test results.)
+                                ping (Use the officially provided binaries for more accurate test results.)
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
