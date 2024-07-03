@@ -6,9 +6,15 @@
 
 Shell版本： https://github.com/spiritLHLS/ecs
 
-## 适配系统
+## 适配系统和架构
 
-Linux、MacOS、Windows
+已支持的架构: x86_64、i386、arm64
+
+待支持的架构(有依赖包不支持该架构): s390x
+
+已支持的系统: Linux、Windows
+
+待支持的系统(存在硬件测试BUG未修复): MacOS
 
 ## 功能
 
@@ -24,12 +30,9 @@ Linux、MacOS、Windows
 - [x] 三网回程测试[借鉴[zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)二次开发至于[oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)]
 - [x] 三网路由测试[借鉴[NTrace-core](https://github.com/nxtrace/NTrace-core)二次开发至于[nt3](https://github.com/oneclickvirt/nt3)]
 - [x] 测试网速[基于[speedtest.net-爬虫](https://github.com/spiritLHLS/speedtest.net-CN-ID)、[speedtest.cn-爬虫](https://github.com/spiritLHLS/speedtest.cn-CN-ID)的数据，借鉴[speedtest-go](https://github.com/showwin/speedtest-go)二次开发至于[oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
+- [x] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发至于[pingtest](https://github.com/oneclickvirt/pingtest)]
 
-## TODO
-
-- [ ] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发]
-
-## Linux/macOS上使用的说明
+## Linux上使用的说明
 
 下载脚本
 

@@ -304,6 +304,8 @@ env_check() {
         echo "Detected MacOS. Installing sysbench and fio..."
         brew install --force sysbench fio dd
         # 有问题，需要修复，root环境不能brew，brew安装完毕后可能路径不在环境变量中
+    else
+        sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
     fi
     _green "The environment is ready."
 }
