@@ -20,6 +20,8 @@ import (
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
 	nt3model "github.com/oneclickvirt/nt3/model"
+	ptmodel "github.com/oneclickvirt/pingtest/model"
+	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
 	"net/http"
@@ -34,8 +36,9 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.32"
+	ecsVersion                                                        = "v0.0.33"
 	menuMode                                                          bool
+	onlyChinaTest                                                     bool
 	input, choice                                                     string
 	showVersion                                                       bool
 	enableLogger                                                      bool
@@ -49,7 +52,7 @@ var (
 	width                                                             = 82
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
-	backtraceStatus, nt3Status, speedTestStatus                       bool
+	backtraceStatus, nt3Status, speedTestStatus, pingTestStatus       bool
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
 	help                                                              bool
@@ -101,7 +104,7 @@ func main() {
 		memorytestmodel.EnableLoger = true
 		disktestmodel.EnableLoger = true
 		commediatests.EnableLoger = true
-
+		ptmodel.EnableLoger = true
 		backtraceori.EnableLoger = true
 		nt3model.EnableLoger = true
 		speedtestmodel.EnableLoger = true
@@ -160,6 +163,7 @@ func main() {
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
+					onlyChinaTest = utils.CheckChina(enableLogger)
 					break Loop
 				case "2":
 					basicStatus = true
@@ -219,6 +223,7 @@ func main() {
 					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
+					pingTestStatus = true
 					break Loop
 				default:
 					if language == "zh" {
@@ -292,7 +297,7 @@ func main() {
 				emailInfo = email.EmailCheck()
 			}()
 		}
-		if utTestStatus {
+		if utTestStatus && !onlyChinaTest {
 			wg1.Add(1)
 			go func() {
 				defer wg1.Done()
@@ -300,13 +305,13 @@ func main() {
 			}()
 		}
 		output = utils.PrintAndCapture(func() {
-			if commTestStatus {
+			if commTestStatus && !onlyChinaTest {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
 				commediatest.ComMediaTest(language)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
-			if utTestStatus {
+			if utTestStatus && !onlyChinaTest {
 				utils.PrintCenteredTitle("跨国流媒体解锁", width)
 				wg1.Wait()
 				fmt.Printf(mediaInfo)
@@ -327,16 +332,22 @@ func main() {
 		}, tempOutput, output)
 		if runtime.GOOS != "windows" {
 			output = utils.PrintAndCapture(func() {
-				if backtraceStatus {
+				if backtraceStatus && !onlyChinaTest {
 					utils.PrintCenteredTitle("三网回程线路检测", width)
 					backtrace.BackTrace()
 				}
 			}, tempOutput, output)
 			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
 			output = utils.PrintAndCapture(func() {
-				if nt3Status {
+				if nt3Status && !onlyChinaTest {
 					utils.PrintCenteredTitle("三网回程路由检测", width)
 					ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
+				}
+			}, tempOutput, output)
+			output = utils.PrintAndCapture(func() {
+				if onlyChinaTest || pingTestStatus {
+					utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
+					pt.PingTest()
 				}
 			}, tempOutput, output)
 		}

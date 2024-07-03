@@ -6,6 +6,7 @@ import (
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/uts"
 	"github.com/oneclickvirt/basics/system"
+	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/security/network"
 	"io"
 	"os"
@@ -42,6 +43,89 @@ func PrintHead(language string, width int, ecsVersion string) {
 			"Go Project URL: https://github.com/oneclickvirt/ecs\n" +
 			"Shell Project URL: https://github.com/spiritLHLS/ecs")
 	}
+}
+
+func CheckChina(enableLogger bool) bool {
+	if enableLogger {
+		InitLogger()
+		defer Logger.Sync()
+	}
+	var selectChina bool
+	client := req.C()
+	client.SetTimeout(6 * time.Second)
+	client.R().
+		SetRetryCount(2).
+		SetRetryBackoffInterval(1*time.Second, 3*time.Second).
+		SetRetryFixedInterval(2 * time.Second)
+	ipapiURL := "https://ipapi.co/json"
+	cipccURL := "http://cip.cc"
+	ipapiResp, err := client.R().Get(ipapiURL)
+	if err != nil {
+		if enableLogger {
+			Logger.Info("无法获取IP信息:" + err.Error())
+		}
+	} else {
+		defer ipapiResp.Body.Close()
+		var ipapiBody string
+		ipapiBody, err = ipapiResp.ToString()
+		if err != nil {
+			if enableLogger {
+				Logger.Info("无法读取IP信息响应:" + err.Error())
+			}
+		} else {
+			isInChina := strings.Contains(ipapiBody, "China")
+			if isInChina {
+				fmt.Println("根据ipapi.co提供的信息，当前IP可能在中国")
+				var input string
+				fmt.Print("是否选用中国专项测试(无流媒体测试，有三网Ping值测试)? ([y]/n) ")
+				fmt.Scanln(&input)
+				switch strings.ToLower(input) {
+				case "yes", "y":
+					fmt.Println("使用中国专项测试")
+					selectChina = true
+				case "no", "n":
+					fmt.Println("不使用中国专项测试")
+				default:
+					fmt.Println("使用中国专项测试")
+					selectChina = true
+				}
+				return selectChina
+			}
+		}
+	}
+	cipccResp, err := client.R().Get(cipccURL)
+	if err != nil {
+		if enableLogger {
+			Logger.Info("无法获取IP信息:" + err.Error())
+		}
+		return false
+	}
+	defer cipccResp.Body.Close()
+	cipccBody, err := cipccResp.ToString()
+	if err != nil {
+		if enableLogger {
+			Logger.Info("无法读取IP信息响应:" + err.Error())
+		}
+		return false
+	}
+	isInChina := strings.Contains(cipccBody, "中国")
+	if isInChina {
+		fmt.Println("根据cip.cc提供的信息，当前IP可能在中国")
+		var input string
+		fmt.Print("是否选用中国专项测试(无流媒体测试，有三网Ping值测试)? ([y]/n) ")
+		fmt.Scanln(&input)
+		switch strings.ToLower(input) {
+		case "yes", "y":
+			fmt.Println("使用中国专项测试")
+			selectChina = true
+		case "no", "n":
+			fmt.Println("不使用中国专项测试")
+		default:
+			fmt.Println("不使用中国专项测试")
+			selectChina = true
+		}
+	}
+	return selectChina
 }
 
 // SecurityCheck 执行安全检查

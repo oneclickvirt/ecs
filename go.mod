@@ -14,6 +14,7 @@ require (
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
 	github.com/oneclickvirt/memorytest v0.0.2-20240702031042
 	github.com/oneclickvirt/nt3 v0.0.3-20240702132013
+	github.com/oneclickvirt/pingtest v0.0.4-20240703142340
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.4-20240702055848
 	github.com/oneclickvirt/speedtest v0.0.6-20240702134926
@@ -45,6 +46,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nxtrace/NTrace-core v1.3.1 // indirect
