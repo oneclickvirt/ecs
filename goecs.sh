@@ -246,6 +246,10 @@ env_check() {
     check_cdn_file
     _green "Update system manager."
     $PACKAGE_UPDATE command 2>/dev/null
+    if ! command -v sudo >/dev/null 2>&1; then
+            _green "Installing sudo"
+            $PACKAGE_INSTALL sudo
+        fi
     if ! command -v tar >/dev/null 2>&1; then
         _green "Installing tar"
         $PACKAGE_INSTALL tar
@@ -305,7 +309,10 @@ env_check() {
         brew install --force sysbench fio dd
         # 有问题，需要修复，root环境不能brew，brew安装完毕后可能路径不在环境变量中
     else
-        sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"
+        if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
+            echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf
+            sysctl -p
+        fi
     fi
     _green "The environment is ready."
 }
@@ -320,6 +327,7 @@ show_help() {
 Available commands:
 
 ./goecs.sh env             Check and Install package:
+                                sudo (Almost all unix-like systems have it.)
                                 tar (Almost all unix-like systems have it.)
                                 unzip (Almost all unix-like systems have it.)
                                 dd (Almost all unix-like systems have it.)
