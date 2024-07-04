@@ -382,7 +382,7 @@ func main() {
 			utils.PrintHead(language, width, ecsVersion)
 			if basicStatus || securityTestStatus {
 				if basicStatus {
-					utils.PrintCenteredTitle("System Basic Information", width)
+					utils.PrintCenteredTitle("System-Basic-Information", width)
 				}
 				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
@@ -392,19 +392,19 @@ func main() {
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if cpuTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU Test - %s Method", cpuTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", cpuTestMethod), width)
 				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if memoryTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("Memory Test - %s Method", memoryTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("Memory-Test--%s-Method", memoryTestMethod), width)
 				memorytest.MemoryTest(language, memoryTestMethod)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if diskTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk Test - %s Method", diskTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", diskTestMethod), width)
 				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 			}
 		}, tempOutput, output)
@@ -417,26 +417,26 @@ func main() {
 		}
 		output = utils.PrintAndCapture(func() {
 			if utTestStatus {
-				utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
+				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
 				unlocktest.MediaTest(language)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if securityTestStatus {
-				utils.PrintCenteredTitle("IP Quality Check", width)
+				utils.PrintCenteredTitle("IP-Quality-Check", width)
 				fmt.Printf(securityInfo)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if emailTestStatus {
-				utils.PrintCenteredTitle("Email Port Check", width)
+				utils.PrintCenteredTitle("Email-Port-Check", width)
 				wg1.Wait()
 				fmt.Println(emailInfo)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if speedTestStatus {
-				utils.PrintCenteredTitle("Nearby Node Speed Test", width)
+				utils.PrintCenteredTitle("Speed-Test", width)
 				speedtest.ShowHead(language)
 				speedtest.NearbySP()
 				speedtest.CustomSP("net", "global", -1, language)

@@ -38,16 +38,18 @@ Pending support (due to unresolved hardware testing bugs): MacOS
 
 ## Instructions for Use on Linux
 
+### one-click command
+
+```
+curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+```
+
+### explain in detail
+
 Download the script
 
 ```
 curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
-```
-
-or
-
-```
-curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
 
 Install environment

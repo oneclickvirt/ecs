@@ -38,6 +38,20 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 ## Linux上使用的说明
 
+### 一键命令
+
+```
+curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+```
+
+或
+
+```
+curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+```
+
+### 详细说明
+
 下载脚本
 
 ```
