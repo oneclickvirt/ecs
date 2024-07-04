@@ -8,7 +8,7 @@ git commit -am"update"
 
 :push
 cd %repo_path%
-
+git tag v0.0.46
 git push -f origin master
 if errorlevel 1 (
     echo Push failed. Retrying in 3 seconds...
