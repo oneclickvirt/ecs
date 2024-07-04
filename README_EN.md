@@ -24,7 +24,7 @@ Tested on: Linux, Windows
 
 More systems to be tested
 
-Systems to be supported (hardware testing bugs not yet fixed): MacOS
+Systems to be supported (hardware testing bugs not yet fixed): MacOS、FreeBSD
 
 ## Features
 
