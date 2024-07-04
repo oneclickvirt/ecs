@@ -6,28 +6,17 @@ builds:
   - env:
       - CGO_ENABLED=0 # 禁用 CGO，强制静态链接
     goos:
+      - freebsd
       - linux
       - windows
       - darwin
       - openbsd
-      - freebsd
     goarch:
       - amd64
       - arm
       - arm64
       - 386
-      - s390x
-      - ppc64
-      - ppc64le
-      - riscv64
-      - mips
-      - mips64
-      - mipsle
-      - mips64le
-      - loong64
     goarm:
-      - 5
-      - 6
       - 7
     gomips:
       - hardfloat
@@ -36,7 +25,7 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{ .CommitDate }}
 archives:
   - name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "openbsd" }}OpenBSD{{ else }}{{ title .Os }}{{ end }}_{{ if eq .Arch "386" }}i386{{ else if eq .Arch "amd64" }}x86_64{{ else }}{{ .Arch }}{{ end }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "openbsd" }}OpenBSD{{ else }}{{ title .Os }}{{ end }}_{{ if eq .Arch "386" }}i386{{ else if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "arm" }}armv7{{ else if eq .Arch "arm64" }}arm64{{ else if eq .Arch "riscv64" }}riscv64{{ else }}{{ .Arch }}{{ end }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
 
 checksum:
   name_template: 'checksums.txt'
