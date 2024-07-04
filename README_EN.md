@@ -42,7 +42,7 @@ Systems to be supported (hardware testing bugs not yet fixed): MacOS
 - [x] Speed test [Based on data from [speedtest.net-crawler](https://github.com/spiritLHLS/speedtest.net-CN-ID), [speedtest.cn-crawler](https://github.com/spiritLHLS/speedtest.cn-CN-ID), modified from [speedtest-go](https://github.com/showwin/speedtest-go) to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
 - [x] Three-network Ping test [Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) logic to [pingtest](https://github.com/oneclickvirt/pingtest)]
 
-## Instructions for Use on Linux
+## Instructions for Use on Linux/FreeBSD/MacOS
 
 ### one-click command
 
