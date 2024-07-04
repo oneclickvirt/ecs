@@ -126,6 +126,8 @@ goecs_check() {
     rm -rf /usr/bin/goecs
     sleep 1
     cp goecs /usr/bin/goecs
+    rm -rf README_EN.md
+    rm -rf README.md
     echo "goecs version:"
     goecs -v || ./goecs -v
 }
