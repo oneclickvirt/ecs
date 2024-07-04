@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.35"
+	ecsVersion                                                        = "v0.0.36"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -408,17 +408,25 @@ func main() {
 				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 			}
 		}, tempOutput, output)
-		if emailTestStatus {
+		if utTestStatus {
 			wg1.Add(1)
 			go func() {
 				defer wg1.Done()
+				mediaInfo = unlocktest.MediaTest(language)
+			}()
+		}
+		if emailTestStatus {
+			wg2.Add(1)
+			go func() {
+				defer wg2.Done()
 				emailInfo = email.EmailCheck()
 			}()
 		}
 		output = utils.PrintAndCapture(func() {
 			if utTestStatus {
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
-				unlocktest.MediaTest(language)
+				wg1.Wait()
+				fmt.Printf(mediaInfo)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
@@ -430,7 +438,7 @@ func main() {
 		output = utils.PrintAndCapture(func() {
 			if emailTestStatus {
 				utils.PrintCenteredTitle("Email-Port-Check", width)
-				wg1.Wait()
+				wg2.Wait()
 				fmt.Println(emailInfo)
 			}
 		}, tempOutput, output)
