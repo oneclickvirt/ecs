@@ -273,7 +273,7 @@ env_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _green "Update system manager."
-    ${PACKAGE_UPDATE[int]} command 2>/dev/null
+    ${PACKAGE_UPDATE[int]} 2>/dev/null
     if ! command -v sudo >/dev/null 2>&1; then
         _green "Installing sudo"
         ${PACKAGE_INSTALL[int]} sudo
