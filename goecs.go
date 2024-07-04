@@ -251,16 +251,28 @@ func main() {
 	if !enabelUpload {
 		securityTestStatus = false
 	}
-	startTime := time.Now()
 	var (
+		startTime                                     time.Time
 		wg1, wg2                                      sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo string
 		output, tempOutput                            string
 	)
-	// 启动一个goroutine来等待信号
+	// 启动一个goroutine来等待信号，内置计时器
 	go func() {
+		startTime = time.Now()
 		// 等待信号
 		<-sig
+		endTime := time.Now()
+		duration := endTime.Sub(startTime)
+		minutes := int(duration.Minutes())
+		seconds := int(duration.Seconds()) % 60
+		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+		output = utils.PrintAndCapture(func() {
+			utils.PrintCenteredTitle("", width)
+			fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
+			fmt.Printf("Current Time          : %s\n", currentTime)
+			utils.PrintCenteredTitle("", width)
+		}, tempOutput, output)
 		utils.ProcessAndUpload(output, filePath, enabelUpload)
 		os.Exit(1) // 使用非零状态码退出，表示意外退出
 	}()
