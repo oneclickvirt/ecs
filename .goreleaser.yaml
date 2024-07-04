@@ -1,39 +1,75 @@
 before:
   hooks:
-    - go mod download
-    - go generate ./...
+    - go mod tidy -v
 builds:
-  - env:
-      - CGO_ENABLED=0 # 禁用 CGO，强制静态链接
+  - id: universal
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
     goos:
-      - freebsd
       - linux
       - windows
-      - darwin
-      - openbsd
+      - freebsd
     goarch:
-      - amd64
       - arm
       - arm64
       - 386
-    goarm:
-      - 7
+      - amd64
+      - mips
+      - mipsle
+      - s390x
+      - riscv64
     gomips:
-      - hardfloat
       - softfloat
+    ignore:
+      - goos: windows
+        goarch: arm
+    binary: goecs
+  - id: darwin-amd64
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{ .CommitDate }}
-archives:
-  - name_template: >-
-      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "openbsd" }}OpenBSD{{ else }}{{ title .Os }}{{ end }}_{{ if eq .Arch "386" }}i386{{ else if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "arm" }}armv7{{ else if eq .Arch "arm64" }}arm64{{ else if eq .Arch "riscv64" }}riscv64{{ else }}{{ .Arch }}{{ end }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
-
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    binary: goecs
+  - id: darwin-arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    binary: goecs
+universal_binaries:
+  - name_template: "goecs"
+    replace: false
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "goecs"
+archives:
+  - name_template: "goecs_{{ .Os }}_{{ .Arch }}"
+    format: zip
+    files:
+      - none*
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
+      - "^chore"
+      - Merge pull request
+      - Merge branch
+      - go mod tidy
+      - New translations
