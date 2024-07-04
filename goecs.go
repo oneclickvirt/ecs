@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.34"
+	ecsVersion                                                        = "v0.0.35"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -449,7 +449,7 @@ func main() {
 		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 		output = utils.PrintAndCapture(func() {
 			utils.PrintCenteredTitle("", width)
-			fmt.Printf("Cost    Time          : %d 分 %d 秒\n", minutes, seconds)
+			fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
 			fmt.Printf("Current Time          : %s\n", currentTime)
 			utils.PrintCenteredTitle("", width)
 		}, tempOutput, output)
