@@ -18,7 +18,7 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 已支持的系统: Linux、Windows
 
-待支持的系统(存在硬件测试BUG未修复): MacOS、Alpine
+待支持的系统(存在硬件测试BUG未修复): MacOS
 
 ## 功能
 
