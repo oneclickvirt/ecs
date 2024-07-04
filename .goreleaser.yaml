@@ -1,4 +1,3 @@
-version: 2
 before:
   hooks:
     - go mod tidy -v
@@ -26,6 +25,7 @@ builds:
     ignore:
       - goos: windows
         goarch: arm
+    main: ./
     binary: goecs
   - id: darwin-amd64
     env:
@@ -38,6 +38,7 @@ builds:
       - darwin
     goarch:
       - amd64
+    main: ./
     binary: goecs
   - id: darwin-arm64
     env:
@@ -50,6 +51,7 @@ builds:
       - darwin
     goarch:
       - arm64
+    main: ./
     binary: goecs
 universal_binaries:
   - name_template: "goecs"

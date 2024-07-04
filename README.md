@@ -12,7 +12,7 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 ## 适配系统和架构
 
-编译支持的架构: amd64、arm、arm64、386、s390x、ppc64、ppc64le、riscv64、mips、mips64、mipsle、mips64le、loong64
+编译支持的架构: amd64、arm、arm64、386、s390x、ppc64、ppc64le、riscv64
 
 测试支持的架构: amd64、arm64 
 

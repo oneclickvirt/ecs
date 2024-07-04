@@ -12,7 +12,7 @@ Shell version: https://github.com/spiritLHLS/ecs/blob/main/README_EN.md
 
 ## Supported Systems and Architectures
 
-Architectures supported for compilation: amd64, arm, arm64, 386, s390x, ppc64, ppc64le, riscv64, mips, mips64, mipsle, mips64le, loong64
+Architectures supported for compilation: amd64, arm, arm64, 386, s390x、ppc64、ppc64le、riscv64
 
 Tested architectures: amd64, arm64
 
