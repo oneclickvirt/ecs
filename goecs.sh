@@ -276,9 +276,13 @@ env_check() {
     _green "Update system manager."
     ${PACKAGE_UPDATE[int]} command 2>/dev/null
     if ! command -v sudo >/dev/null 2>&1; then
-            _green "Installing sudo"
-            ${PACKAGE_INSTALL[int]} sudo
-        fi
+        _green "Installing sudo"
+        ${PACKAGE_INSTALL[int]} sudo
+    fi
+    if ! command -v wget >/dev/null 2>&1; then
+        _green "Installing wget"
+        ${PACKAGE_INSTALL[int]} wget
+    fi
     if ! command -v tar >/dev/null 2>&1; then
         _green "Installing tar"
         ${PACKAGE_INSTALL[int]} tar
@@ -363,12 +367,13 @@ show_help() {
 Available commands:
 
 ./goecs.sh env             Check and Install package:
-                                sudo (Almost all unix-like systems have it.)
-                                tar (Almost all unix-like systems have it.)
+                                sudo  (Almost all unix-like systems have it.)
+                                wget  (Almost all unix-like systems have it.)
+                                tar   (Almost all unix-like systems have it.)
                                 unzip (Almost all unix-like systems have it.)
-                                dd (Almost all unix-like systems have it.)
-                                fio (Almost all unix-like systems can be installed through the system's package manager.)
-                                sysbench (Almost all unix-like systems can be installed through the system's package manager.)
+                                dd    (Almost all unix-like systems have it.)
+                                fio   (Almost all unix-like systems can be installed through the system's package manager.)
+                                sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
                                 geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
                                 speedtest (Use the officially provided binaries for more accurate test results.)
                                 ping (Use the officially provided binaries for more accurate test results.)
