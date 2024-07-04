@@ -61,7 +61,7 @@ goecs_check() {
     # 检测原始goecs命令是否存在，若存在则升级，不存在则安装
     version_output=$(goecs -v command 2>/dev/null || ./goecs -v command 2>/dev/null)
     if [ $? -eq 0 ]; then
-        extracted_version=$(echo "${version_output//v/}")
+        extracted_version=${version_output//v/}
         if [ -n "$extracted_version" ]; then
             ecs_version=$ECS_VERSION
             if [[ "$(echo -e "$extracted_version\n$ecs_version" | sort -V | tail -n 1)" == "$extracted_version" ]]; then
@@ -233,8 +233,23 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "" "pkg autoremove" "apk autoremove")
-    CMD=("$(grep -i pretty_name /etc/os-release 2>/dev/null | cut -d \" -f2)" "$(hostnamectl 2>/dev/null | grep -i system | cut -d : -f2)" "$(lsb_release -sd 2>/dev/null)" "$(grep -i description /etc/lsb-release 2>/dev/null | cut -d \" -f2)" "$(grep . /etc/redhat-release 2>/dev/null)" "$(grep . /etc/issue 2>/dev/null | cut -d \\ -f1 | sed '/^[ ]*$/d')" "$(grep -i pretty_name /etc/os-release 2>/dev/null | cut -d \" -f2)" "$(uname -s)" "$(uname -s)")
-    SYS="${CMD[0]}"
+    if [ -s /etc/os-release ]; then
+      SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
+    elif [ -x "$(type -p hostnamectl)" ]; then
+      SYS="$(hostnamectl | grep -i system | cut -d : -f2)"
+    elif [ -x "$(type -p lsb_release)" ]; then
+      SYS="$(lsb_release -sd)"
+    elif [ -s /etc/lsb-release ]; then
+      SYS="$(grep -i description /etc/lsb-release | cut -d \" -f2)"
+    elif [ -s /etc/redhat-release ]; then
+      SYS="$(grep . /etc/redhat-release)"
+    elif [ -s /etc/issue ]; then
+      SYS="$(grep . /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
+    elif [ -f /etc/alpine-release ]; then
+      SYS="alpine"
+    else
+      SYS="$(uname -s)}"
+    fi
     [[ -n $SYS ]] || exit 1
     for ((int = 0; int < ${#REGEX[@]}; int++)); do
         if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then

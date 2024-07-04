@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.33"
+	ecsVersion                                                        = "v0.0.34"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -357,12 +357,12 @@ func main() {
 				speedtest.ShowHead(language)
 				if (menuMode && choice == "1") || !menuMode {
 					speedtest.NearbySP()
-					speedtest.CustomSP("net", "global", 2)
-					speedtest.CustomSP("net", "cu", spNum)
-					speedtest.CustomSP("net", "ct", spNum)
-					speedtest.CustomSP("net", "cmcc", spNum)
+					speedtest.CustomSP("net", "global", 2, language)
+					speedtest.CustomSP("net", "cu", spNum, language)
+					speedtest.CustomSP("net", "ct", spNum, language)
+					speedtest.CustomSP("net", "cmcc", spNum, language)
 				} else if menuMode && choice == "2" || choice == "3" || choice == "4" || choice == "5" {
-					speedtest.CustomSP("net", "global", 4)
+					speedtest.CustomSP("net", "global", 4, language)
 				}
 			}
 		}, tempOutput, output)
@@ -416,12 +416,6 @@ func main() {
 			}()
 		}
 		output = utils.PrintAndCapture(func() {
-			if commTestStatus {
-				utils.PrintCenteredTitle("The Three Main Streaming Media Unlock", width)
-				commediatest.ComMediaTest(language)
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
 			if utTestStatus {
 				utils.PrintCenteredTitle("Cross-Border Streaming Media Unlock", width)
 				unlocktest.MediaTest(language)
@@ -445,10 +439,9 @@ func main() {
 				utils.PrintCenteredTitle("Nearby Node Speed Test", width)
 				speedtest.ShowHead(language)
 				speedtest.NearbySP()
-				speedtest.CustomSP("net", "global", -1)
+				speedtest.CustomSP("net", "global", -1, language)
 			}
 		}, tempOutput, output)
-
 		endTime := time.Now()
 		duration := endTime.Sub(startTime)
 		minutes := int(duration.Minutes())

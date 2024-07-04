@@ -19,7 +19,7 @@ func NearbySP() {
 	}
 }
 
-func CustomSP(platform, operator string, num int) {
+func CustomSP(platform, operator string, num int, language string) {
 	var url, parseType string
 	if strings.ToLower(platform) == "cn" {
 		if strings.ToLower(operator) == "cmcc" {
@@ -59,8 +59,8 @@ func CustomSP(platform, operator string, num int) {
 		parseType = "id"
 	}
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		sp.CustomSpeedTest(url, parseType, num)
+		sp.CustomSpeedTest(url, parseType, num, language)
 	} else {
-		sp.OfficialCustomSpeedTest(url, parseType, num)
+		sp.OfficialCustomSpeedTest(url, parseType, num, language)
 	}
 }

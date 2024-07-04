@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/imroc/req/v3 v3.43.7
-	github.com/oneclickvirt/CommonMediaTests v0.0.3-20240702073302
+	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
 	github.com/oneclickvirt/UnlockTests v0.0.10-20240630044930
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
 	github.com/oneclickvirt/basics v0.0.5-20240702055351
@@ -17,7 +17,7 @@ require (
 	github.com/oneclickvirt/pingtest v0.0.4-20240703142340
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
 	github.com/oneclickvirt/security v0.0.4-20240702055848
-	github.com/oneclickvirt/speedtest v0.0.6-20240702134926
+	github.com/oneclickvirt/speedtest v0.0.7-20240704023701
 )
 
 require (
