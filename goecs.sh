@@ -335,11 +335,13 @@ env_check() {
         fi
     fi
     _green "The environment is ready."
+    _green "The next command is: ./goecs.sh install"
 }
 
 delete_goecs() {
   rm -rf /root/goecs
   rm -rf /usr/bin/goecs
+  _green "The command (goecs) has been deleted."
 }
 
 show_help() {
