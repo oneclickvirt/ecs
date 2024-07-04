@@ -316,7 +316,7 @@ env_check() {
         _green "Installing fio"
         ${PACKAGE_INSTALL[int]} fio
     fi
-    if ! command -v sysbench >/dev/null 2>&1; then
+    if ! command -v sysbench >/dev/null 2>&1 && [ "${REGEX[int]}" != "freebsd" ]; then
         _green "Installing sysbench"
         ${PACKAGE_INSTALL[int]} sysbench
         if [ $? -ne 0 ]; then
