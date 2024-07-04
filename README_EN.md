@@ -18,7 +18,7 @@ Pending support (due to unsupported dependencies): s390x
 
 Supported systems: Linux, Windows
 
-Pending support (due to unresolved hardware testing bugs): MacOS
+Pending support (due to unresolved hardware testing bugs): MacOS、Alpine
 
 ## Features
 

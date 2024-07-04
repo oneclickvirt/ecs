@@ -233,7 +233,9 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "" "pkg autoremove" "apk autoremove")
-    if [ -s /etc/os-release ]; then
+    if [ -f /etc/alpine-release ]; then
+          SYS="alpine"
+    elif [ -s /etc/os-release ]; then
       SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
     elif [ -x "$(type -p hostnamectl)" ]; then
       SYS="$(hostnamectl | grep -i system | cut -d : -f2)"
@@ -245,8 +247,6 @@ env_check() {
       SYS="$(grep . /etc/redhat-release)"
     elif [ -s /etc/issue ]; then
       SYS="$(grep . /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
-    elif [ -f /etc/alpine-release ]; then
-      SYS="alpine"
     else
       SYS="$(uname -s)}"
     fi
