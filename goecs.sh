@@ -332,6 +332,7 @@ env_check() {
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
         bash dspt.sh
         rm -rf dspt.sh
+        rm -rf speedtest.tar.gz
         _blue "if you want to use golang origin speedtest, you can use"
         echo "rm -rf /usr/bin/speedtest"
         echo "rm -rf /usr/bin/speedtest-go"
