@@ -1,80 +1,80 @@
-# ecs
+# ECS
 
 [![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
-融合怪测评脚本 - GO重构版本 - 由于未正式发版，如有问题请issues反馈
+Fusion Monster Evaluation Script - GO Refactored Version - Since it has not been officially released, please report any issues via issues.
 
-Shell版本： https://github.com/spiritLHLS/ecs
+Shell version: https://github.com/spiritLHLS/ecs/blob/main/README_EN.md
 
-## 语言
+## Language
 
 [中文文档](README.md) | [English Docs](README_EN.md)
 
-## 适配系统和架构
+## Supported Systems and Architectures
 
-已支持的架构: x86_64、i386、arm64
+Supported architectures: x86_64, i386, arm64
 
-待支持的架构(有依赖包不支持该架构): s390x
+Pending support (due to unsupported dependencies): s390x
 
-已支持的系统: Linux、Windows
+Supported systems: Linux, Windows
 
-待支持的系统(存在硬件测试BUG未修复): MacOS
+Pending support (due to unresolved hardware testing bugs): MacOS
 
-## 功能
+## Features
 
-- [x] 系统基础信息查询[自研[basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)]
-- [x] IP基础信息并发查询[自研[basics](https://github.com/oneclickvirt/basics)]
-- [x] CPU测试[自研[cputest](https://github.com/oneclickvirt/cputest)支持sysbench、geekbench、winsat]
-- [x] 内存测试[自研[memorytest](https://github.com/oneclickvirt/memorytest)支持sysbench、dd]
-- [x] 硬盘测试[自研[disktest](https://github.com/oneclickvirt/disktest)支持dd、fio、winsat]
-- [x] 御三家流媒体解锁信息并发查询[借鉴[netflix-verify](https://github.com/sjlleo/netflix-verify)、[VerifyDisneyPlus](https://github.com/sjlleo/VerifyDisneyPlus)、[TubeCheck](https://github.com/sjlleo/TubeCheck)二次开发至于[CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)]
-- [x] 常见流媒体测试并发查询[自研代码，逻辑借鉴[RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck)、[MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest)并自行修复错漏至于[UnlockTests](https://github.com/oneclickvirt/UnlockTests)]
-- [x] IP质量/安全信息并发查询[自研，由于测试含密钥信息，故而私有化开发，但二进制文件编译至于[securityCheck](https://github.com/oneclickvirt/securityCheck)]
-- [x] 邮件端口测试[自研[portchecker](https://github.com/oneclickvirt/portchecker)]
-- [x] 三网回程测试[借鉴[zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)二次开发至于[oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)]
-- [x] 三网路由测试[借鉴[NTrace-core](https://github.com/nxtrace/NTrace-core)二次开发至于[nt3](https://github.com/oneclickvirt/nt3)]
-- [x] 测试网速[基于[speedtest.net-爬虫](https://github.com/spiritLHLS/speedtest.net-CN-ID)、[speedtest.cn-爬虫](https://github.com/spiritLHLS/speedtest.cn-CN-ID)的数据，借鉴[speedtest-go](https://github.com/showwin/speedtest-go)二次开发至于[oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
-- [x] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发至于[pingtest](https://github.com/oneclickvirt/pingtest)]
+- [x] System basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)]
+- [x] Concurrent IP basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics)]
+- [x] CPU test [Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench, geekbench, winsat]
+- [x] Memory test [Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd]
+- [x] Disk test [Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat]
+- [x] Concurrent streaming media unlock information query for three major platforms [Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify), [VerifyDisneyPlus](https://github.com/sjlleo/VerifyDisneyPlus), [TubeCheck](https://github.com/sjlleo/TubeCheck) to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)]
+- [x] Concurrent common streaming media tests [Self-developed code, logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck), [MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest) to [UnlockTests](https://github.com/oneclickvirt/UnlockTests)]
+- [x] Concurrent IP quality/security information query [Self-developed, due to testing with key information, privately developed, but binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)]
+- [x] Email port test [Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)]
+- [x] Three-network return path test [Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)]
+- [x] Three-network route test [Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)]
+- [x] Speed test [Based on data from [speedtest.net-crawler](https://github.com/spiritLHLS/speedtest.net-CN-ID), [speedtest.cn-crawler](https://github.com/spiritLHLS/speedtest.cn-CN-ID), modified from [speedtest-go](https://github.com/showwin/speedtest-go) to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
+- [x] Three-network Ping test [Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) logic to [pingtest](https://github.com/oneclickvirt/pingtest)]
 
-## Linux上使用的说明
+## Instructions for Use on Linux
 
-下载脚本
+Download the script
 
 ```
 curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
 
-或
+or
 
 ```
 curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
 
-安装环境
+Install environment
 
 ```
 ./goecs.sh env
 ```
 
-安装goecs
+Install goecs
 
 ```
 ./goecs.sh install
 ```
 
-升级goecs
+Upgrade goecs
 
 ```
 ./goecs.sh upgrade
 ```
 
-卸载goecs
+Uninstall goecs
 
 ```
 ./goecs.sh delete
 ```
 
-shell脚本的说明
+Explanation of the shell script
 
 ```
 Available commands:
@@ -96,19 +96,19 @@ Available commands:
 ./goecs.sh help            Show this message
 ```
 
-goecs唤起菜单
+Invoke the goecs menu
 
 ```
 goecs
 ```
 
-或
+or
 
 ```
 ./goecs
 ```
 
-goecs命令参数化
+Parameterized goecs command
 
 ```
 Usage: goecs [options]
@@ -162,14 +162,14 @@ Usage: goecs [options]
   -v    Display version information
 ```
 
-## Windows上使用的说明
+## Instructions for Use on Windows
 
-下载带exe文件的压缩文件
+Download the compressed file with the exe file
 
 https://github.com/oneclickvirt/ecs/releases
 
-找其中最新的版本，按照对应架构下载对应的 .tar.gz 文件，解压后文件夹内有一个exe文件
+Find the latest version, download the .tar.gz file corresponding to your architecture, and unzip it to get an exe file.
 
-选择该exe文件，右键点击选择管理员模式运行(非管理员模式运行无法进行硬件测试)，唤起菜单自选
+Right-click the exe file and select Run as administrator (running without administrator mode will not allow hardware testing), and invoke the menu to choose.
 
-windows测试无需进行环境安装
+No environment installation is required for Windows testing.
