@@ -246,6 +246,9 @@ func main() {
 		backtraceStatus = false
 		nt3Status = false
 	}
+	if !enabelUpload {
+		securityTestStatus = false
+	}
 	startTime := time.Now()
 	var (
 		wg1, wg2                                      sync.WaitGroup

@@ -1,6 +1,6 @@
 #!/bin/bash
 #From https://github.com/oneclickvirt/ecs
-#2024.06.29
+#2024.07.04
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
