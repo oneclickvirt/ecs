@@ -18,13 +18,13 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 更多架构请自行测试
 
-编译支持的系统: Linux、Windows、OpenBSD
+编译支持的系统: Linux、Windows
 
 测试支持的系统: Linux、Windows 
 
 更多系统请自行测试
 
-待支持的系统(存在硬件测试BUG未修复): MacOS、FreeBSD
+待支持的系统(存在硬件测试BUG未修复): MacOS、FreeBSD、OpenBSD
 
 ## 功能
 
@@ -188,7 +188,7 @@ Usage: goecs [options]
 
 https://github.com/oneclickvirt/ecs/releases
 
-找其中最新的版本，按照对应架构下载对应的 .tar.gz 文件，解压后文件夹内有一个exe文件
+找其中最新的版本，按照对应架构下载对应的 .zip 文件，解压后文件夹内有一个exe文件
 
 选择该exe文件，右键点击选择管理员模式运行(非管理员模式运行无法进行硬件测试)，唤起菜单自选
 

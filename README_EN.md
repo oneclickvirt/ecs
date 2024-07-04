@@ -18,13 +18,13 @@ Tested architectures: amd64, arm64
 
 More architectures please test by yourself
 
-Compilation support: Linux, Windows, FreeBSD, OpenBSD
+Compilation support: Linux, Windows
 
 Tested on: Linux, Windows
 
 More systems to be tested
 
-Systems to be supported (hardware testing bugs not yet fixed): MacOS、FreeBSD
+Systems to be supported (hardware testing bugs not yet fixed): MacOS、FreeBSD、OpenBSD
 
 ## Features
 
@@ -176,7 +176,7 @@ Download the compressed file with the exe file
 
 https://github.com/oneclickvirt/ecs/releases
 
-Find the latest version, download the .tar.gz file corresponding to your architecture, and unzip it to get an exe file.
+Find the latest version, download the .zip file corresponding to your architecture, and unzip it to get an exe file.
 
 Right-click the exe file and select Run as administrator (running without administrator mode will not allow hardware testing), and invoke the menu to choose.
 
