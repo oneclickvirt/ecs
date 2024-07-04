@@ -10,7 +10,7 @@ require (
 	github.com/oneclickvirt/basics v0.0.5-20240702055351
 	github.com/oneclickvirt/cputest v0.0.8-20240702070215
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.4-20240702071738
+	github.com/oneclickvirt/disktest v0.0.4-20240704095213
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
 	github.com/oneclickvirt/memorytest v0.0.2-20240702031042
 	github.com/oneclickvirt/nt3 v0.0.3-20240702132013
