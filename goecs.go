@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
+	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
 	backtraceori "github.com/oneclickvirt/backtrace/bk"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
@@ -36,7 +37,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.37"
+	ecsVersion                                                        = "v0.0.38"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -105,6 +106,7 @@ func main() {
 		memorytestmodel.EnableLoger = true
 		disktestmodel.EnableLoger = true
 		commediatests.EnableLoger = true
+		unlocktestmodel.EnableLoger = true
 		ptmodel.EnableLoger = true
 		backtraceori.EnableLoger = true
 		nt3model.EnableLoger = true
