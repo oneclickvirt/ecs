@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.48"
+	ecsVersion                                                        = "v0.0.49"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -252,10 +252,10 @@ func main() {
 		securityTestStatus = false
 	}
 	var (
-		startTime                                     time.Time
-		wg1, wg2                                      sync.WaitGroup
-		basicInfo, securityInfo, emailInfo, mediaInfo string
-		output, tempOutput                            string
+		startTime                                             time.Time
+		wg1, wg2, wg3                                         sync.WaitGroup
+		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
+		output, tempOutput                                    string
 	)
 	// 启动一个goroutine来等待信号，内置计时器
 	go func() {
@@ -308,6 +308,13 @@ func main() {
 				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
 			}
 		}, tempOutput, output)
+		if onlyChinaTest || pingTestStatus {
+			wg3.Add(1)
+			go func() {
+				defer wg3.Done()
+				ptInfo = pt.PingTest()
+			}()
+		}
 		if emailTestStatus {
 			wg2.Add(1)
 			go func() {
@@ -365,7 +372,8 @@ func main() {
 			output = utils.PrintAndCapture(func() {
 				if onlyChinaTest || pingTestStatus {
 					utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
-					pt.PingTest()
+					wg3.Wait()
+					fmt.Println(ptInfo)
 				}
 			}, tempOutput, output)
 		}

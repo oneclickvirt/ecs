@@ -165,6 +165,8 @@ Usage: goecs [options]
         Enable/Disable speed test (default true)
   -spnum int
         Set the number of servers per operator for speed test (default 2)
+  -upload
+        Enable/Disable upload the result (default true)
   -ut
         Enable/Disable unlock media test (default true)
   -v    Display version information
