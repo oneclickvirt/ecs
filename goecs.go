@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.36"
+	ecsVersion                                                        = "v0.0.37"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -85,6 +85,7 @@ func main() {
 	goecsFlag.StringVar(&nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	goecsFlag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
+	goecsFlag.BoolVar(&enabelUpload, "upload", true, "Enable/Disable upload the result")
 	goecsFlag.Parse(os.Args[1:])
 	if help {
 		fmt.Printf("Usage: %s [options]\n", os.Args[0])

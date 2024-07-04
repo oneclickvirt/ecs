@@ -233,30 +233,44 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "" "pkg autoremove" "apk autoremove")
+    # 检查系统信息
     if [ -f /etc/alpine-release ]; then
-          SYS="alpine"
+        SYS="alpine"
     elif [ -s /etc/os-release ]; then
-      SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
+        SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
     elif [ -x "$(type -p hostnamectl)" ]; then
-      SYS="$(hostnamectl | grep -i system | cut -d : -f2)"
+        SYS="$(hostnamectl | grep -i system | cut -d : -f2 | xargs)"
     elif [ -x "$(type -p lsb_release)" ]; then
-      SYS="$(lsb_release -sd)"
+        SYS="$(lsb_release -sd)"
     elif [ -s /etc/lsb-release ]; then
-      SYS="$(grep -i description /etc/lsb-release | cut -d \" -f2)"
+        SYS="$(grep -i description /etc/lsb-release | cut -d \" -f2)"
     elif [ -s /etc/redhat-release ]; then
-      SYS="$(grep . /etc/redhat-release)"
+        SYS="$(grep . /etc/redhat-release)"
     elif [ -s /etc/issue ]; then
-      SYS="$(grep . /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
+        SYS="$(grep . /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
     else
-      SYS="$(uname -s)}"
+        SYS="$(uname -s)"
     fi
     [[ -n $SYS ]] || exit 1
+    # 匹配操作系统
     for ((int = 0; int < ${#REGEX[@]}; int++)); do
         if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then
             SYSTEM="${RELEASE[int]}"
             [[ -n $SYSTEM ]] && break
         fi
     done
+    # 检查是否成功匹配
+    [[ -n $SYSTEM ]] || exit 1
+    # 根据 SYSTEM 设置相应的包管理命令
+    UPDATE_CMD=${PACKAGE_UPDATE[int]}
+    INSTALL_CMD=${PACKAGE_INSTALL[int]}
+    REMOVE_CMD=${PACKAGE_REMOVE[int]}
+    UNINSTALL_CMD=${PACKAGE_UNINSTALL[int]}
+    echo "System: $SYSTEM"
+    echo "Update command: $UPDATE_CMD"
+    echo "Install command: $INSTALL_CMD"
+    echo "Remove command: $REMOVE_CMD"
+    echo "Uninstall command: $UNINSTALL_CMD"
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _green "Update system manager."
