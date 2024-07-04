@@ -274,30 +274,30 @@ env_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _green "Update system manager."
-    $PACKAGE_UPDATE command 2>/dev/null
+    ${PACKAGE_UPDATE[int]} command 2>/dev/null
     if ! command -v sudo >/dev/null 2>&1; then
             _green "Installing sudo"
-            $PACKAGE_INSTALL sudo
+            ${PACKAGE_INSTALL[int]} sudo
         fi
     if ! command -v tar >/dev/null 2>&1; then
         _green "Installing tar"
-        $PACKAGE_INSTALL tar
+        ${PACKAGE_INSTALL[int]} tar
     fi
     if ! command -v unzip >/dev/null 2>&1; then
         _green "Installing unzip"
-        $PACKAGE_INSTALL unzip
+        ${PACKAGE_INSTALL[int]} unzip
     fi
     if ! command -v dd >/dev/null 2>&1; then
         _green "Installing dd"
-        $PACKAGE_INSTALL dd
+        ${PACKAGE_INSTALL[int]} dd
     fi
     if ! command -v fio >/dev/null 2>&1; then
         _green "Installing fio"
-        $PACKAGE_INSTALL fio
+        ${PACKAGE_INSTALL[int]} fio
     fi
     if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
-        $PACKAGE_INSTALL sysbench
+        ${PACKAGE_INSTALL[int]} sysbench
         if [ $? -ne 0 ]; then
             echo "Unable to download sysbench through the system's package manager, speak to try compiling and installing it..."
             if ! wget -O /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"; then
