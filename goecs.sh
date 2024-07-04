@@ -80,16 +80,16 @@ goecs_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     case $os in
-    Linux|FreeBSD)
+    Linux)
         case $arch in
         "x86_64" | "x86" | "amd64" | "x64")
-            wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_amd64.tar.gz"
+            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip"
             ;;
         "i386" | "i686")
-            wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_386.tar.gz"
+            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip"
             ;;
         "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_arm64.tar.gz"
+            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip"
             ;;
         *)
             echo "Unsupported architecture: $arch"
@@ -97,13 +97,30 @@ goecs_check() {
             ;;
         esac
         ;;
+    FreeBSD)
+            case $arch in
+            "x86_64" | "x86" | "amd64" | "x64")
+                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip"
+                ;;
+            "i386" | "i686")
+                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip"
+                ;;
+            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip"
+                ;;
+            *)
+                echo "Unsupported architecture: $arch"
+                exit 1
+                ;;
+            esac
+            ;;
     Darwin)
         case $arch in
         "x86_64" | "x86" | "amd64" | "x64")
-            wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_amd64.tar.gz"
+            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip"
             ;;
         "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_arm64.tar.gz"
+            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip"
             ;;
         *)
             echo "Unsupported architecture: $arch"
@@ -116,8 +133,8 @@ goecs_check() {
         exit 1
         ;;
     esac
-    tar -xvf goecs.tar.gz
-    rm -rf goecs.tar.gz
+    unzip goecs.zip
+    rm -rf goecs.zip
     rm -rf README.md
     rm -rf LICENSE
     mv ecs goecs
