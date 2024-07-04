@@ -167,6 +167,9 @@ InstallSysbench() {
 }
 
 Check_SysBench() {
+    if [ ! -f "/usr/bin/sysbench" ] && [ ! -f "/usr/local/bin/sysbench" ]; then
+        InstallSysbench
+    fi
     # 尝试编译安装
     if [ ! -f "/usr/bin/sysbench" ] && [ ! -f "/usr/local/bin/sysbench" ]; then
         echo -e "${Msg_Warning}Sysbench Module install Failure, trying compile modules ..."
@@ -180,7 +183,7 @@ Check_SysBench() {
         _red "SysBench Moudle install Failure! Try Restart Bench or Manually install it! (/usr/bin/sysbench)"
         _blue "Will try to test with geekbench5 instead later."
     fi
-    sleep 2
+    sleep 3
 }
 
 Check_Sysbench_InstantBuild() {
