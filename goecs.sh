@@ -80,7 +80,7 @@ goecs_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     case $os in
-    Linux)
+    Linux|FreeBSD)
         case $arch in
         "x86_64" | "x86" | "amd64" | "x64")
             wget -O goecs.tar.gz "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/ecs_${ECS_VERSION}_linux_amd64.tar.gz"
