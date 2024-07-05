@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.49"
+	ecsVersion                                                        = "v0.0.50"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -124,24 +124,24 @@ func main() {
 			fmt.Println("VPS融合怪版本: ", ecsVersion)
 			fmt.Println("1. 融合怪完全体")
 			fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
-			fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+御三家+常用流媒体+回程+路由+测速节点5个)")
+			fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
 			fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
 			fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
 			fmt.Println("6. 网络单项(IP质量检测+三网回程+三网路由与延迟+测速节点11个)")
 			fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
-			fmt.Println("8. 硬件单项(基础系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
+			fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)-待修复")
 			fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
 			fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
 		case "en":
 			fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
 			fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
 			fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
-			fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
+			fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
 			fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 			fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
 			fmt.Println("6. Network-Only Test (IP Quality Test + 5 Speed Test Nodes)")
 			fmt.Println("7. Unlock-Only Test (Basic Unlock Tests + Common Streaming Services Unlock)")
-			fmt.Println("8. Hardware-Only Test (Basic System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
+			fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
 			fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
 		}
 	Loop:
@@ -180,10 +180,7 @@ func main() {
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
-					commTestStatus = true
 					utTestStatus = true
-					securityTestStatus = true
-					backtraceStatus = true
 					nt3Status = true
 					speedTestStatus = true
 					break Loop
@@ -201,32 +198,39 @@ func main() {
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
-					securityTestStatus = true
+					commTestStatus = true
+					utTestStatus = true
 					speedTestStatus = true
 					break Loop
 				case "6":
+					securityTestStatus = true
 					speedTestStatus = true
 					backtraceStatus = true
 					nt3Status = true
+					enabelUpload = false
 					break Loop
 				case "7":
-					securityTestStatus = true
 					commTestStatus = true
+					utTestStatus = true
+					enabelUpload = false
 					break Loop
 				case "8":
 					basicStatus = true
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
+					// TODO 双硬盘类型测试
 					break Loop
 				case "9":
+					securityTestStatus = true
 					emailTestStatus = true
+					enabelUpload = false
 					break Loop
 				case "10":
 					backtraceStatus = true
 					nt3Status = true
-					speedTestStatus = true
 					pingTestStatus = true
+					enabelUpload = false
 					break Loop
 				default:
 					if language == "zh" {
