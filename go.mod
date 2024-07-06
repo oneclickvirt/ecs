@@ -7,7 +7,7 @@ require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
 	github.com/oneclickvirt/UnlockTests v0.0.11-20240704101006
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
-	github.com/oneclickvirt/basics v0.0.5-20240704113233
+	github.com/oneclickvirt/basics v0.0.6-20240706025619
 	github.com/oneclickvirt/cputest v0.0.8-20240702070215
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.4-20240704095213
@@ -16,7 +16,7 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.3-20240702132013
 	github.com/oneclickvirt/pingtest v0.0.4-20240703142340
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
-	github.com/oneclickvirt/security v0.0.4-20240704114145
+	github.com/oneclickvirt/security v0.0.4-20240706030003
 	github.com/oneclickvirt/speedtest v0.0.7-20240704023701
 )
 
@@ -43,6 +43,7 @@ require (
 	github.com/libp2p/go-nat v0.2.0 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/lionsoul2014/ip2region v2.11.2+incompatible // indirect
+	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -58,6 +59,7 @@ require (
 	github.com/pion/stun/v2 v2.0.0 // indirect
 	github.com/pion/transport/v2 v2.2.1 // indirect
 	github.com/pion/transport/v3 v3.0.1 // indirect
+	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/quic-go v0.45.1 // indirect
 	github.com/refraction-networking/utls v1.6.6 // indirect
@@ -67,6 +69,8 @@ require (
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/schollz/progressbar/v3 v3.14.4 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
+	github.com/shirou/gopsutil/v4 v4.24.5 // indirect
+	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/showwin/speedtest-go v1.7.7 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect

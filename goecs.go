@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
@@ -37,7 +38,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.50"
+	ecsVersion                                                        = "v0.0.51"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -207,7 +208,6 @@ func main() {
 					speedTestStatus = true
 					backtraceStatus = true
 					nt3Status = true
-					enabelUpload = false
 					break Loop
 				case "7":
 					commTestStatus = true
@@ -224,7 +224,6 @@ func main() {
 				case "9":
 					securityTestStatus = true
 					emailTestStatus = true
-					enabelUpload = false
 					break Loop
 				case "10":
 					backtraceStatus = true
@@ -291,6 +290,14 @@ func main() {
 				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
 					fmt.Printf(basicInfo)
+				} else if (input == "6" || input == "9") && securityTestStatus {
+					scanner := bufio.NewScanner(strings.NewReader(basicInfo))
+					for scanner.Scan() {
+						line := scanner.Text()
+						if strings.Contains(line, "IPV") {
+							fmt.Println(line)
+						}
+					}
 				}
 			}
 		}, tempOutput, output)
@@ -417,6 +424,14 @@ func main() {
 				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
 					fmt.Printf(basicInfo)
+				} else if (input == "6" || input == "9") && securityTestStatus {
+					scanner := bufio.NewScanner(strings.NewReader(basicInfo))
+					for scanner.Scan() {
+						line := scanner.Text()
+						if strings.Contains(line, "IPV") {
+							fmt.Println(line)
+						}
+					}
 				}
 			}
 		}, tempOutput, output)
