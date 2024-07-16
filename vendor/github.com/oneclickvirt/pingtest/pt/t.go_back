@@ -1,0 +1,21 @@
+package pt
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+)
+
+func TTT() {
+	output := "PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.\n64 bytes from 1.1.1.1: icmp_seq=1 ttl=58 time=0.944 ms"
+	var avgTime float64
+	lines := strings.Split(output, "\n")
+	if len(lines) >= 2 {
+		matches := strings.Split(lines[1], "time=")
+		if len(matches) >= 2 {
+			avgTime, _ = strconv.ParseFloat(strings.TrimSpace(strings.ReplaceAll(matches[1], "ms", "")), 64)
+		}
+	}
+	fmt.Println(time.Duration(avgTime ))
+}

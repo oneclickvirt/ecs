@@ -1,0 +1,11 @@
+package memory
+
+import (
+	"fmt"
+	"testing"
+)
+
+func TestM(t *testing.T) {
+	res := SysBenchTest("zh")
+	fmt.Println(res)
+}

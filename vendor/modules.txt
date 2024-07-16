@@ -1,0 +1,586 @@
+# github.com/PuerkitoBio/goquery v1.9.2
+## explicit; go 1.18
+github.com/PuerkitoBio/goquery
+# github.com/andybalholm/brotli v1.1.0
+## explicit; go 1.13
+github.com/andybalholm/brotli
+github.com/andybalholm/brotli/matchfinder
+# github.com/andybalholm/cascadia v1.3.2
+## explicit; go 1.16
+github.com/andybalholm/cascadia
+# github.com/cloudflare/circl v1.3.9
+## explicit; go 1.21
+github.com/cloudflare/circl/dh/x25519
+github.com/cloudflare/circl/dh/x448
+github.com/cloudflare/circl/ecc/goldilocks
+github.com/cloudflare/circl/ecc/p384
+github.com/cloudflare/circl/hpke
+github.com/cloudflare/circl/internal/conv
+github.com/cloudflare/circl/internal/sha3
+github.com/cloudflare/circl/kem
+github.com/cloudflare/circl/kem/hybrid
+github.com/cloudflare/circl/kem/kyber/kyber1024
+github.com/cloudflare/circl/kem/kyber/kyber512
+github.com/cloudflare/circl/kem/kyber/kyber768
+github.com/cloudflare/circl/math
+github.com/cloudflare/circl/math/fp25519
+github.com/cloudflare/circl/math/fp448
+github.com/cloudflare/circl/math/mlsbset
+github.com/cloudflare/circl/pke/kyber/internal/common
+github.com/cloudflare/circl/pke/kyber/internal/common/params
+github.com/cloudflare/circl/pke/kyber/kyber1024
+github.com/cloudflare/circl/pke/kyber/kyber1024/internal
+github.com/cloudflare/circl/pke/kyber/kyber512
+github.com/cloudflare/circl/pke/kyber/kyber512/internal
+github.com/cloudflare/circl/pke/kyber/kyber768
+github.com/cloudflare/circl/pke/kyber/kyber768/internal
+github.com/cloudflare/circl/pki
+github.com/cloudflare/circl/sign
+github.com/cloudflare/circl/sign/dilithium/internal/common
+github.com/cloudflare/circl/sign/dilithium/internal/common/params
+github.com/cloudflare/circl/sign/dilithium/mode2
+github.com/cloudflare/circl/sign/dilithium/mode2/internal
+github.com/cloudflare/circl/sign/dilithium/mode3
+github.com/cloudflare/circl/sign/dilithium/mode3/internal
+github.com/cloudflare/circl/sign/ed25519
+github.com/cloudflare/circl/sign/ed448
+github.com/cloudflare/circl/sign/eddilithium2
+github.com/cloudflare/circl/sign/eddilithium3
+github.com/cloudflare/circl/sign/schemes
+github.com/cloudflare/circl/simd/keccakf1600
+github.com/cloudflare/circl/xof
+github.com/cloudflare/circl/xof/k12
+# github.com/fatih/color v1.17.0
+## explicit; go 1.17
+github.com/fatih/color
+# github.com/fsnotify/fsnotify v1.7.0
+## explicit; go 1.17
+github.com/fsnotify/fsnotify
+# github.com/go-ole/go-ole v1.2.6
+## explicit; go 1.12
+github.com/go-ole/go-ole
+github.com/go-ole/go-ole/oleutil
+# github.com/go-task/slim-sprig/v3 v3.0.0
+## explicit; go 1.20
+github.com/go-task/slim-sprig/v3
+# github.com/gofrs/uuid/v5 v5.2.0
+## explicit; go 1.19
+github.com/gofrs/uuid/v5
+# github.com/google/gopacket v1.1.19
+## explicit; go 1.12
+github.com/google/gopacket
+github.com/google/gopacket/layers
+github.com/google/gopacket/routing
+# github.com/google/pprof v0.0.0-20240625030939-27f56978b8b0
+## explicit; go 1.19
+github.com/google/pprof/profile
+# github.com/gorilla/websocket v1.5.1
+## explicit; go 1.20
+github.com/gorilla/websocket
+# github.com/hashicorp/errwrap v1.1.0
+## explicit
+github.com/hashicorp/errwrap
+# github.com/hashicorp/go-multierror v1.1.1
+## explicit; go 1.13
+github.com/hashicorp/go-multierror
+# github.com/hashicorp/hcl v1.0.0
+## explicit
+github.com/hashicorp/hcl
+github.com/hashicorp/hcl/hcl/ast
+github.com/hashicorp/hcl/hcl/parser
+github.com/hashicorp/hcl/hcl/printer
+github.com/hashicorp/hcl/hcl/scanner
+github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/json/scanner
+github.com/hashicorp/hcl/json/token
+# github.com/huin/goupnp v1.2.0
+## explicit; go 1.14
+github.com/huin/goupnp
+github.com/huin/goupnp/dcps/internetgateway1
+github.com/huin/goupnp/dcps/internetgateway2
+github.com/huin/goupnp/httpu
+github.com/huin/goupnp/scpd
+github.com/huin/goupnp/soap
+github.com/huin/goupnp/ssdp
+# github.com/imroc/req/v3 v3.43.7
+## explicit; go 1.21
+github.com/imroc/req/v3
+github.com/imroc/req/v3/http2
+github.com/imroc/req/v3/internal
+github.com/imroc/req/v3/internal/altsvcutil
+github.com/imroc/req/v3/internal/ascii
+github.com/imroc/req/v3/internal/bisect
+github.com/imroc/req/v3/internal/charsets
+github.com/imroc/req/v3/internal/common
+github.com/imroc/req/v3/internal/dump
+github.com/imroc/req/v3/internal/godebug
+github.com/imroc/req/v3/internal/godebugs
+github.com/imroc/req/v3/internal/header
+github.com/imroc/req/v3/internal/http2
+github.com/imroc/req/v3/internal/http3
+github.com/imroc/req/v3/internal/netutil
+github.com/imroc/req/v3/internal/quic-go/quicvarint
+github.com/imroc/req/v3/internal/socks
+github.com/imroc/req/v3/internal/transport
+github.com/imroc/req/v3/internal/util
+github.com/imroc/req/v3/pkg/altsvc
+github.com/imroc/req/v3/pkg/tls
+# github.com/jackpal/go-nat-pmp v1.0.2
+## explicit
+github.com/jackpal/go-nat-pmp
+# github.com/klauspost/compress v1.17.9
+## explicit; go 1.20
+github.com/klauspost/compress
+github.com/klauspost/compress/fse
+github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/cpuinfo
+github.com/klauspost/compress/internal/snapref
+github.com/klauspost/compress/zstd
+github.com/klauspost/compress/zstd/internal/xxhash
+# github.com/koron/go-ssdp v0.0.4
+## explicit; go 1.19
+github.com/koron/go-ssdp
+github.com/koron/go-ssdp/internal/multicast
+github.com/koron/go-ssdp/internal/ssdplog
+# github.com/libp2p/go-nat v0.2.0
+## explicit; go 1.19
+github.com/libp2p/go-nat
+# github.com/libp2p/go-netroute v0.2.1
+## explicit; go 1.18
+github.com/libp2p/go-netroute
+# github.com/lionsoul2014/ip2region v2.11.2+incompatible
+## explicit
+github.com/lionsoul2014/ip2region/v1.0/binding/golang/ip2region
+# github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0
+## explicit; go 1.16
+github.com/lufia/plan9stats
+# github.com/magiconair/properties v1.8.7
+## explicit; go 1.19
+github.com/magiconair/properties
+# github.com/mattn/go-colorable v0.1.13
+## explicit; go 1.15
+github.com/mattn/go-colorable
+# github.com/mattn/go-isatty v0.0.20
+## explicit; go 1.15
+github.com/mattn/go-isatty
+# github.com/mattn/go-runewidth v0.0.15
+## explicit; go 1.9
+github.com/mattn/go-runewidth
+# github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db
+## explicit
+github.com/mitchellh/colorstring
+# github.com/mitchellh/mapstructure v1.5.0
+## explicit; go 1.14
+github.com/mitchellh/mapstructure
+# github.com/nxtrace/NTrace-core v1.3.1
+## explicit; go 1.22.0
+github.com/nxtrace/NTrace-core/config
+github.com/nxtrace/NTrace-core/dn42
+github.com/nxtrace/NTrace-core/fast_trace
+github.com/nxtrace/NTrace-core/ipgeo
+github.com/nxtrace/NTrace-core/pow
+github.com/nxtrace/NTrace-core/printer
+github.com/nxtrace/NTrace-core/trace
+github.com/nxtrace/NTrace-core/trace/internal
+github.com/nxtrace/NTrace-core/tracelog
+github.com/nxtrace/NTrace-core/util
+github.com/nxtrace/NTrace-core/wshandle
+# github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
+## explicit; go 1.22.4
+github.com/oneclickvirt/CommonMediaTests/commediatests
+github.com/oneclickvirt/CommonMediaTests/commediatests/netflix
+github.com/oneclickvirt/CommonMediaTests/commediatests/netflix/printer
+github.com/oneclickvirt/CommonMediaTests/commediatests/netflix/util
+github.com/oneclickvirt/CommonMediaTests/commediatests/netflix/verify
+github.com/oneclickvirt/CommonMediaTests/commediatests/utils
+github.com/oneclickvirt/CommonMediaTests/commediatests/website
+# github.com/oneclickvirt/UnlockTests v0.0.12-20240716020706
+## explicit; go 1.22.4
+github.com/oneclickvirt/UnlockTests/africa
+github.com/oneclickvirt/UnlockTests/asia
+github.com/oneclickvirt/UnlockTests/au
+github.com/oneclickvirt/UnlockTests/ca
+github.com/oneclickvirt/UnlockTests/ch
+github.com/oneclickvirt/UnlockTests/de
+github.com/oneclickvirt/UnlockTests/es
+github.com/oneclickvirt/UnlockTests/eu
+github.com/oneclickvirt/UnlockTests/fr
+github.com/oneclickvirt/UnlockTests/hk
+github.com/oneclickvirt/UnlockTests/in
+github.com/oneclickvirt/UnlockTests/it
+github.com/oneclickvirt/UnlockTests/jp
+github.com/oneclickvirt/UnlockTests/kr
+github.com/oneclickvirt/UnlockTests/model
+github.com/oneclickvirt/UnlockTests/nl
+github.com/oneclickvirt/UnlockTests/nz
+github.com/oneclickvirt/UnlockTests/ru
+github.com/oneclickvirt/UnlockTests/sg
+github.com/oneclickvirt/UnlockTests/th
+github.com/oneclickvirt/UnlockTests/transnation
+github.com/oneclickvirt/UnlockTests/tw
+github.com/oneclickvirt/UnlockTests/uk
+github.com/oneclickvirt/UnlockTests/us
+github.com/oneclickvirt/UnlockTests/utils
+github.com/oneclickvirt/UnlockTests/uts
+# github.com/oneclickvirt/backtrace v0.0.4-20240702140722
+## explicit; go 1.22.4
+github.com/oneclickvirt/backtrace/bk
+# github.com/oneclickvirt/basics v0.0.6-20240706025619
+## explicit; go 1.22.4
+github.com/oneclickvirt/basics/model
+github.com/oneclickvirt/basics/network
+github.com/oneclickvirt/basics/network/baseinfo
+github.com/oneclickvirt/basics/network/utils
+github.com/oneclickvirt/basics/system
+github.com/oneclickvirt/basics/system/utils
+# github.com/oneclickvirt/cputest v0.0.8-20240702070215
+## explicit; go 1.22.4
+github.com/oneclickvirt/cputest/cpu
+github.com/oneclickvirt/cputest/model
+# github.com/oneclickvirt/defaultset v0.0.2-20240624082446
+## explicit; go 1.22.4
+github.com/oneclickvirt/defaultset
+# github.com/oneclickvirt/disktest v0.0.4-20240704095213
+## explicit; go 1.22.4
+github.com/oneclickvirt/disktest/disk
+# github.com/oneclickvirt/gostun v0.0.3-20240702054621
+## explicit; go 1.22.4
+github.com/oneclickvirt/gostun/model
+github.com/oneclickvirt/gostun/stuncheck
+# github.com/oneclickvirt/memorytest v0.0.2-20240702031042
+## explicit; go 1.22.4
+github.com/oneclickvirt/memorytest/memory
+# github.com/oneclickvirt/nt3 v0.0.3-20240702132013
+## explicit; go 1.22.4
+github.com/oneclickvirt/nt3/model
+github.com/oneclickvirt/nt3/nt
+# github.com/oneclickvirt/pingtest v0.0.4-20240703142340
+## explicit; go 1.22.4
+github.com/oneclickvirt/pingtest/model
+github.com/oneclickvirt/pingtest/pt
+# github.com/oneclickvirt/portchecker v0.0.1-20240624155429
+## explicit; go 1.22.4
+github.com/oneclickvirt/portchecker/email
+github.com/oneclickvirt/portchecker/model
+# github.com/oneclickvirt/security v0.0.4-20240706030003
+## explicit; go 1.22.4
+github.com/oneclickvirt/security/network
+github.com/oneclickvirt/security/network/printhead
+github.com/oneclickvirt/security/network/security
+# github.com/oneclickvirt/speedtest v0.0.7-20240704023701
+## explicit; go 1.22.4
+github.com/oneclickvirt/speedtest/model
+github.com/oneclickvirt/speedtest/sp
+# github.com/onsi/ginkgo/v2 v2.19.0
+## explicit; go 1.20
+github.com/onsi/ginkgo/v2/config
+github.com/onsi/ginkgo/v2/formatter
+github.com/onsi/ginkgo/v2/ginkgo
+github.com/onsi/ginkgo/v2/ginkgo/build
+github.com/onsi/ginkgo/v2/ginkgo/command
+github.com/onsi/ginkgo/v2/ginkgo/generators
+github.com/onsi/ginkgo/v2/ginkgo/internal
+github.com/onsi/ginkgo/v2/ginkgo/labels
+github.com/onsi/ginkgo/v2/ginkgo/outline
+github.com/onsi/ginkgo/v2/ginkgo/run
+github.com/onsi/ginkgo/v2/ginkgo/unfocus
+github.com/onsi/ginkgo/v2/ginkgo/watch
+github.com/onsi/ginkgo/v2/internal/interrupt_handler
+github.com/onsi/ginkgo/v2/internal/parallel_support
+github.com/onsi/ginkgo/v2/reporters
+github.com/onsi/ginkgo/v2/types
+# github.com/oschwald/maxminddb-golang v1.12.0
+## explicit; go 1.19
+github.com/oschwald/maxminddb-golang
+# github.com/pelletier/go-toml/v2 v2.2.2
+## explicit; go 1.16
+github.com/pelletier/go-toml/v2
+github.com/pelletier/go-toml/v2/internal/characters
+github.com/pelletier/go-toml/v2/internal/danger
+github.com/pelletier/go-toml/v2/internal/tracker
+github.com/pelletier/go-toml/v2/unstable
+# github.com/pion/dtls/v2 v2.2.7
+## explicit; go 1.13
+github.com/pion/dtls/v2
+github.com/pion/dtls/v2/internal/ciphersuite
+github.com/pion/dtls/v2/internal/ciphersuite/types
+github.com/pion/dtls/v2/internal/closer
+github.com/pion/dtls/v2/internal/util
+github.com/pion/dtls/v2/pkg/crypto/ccm
+github.com/pion/dtls/v2/pkg/crypto/ciphersuite
+github.com/pion/dtls/v2/pkg/crypto/clientcertificate
+github.com/pion/dtls/v2/pkg/crypto/elliptic
+github.com/pion/dtls/v2/pkg/crypto/hash
+github.com/pion/dtls/v2/pkg/crypto/prf
+github.com/pion/dtls/v2/pkg/crypto/signature
+github.com/pion/dtls/v2/pkg/crypto/signaturehash
+github.com/pion/dtls/v2/pkg/protocol
+github.com/pion/dtls/v2/pkg/protocol/alert
+github.com/pion/dtls/v2/pkg/protocol/extension
+github.com/pion/dtls/v2/pkg/protocol/handshake
+github.com/pion/dtls/v2/pkg/protocol/recordlayer
+# github.com/pion/logging v0.2.2
+## explicit; go 1.12
+github.com/pion/logging
+# github.com/pion/stun/v2 v2.0.0
+## explicit; go 1.12
+github.com/pion/stun/v2
+github.com/pion/stun/v2/internal/hmac
+# github.com/pion/transport/v2 v2.2.1
+## explicit; go 1.12
+github.com/pion/transport/v2/connctx
+github.com/pion/transport/v2/deadline
+github.com/pion/transport/v2/packetio
+github.com/pion/transport/v2/replaydetector
+github.com/pion/transport/v2/udp
+# github.com/pion/transport/v3 v3.0.1
+## explicit; go 1.12
+github.com/pion/transport/v3
+github.com/pion/transport/v3/stdnet
+github.com/pion/transport/v3/utils/xor
+# github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c
+## explicit; go 1.14
+github.com/power-devops/perfstat
+# github.com/quic-go/qpack v0.4.0
+## explicit; go 1.18
+github.com/quic-go/qpack
+# github.com/quic-go/quic-go v0.45.1
+## explicit; go 1.21
+github.com/quic-go/quic-go
+github.com/quic-go/quic-go/internal/ackhandler
+github.com/quic-go/quic-go/internal/congestion
+github.com/quic-go/quic-go/internal/flowcontrol
+github.com/quic-go/quic-go/internal/handshake
+github.com/quic-go/quic-go/internal/logutils
+github.com/quic-go/quic-go/internal/protocol
+github.com/quic-go/quic-go/internal/qerr
+github.com/quic-go/quic-go/internal/qtls
+github.com/quic-go/quic-go/internal/utils
+github.com/quic-go/quic-go/internal/utils/linkedlist
+github.com/quic-go/quic-go/internal/utils/ringbuffer
+github.com/quic-go/quic-go/internal/wire
+github.com/quic-go/quic-go/logging
+github.com/quic-go/quic-go/quicvarint
+# github.com/refraction-networking/utls v1.6.6
+## explicit; go 1.21
+github.com/refraction-networking/utls
+github.com/refraction-networking/utls/dicttls
+github.com/refraction-networking/utls/internal/boring
+github.com/refraction-networking/utls/internal/helper
+github.com/refraction-networking/utls/internal/quicvarint
+github.com/refraction-networking/utls/internal/quicvarint/protocol
+# github.com/rivo/uniseg v0.4.7
+## explicit; go 1.18
+github.com/rivo/uniseg
+# github.com/rodaine/table v1.2.0
+## explicit; go 1.14
+github.com/rodaine/table
+# github.com/sagikazarmark/locafero v0.4.0
+## explicit; go 1.20
+github.com/sagikazarmark/locafero
+# github.com/sagikazarmark/slog-shim v0.1.0
+## explicit; go 1.20
+github.com/sagikazarmark/slog-shim
+# github.com/schollz/progressbar/v3 v3.14.4
+## explicit; go 1.13
+github.com/schollz/progressbar/v3
+# github.com/shirou/gopsutil v3.21.11+incompatible
+## explicit
+github.com/shirou/gopsutil/disk
+github.com/shirou/gopsutil/internal/common
+# github.com/shirou/gopsutil/v4 v4.24.5
+## explicit; go 1.18
+github.com/shirou/gopsutil/v4/common
+github.com/shirou/gopsutil/v4/cpu
+github.com/shirou/gopsutil/v4/disk
+github.com/shirou/gopsutil/v4/host
+github.com/shirou/gopsutil/v4/internal/common
+github.com/shirou/gopsutil/v4/load
+github.com/shirou/gopsutil/v4/mem
+github.com/shirou/gopsutil/v4/net
+github.com/shirou/gopsutil/v4/process
+# github.com/shoenig/go-m1cpu v0.1.6
+## explicit; go 1.20
+github.com/shoenig/go-m1cpu
+# github.com/showwin/speedtest-go v1.7.7
+## explicit; go 1.19
+github.com/showwin/speedtest-go/speedtest
+github.com/showwin/speedtest-go/speedtest/internal
+github.com/showwin/speedtest-go/speedtest/transport
+# github.com/sourcegraph/conc v0.3.0
+## explicit; go 1.19
+github.com/sourcegraph/conc
+github.com/sourcegraph/conc/internal/multierror
+github.com/sourcegraph/conc/iter
+github.com/sourcegraph/conc/panics
+# github.com/spf13/afero v1.11.0
+## explicit; go 1.19
+github.com/spf13/afero
+github.com/spf13/afero/internal/common
+github.com/spf13/afero/mem
+# github.com/spf13/cast v1.6.0
+## explicit; go 1.19
+github.com/spf13/cast
+# github.com/spf13/pflag v1.0.5
+## explicit; go 1.12
+github.com/spf13/pflag
+# github.com/spf13/viper v1.18.2
+## explicit; go 1.18
+github.com/spf13/viper
+github.com/spf13/viper/internal/encoding
+github.com/spf13/viper/internal/encoding/dotenv
+github.com/spf13/viper/internal/encoding/hcl
+github.com/spf13/viper/internal/encoding/ini
+github.com/spf13/viper/internal/encoding/javaproperties
+github.com/spf13/viper/internal/encoding/json
+github.com/spf13/viper/internal/encoding/toml
+github.com/spf13/viper/internal/encoding/yaml
+github.com/spf13/viper/internal/features
+# github.com/subosito/gotenv v1.6.0
+## explicit; go 1.18
+github.com/subosito/gotenv
+# github.com/tidwall/gjson v1.17.1
+## explicit; go 1.12
+github.com/tidwall/gjson
+# github.com/tidwall/match v1.1.1
+## explicit; go 1.15
+github.com/tidwall/match
+# github.com/tidwall/pretty v1.2.1
+## explicit; go 1.16
+github.com/tidwall/pretty
+# github.com/tklauser/go-sysconf v0.3.14
+## explicit; go 1.18
+github.com/tklauser/go-sysconf
+# github.com/tklauser/numcpus v0.8.0
+## explicit; go 1.18
+github.com/tklauser/numcpus
+# github.com/tsosunchia/powclient v0.1.5
+## explicit; go 1.22
+github.com/tsosunchia/powclient
+# github.com/yusufpapurcu/wmi v1.2.4
+## explicit; go 1.16
+github.com/yusufpapurcu/wmi
+# go.uber.org/mock v0.4.0
+## explicit; go 1.20
+go.uber.org/mock/mockgen
+go.uber.org/mock/mockgen/model
+# go.uber.org/multierr v1.11.0
+## explicit; go 1.19
+go.uber.org/multierr
+# go.uber.org/zap v1.27.0
+## explicit; go 1.19
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/internal/pool
+go.uber.org/zap/internal/stacktrace
+go.uber.org/zap/zapcore
+# golang.org/x/crypto v0.24.0
+## explicit; go 1.18
+golang.org/x/crypto/blake2b
+golang.org/x/crypto/blake2s
+golang.org/x/crypto/chacha20
+golang.org/x/crypto/chacha20poly1305
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/cryptobyte/asn1
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/curve25519/internal/field
+golang.org/x/crypto/hkdf
+golang.org/x/crypto/internal/alias
+golang.org/x/crypto/internal/poly1305
+golang.org/x/crypto/sha3
+# golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
+## explicit; go 1.20
+golang.org/x/exp/constraints
+golang.org/x/exp/rand
+golang.org/x/exp/slices
+golang.org/x/exp/slog
+golang.org/x/exp/slog/internal
+golang.org/x/exp/slog/internal/buffer
+# golang.org/x/mod v0.18.0
+## explicit; go 1.18
+golang.org/x/mod/internal/lazyregexp
+golang.org/x/mod/modfile
+golang.org/x/mod/module
+golang.org/x/mod/semver
+# golang.org/x/net v0.26.0
+## explicit; go 1.18
+golang.org/x/net/bpf
+golang.org/x/net/context
+golang.org/x/net/html
+golang.org/x/net/html/atom
+golang.org/x/net/html/charset
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2/hpack
+golang.org/x/net/icmp
+golang.org/x/net/idna
+golang.org/x/net/internal/iana
+golang.org/x/net/internal/socket
+golang.org/x/net/internal/socks
+golang.org/x/net/ipv4
+golang.org/x/net/ipv6
+golang.org/x/net/proxy
+golang.org/x/net/publicsuffix
+golang.org/x/net/route
+# golang.org/x/sync v0.7.0
+## explicit; go 1.18
+golang.org/x/sync/errgroup
+golang.org/x/sync/semaphore
+# golang.org/x/sys v0.21.0
+## explicit; go 1.18
+golang.org/x/sys/cpu
+golang.org/x/sys/plan9
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+golang.org/x/sys/windows/registry
+# golang.org/x/term v0.21.0
+## explicit; go 1.18
+golang.org/x/term
+# golang.org/x/text v0.16.0
+## explicit; go 1.18
+golang.org/x/text/encoding
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/htmlindex
+golang.org/x/text/encoding/ianaindex
+golang.org/x/text/encoding/internal
+golang.org/x/text/encoding/internal/identifier
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
+golang.org/x/text/encoding/unicode
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/internal/utf8internal
+golang.org/x/text/language
+golang.org/x/text/runes
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# golang.org/x/tools v0.22.0
+## explicit; go 1.19
+golang.org/x/tools/cover
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/ast/inspector
+golang.org/x/tools/imports
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/imports
+golang.org/x/tools/internal/stdlib
+# gopkg.in/ini.v1 v1.67.0
+## explicit
+gopkg.in/ini.v1
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3

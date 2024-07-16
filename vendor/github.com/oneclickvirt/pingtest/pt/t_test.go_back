@@ -1,0 +1,7 @@
+package pt
+
+import "testing"
+
+func TestTT(t *testing.T) {
+	TTT()
+}
