@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func DiskTest(language, testMethod, testPath string, isMultiCheck bool) {
+func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChange bool) {
 	var res string
 	if runtime.GOOS == "windows" {
 		if testMethod != "winsat" && testMethod != "" {
@@ -18,13 +18,13 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool) {
 		switch testMethod {
 		case "fio":
 			res = disk.FioTest(language, isMultiCheck, testPath)
-			if res == "" {
+			if res == "" && autoChange {
 				res = "Fio test failed, switching to DD for testing.\n"
 				res += disk.DDTest(language, isMultiCheck, testPath)
 			}
 		case "dd":
 			res = disk.DDTest(language, isMultiCheck, testPath)
-			if res == "" {
+			if res == "" && autoChange {
 				res = "DD test failed, switching to Fio for testing.\n"
 				res += disk.FioTest(language, isMultiCheck, testPath)
 			}

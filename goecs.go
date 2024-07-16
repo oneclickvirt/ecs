@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.51"
+	ecsVersion                                                        = "v0.0.52"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -55,6 +55,7 @@ var (
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
 	backtraceStatus, nt3Status, speedTestStatus, pingTestStatus       bool
+	autoChangeDiskTestMethod                                          = true
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
 	help                                                              bool
@@ -120,6 +121,7 @@ func main() {
 		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 		commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
 		backtraceStatus, nt3Status, speedTestStatus = false, false, false
+		autoChangeDiskTestMethod = true
 		switch language {
 		case "zh":
 			fmt.Println("VPS融合怪版本: ", ecsVersion)
@@ -130,7 +132,7 @@ func main() {
 			fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
 			fmt.Println("6. 网络单项(IP质量检测+三网回程+三网路由与延迟+测速节点11个)")
 			fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
-			fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)-待修复")
+			fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
 			fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
 			fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
 		case "en":
@@ -219,7 +221,7 @@ func main() {
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
-					// TODO 双硬盘类型测试
+					autoChangeDiskTestMethod = false
 					break Loop
 				case "9":
 					securityTestStatus = true
@@ -314,9 +316,14 @@ func main() {
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
-			if diskTestStatus {
+			if diskTestStatus && autoChangeDiskTestMethod {
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+			} else if diskTestStatus && !autoChangeDiskTestMethod {
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), width)
+				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), width)
+				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
 			}
 		}, tempOutput, output)
 		if onlyChinaTest || pingTestStatus {
@@ -448,9 +455,14 @@ func main() {
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
-			if diskTestStatus {
+			if diskTestStatus && autoChangeDiskTestMethod {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck)
+				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+			} else if diskTestStatus && !autoChangeDiskTestMethod {
+				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "dd"), width)
+				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "fio"), width)
+				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
 			}
 		}, tempOutput, output)
 		if utTestStatus {
