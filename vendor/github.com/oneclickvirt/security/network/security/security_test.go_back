@@ -1,7 +1,0 @@
-package security
-
-import "testing"
-
-func Test(t *testing.T) {
-	Bigdatacloud("69.30.193.1")
-}
