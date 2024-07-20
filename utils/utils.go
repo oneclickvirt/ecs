@@ -239,7 +239,8 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 
 // UploadText 上传文本内容到指定URL
 func UploadText(absPath string) (string, error) {
-	url := "https://paste.spiritlhl.net/api/upload"
+	primaryURL := "http://hpaste.spiritlhl.net/api/upload"
+	backupURL := "https://paste.spiritlhl.net/api/upload"
 	token := network.SecurityUploadToken
 	client := req.DefaultClient()
 	client.SetTimeout(6 * time.Second)
@@ -247,24 +248,39 @@ func UploadText(absPath string) (string, error) {
 		SetRetryCount(2).
 		SetRetryBackoffInterval(1*time.Second, 5*time.Second).
 		SetRetryFixedInterval(2 * time.Second)
-	file, _ := os.Open(absPath)
-	resp, err := client.R().
-		SetHeader("Authorization", token).
-		SetHeader("Format", "RANDOM").
-		SetHeader("Max-Views", "0").
-		SetHeader("UploadText", "true").
-		SetHeader("Content-Type", "multipart/form-data").
-		SetHeader("No-JSON", "true").
-		SetFileReader("file", "goecs.txt", file).
-		Post(url)
+	file, err := os.Open(absPath)
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		return resp.String(), nil
-	} else {
-		return "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
+	defer file.Close()
+	upload := func(url string) (string, error) {
+		resp, err := client.R().
+			SetHeader("Authorization", token).
+			SetHeader("Format", "RANDOM").
+			SetHeader("Max-Views", "0").
+			SetHeader("UploadText", "true").
+			SetHeader("Content-Type", "multipart/form-data").
+			SetHeader("No-JSON", "true").
+			SetFileReader("file", "goecs.txt", file).
+			Post(url)
+		if err != nil {
+			return "", err
+		}
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			return resp.String(), nil
+		} else {
+			return "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
+		}
 	}
+	result, err := upload(primaryURL)
+	if err == nil {
+		return result, nil
+	}
+	result, err = upload(backupURL)
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }
 
 // ProcessAndUpload 创建结果文件并上传文件
