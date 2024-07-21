@@ -91,7 +91,7 @@ curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt
 卸载goecs
 
 ```
-./goecs.sh delete
+./goecs.sh uninstall
 ```
 
 shell脚本的说明
@@ -112,7 +112,7 @@ shell脚本的说明
                           事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
 ./goecs.sh install        安装 goecs 命令
 ./goecs.sh upgrade        升级 goecs 命令
-./goecs.sh delete         卸载 goecs 命令
+./goecs.sh uninstall      卸载 goecs 命令
 ./goecs.sh help           显示此消息
 ```
 

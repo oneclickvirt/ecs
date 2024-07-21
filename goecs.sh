@@ -1,6 +1,6 @@
 #!/bin/bash
 #From https://github.com/oneclickvirt/ecs
-#2024.07.04
+#2024.07.21
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
@@ -375,10 +375,10 @@ env_check() {
     _green "The next command is: ./goecs.sh install"
 }
 
-delete_goecs() {
+uninstall_goecs() {
   rm -rf /root/goecs
   rm -rf /usr/bin/goecs
-  _green "The command (goecs) has been deleted."
+  _green "The command (goecs) has been uninstalled."
 }
 
 show_help() {
@@ -398,7 +398,7 @@ show_help() {
                           事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
 ./goecs.sh install        安装 goecs 命令
 ./goecs.sh upgrade        升级 goecs 命令
-./goecs.sh delete         卸载 goecs 命令
+./goecs.sh uninstall      卸载 goecs 命令
 ./goecs.sh help           显示此消息
 
 Available commands:
@@ -416,7 +416,7 @@ Available commands:
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
-./goecs.sh delete          Uninstall goecs command
+./goecs.sh uninstall       Uninstall goecs command
 ./goecs.sh help            Show this message
 EOF
 }
@@ -431,8 +431,8 @@ case "$1" in
 "install" | "upgrade")
     goecs_check
     ;;
-"delete")
-    delete_goecs
+"uninstall")
+    uninstall_goecs
     ;;
 *)
     echo "No command found."
