@@ -18,7 +18,7 @@ Tested architectures: amd64, arm64
 
 More architectures please test by yourself
 
-Compilation support: Linux, Windows、FreeBSD、OpenBSD
+Compilation support: Linux, Windows、MacOS、FreeBSD、OpenBSD
 
 Tested on: Linux, Windows
 

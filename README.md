@@ -18,7 +18,7 @@ Shell版本： https://github.com/spiritLHLS/ecs
 
 更多架构请自行测试
 
-编译支持的系统: Linux、Windows、FreeBSD、OpenBSD
+编译支持的系统: Linux、Windows、MacOS、FreeBSD、OpenBSD
 
 测试支持的系统: Linux、Windows 
 
