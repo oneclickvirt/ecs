@@ -79,7 +79,7 @@ Upgrade goecs
 Uninstall goecs
 
 ```
-./goecs.sh delete
+./goecs.sh uninstall
 ```
 
 Explanation of the shell script
@@ -100,7 +100,7 @@ Available commands:
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
-./goecs.sh delete          Uninstall goecs command
+./goecs.sh uninstall       Uninstall goecs command
 ./goecs.sh help            Show this message
 ```
 
