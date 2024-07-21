@@ -100,19 +100,19 @@ shell脚本的说明
 可用命令：
 
 ./goecs.sh env            检查并安装的包：
-                                     sudo (几乎所有类 Unix 系统都有。)
-                                     tar (几乎所有类 Unix 系统都有。)
-                                     unzip (几乎所有类 Unix 系统都有。)
-                                     dd (几乎所有类 Unix 系统都有。)
-                                     fio (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                                     sysbench (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                                     geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
-                                     speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
-                                     ping (使用官方提供的二进制文件以获得更准确的测试结果。)
-                                     事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
+                          sudo  (几乎所有类 Unix 系统都有。)
+                          tar   (几乎所有类 Unix 系统都有。)
+                          unzip (几乎所有类 Unix 系统都有。)
+                          dd    (几乎所有类 Unix 系统都有。)
+                          fio   (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
+                          sysbench  (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
+                          geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
+                          speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
+                          ping  (使用官方提供的二进制文件以获得更准确的测试结果。)
+                          事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
 ./goecs.sh install        安装 goecs 命令
-./goecs.sh upgrade    升级 goecs 命令
-./goecs.sh delete        卸载 goecs 命令
+./goecs.sh upgrade        升级 goecs 命令
+./goecs.sh delete         卸载 goecs 命令
 ./goecs.sh help           显示此消息
 ```
 

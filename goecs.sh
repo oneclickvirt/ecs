@@ -10,7 +10,7 @@ cat <<"EOF"
     GG              OO         OO     EE          CC           SS
     GG              OO         OO     EE          CC            SS
     GG              OO         OO     EEEEEEEE    CC             SSSSSSSSSS
-    GG    GGGGGG    OO         OO     EE          CC                      SS
+    GG     GGGGGG   OO         OO     EE          CC                      SS
     GG        GG    OO         OO     EE          CC                       SS
      GG      GG      OO       OO      EE           CC                     SS
       GGGGGGGG         OOOOOOO         EEEEEEEE     CCCCCCCCC    SSSSSSSSSS
@@ -383,25 +383,41 @@ delete_goecs() {
 
 show_help() {
     cat <<"EOF"
+可用命令：
+
+./goecs.sh env            检查并安装的包：
+                          sudo  (几乎所有类 Unix 系统都有。)
+                          tar   (几乎所有类 Unix 系统都有。)
+                          unzip (几乎所有类 Unix 系统都有。)
+                          dd    (几乎所有类 Unix 系统都有。)
+                          fio   (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
+                          sysbench  (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
+                          geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
+                          speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
+                          ping  (使用官方提供的二进制文件以获得更准确的测试结果。)
+                          事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
+./goecs.sh install        安装 goecs 命令
+./goecs.sh upgrade        升级 goecs 命令
+./goecs.sh delete         卸载 goecs 命令
+./goecs.sh help           显示此消息
+
 Available commands:
 
 ./goecs.sh env             Check and Install package:
-                                sudo  (Almost all unix-like systems have it.)
-                                wget  (Almost all unix-like systems have it.)
-                                tar   (Almost all unix-like systems have it.)
-                                unzip (Almost all unix-like systems have it.)
-                                dd    (Almost all unix-like systems have it.)
-                                fio   (Almost all unix-like systems can be installed through the system's package manager.)
-                                sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
-                                geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
-                                speedtest (Use the officially provided binaries for more accurate test results.)
-                                ping (Use the officially provided binaries for more accurate test results.)
+                           sudo  (Almost all unix-like systems have it.)
+                           tar   (Almost all unix-like systems have it.)
+                           unzip (Almost all unix-like systems have it.)
+                           dd    (Almost all unix-like systems have it.)
+                           fio   (Almost all unix-like systems can be installed through the system's package manager.)
+                           sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
+                           geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
+                           speedtest (Use the officially provided binaries for more accurate test results.)
+                           ping   (Use the officially provided binaries for more accurate test results.)
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
 ./goecs.sh delete          Uninstall goecs command
 ./goecs.sh help            Show this message
-
 EOF
 }
 
