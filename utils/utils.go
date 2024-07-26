@@ -267,7 +267,7 @@ func UploadText(absPath string) (string, error) {
 			return "", err
 		}
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return resp.String(), nil
+			return strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/"), nil
 		} else {
 			return "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
 		}
