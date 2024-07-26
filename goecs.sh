@@ -308,6 +308,16 @@ env_check() {
         _green "Installing unzip"
         ${PACKAGE_INSTALL[int]} unzip
     fi
+    if ! command -v systemd-detect-virt >/dev/null 2>&1; then
+        _green "Installing systemd-detect-virt"
+        ${PACKAGE_INSTALL[int]} systemd-detect-virt
+        if [ $? -ne 0 ]; then
+            if ! command -v dmidecode >/dev/null 2>&1; then
+                _green "Installing dmidecode"
+                ${PACKAGE_INSTALL[int]} dmidecode
+            fi
+        fi
+    fi
     if ! command -v dd >/dev/null 2>&1; then
         _green "Installing dd"
         ${PACKAGE_INSTALL[int]} dd
@@ -395,6 +405,7 @@ show_help() {
                           geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
                           speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
                           ping  (使用官方提供的二进制文件以获得更准确的测试结果。)
+                          systemd-detect-virt 或 dmidecode (几乎所有类 Unix 系统都有，安装以获得更准确的测试结果。)
                           事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
 ./goecs.sh install        安装 goecs 命令
 ./goecs.sh upgrade        升级 goecs 命令
@@ -413,6 +424,7 @@ Available commands:
                            geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
                            speedtest (Use the officially provided binaries for more accurate test results.)
                            ping   (Use the officially provided binaries for more accurate test results.)
+                           systemd-detect-virt OR dmidecode (Almost all unix-like systems have it, for more accurate test results.)
                            In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
