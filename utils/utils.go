@@ -40,8 +40,8 @@ func PrintHead(language string, width int, ecsVersion string) {
 		PrintCenteredTitle("VPS Fusion Monster Test", width)
 		fmt.Printf("Version: %s\n", ecsVersion)
 		fmt.Println("Review Channel: https://t.me/vps_reviews\n" +
-			"Go Project URL: https://github.com/oneclickvirt/ecs\n" +
-			"Shell Project URL: https://github.com/spiritLHLS/ecs")
+			"Go Project: https://github.com/oneclickvirt/ecs\n" +
+			"Shell Project: https://github.com/spiritLHLS/ecs")
 	}
 }
 
