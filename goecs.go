@@ -221,6 +221,7 @@ func main() {
 					cpuTestStatus = true
 					memoryTestStatus = true
 					diskTestStatus = true
+					securityTestStatus = false
 					autoChangeDiskTestMethod = false
 					break Loop
 				case "9":
@@ -311,7 +312,7 @@ func main() {
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
 			if memoryTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", cpuTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", memoryTestMethod), width)
 				memorytest.MemoryTest(language, memoryTestMethod)
 			}
 		}, tempOutput, output)
