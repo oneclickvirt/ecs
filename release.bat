@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-GIT_TRACE_CURL=1
+
 REM 设置仓库路径
 set repo_path=C:\Users\spiritlhl\Documents\GoWorks\ecs
 
