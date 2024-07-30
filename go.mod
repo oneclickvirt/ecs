@@ -10,9 +10,9 @@ require (
 	github.com/oneclickvirt/basics v0.0.7-20240729065559
 	github.com/oneclickvirt/cputest v0.0.8-20240702070215
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.4-20240730100055
+	github.com/oneclickvirt/disktest v0.0.4-20240730102432
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
-	github.com/oneclickvirt/memorytest v0.0.3-20240730095857
+	github.com/oneclickvirt/memorytest v0.0.3-20240730102418
 	github.com/oneclickvirt/nt3 v0.0.3-20240702132013
 	github.com/oneclickvirt/pingtest v0.0.4-20240703142340
 	github.com/oneclickvirt/portchecker v0.0.1-20240624155429
