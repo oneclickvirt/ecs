@@ -17,7 +17,7 @@ git commit -am "update"
 
 REM 推送代码到 master 分支并创建标签
 :push
-git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% push -f origin master
+git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% -c http.sslVerify=false -c https.sslVerify=false push -f origin master
 if errorlevel 1 (
     echo Push failed. Retrying in 3 seconds...
     timeout /nobreak /t 3 >nul
@@ -29,8 +29,8 @@ set /p version="Enter the version number (e.g., v1.0.0): "
 
 REM 创建并推送标签
 :push_tag
-git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% tag %version%
-git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% push origin %version%
+git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% -c http.sslVerify=false -c https.sslVerify=false tag %version%
+git -c http.proxy=%http_proxy% -c https.proxy=%https_proxy% -c http.sslVerify=false -c https.sslVerify=false push origin %version%
 if errorlevel 1 (
     echo Tag push failed. Retrying in 3 seconds...
     timeout /nobreak /t 3 >nul
