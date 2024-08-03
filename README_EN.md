@@ -47,7 +47,7 @@ Systems to be supported (hardware testing bugs not yet fixed): MacOS„ÄÅFreeBSD„Ä
 ### one-click command
 
 ```
-curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
 ```
 
 ### explain in detail
@@ -108,13 +108,13 @@ Available commands:
 Invoke the goecs menu
 
 ```
-goecs
+goecs -l en
 ```
 
 or
 
 ```
-./goecs
+./goecs -l en
 ```
 
 Parameterized goecs command
