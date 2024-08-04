@@ -144,6 +144,19 @@ goecs_check() {
     cp goecs /usr/bin/goecs
     rm -rf README_EN.md
     rm -rf README.md
+    PARAM="net.ipv4.ping_group_range"
+    NEW_VALUE="0 2147483647"
+    CURRENT_VALUE=$(sysctl -n "$PARAM" 2>/dev/null)
+    if [ -f /etc/sysctl.conf ] && [ "$CURRENT_VALUE" != "$NEW_VALUE" ]; then
+        if grep -q "^$PARAM" /etc/sysctl.conf; then
+            sudo sed -i "s/^$PARAM.*/$PARAM = $NEW_VALUE/" /etc/sysctl.conf
+        else
+            echo "$PARAM = $NEW_VALUE" | sudo tee -a /etc/sysctl.conf
+        fi
+        sudo sysctl -p
+    fi
+    setcap cap_net_raw=+ep goecs
+    setcap cap_net_raw=+ep /usr/bin/goecs
     echo "goecs version:"
     goecs -v || ./goecs -v
 }
