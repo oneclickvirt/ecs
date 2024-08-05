@@ -40,20 +40,19 @@ check_cdn() {
 check_cdn_file() {
     check_cdn "https://raw.githubusercontent.com/spiritLHLS/ecs/main/back/test"
     if [ -n "$cdn_success_url" ]; then
-        echo "CDN available, using CDN"
+        _green "CDN available, using CDN"
     else
-        echo "No CDN available, no use CDN"
+        _yellow "No CDN available, no use CDN"
     fi
 }
 
 download_file() {
     local url="$1"
     local output="$2"
-
     if ! wget -O "$output" "$url"; then
-        echo "wget failed, trying curl..."
+        _yellow "wget failed, trying curl..."
         if ! curl -L -o "$output" "$url"; then
-            echo "Both wget and curl failed. Unable to download the file."
+            _red "Both wget and curl failed. Unable to download the file."
             return 1
         fi
     fi
@@ -79,16 +78,16 @@ goecs_check() {
         if [ -n "$extracted_version" ]; then
             ecs_version=$ECS_VERSION
             if [[ "$(echo -e "$extracted_version\n$ecs_version" | sort -V | tail -n 1)" == "$extracted_version" ]]; then
-                echo "goecs version ($extracted_version) is latest, no need to upgrade."
+                _green "goecs version ($extracted_version) is latest, no need to upgrade."
                 return
             else
-                echo "goecs version ($extracted_version) < $ecs_version, need to upgrade, 5 seconds later will start to upgrade"
+                _yellow "goecs version ($extracted_version) < $ecs_version, need to upgrade, 5 seconds later will start to upgrade"
                 rm -rf /usr/bin/goecs
                 rm -rf goecs
             fi
         fi
     else
-        echo "Can not find goecs, need to download and install, 5 seconds later will start to install"
+        _green "Can not find goecs, need to download and install, 5 seconds later will start to install"
     fi
     sleep 5
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
@@ -106,7 +105,7 @@ goecs_check() {
             download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
             ;;
         *)
-            echo "Unsupported architecture: $arch"
+            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
             exit 1
             ;;
         esac
@@ -123,7 +122,7 @@ goecs_check() {
             download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
             ;;
         *)
-            echo "Unsupported architecture: $arch"
+            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
             exit 1
             ;;
         esac
@@ -137,13 +136,13 @@ goecs_check() {
             download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
             ;;
         *)
-            echo "Unsupported architecture: $arch"
+            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
             exit 1
             ;;
         esac
         ;;
     *)
-        echo "Unsupported operating system: $os"
+        _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
         exit 1
         ;;
     esac
@@ -207,7 +206,7 @@ InstallSysbench() {
     arch) pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
     freebsd) pkg install -y sysbench ;;
     alpinelinux) echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
-    *) echo "Error: Unknown OS release: $os_release" ;;
+    *) _red "Sysbench Install Error: Unknown OS release: $os_release" ;;
     esac
 }
 
