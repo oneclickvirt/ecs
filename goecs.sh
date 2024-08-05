@@ -46,6 +46,20 @@ check_cdn_file() {
     fi
 }
 
+download_file() {
+    local url="$1"
+    local output="$2"
+
+    if ! wget -O "$output" "$url"; then
+        echo "wget failed, trying curl..."
+        if ! curl -L -o "$output" "$url"; then
+            echo "Both wget and curl failed. Unable to download the file."
+            return 1
+        fi
+    fi
+    return 0
+}
+
 goecs_check() {
     os=$(uname -s)
     arch=$(uname -m)
@@ -83,13 +97,13 @@ goecs_check() {
     Linux)
         case $arch in
         "x86_64" | "x86" | "amd64" | "x64")
-            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip"
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
             ;;
         "i386" | "i686")
-            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip"
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
             ;;
         "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip"
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
             ;;
         *)
             echo "Unsupported architecture: $arch"
@@ -98,29 +112,29 @@ goecs_check() {
         esac
         ;;
     FreeBSD)
-            case $arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip"
-                ;;
-            "i386" | "i686")
-                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip"
-                ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip"
-                ;;
-            *)
-                echo "Unsupported architecture: $arch"
-                exit 1
-                ;;
-            esac
+        case $arch in
+        "x86_64" | "x86" | "amd64" | "x64")
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
             ;;
+        "i386" | "i686")
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
+            ;;
+        "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
+            ;;
+        *)
+            echo "Unsupported architecture: $arch"
+            exit 1
+            ;;
+        esac
+        ;;
     Darwin)
         case $arch in
         "x86_64" | "x86" | "amd64" | "x64")
-            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip"
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
             ;;
         "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            wget -O goecs.zip "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip"
+            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
             ;;
         *)
             echo "Unsupported architecture: $arch"
