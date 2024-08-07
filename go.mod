@@ -5,7 +5,7 @@ go 1.22.4
 require (
 	github.com/imroc/req/v3 v3.43.7
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
-	github.com/oneclickvirt/UnlockTests v0.0.13-20240728133802
+	github.com/oneclickvirt/UnlockTests v0.0.14-20240807150053
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
 	github.com/oneclickvirt/basics v0.0.7-20240801050316
 	github.com/oneclickvirt/cputest v0.0.8-20240702070215
@@ -54,6 +54,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
