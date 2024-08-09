@@ -93,58 +93,70 @@ goecs_check() {
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     case $os in
-    Linux)
-        case $arch in
-        "x86_64" | "x86" | "amd64" | "x64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
+        Linux)
+            case $arch in
+            "x86_64" | "x86" | "amd64" | "x64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
+                ;;
+            "i386" | "i686")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
+                ;;
+            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
+                ;;
+            "mips")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mips.zip" "goecs.zip"
+                ;;
+            "mipsle")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mipsle.zip" "goecs.zip"
+                ;;
+            "s390x")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_s390x.zip" "goecs.zip"
+                ;;
+            "riscv64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_riscv64.zip" "goecs.zip"
+                ;;
+            *)
+                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                exit 1
+                ;;
+            esac
             ;;
-        "i386" | "i686")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
+        FreeBSD)
+            case $arch in
+            "x86_64" | "x86" | "amd64" | "x64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
+                ;;
+            "i386" | "i686")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
+                ;;
+            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
+                ;;
+            *)
+                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                exit 1
+                ;;
+            esac
             ;;
-        "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
+        Darwin)
+            case $arch in
+            "x86_64" | "x86" | "amd64" | "x64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
+                ;;
+            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
+                ;;
+            *)
+                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                exit 1
+                ;;
+            esac
             ;;
         *)
-            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+            _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
             exit 1
             ;;
-        esac
-        ;;
-    FreeBSD)
-        case $arch in
-        "x86_64" | "x86" | "amd64" | "x64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
-            ;;
-        "i386" | "i686")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
-            ;;
-        "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
-            ;;
-        *)
-            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-            exit 1
-            ;;
-        esac
-        ;;
-    Darwin)
-        case $arch in
-        "x86_64" | "x86" | "amd64" | "x64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
-            ;;
-        "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-            download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
-            ;;
-        *)
-            _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-            exit 1
-            ;;
-        esac
-        ;;
-    *)
-        _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-        exit 1
-        ;;
     esac
     unzip goecs.zip
     rm -rf goecs.zip
