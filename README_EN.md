@@ -184,3 +184,23 @@ Find the latest version, download the .zip file corresponding to your architectu
 Right-click the exe file and select Run as administrator (running without administrator mode will not allow hardware testing), and invoke the menu to choose.
 
 No environment installation is required for Windows testing.
+
+## Instructions for Use in Docker
+
+Please make sure that Docker is installed on your machine before executing the following commands
+
+Privileged Mode + host network
+
+```shell
+docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l en
+```
+
+Unprivileged mode + non-host network -menu=false -l en
+
+```shell
+docker run --rm spiritlhl/goecs:latest
+```
+
+Using Docker to execute tests, hardware testing will have some bias and virtualization architecture to determine the failure.
+
+Recommended direct testing without using Docker testing.

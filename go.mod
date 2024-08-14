@@ -5,14 +5,14 @@ go 1.22.4
 require (
 	github.com/imroc/req/v3 v3.43.7
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
-	github.com/oneclickvirt/UnlockTests v0.0.14-20240808055601
+	github.com/oneclickvirt/UnlockTests v0.0.15-20240814090726
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
 	github.com/oneclickvirt/basics v0.0.7-20240801050316
 	github.com/oneclickvirt/cputest v0.0.8-20240702070215
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.4-20240809053456
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
-	github.com/oneclickvirt/memorytest v0.0.4-20240805062017
+	github.com/oneclickvirt/memorytest v0.0.4-20240814081347
 	github.com/oneclickvirt/nt3 v0.0.3-20240809100110
 	github.com/oneclickvirt/pingtest v0.0.5-20240804134050
 	github.com/oneclickvirt/portchecker v0.0.2-20240803151204
