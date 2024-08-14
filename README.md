@@ -199,6 +199,8 @@ windows测试无需进行环境安装
 
 ## 在Docker中使用的说明
 
+地址：https://hub.docker.com/r/spiritlhl/goecs
+
 请确保执行下述命令前本机已安装Docker
 
 特权模式+host网络
