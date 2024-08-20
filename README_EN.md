@@ -151,7 +151,7 @@ Usage: goecs [options]
   -memory
         Enable/Disable memory test (default true)
   -memorym string
-        Set memory test method (supported: sysbench, dd, winsat) (default "dd")
+        Set memory test method (supported: sysbench, dd, winsat) (default "sysbench")
   -menu
         Enable/Disable menu mode, disable example: -menu=false (default true)
   -nt3

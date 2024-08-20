@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.72"
+	ecsVersion                                                        = "v0.0.73"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -80,7 +80,7 @@ func main() {
 	goecsFlag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
 	goecsFlag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
 	goecsFlag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
-	goecsFlag.StringVar(&memoryTestMethod, "memorym", "dd", "Set memory test method (supported: sysbench, dd, winsat)")
+	goecsFlag.StringVar(&memoryTestMethod, "memorym", "sysbench", "Set memory test method (supported: sysbench, dd, winsat)")
 	goecsFlag.StringVar(&diskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
 	goecsFlag.StringVar(&diskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
 	goecsFlag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
