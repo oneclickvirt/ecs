@@ -194,13 +194,13 @@ Please make sure that Docker is installed on your machine before executing the f
 Privileged Mode + host network
 
 ```shell
-docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l en -memorym sysbench
+docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l en
 ```
 
 Unprivileged mode + non-host network
 
 ```shell
-docker run --rm spiritlhl/goecs:latest -memorym sysbench
+docker run --rm spiritlhl/goecs:latest
 ```
 
 Using Docker to execute tests, hardware testing will have some bias and virtualization architecture to determine the failure.

@@ -206,13 +206,13 @@ windows测试无需进行环境安装
 特权模式+host网络
 
 ```shell
-docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l zh -memorym sysbench
+docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l zh
 ```
 
 非特权模式+非host网络
 
 ```shell
-docker run --rm spiritlhl/goecs:latest -menu=false -l zh -memorym sysbench
+docker run --rm spiritlhl/goecs:latest -menu=false -l zh
 ```
 
 使用Docker执行测试，硬件测试会有一些偏差和虚拟化架构判断失效，还是推荐直接测试而不使用Docker测试。
