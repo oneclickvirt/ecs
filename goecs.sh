@@ -358,7 +358,10 @@ env_check() {
     fi
     if ! command -v dd >/dev/null 2>&1; then
         _green "Installing dd"
-        ${PACKAGE_INSTALL[int]} dd
+        ${PACKAGE_INSTALL[int]} coreutils
+        if [ $? -ne 0 ]; then
+          ${PACKAGE_INSTALL[int]} man
+        fi
     fi
     if ! command -v fio >/dev/null 2>&1; then
         _green "Installing fio"
