@@ -238,7 +238,7 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 }
 
 // UploadText 上传文本内容到指定URL
-func UploadText(absPath string) (string, error) {
+func UploadText(absPath string) (string, string, error) {
 	primaryURL := "http://hpaste.spiritlhl.net/api/upload"
 	backupURL := "https://paste.spiritlhl.net/api/upload"
 	token := network.SecurityUploadToken
@@ -250,10 +250,10 @@ func UploadText(absPath string) (string, error) {
 		SetRetryFixedInterval(2 * time.Second)
 	file, err := os.Open(absPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer file.Close()
-	upload := func(url string) (string, error) {
+	upload := func(url string) (string, string, error) {
 		resp, err := client.R().
 			SetHeader("Authorization", token).
 			SetHeader("Format", "RANDOM").
@@ -264,23 +264,24 @@ func UploadText(absPath string) (string, error) {
 			SetFileReader("file", "goecs.txt", file).
 			Post(url)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/"), nil
+			return strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/"),
+				strings.ReplaceAll(resp.String(), "http://hpaste.spiritlhl.net/", "https://paste.spiritlhl.net/"), nil
 		} else {
-			return "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
+			return "", "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
 		}
 	}
-	result, err := upload(primaryURL)
+	http_url, https_url, err := upload(primaryURL)
 	if err == nil {
-		return result, nil
+		return http_url, https_url, nil
 	}
-	result, err = upload(backupURL)
+	http_url, https_url, err = upload(backupURL)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return result, nil
+	return http_url, https_url, nil
 }
 
 // ProcessAndUpload 创建结果文件并上传文件
@@ -321,12 +322,12 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) {
 			return
 		}
 		// 上传文件并生成短链接
-		shorturl, err3 := UploadText(absPath)
+		http_url, https_url, err3 := UploadText(absPath)
 		if err3 != nil {
 			fmt.Println("Upload failed, cannot generate short URL.")
 			fmt.Println(err3.Error())
 			return
 		}
-		fmt.Println("Upload successful, short URL:", shorturl)
+		fmt.Println("Upload successful, short URL:", http_url, https_url)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
@@ -38,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.74"
+	ecsVersion                                                        = "v0.0.75"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -61,6 +62,68 @@ var (
 	help                                                              bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 )
+
+func getMenuChoice(language string) string {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
+
+	inputChan := make(chan string, 1)
+
+	go func() {
+		select {
+		case <-sigChan:
+			fmt.Println("\n程序在选择过程中被用户中断")
+			os.Exit(1)
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	for {
+		go func() {
+			var input string
+			fmt.Print("请输入选项 / Please enter your choice: ")
+			fmt.Scanln(&input)
+			input = strings.TrimSpace(input)
+			input = strings.TrimRight(input, "\n")
+			select {
+			case inputChan <- input:
+			case <-ctx.Done():
+				return
+			}
+		}()
+
+		select {
+		case input := <-inputChan:
+			re := regexp.MustCompile(`^\d+$`) // 正则表达式匹配纯数字
+			if re.MatchString(input) {
+				choice := input
+				switch choice {
+				case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
+					return choice
+				default:
+					if language == "zh" {
+						fmt.Println("无效的选项")
+					} else {
+						fmt.Println("Invalid choice")
+					}
+				}
+			} else {
+				if language == "zh" {
+					fmt.Println("输入错误，请输入一个纯数字")
+				} else {
+					fmt.Println("Invalid input, please enter a number")
+				}
+			}
+		case <-ctx.Done():
+			return ""
+		}
+	}
+}
 
 func main() {
 	goecsFlag.BoolVar(&help, "h", false, "Show help information")
@@ -95,8 +158,6 @@ func main() {
 		goecsFlag.PrintDefaults()
 		return
 	}
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	if showVersion {
 		fmt.Println(ecsVersion)
 		return
@@ -149,103 +210,90 @@ func main() {
 		}
 	Loop:
 		for {
-			fmt.Print("请输入选项 / Please enter your choice: ")
-			fmt.Scanln(&input)
-			input = strings.TrimSpace(input)
-			input = strings.TrimRight(input, "\n")
-			re := regexp.MustCompile(`^\d+$`) // 正则表达式匹配纯数字
-			if re.MatchString(input) {
-				choice = input
-				switch choice {
-				case "1":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					commTestStatus = true
-					utTestStatus = true
-					securityTestStatus = true
-					emailTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
-					onlyChinaTest = utils.CheckChina(enableLogger)
-					break Loop
-				case "2":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					speedTestStatus = true
-					break Loop
-				case "3":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					utTestStatus = true
-					nt3Status = true
-					speedTestStatus = true
-					break Loop
-				case "4":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					speedTestStatus = true
-					break Loop
-				case "5":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					commTestStatus = true
-					utTestStatus = true
-					speedTestStatus = true
-					break Loop
-				case "6":
-					securityTestStatus = true
-					speedTestStatus = true
-					backtraceStatus = true
-					nt3Status = true
-					break Loop
-				case "7":
-					commTestStatus = true
-					utTestStatus = true
-					enabelUpload = false
-					break Loop
-				case "8":
-					basicStatus = true
-					cpuTestStatus = true
-					memoryTestStatus = true
-					diskTestStatus = true
-					securityTestStatus = false
-					autoChangeDiskTestMethod = false
-					break Loop
-				case "9":
-					securityTestStatus = true
-					emailTestStatus = true
-					break Loop
-				case "10":
-					backtraceStatus = true
-					nt3Status = true
-					pingTestStatus = true
-					enabelUpload = false
-					break Loop
-				default:
-					if language == "zh" {
-						fmt.Println("无效的选项")
-					} else {
-						fmt.Println("Invalid choice")
-					}
-				}
-			} else {
+			choice := getMenuChoice(language)
+			switch choice {
+			case "1":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				commTestStatus = true
+				utTestStatus = true
+				securityTestStatus = true
+				emailTestStatus = true
+				backtraceStatus = true
+				nt3Status = true
+				speedTestStatus = true
+				onlyChinaTest = utils.CheckChina(enableLogger)
+				break Loop
+			case "2":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				speedTestStatus = true
+				break Loop
+			case "3":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				utTestStatus = true
+				nt3Status = true
+				speedTestStatus = true
+				break Loop
+			case "4":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				backtraceStatus = true
+				nt3Status = true
+				speedTestStatus = true
+				break Loop
+			case "5":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				commTestStatus = true
+				utTestStatus = true
+				speedTestStatus = true
+				break Loop
+			case "6":
+				securityTestStatus = true
+				speedTestStatus = true
+				backtraceStatus = true
+				nt3Status = true
+				break Loop
+			case "7":
+				commTestStatus = true
+				utTestStatus = true
+				enabelUpload = false
+				break Loop
+			case "8":
+				basicStatus = true
+				cpuTestStatus = true
+				memoryTestStatus = true
+				diskTestStatus = true
+				securityTestStatus = false
+				autoChangeDiskTestMethod = false
+				break Loop
+			case "9":
+				securityTestStatus = true
+				emailTestStatus = true
+				break Loop
+			case "10":
+				backtraceStatus = true
+				nt3Status = true
+				pingTestStatus = true
+				enabelUpload = false
+				break Loop
+			default:
 				if language == "zh" {
-					fmt.Println("输入错误，请输入一个纯数字")
+					fmt.Println("无效的选项")
 				} else {
-					fmt.Println("Invalid input, please enter a number")
+					fmt.Println("Invalid choice")
 				}
 			}
 		}
@@ -263,6 +311,9 @@ func main() {
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
 		output, tempOutput                                    string
 	)
+	// 设置主程序的信号处理
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	// 启动一个goroutine来等待信号，内置计时器
 	go func() {
 		startTime = time.Now()
