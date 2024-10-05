@@ -17,7 +17,7 @@ require (
 	github.com/oneclickvirt/pingtest v0.0.5-20240804134050
 	github.com/oneclickvirt/portchecker v0.0.2-20240803151204
 	github.com/oneclickvirt/security v0.0.4-20240729065854
-	github.com/oneclickvirt/speedtest v0.0.7-20240704023701
+	github.com/oneclickvirt/speedtest v0.0.8-20241005152305
 )
 
 require (

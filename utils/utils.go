@@ -328,6 +328,6 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) {
 			fmt.Println(err3.Error())
 			return
 		}
-		fmt.Printf("Upload successful!\nHttp URL:%s\nHttps URL:%s\n", http_url, https_url)
+		fmt.Printf("Upload successful!\nHttp URL:  %s\nHttps URL: %s\n", http_url, https_url)
 	}
 }
