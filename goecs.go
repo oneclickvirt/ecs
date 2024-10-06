@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.79"
+	ecsVersion                                                        = "v0.0.80"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -61,23 +61,21 @@ var (
 	enabelUpload                                                      = true
 	help                                                              bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
+	finish                                                            bool
 )
 
 func getMenuChoice(language string) string {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
-
 	inputChan := make(chan string, 1)
-
 	go func() {
 		select {
 		case <-sigChan:
 			fmt.Println("\n程序在选择过程中被用户中断")
-			os.Exit(1)
+			os.Exit(0)
 		case <-ctx.Done():
 			return
 		}
@@ -96,15 +94,14 @@ func getMenuChoice(language string) string {
 				return
 			}
 		}()
-
 		select {
 		case input := <-inputChan:
 			re := regexp.MustCompile(`^\d+$`) // 正则表达式匹配纯数字
 			if re.MatchString(input) {
-				choice := input
-				switch choice {
+				inChoice := input
+				switch inChoice {
 				case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
-					return choice
+					return inChoice
 				default:
 					if language == "zh" {
 						fmt.Println("无效的选项")
@@ -210,7 +207,7 @@ func main() {
 		}
 	Loop:
 		for {
-			choice := getMenuChoice(language)
+			choice = getMenuChoice(language)
 			switch choice {
 			case "1":
 				basicStatus = true
@@ -319,19 +316,21 @@ func main() {
 		startTime = time.Now()
 		// 等待信号
 		<-sig
-		endTime := time.Now()
-		duration := endTime.Sub(startTime)
-		minutes := int(duration.Minutes())
-		seconds := int(duration.Seconds()) % 60
-		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-		output = utils.PrintAndCapture(func() {
-			utils.PrintCenteredTitle("", width)
-			fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
-			fmt.Printf("Current Time          : %s\n", currentTime)
-			utils.PrintCenteredTitle("", width)
-		}, tempOutput, output)
-		utils.ProcessAndUpload(output, filePath, enabelUpload)
-		os.Exit(1) // 使用非零状态码退出，表示意外退出
+		if !finish {
+			endTime := time.Now()
+			duration := endTime.Sub(startTime)
+			minutes := int(duration.Minutes())
+			seconds := int(duration.Seconds()) % 60
+			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+			output = utils.PrintAndCapture(func() {
+				utils.PrintCenteredTitle("", width)
+				fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
+				fmt.Printf("Current Time          : %s\n", currentTime)
+				utils.PrintCenteredTitle("", width)
+			}, tempOutput, output)
+			utils.ProcessAndUpload(output, filePath, enabelUpload)
+		}
+		os.Exit(0)
 	}()
 	switch language {
 	case "zh":
@@ -451,14 +450,16 @@ func main() {
 			if speedTestStatus {
 				utils.PrintCenteredTitle("就近节点测速", width)
 				speedtest.ShowHead(language)
-				if (menuMode && choice == "1") || !menuMode {
+				if choice == "1" || !menuMode {
 					speedtest.NearbySP()
 					speedtest.CustomSP("net", "global", 2, language)
 					speedtest.CustomSP("net", "cu", spNum, language)
 					speedtest.CustomSP("net", "ct", spNum, language)
 					speedtest.CustomSP("net", "cmcc", spNum, language)
-				} else if menuMode && choice == "2" || choice == "3" || choice == "4" || choice == "5" {
+				} else if choice == "2" || choice == "3" || choice == "4" || choice == "5" {
 					speedtest.CustomSP("net", "global", 4, language)
+				} else if choice == "6" {
+					speedtest.CustomSP("net", "global", 11, language)
 				}
 			}
 		}, tempOutput, output)
@@ -574,6 +575,7 @@ func main() {
 		fmt.Println("Unsupported language")
 	}
 	utils.ProcessAndUpload(output, filePath, enabelUpload)
+	finish = true
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")
 		fmt.Scanln()

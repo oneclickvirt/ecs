@@ -14,7 +14,7 @@ require (
 	github.com/oneclickvirt/gostun v0.0.3-20240702054621
 	github.com/oneclickvirt/memorytest v0.0.4-20240820095126
 	github.com/oneclickvirt/nt3 v0.0.3-20240809100110
-	github.com/oneclickvirt/pingtest v0.0.5-20240804134050
+	github.com/oneclickvirt/pingtest v0.0.5-20241006123443
 	github.com/oneclickvirt/portchecker v0.0.2-20240803151204
 	github.com/oneclickvirt/security v0.0.4-20240729065854
 	github.com/oneclickvirt/speedtest v0.0.8-20241005164804
