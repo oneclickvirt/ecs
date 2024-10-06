@@ -258,6 +258,9 @@ Check_Sysbench_InstantBuild() {
         if [ "$os_sysbench" = "astra" ]; then
             os_sysbench="debian"
         fi
+        if [ "$os_sysbench" = "opencloudos" ]; then
+            os_sysbench="centos"
+        fi
         echo -e "${Msg_Info}Release Detected: ${os_sysbench}"
         echo -e "${Msg_Info}Preparing compile enviorment ..."
         prepare_compile_env "${os_sysbench}"
