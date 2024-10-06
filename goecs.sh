@@ -1,6 +1,6 @@
 #!/bin/bash
-#From https://github.com/oneclickvirt/ecs
-#2024.07.21
+# From https://github.com/oneclickvirt/ecs
+# 2024.10.06
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
@@ -145,7 +145,7 @@ goecs_check() {
                 download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
                 ;;
             "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
+                download_file "${cdn_success_url}https://github.com/oneclickvirt/                ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
                 ;;
             *)
                 _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
@@ -158,6 +158,7 @@ goecs_check() {
             exit 1
             ;;
     esac
+
     unzip goecs.zip
     rm -rf goecs.zip
     rm -rf README.md
@@ -187,7 +188,9 @@ goecs_check() {
 }
 
 InstallSysbench() {
-    if [ -f "/etc/centos-release" ]; then # CentOS
+    if [ -f "/etc/opencloudos-release" ]; then # OpenCloudOS
+        Var_OSRelease="opencloudos"
+    elif [ -f "/etc/centos-release" ]; then # CentOS
         Var_OSRelease="centos"
     elif [ -f "/etc/fedora-release" ]; then # Fedora
         Var_OSRelease="fedora"
@@ -203,7 +206,6 @@ InstallSysbench() {
         Var_OSRelease="alpinelinux"
     elif [ -f "/etc/almalinux-release" ]; then # almalinux
         Var_OSRelease="almalinux"
-    # rockylinux
     elif [ -f "/etc/arch-release" ]; then # archlinux
         Var_OSRelease="arch"
     elif [ -f "/etc/freebsd-update.conf" ]; then # freebsd
@@ -211,14 +213,22 @@ InstallSysbench() {
     else
         Var_OSRelease="unknown" # 未知系统分支
     fi
+
     case "$Var_OSRelease" in
-    ubuntu | debian | astra) ! apt-get install -y sysbench && apt-get --fix-broken install -y && apt-get install --no-install-recommends -y sysbench ;;
-    centos | rhel | almalinux | redhat) (yum -y install epel-release && yum -y install sysbench) || (dnf install epel-release -y && dnf install sysbench -y) ;;
-    fedora) dnf -y install sysbench ;;
-    arch) pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
-    freebsd) pkg install -y sysbench ;;
-    alpinelinux) echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
-    *) _red "Sysbench Install Error: Unknown OS release: $os_release" ;;
+    ubuntu | debian | astra) 
+        ! apt-get install -y sysbench && apt-get --fix-broken install -y && apt-get install --no-install-recommends -y sysbench ;;
+    centos | rhel | almalinux | redhat | opencloudos) 
+        (yum -y install epel-release && yum -y install sysbench) || (dnf install epel-release -y && dnf install sysbench -y) ;;
+    fedora) 
+        dnf -y install sysbench ;;
+    arch) 
+        pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
+    freebsd) 
+        pkg install -y sysbench ;;
+    alpinelinux) 
+        echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
+    *) 
+        _red "Sysbench Install Error: Unknown OS release: $Var_OSRelease" ;;
     esac
 }
 
@@ -288,9 +298,10 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "" "pkg autoremove" "apk autoremove")
+    
     # 检查系统信息
-    if [ -f /etc/alpine-release ]; then
-        SYS="alpine"
+    if [ -f /etc/opencloudos-release ]; then
+        SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
         SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
     elif [ -x "$(type -p hostnamectl)" ]; then
@@ -307,6 +318,7 @@ env_check() {
         SYS="$(uname -s)"
     fi
     [[ -n $SYS ]] || exit 1
+
     # 匹配操作系统
     for ((int = 0; int < ${#REGEX[@]}; int++)); do
         if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then
@@ -314,68 +326,41 @@ env_check() {
             [[ -n $SYSTEM ]] && break
         fi
     done
+
     # 检查是否成功匹配
     [[ -n $SYSTEM ]] || exit 1
+
     # 根据 SYSTEM 设置相应的包管理命令
     UPDATE_CMD=${PACKAGE_UPDATE[int]}
     INSTALL_CMD=${PACKAGE_INSTALL[int]}
     REMOVE_CMD=${PACKAGE_REMOVE[int]}
     UNINSTALL_CMD=${PACKAGE_UNINSTALL[int]}
+
     echo "System: $SYSTEM"
     echo "Update command: $UPDATE_CMD"
     echo "Install command: $INSTALL_CMD"
     echo "Remove command: $REMOVE_CMD"
     echo "Uninstall command: $UNINSTALL_CMD"
+    
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _green "Update system manager."
     ${PACKAGE_UPDATE[int]} 2>/dev/null
-    if ! command -v sudo >/dev/null 2>&1; then
-        _green "Installing sudo"
-        ${PACKAGE_INSTALL[int]} sudo
-    fi
-    if ! command -v wget >/dev/null 2>&1; then
-        _green "Installing wget"
-        ${PACKAGE_INSTALL[int]} wget
-    fi
-    if ! command -v tar >/dev/null 2>&1; then
-        _green "Installing tar"
-        ${PACKAGE_INSTALL[int]} tar
-    fi
-    if ! command -v unzip >/dev/null 2>&1; then
-        _green "Installing unzip"
-        ${PACKAGE_INSTALL[int]} unzip
-    fi
-    if ! command -v systemd-detect-virt >/dev/null 2>&1; then
-        _green "Installing systemd-detect-virt"
-        ${PACKAGE_INSTALL[int]} systemd-detect-virt
-        if [ $? -ne 0 ]; then
-            if ! command -v dmidecode >/dev/null 2>&1; then
-                _green "Installing dmidecode"
-                ${PACKAGE_INSTALL[int]} dmidecode
-            fi
+    
+    # 安装必要的命令
+    for cmd in sudo wget tar unzip systemd-detect-virt dd fio; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            _green "Installing $cmd"
+            ${PACKAGE_INSTALL[int]} "$cmd"
         fi
-    fi
-    if ! command -v dd >/dev/null 2>&1; then
-        _green "Installing dd"
-        ${PACKAGE_INSTALL[int]} coreutils
-        if [ $? -ne 0 ]; then
-          ${PACKAGE_INSTALL[int]} man
-        fi
-    fi
-    if ! command -v fio >/dev/null 2>&1; then
-        _green "Installing fio"
-        ${PACKAGE_INSTALL[int]} fio
-    fi
-    if ! command -v sysbench >/dev/null 2>&1 && [ "${REGEX[int]}" != "freebsd" ]; then
+    done
+
+    if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
         ${PACKAGE_INSTALL[int]} sysbench
         if [ $? -ne 0 ]; then
-            echo "Unable to download sysbench through the system's package manager, speak to try compiling and installing it..."
-            if ! wget -O /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"; then
-                echo "wget failed, trying with curl"
-                curl -Lk -o /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"
-            fi
+            echo "Unable to download sysbench through the system's package manager, trying to compile and install it..."
+            wget -O /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip" || curl -Lk -o /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"
             if [ ! -f /tmp/sysbench.zip ]; then
                 wget -q -O /tmp/sysbench.zip "https://hub.fgit.cf/akopytov/sysbench/archive/1.0.20.zip"
             fi
@@ -384,11 +369,12 @@ env_check() {
             Check_SysBench
         fi
     fi
+
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
         bash dgb.sh -v gb5
-        _blue "If you not want to use geekbench5, you can use"
+        _blue "If you do not want to use geekbench5, you can use"
         echo "bash dgb.sh -v gb6"
         echo "bash dgb.sh -v gb4"
         _blue "to change version, or use"
@@ -396,26 +382,28 @@ env_check() {
         _blue "to uninstall geekbench"
         rm -rf dgb.sh
     fi
+
     if ! command -v speedtest >/dev/null 2>&1; then
-        _green "Installing geekbench"
+        _green "Installing speedtest"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
         bash dspt.sh
         rm -rf dspt.sh
         rm -rf speedtest.tar.gz
-        _blue "if you want to use golang origin speedtest, you can use"
+        _blue "if you want to use golang original speedtest, you can use"
         echo "rm -rf /usr/bin/speedtest"
         echo "rm -rf /usr/bin/speedtest-go"
         _blue "to uninstall speedtest and speedtest-go"
     fi
+
     if ! command -v ping >/dev/null 2>&1; then
         _green "Installing ping"
         ${PACKAGE_INSTALL[int]} iputils-ping >/dev/null 2>&1
         ${PACKAGE_INSTALL[int]} ping >/dev/null 2>&1
     fi
+
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS. Installing sysbench and fio..."
-        brew install --force sysbench fio dd
-        # 有问题，需要修复，root环境不能brew，brew安装完毕后可能路径不在环境变量中
+        brew install --force sysbench fio
     else
         if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
             echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf
@@ -427,9 +415,9 @@ env_check() {
 }
 
 uninstall_goecs() {
-  rm -rf /root/goecs
-  rm -rf /usr/bin/goecs
-  _green "The command (goecs) has been uninstalled."
+    rm -rf /root/goecs
+    rm -rf /usr/bin/goecs
+    _green "The command (goecs) has been uninstalled."
 }
 
 show_help() {
@@ -466,7 +454,7 @@ Available commands:
                            speedtest (Use the officially provided binaries for more accurate test results.)
                            ping   (Use the officially provided binaries for more accurate test results.)
                            systemd-detect-virt OR dmidecode (Almost all unix-like systems have it, for more accurate test results.)
-                           In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
+                           In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested without which the CPU score cannot be tested.
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
 ./goecs.sh uninstall       Uninstall goecs command
@@ -493,3 +481,4 @@ case "$1" in
     show_help
     ;;
 esac
+
