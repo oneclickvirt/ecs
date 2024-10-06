@@ -242,18 +242,29 @@ func UploadText(absPath string) (string, string, error) {
 	primaryURL := "http://hpaste.spiritlhl.net/api/upload"
 	backupURL := "https://paste.spiritlhl.net/api/upload"
 	token := network.SecurityUploadToken
-	client := req.DefaultClient()
-	client.SetTimeout(6 * time.Second)
+	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
 		SetRetryCount(2).
 		SetRetryBackoffInterval(1*time.Second, 5*time.Second).
 		SetRetryFixedInterval(2 * time.Second)
 	file, err := os.Open(absPath)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
 	upload := func(url string) (string, string, error) {
+		// 重新打开文件，以确保我们总是从文件开头读取
+		file, err := os.Open(absPath)
+		if err != nil {
+			return "", "", fmt.Errorf("failed to re-open file for %s: %w", url, err)
+		}
+		defer file.Close()
+
+		// 读取文件内容
+		content, err := io.ReadAll(file)
+		if err != nil {
+			return "", "", fmt.Errorf("failed to read file content for %s: %w", url, err)
+		}
 		resp, err := client.R().
 			SetHeader("Authorization", token).
 			SetHeader("Format", "RANDOM").
@@ -261,16 +272,17 @@ func UploadText(absPath string) (string, string, error) {
 			SetHeader("UploadText", "true").
 			SetHeader("Content-Type", "multipart/form-data").
 			SetHeader("No-JSON", "true").
-			SetFileReader("file", "goecs.txt", file).
+			SetFileBytes("file", "goecs.txt", content).
 			Post(url)
 		if err != nil {
-			return "", "", err
+			return "", "", fmt.Errorf("failed to make request to %s: %w", url, err)
 		}
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			return strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/"),
-				strings.ReplaceAll(resp.String(), "http://hpaste.spiritlhl.net/", "https://paste.spiritlhl.net/"), nil
+			http_url := strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/")
+			https_url := strings.ReplaceAll(resp.String(), "http://hpaste.spiritlhl.net/", "https://paste.spiritlhl.net/")
+			return http_url, https_url, nil
 		} else {
-			return "", "", fmt.Errorf("upload failed with status code: %d", resp.StatusCode)
+			return "", "", fmt.Errorf("upload failed for %s with status code: %d", url, resp.StatusCode)
 		}
 	}
 	http_url, https_url, err := upload(primaryURL)
@@ -279,7 +291,7 @@ func UploadText(absPath string) (string, string, error) {
 	}
 	http_url, https_url, err = upload(backupURL)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to upload to both primary and backup URLs: %w", err)
 	}
 	return http_url, https_url, nil
 }
