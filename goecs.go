@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.0.83"
+	ecsVersion                                                        = "v0.0.84"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -340,7 +340,7 @@ func main() {
 				if basicStatus {
 					utils.PrintCenteredTitle("系统基础信息", width)
 				}
-				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
+				basicInfo, securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
 					fmt.Printf(basicInfo)
 				} else if (input == "6" || input == "9") && securityTestStatus {
@@ -481,7 +481,7 @@ func main() {
 				if basicStatus {
 					utils.PrintCenteredTitle("System-Basic-Information", width)
 				}
-				basicInfo, securityInfo, nt3CheckType = utils.SecurityCheck(language, nt3CheckType, securityTestStatus)
+				basicInfo, securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
 				if basicStatus {
 					fmt.Printf(basicInfo)
 				} else if (input == "6" || input == "9") && securityTestStatus {
