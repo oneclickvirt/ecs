@@ -350,7 +350,7 @@ env_check() {
     ${PACKAGE_UPDATE[int]} 2>/dev/null
     
     # 安装必要的命令
-    for cmd in sudo wget tar unzip systemd-detect-virt dd fio; do
+    for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${PACKAGE_INSTALL[int]} "$cmd"
@@ -404,8 +404,8 @@ env_check() {
     fi
 
     if [ "$(uname -s)" = "Darwin" ]; then
-        echo "Detected MacOS. Installing sysbench and fio..."
-        brew install --force sysbench fio
+        echo "Detected MacOS. Installing sysbench iproute2mac fio..."
+        brew install --force sysbench iproute2mac fio
     else
         if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
             echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf

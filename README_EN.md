@@ -93,6 +93,7 @@ Available commands:
                            unzip (Almost all unix-like systems have it.)
                            dd    (Almost all unix-like systems have it.)
                            fio   (Almost all unix-like systems can be installed through the system's package manager.)
+                           iproute2 (Almost all unix-like systems can be installed through the system's package manager.)
                            sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
                            geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
                            speedtest (Use the officially provided binaries for more accurate test results.)
