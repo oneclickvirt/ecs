@@ -1,6 +1,6 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2024.10.06
+# 2024.11.17
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
@@ -57,6 +57,17 @@ download_file() {
         fi
     fi
     return 0
+}
+
+get_memory_size() {
+    local mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    echo $((mem_kb / 1024))
+}
+
+cleanup_epel() {
+    _yellow "Cleaning up EPEL repositories..."
+    rm -f /etc/yum.repos.d/*epel*
+    yum clean all
 }
 
 goecs_check() {
@@ -213,23 +224,39 @@ InstallSysbench() {
     else
         Var_OSRelease="unknown" # 未知系统分支
     fi
-
-    case "$Var_OSRelease" in
-    ubuntu | debian | astra) 
-        ! apt-get install -y sysbench && apt-get --fix-broken install -y && apt-get install --no-install-recommends -y sysbench ;;
-    centos | rhel | almalinux | redhat | opencloudos) 
-        (yum -y install epel-release && yum -y install sysbench) || (dnf install epel-release -y && dnf install sysbench -y) ;;
-    fedora) 
-        dnf -y install sysbench ;;
-    arch) 
-        pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
-    freebsd) 
-        pkg install -y sysbench ;;
-    alpinelinux) 
-        echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
-    *) 
-        _red "Sysbench Install Error: Unknown OS release: $Var_OSRelease" ;;
-    esac
+    local mem_size=$(get_memory_size)
+    if [ $mem_size -lt 1024 ]; then
+        _red "Warning: Your system has less than 1GB RAM (${mem_size}MB)"
+        reading "Do you want to continue with EPEL installation? (y/N): " confirm
+        if [[ ! $confirm =~ ^[Yy]$ ]]; then
+            _yellow "Skipping EPEL installation"
+            return 1
+        fi
+        case "$Var_OSRelease" in
+        ubuntu | debian | astra) 
+            ! apt-get install -y sysbench && apt-get --fix-broken install -y && apt-get install --no-install-recommends -y sysbench ;;
+        centos | rhel | almalinux | redhat | opencloudos) 
+            (yum -y install epel-release && yum -y install sysbench) || (dnf install epel-release -y && dnf install sysbench -y) ;;
+        fedora) 
+            dnf -y install sysbench ;;
+        arch) 
+            pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
+        freebsd) 
+            pkg install -y sysbench ;;
+        alpinelinux) 
+            echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1" ;;
+        *) 
+            _red "Sysbench Install Error: Unknown OS release: $Var_OSRelease" ;;
+        esac
+        if [[ $SYSTEM =~ ^(CentOS|RHEL|AlmaLinux)$ ]]; then
+        _yellow "Installing EPEL repository..."
+            if ! yum -y install epel-release; then
+                _red "EPEL installation failed!"
+                cleanup_epel
+                _yellow "Attempting to continue without EPEL..."
+            fi
+        fi
+    fi
 }
 
 Check_SysBench() {
@@ -346,8 +373,22 @@ env_check() {
     
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
-    _green "Update system manager."
-    ${PACKAGE_UPDATE[int]} 2>/dev/null
+    _yellow "Warning: System update will be performed"
+    _yellow "This operation may:"
+    _yellow "1. Take significant time to complete"
+    _yellow "2. Cause temporary network interruptions"
+    _yellow "3. Impact system stability"
+    _yellow "4. Affect future system startup"
+    reading "Do you want to proceed with system update? (y/N): " update_confirm
+    if [[ ! $update_confirm =~ ^[Yy]$ ]]; then
+        _yellow "Skipping system update"
+        _yellow "Note: Some package installations may fail"
+    else
+        _green "Updating system package manager..."
+        if ! ${PACKAGE_UPDATE[int]} 2>/dev/null; then
+            _red "System update failed!"
+        fi
+    fi
     
     # 安装必要的命令
     for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
@@ -426,37 +467,59 @@ show_help() {
     cat <<"EOF"
 可用命令：
 
-./goecs.sh env            检查并安装的包：
-                          sudo  (几乎所有类 Unix 系统都有。)
-                          tar   (几乎所有类 Unix 系统都有。)
-                          unzip (几乎所有类 Unix 系统都有。)
-                          dd    (几乎所有类 Unix 系统都有。)
-                          fio   (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                          sysbench  (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                          geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
-                          speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
-                          ping  (使用官方提供的二进制文件以获得更准确的测试结果。)
-                          systemd-detect-virt 或 dmidecode (几乎所有类 Unix 系统都有，安装以获得更准确的测试结果。)
-                          事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
+./goecs.sh env            检查并安装依赖包
+                          警告: 此命令会执行系统更新，可能:
+                          1. 耗时较长
+                          2. 导致网络短暂中断
+                          3. 影响系统稳定性
+                          4. 影响后续系统启动
+                          对于内存小于2GB的系统，还可能导致:
+                          1. 系统卡死
+                          2. SSH连接中断
+                          3. 关键服务失败
+                          推荐：
+                          环境依赖安装过程中挂起执行
+
+                          必需组件:
+                          sysbench/geekbench (CPU性能测试必需)
+                          
+                          可选组件:
+                          sudo, tar, unzip, dd, fio
+                          speedtest (网络测试)
+                          ping (网络连通性测试)
+                          systemd-detect-virt/dmidecode (系统信息检测)
+
 ./goecs.sh install        安装 goecs 命令
 ./goecs.sh upgrade        升级 goecs 命令
 ./goecs.sh uninstall      卸载 goecs 命令
 ./goecs.sh help           显示此消息
 
+[English version follows...]
+
 Available commands:
 
-./goecs.sh env             Check and Install package:
-                           sudo  (Almost all unix-like systems have it.)
-                           tar   (Almost all unix-like systems have it.)
-                           unzip (Almost all unix-like systems have it.)
-                           dd    (Almost all unix-like systems have it.)
-                           fio   (Almost all unix-like systems can be installed through the system's package manager.)
-                           sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
-                           geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
-                           speedtest (Use the officially provided binaries for more accurate test results.)
-                           ping   (Use the officially provided binaries for more accurate test results.)
-                           systemd-detect-virt OR dmidecode (Almost all unix-like systems have it, for more accurate test results.)
-                           In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested without which the CPU score cannot be tested.
+./goecs.sh env             Check and Install dependencies
+                           Warning: This command performs system update, which may:
+                           1. Take considerable time
+                           2. Cause temporary network interruptions
+                           3. Impact system stability
+                           4. Affect subsequent system startups
+                           For systems with less than 2GB RAM, additional risks:
+                           1. System freeze
+                           2. SSH connection loss
+                           3. Critical service failures
+                           Recommended:
+                           Hanging execution during environment dependency installation
+                           
+                           Required components:
+                           sysbench/geekbench (Required for CPU testing)
+                           
+                           Optional components:
+                           sudo, tar, unzip, dd, fio
+                           speedtest (Network testing)
+                           ping (Network connectivity)
+                           systemd-detect-virt/dmidecode (System info detection)
+
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
 ./goecs.sh uninstall       Uninstall goecs command

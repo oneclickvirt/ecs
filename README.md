@@ -99,19 +99,28 @@ shell脚本的说明
 ```
 可用命令：
 
-./goecs.sh env            检查并安装的包：
-                          sudo  (几乎所有类 Unix 系统都有。)
-                          tar   (几乎所有类 Unix 系统都有。)
-                          unzip (几乎所有类 Unix 系统都有。)
-                          dd    (几乎所有类 Unix 系统都有。)
-			  iproute2 (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                          fio   (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                          sysbench  (几乎所有类 Unix 系统可以通过系统的包管理器安装。)
-                          geekbench (geekbench5) (仅支持 IPV4 环境，且内存大于 1GB 并需要持续联网，仅支持 amd64 和 arm64 架构。)
-                          speedtest (使用官方提供的二进制文件以获得更准确的测试结果。)
-                          ping  (使用官方提供的二进制文件以获得更准确的测试结果。)
-                          systemd-detect-virt 或 dmidecode (几乎所有类 Unix 系统都有，安装以获得更准确的测试结果。)
-                          事实上，sysbench/geekbench 是上述依赖项中唯一必须安装的，没有它们无法测试 CPU 分数。
+./goecs.sh env            检查并安装依赖包
+                          警告: 此命令会执行系统更新，可能:
+                          1. 耗时较长
+                          2. 导致网络短暂中断
+                          3. 影响系统稳定性
+                          4. 影响后续系统启动
+                          对于内存小于2GB的系统，还可能导致:
+                          1. 系统卡死
+                          2. SSH连接中断
+                          3. 关键服务失败
+                          推荐：
+                          环境依赖安装过程中挂起执行
+
+                          必需组件:
+                          sysbench/geekbench (CPU性能测试必需)
+                          
+                          可选组件:
+                          sudo, tar, unzip, dd, fio
+                          speedtest (网络测试)
+                          ping (网络连通性测试)
+                          systemd-detect-virt/dmidecode (系统信息检测)
+
 ./goecs.sh install        安装 goecs 命令
 ./goecs.sh upgrade        升级 goecs 命令
 ./goecs.sh uninstall      卸载 goecs 命令

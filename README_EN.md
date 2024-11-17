@@ -87,19 +87,28 @@ Explanation of the shell script
 ```
 Available commands:
 
-./goecs.sh env             Check and Install package:
-                           sudo  (Almost all unix-like systems have it.)
-                           tar   (Almost all unix-like systems have it.)
-                           unzip (Almost all unix-like systems have it.)
-                           dd    (Almost all unix-like systems have it.)
-                           fio   (Almost all unix-like systems can be installed through the system's package manager.)
-                           iproute2 (Almost all unix-like systems can be installed through the system's package manager.)
-                           sysbench  (Almost all unix-like systems can be installed through the system's package manager.)
-                           geekbench (geekbench5)(Only support IPV4 environment, and memory greater than 1GB network detection, only support amd64 and arm64 architecture.)
-                           speedtest (Use the officially provided binaries for more accurate test results.)
-                           ping   (Use the officially provided binaries for more accurate test results.)
-                           systemd-detect-virt OR dmidecode (Almost all unix-like systems have it, for more accurate test results.)
-                           In fact, sysbench/geekbench is the only one of the above dependencies that must be installed, without which the CPU score cannot be tested.
+./goecs.sh env             Check and Install dependencies
+                           Warning: This command performs system update, which may:
+                           1. Take considerable time
+                           2. Cause temporary network interruptions
+                           3. Impact system stability
+                           4. Affect subsequent system startups
+                           For systems with less than 2GB RAM, additional risks:
+                           1. System freeze
+                           2. SSH connection loss
+                           3. Critical service failures
+                           Recommended:
+                           Hanging execution during environment dependency installation
+                           
+                           Required components:
+                           sysbench/geekbench (Required for CPU testing)
+                           
+                           Optional components:
+                           sudo, tar, unzip, dd, fio
+                           speedtest (Network testing)
+                           ping (Network connectivity)
+                           systemd-detect-virt/dmidecode (System info detection)
+
 ./goecs.sh install         Install goecs command
 ./goecs.sh upgrade         Upgrade goecs command
 ./goecs.sh uninstall       Uninstall goecs command
