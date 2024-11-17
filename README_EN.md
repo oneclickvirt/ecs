@@ -88,12 +88,12 @@ Explanation of the shell script
 Available commands:
 
 ./goecs.sh env             Check and Install dependencies
-                           Warning: This command performs system update, which may:
+                           Warning: This command performs system update(optional), which may:
                            1. Take considerable time
                            2. Cause temporary network interruptions
                            3. Impact system stability
                            4. Affect subsequent system startups
-                           For systems with less than 2GB RAM, additional risks:
+                           For systems with less than 1GB RAM, additional risks:
                            1. System freeze
                            2. SSH connection loss
                            3. Critical service failures

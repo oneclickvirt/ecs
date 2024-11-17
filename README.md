@@ -70,7 +70,7 @@ curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o go
 curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 ```
 
-安装环境
+更新包管理器(可选择)和安装环境
 
 ```
 ./goecs.sh env
@@ -100,12 +100,12 @@ shell脚本的说明
 可用命令：
 
 ./goecs.sh env            检查并安装依赖包
-                          警告: 此命令会执行系统更新，可能:
+                          警告: 此命令会执行系统更新(可选择)，可能:
                           1. 耗时较长
                           2. 导致网络短暂中断
                           3. 影响系统稳定性
                           4. 影响后续系统启动
-                          对于内存小于2GB的系统，还可能导致:
+                          对于内存小于1GB的系统，还可能导致:
                           1. 系统卡死
                           2. SSH连接中断
                           3. 关键服务失败

@@ -61,8 +61,23 @@ download_file() {
 }
 
 get_memory_size() {
-    local mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
-    echo $((mem_kb / 1024))
+    if [ -f /proc/meminfo ]; then
+        local mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        echo $((mem_kb / 1024)) # Convert to MB
+        return
+    fi
+    if command -v free >/dev/null 2>&1; then
+        local mem_kb=$(free -m | awk '/^Mem:/ {print $2}')
+        echo "$mem_kb" # Already in MB
+        return
+    fi
+    if command -v sysctl >/dev/null 2>&1; then
+        local mem_bytes=$(sysctl -n hw.memsize 2>/dev/null || sysctl -n hw.physmem 2>/dev/null)
+        if [ -n "$mem_bytes" ]; then
+            echo $((mem_bytes / 1024 / 1024)) # Convert to MB
+            return
+        fi
+    fi
 }
 
 cleanup_epel() {
@@ -226,7 +241,9 @@ InstallSysbench() {
         Var_OSRelease="unknown" # 未知系统分支
     fi
     local mem_size=$(get_memory_size)
-    if [ $mem_size -lt 1024 ]; then
+    if [ -z "$mem_size" ] || [ "$mem_size" -eq 0 ]; then
+        echo "Error: Unable to determine memory size or memory size is zero."
+    elif [ $mem_size -lt 1024 ]; then
         _red "Warning: Your system has less than 1GB RAM (${mem_size}MB)"
         reading "Do you want to continue with EPEL installation? (y/N): " confirm
         if [[ ! $confirm =~ ^[Yy]$ ]]; then
@@ -469,12 +486,12 @@ show_help() {
 可用命令：
 
 ./goecs.sh env            检查并安装依赖包
-                          警告: 此命令会执行系统更新，可能:
+                          警告: 此命令会执行系统更新(可选择)，可能:
                           1. 耗时较长
                           2. 导致网络短暂中断
                           3. 影响系统稳定性
                           4. 影响后续系统启动
-                          对于内存小于2GB的系统，还可能导致:
+                          对于内存小于1GB的系统，还可能导致:
                           1. 系统卡死
                           2. SSH连接中断
                           3. 关键服务失败
@@ -500,12 +517,12 @@ show_help() {
 Available commands:
 
 ./goecs.sh env             Check and Install dependencies
-                           Warning: This command performs system update, which may:
+                           Warning: This command performs system update(optional), which may:
                            1. Take considerable time
                            2. Cause temporary network interruptions
                            3. Impact system stability
                            4. Affect subsequent system startups
-                           For systems with less than 2GB RAM, additional risks:
+                           For systems with less than 1GB RAM, additional risks:
                            1. System freeze
                            2. SSH connection loss
                            3. Critical service failures
