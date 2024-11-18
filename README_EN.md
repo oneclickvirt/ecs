@@ -47,7 +47,7 @@ Systems to be supported (hardware testing bugs not yet fixed): MacOS„ÄÅFreeBSD„Ä
 ### one-click command
 
 ```
-curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
+export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
 ```
 
 ### explain in detail
@@ -63,6 +63,8 @@ Install environment
 ```
 ./goecs.sh env
 ```
+
+If you don't want interaction, use ```export noninteractive=true``` and then execute the ```env``` command
 
 Install goecs
 

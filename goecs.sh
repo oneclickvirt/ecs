@@ -1,6 +1,6 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2024.11.17
+# 2024.11.18
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
@@ -245,10 +245,12 @@ InstallSysbench() {
         echo "Error: Unable to determine memory size or memory size is zero."
     elif [ $mem_size -lt 1024 ]; then
         _red "Warning: Your system has less than 1GB RAM (${mem_size}MB)"
-        reading "Do you want to continue with EPEL installation? (y/N): " confirm
-        if [[ ! $confirm =~ ^[Yy]$ ]]; then
-            _yellow "Skipping EPEL installation"
-            return 1
+        if [ "$noninteractive" != "true" ]; then
+            reading "Do you want to continue with EPEL installation? (y/N): " confirm
+            if [[ ! $confirm =~ ^[Yy]$ ]]; then
+                _yellow "Skipping EPEL installation"
+                return 1
+            fi
         fi
         case "$Var_OSRelease" in
         ubuntu | debian | astra) 
@@ -397,14 +399,16 @@ env_check() {
     _yellow "2. Cause temporary network interruptions"
     _yellow "3. Impact system stability"
     _yellow "4. Affect future system startup"
-    reading "Do you want to proceed with system update? (y/N): " update_confirm
-    if [[ ! $update_confirm =~ ^[Yy]$ ]]; then
-        _yellow "Skipping system update"
-        _yellow "Note: Some package installations may fail"
-    else
-        _green "Updating system package manager..."
-        if ! ${PACKAGE_UPDATE[int]} 2>/dev/null; then
-            _red "System update failed!"
+    if [ "$noninteractive" != "true" ]; then
+        reading "Do you want to proceed with system update? (y/N): " update_confirm
+        if [[ ! $update_confirm =~ ^[Yy]$ ]]; then
+            _yellow "Skipping system update"
+            _yellow "Note: Some package installations may fail"
+        else
+            _green "Updating system package manager..."
+            if ! ${PACKAGE_UPDATE[int]} 2>/dev/null; then
+                _red "System update failed!"
+            fi
         fi
     fi
     
