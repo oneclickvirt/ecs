@@ -28,8 +28,8 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ${{ secrets.CNB_DOCKER_REGISTRY }}
-          username: cnb
-          password: 34hs1c6a15KgJOVTQ1tGa9AyU3A
+          username: ${{ secrets.CNB_USERNAME }}
+          password: ${{ secrets.CNB_TOKEN }}
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v4
