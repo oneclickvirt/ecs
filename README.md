@@ -211,7 +211,7 @@ windows测试无需进行环境安装
 
 ## 在Docker中使用的说明
 
-地址：https://hub.docker.com/r/spiritlhl/goecs
+国际镜像地址：https://hub.docker.com/r/spiritlhl/goecs
 
 请确保执行下述命令前本机已安装Docker
 
@@ -228,6 +228,22 @@ docker run --rm spiritlhl/goecs:latest -menu=false -l zh
 ```
 
 使用Docker执行测试，硬件测试会有一些偏差和虚拟化架构判断失效，还是推荐直接测试而不使用Docker测试。
+
+国内镜像地址：https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
+
+请确保执行下述命令前本机已安装Docker
+
+特权模式+host网络
+
+```shell
+docker run --rm --privileged --network host docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
+```
+
+非特权模式+非host网络
+
+```shell
+docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
+```
 
 ## QA
 
