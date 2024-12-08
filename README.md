@@ -5,6 +5,8 @@
 融合怪测评脚本 - GO 重构版本  
 由于未正式发版，如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
 
+Go 版本：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
+
 Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS/ecs)
 
 ---
