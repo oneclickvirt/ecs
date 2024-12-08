@@ -4,7 +4,7 @@
 
 Fusion Monster Evaluation Script - GO Refactored Version - Since it has not been officially released, please report any issues via issues.
 
-Shell version：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
+Go version：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
 
 Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https://github.com/spiritLHLS/ecs/blob/main/README_EN.md)
 
