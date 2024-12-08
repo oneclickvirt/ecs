@@ -27,6 +27,13 @@ jobs:
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           
+      - name: Copy repository files
+        run: |
+          cp goecs.sh temp_repo/
+          cp README_EN.md temp_repo/
+          cp README.md temp_repo/
+          cp LICENSE temp_repo/
+          
       - name: Download release assets
         run: |
           cd temp_repo

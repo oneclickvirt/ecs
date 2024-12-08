@@ -1,8 +1,10 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2024.11.18
+# 2024.12.08
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+# 或
+# curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
 cat <<"EOF"
        GGGGGGGG        OOOOOOO         EEEEEEEE      CCCCCCCCC    SSSSSSSSSS
@@ -60,6 +62,67 @@ download_file() {
     return 0
 }
 
+check_china() {
+    _yellow "正在检测IP所在区域......"
+    if [[ -z "${CN}" ]]; then
+        # 首先尝试通过 ipapi.co 检测
+        if curl -m 6 -s https://ipapi.co/json | grep -q 'China'; then
+            _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
+            if [ "$noninteractive" != "true" ]; then
+                reading "是否使用中国镜像完成安装? ([y]/n) " input
+                case $input in
+                    [yY][eE][sS] | [yY] | "")
+                        _green "已选择使用中国镜像"
+                        CN=true
+                        ;;
+                    [nN][oO] | [nN])
+                        _yellow "已选择不使用中国镜像"
+                        CN=false
+                        ;;
+                    *)
+                        _green "已选择使用中国镜像"
+                        CN=true
+                        ;;
+                esac
+            else
+                # 在非交互模式下默认使用中国镜像
+                CN=true
+            fi
+        else
+            # 如果 ipapi.co 检测失败，尝试使用 cip.cc
+            if ! curl -m 6 -s https://ipapi.co/json >/dev/null 2>&1; then
+                if curl -m 6 -s cip.cc | grep -q "中国"; then
+                    _yellow "根据cip.cc提供的信息，当前IP可能在中国"
+                    if [ "$noninteractive" != "true" ]; then
+                        reading "是否使用中国镜像完成安装? ([y]/n) " input
+                        case $input in
+                            [yY][eE][sS] | [yY] | "")
+                                _green "已选择使用中国镜像"
+                                CN=true
+                                ;;
+                            [nN][oO] | [nN])
+                                _yellow "已选择不使用中国镜像"
+                                CN=false
+                                ;;
+                            *)
+                                _green "已选择使用中国镜像"
+                                CN=true
+                                ;;
+                        esac
+                    else
+                        # 在非交互模式下默认使用中国镜像
+                        CN=true
+                    fi
+                else
+                    CN=false
+                fi
+            else
+                CN=false
+            fi
+        fi
+    fi
+}
+
 get_memory_size() {
     if [ -f /proc/meminfo ]; then
         local mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
@@ -89,6 +152,8 @@ cleanup_epel() {
 goecs_check() {
     os=$(uname -s)
     arch=$(uname -m)
+    # 先进行中国IP检测
+    check_china
     ECS_VERSION=$(curl -m 6 -sSL "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
     # 如果 https://api.github.com/ 请求失败，则使用 https://githubapi.spiritlhl.workers.dev/ ，此时可能宿主机无IPV4网络
     if [ -z "$ECS_VERSION" ]; then
@@ -117,75 +182,144 @@ goecs_check() {
         _green "Can not find goecs, need to download and install, 5 seconds later will start to install"
     fi
     sleep 5
-    cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
-    check_cdn_file
-    case $os in
-        Linux)
-            case $arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
+    if [[ "$CN" == true ]]; then
+        _yellow "使用中国镜像下载..."
+        case $os in
+            Linux)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_amd64.zip" "goecs.zip"
+                    ;;
+                "i386" | "i686")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_386.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_arm64.zip" "goecs.zip"
+                    ;;
+                "mips")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_mips.zip" "goecs.zip"
+                    ;;
+                "mipsle")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_mipsle.zip" "goecs.zip"
+                    ;;
+                "s390x")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_s390x.zip" "goecs.zip"
+                    ;;
+                "riscv64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_riscv64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "不支持的架构: $arch"
+                    exit 1
+                    ;;
+                esac
                 ;;
-            "i386" | "i686")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
+            FreeBSD)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_amd64.zip" "goecs.zip"
+                    ;;
+                "i386" | "i686")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_386.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_arm64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "不支持的架构: $arch"
+                    exit 1
+                    ;;
+                esac
                 ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
-                ;;
-            "mips")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mips.zip" "goecs.zip"
-                ;;
-            "mipsle")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mipsle.zip" "goecs.zip"
-                ;;
-            "s390x")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_s390x.zip" "goecs.zip"
-                ;;
-            "riscv64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_riscv64.zip" "goecs.zip"
+            Darwin)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_darwin_amd64.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_darwin_arm64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "不支持的架构: $arch"
+                    exit 1
+                    ;;
+                esac
                 ;;
             *)
-                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                _red "不支持的操作系统: $os"
                 exit 1
                 ;;
-            esac
-            ;;
-        FreeBSD)
-            case $arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
+        esac
+    else
+        cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
+        check_cdn_file
+        case $os in
+            Linux)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
+                    ;;
+                "i386" | "i686")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
+                    ;;
+                "mips")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mips.zip" "goecs.zip"
+                    ;;
+                "mipsle")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mipsle.zip" "goecs.zip"
+                    ;;
+                "s390x")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_s390x.zip" "goecs.zip"
+                    ;;
+                "riscv64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_riscv64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                    exit 1
+                    ;;
+                esac
                 ;;
-            "i386" | "i686")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
+            FreeBSD)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
+                    ;;
+                "i386" | "i686")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                    exit 1
+                    ;;
+                esac
                 ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
+            Darwin)
+                case $arch in
+                "x86_64" | "x86" | "amd64" | "x64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
+                    ;;
+                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
+                    download_file "${cdn_success_url}https://github.com/oneclickvirt/                ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
+                    ;;
+                *)
+                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                    exit 1
+                    ;;
+                esac
                 ;;
             *)
-                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
+                _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
                 exit 1
                 ;;
-            esac
-            ;;
-        Darwin)
-            case $arch in
-            "x86_64" | "x86" | "amd64" | "x64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
-                ;;
-            "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                download_file "${cdn_success_url}https://github.com/oneclickvirt/                ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
-                ;;
-            *)
-                _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-                exit 1
-                ;;
-            esac
-            ;;
-        *)
-            _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-            exit 1
-            ;;
-    esac
-
+        esac
+    fi
     unzip goecs.zip
     rm -rf goecs.zip
     rm -rf README.md

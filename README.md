@@ -1,149 +1,164 @@
-# ecs
+# ECS
 
 [![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
-融合怪测评脚本 - GO重构版本 - 由于未正式发版，如有问题请issues反馈
+融合怪测评脚本 - GO 重构版本  
+由于未正式发版，如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
 
-Shell版本： https://github.com/spiritLHLS/ecs
+Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS/ecs)
 
-## 语言
+---
+
+## **语言**
 
 [中文文档](README.md) | [English Docs](README_EN.md)
 
-## 适配系统和架构
+---
 
-编译支持的架构: amd64、arm、arm64、386、mips、mipsle、s390x、riscv64
+## **适配系统和架构**
 
-测试支持的架构: amd64、arm64 
+### **编译支持的架构**
 
-更多架构请自行测试
+- amd64、arm、arm64、386、mips、mipsle、s390x、riscv64
 
-编译支持的系统: Linux、Windows、MacOS、FreeBSD、OpenBSD
+### **测试支持的架构**
 
-测试支持的系统: Linux、Windows 
+- amd64、arm64
 
-更多系统请自行测试
+> 更多架构请自行测试。
 
-待支持的系统(存在硬件测试BUG未修复): MacOS、FreeBSD、OpenBSD
+### **编译支持的系统**
 
-## 功能
+- Linux、Windows、MacOS、FreeBSD、OpenBSD
 
-- [x] 系统基础信息查询[自研[basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)]
-- [x] IP基础信息并发查询[自研[basics](https://github.com/oneclickvirt/basics)]
-- [x] CPU测试[自研[cputest](https://github.com/oneclickvirt/cputest)支持sysbench、geekbench、winsat]
-- [x] 内存测试[自研[memorytest](https://github.com/oneclickvirt/memorytest)支持sysbench、dd]
-- [x] 硬盘测试[自研[disktest](https://github.com/oneclickvirt/disktest)支持dd、fio、winsat]
-- [x] 御三家流媒体解锁信息并发查询[借鉴[netflix-verify](https://github.com/sjlleo/netflix-verify)、[VerifyDisneyPlus](https://github.com/sjlleo/VerifyDisneyPlus)、[TubeCheck](https://github.com/sjlleo/TubeCheck)逻辑开发至于[CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)]
-- [x] 常见流媒体测试并发查询[自研至于[UnlockTests](https://github.com/oneclickvirt/UnlockTests)，逻辑借鉴[RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck)、[MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest)]
-- [x] IP质量/安全信息并发查询[自研，由于测试含密钥信息，故而私有化开发，但二进制文件编译至于[securityCheck](https://github.com/oneclickvirt/securityCheck)]
-- [x] 邮件端口测试[自研[portchecker](https://github.com/oneclickvirt/portchecker)]
-- [x] 三网回程测试[借鉴[zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)二次开发至于[oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)]
-- [x] 三网路由测试[借鉴[NTrace-core](https://github.com/nxtrace/NTrace-core)二次开发至于[nt3](https://github.com/oneclickvirt/nt3)]
-- [x] 测试网速[基于[speedtest.net-爬虫](https://github.com/spiritLHLS/speedtest.net-CN-ID)、[speedtest.cn-爬虫](https://github.com/spiritLHLS/speedtest.cn-CN-ID)的数据，使用[speedtest-go](https://github.com/showwin/speedtest-go)开发至于[oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
-- [x] 测试三网Ping值[借鉴[ecsspeed](https://github.com/spiritLHLS/ecsspeed)的逻辑二次开发至于[pingtest](https://github.com/oneclickvirt/pingtest)]
+### **测试支持的系统**
 
-## Linux/FreeBSD/MacOS上使用的说明
+- Linux、Windows
 
-### 一键命令
+> 更多系统请自行测试。
 
-```
-export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
-```
+### **待支持的系统**
 
-或
+- MacOS、FreeBSD、OpenBSD（存在硬件测试 BUG 未修复）
 
-```
-export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
-```
+---
 
-### 详细说明
+## **功能**
 
-下载脚本
+- 系统基础信息查询：  
+  自研 [basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)
+- IP 基础信息并发查询：  
+  自研 [basics](https://github.com/oneclickvirt/basics)
+- CPU 测试：  
+  自研 [cputest](https://github.com/oneclickvirt/cputest)，支持 sysbench、geekbench、winsat
+- 内存测试：  
+  自研 [memorytest](https://github.com/oneclickvirt/memorytest)，支持 sysbench、dd
+- 硬盘测试：  
+  自研 [disktest](https://github.com/oneclickvirt/disktest)，支持 dd、fio、winsat
+- 流媒体解锁信息并发查询：  
+  借鉴 [netflix-verify](https://github.com/sjlleo/netflix-verify) 等逻辑，开发至 [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)
+- 常见流媒体测试并发查询：  
+  自研至 [UnlockTests](https://github.com/oneclickvirt/UnlockTests)，逻辑借鉴 [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) 等
+- IP 质量/安全信息并发查询：  
+  自研，二进制文件编译至 [securityCheck](https://github.com/oneclickvirt/securityCheck)
+- 邮件端口测试：  
+  自研 [portchecker](https://github.com/oneclickvirt/portchecker)
+- 三网回程测试：  
+  借鉴 [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)，二次开发至 [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
+- 三网路由测试：  
+  借鉴 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
+- 网速测试：  
+  基于 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发至 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
+- 三网 Ping 值测试：  
+  借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
 
-```
-curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
-```
+---
 
-或
+## **使用说明**
 
-```
-curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
-```
+### **Linux/FreeBSD/MacOS**
 
-更新包管理器(可选择)和安装环境
+#### **一键命令**
 
-```
-./goecs.sh env
-```
+- **国际用户无加速：**
 
-如果不想要互动，可使用```export noninteractive=true```再执行```env```命令
+  ```bash
+  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+  ```
 
-安装goecs
+- **国际/国内使用 CDN 加速：**
 
-```
-./goecs.sh install
-```
+  ```bash
+  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+  ```
 
-升级goecs
+- **国内用户使用 CNB 加速：**
 
-```
-./goecs.sh upgrade
-```
+  ```bash
+  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+  ```
 
-卸载goecs
+#### **详细说明**
 
-```
-./goecs.sh uninstall
-```
+1. **下载脚本**
 
-shell脚本的说明
+   **国际用户无加速：**
 
-```
-可用命令：
+   ```bash
+   curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
 
-./goecs.sh env            检查并安装依赖包
-                          警告: 此命令会执行系统更新(可选择)，可能:
-                          1. 耗时较长
-                          2. 导致网络短暂中断
-                          3. 影响系统稳定性
-                          4. 影响后续系统启动
-                          对于内存小于1GB的系统，还可能导致:
-                          1. 系统卡死
-                          2. SSH连接中断
-                          3. 关键服务失败
-                          推荐：
-                          环境依赖安装过程中挂起执行
+   **国际/国内使用 CDN 加速：**
 
-                          必需组件:
-                          sysbench/geekbench (CPU性能测试必需)
-                          
-                          可选组件:
-                          sudo, tar, unzip, dd, fio
-                          speedtest (网络测试)
-                          ping (网络连通性测试)
-                          systemd-detect-virt/dmidecode (系统信息检测)
+   ```bash
+   curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
 
-./goecs.sh install        安装 goecs 命令
-./goecs.sh upgrade        升级 goecs 命令
-./goecs.sh uninstall      卸载 goecs 命令
-./goecs.sh help           显示此消息
-```
+   **国内用户使用 CNB 加速：**
 
-goecs唤起菜单
+   ```bash
+   curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
 
-```
-goecs
-```
+2. **更新包管理器（可选择）并安装环境**
 
-或
+   ```bash
+   ./goecs.sh env
+   ```
 
-```
-./goecs
-```
+   **非互动模式：**
 
-goecs命令参数化
+   ```bash
+   export noninteractive=true && ./goecs.sh env
+   ```
 
-```
+3. **安装 `goecs`**
+
+   ```bash
+   ./goecs.sh install
+   ```
+
+4. **升级 `goecs`**
+
+   ```bash
+   ./goecs.sh upgrade
+   ```
+
+5. **卸载 `goecs`**
+
+   ```bash
+   ./goecs.sh uninstall
+   ```
+
+6. **唤起菜单**
+
+   ```bash
+   goecs
+   ```
+
+#### **命令参数化**
+
+```bash
 Usage: goecs [options]
   -backtrace
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
@@ -197,19 +212,16 @@ Usage: goecs [options]
   -v    Display version information
 ```
 
-## Windows上使用的说明
+---
 
-下载带exe文件的压缩文件
+### **Windows**
 
-https://github.com/oneclickvirt/ecs/releases
+1. 下载带 exe 文件的压缩包：[Releases](https://github.com/oneclickvirt/ecs/releases)
+2. 解压后，右键以管理员模式运行。
 
-找其中最新的版本，按照对应架构下载对应的 .zip 文件，解压后文件夹内有一个exe文件
+---
 
-选择该exe文件，右键点击选择管理员模式运行(非管理员模式运行无法进行硬件测试)，唤起菜单自选
-
-windows测试无需进行环境安装
-
-## 在Docker中使用的说明
+### **Docker**
 
 国际镜像地址：https://hub.docker.com/r/spiritlhl/goecs
 
@@ -253,10 +265,10 @@ docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
 
 ```
 sysbench                          geekbench
-轻量几乎所有服务器都能跑            重型小机器跑不动
-测试无联网需求，无硬件需求          测试必须联网，且必须IPV4环境，且有内存大小1G的最低需求
-LUA编写且开源，各架构系统可自行编译  仅官方二进制文件且不开源，无对应架构时无法自行编译
-核心测试组件十多年不变              每次大版本更新对标的CPU，不同版本间得分互相之间难转化，你只能以对标的CPU为准
+轻量几乎所有服务器都能跑             重型小机器跑不动
+测试无联网需求，无硬件需求           测试必须联网，且必须IPV4环境并有内存大小1G的最低需求
+LUA编写且开源，各架构系统可自行编译   仅官方二进制文件且不开源，无对应架构时无法自行编译
+核心测试组件十多年不变               每次大版本更新对标的CPU，不同版本间得分互相之间难转化，你只能以对标的CPU为准
 测试仅测试计算性能                  测试涵盖多种性能测试，得分以权重计算，但实际很多测试项目实际是用不到的
 适合快速测试                       适合全面测试
 ```
