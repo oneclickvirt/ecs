@@ -41,4 +41,4 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/goecs:latest
-            ${{ secrets.CNB_DOCKER_REGISTRY }}/${{ github.repository }}:latest
+            ${{ secrets.CNB_DOCKER_REGISTRY }}/oneclickvirt/ecs:latest
