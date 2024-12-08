@@ -1,0 +1,30 @@
+name: Push to CNB Repository
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  push-to-cnb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "cnb"
+          git config --global user.email "cnb@users.noreply.github.com"
+
+      - name: Push to CNB repository
+        run: |
+          echo "Setting up remote repository..."
+          git remote add cnb-remote https://cnb:${{ secrets.CNB_TOKEN }}@cnb.cool/oneclickvirt/ecs
+          echo "Pushing to remote repository..."
+          git push cnb-remote main:main --force
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
