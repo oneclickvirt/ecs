@@ -1,0 +1,49 @@
+name: Sync Latest Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  sync-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Get latest release
+        id: get_release
+        run: |
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          
+      - name: Create temporary directory
+        run: |
+          mkdir -p temp_repo
+          cd temp_repo
+          git init
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          
+      - name: Download release assets
+        run: |
+          cd temp_repo
+          gh release download ${{ env.RELEASE_TAG }} --repo ${{ github.repository }} --dir .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Push to target repository
+        run: |
+          cd temp_repo
+          git add .
+          git commit -m "Sync release ${{ env.RELEASE_TAG }} from ${{ github.repository }}"
+          git branch -M main
+          git remote add target https://cnb.cool/oneclickvirt/ecs.git
+          echo "machine cnb.cool login ${{ secrets.CNB_USERNAME }} password ${{ secrets.CNB_TOKEN }}" > ~/.netrc
+          chmod 600 ~/.netrc
+          git push -f target main
+        env:
+          CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
