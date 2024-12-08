@@ -1,4 +1,4 @@
-name: Push to CNB Repository
+name: Push to CNB
 
 on:
   push:
@@ -10,21 +10,21 @@ jobs:
   push-to-cnb:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source repository
+      - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Configure Git
+      - name: Import to CNB
         run: |
-          git config --global user.name "cnb"
-          git config --global user.email "cnb@users.noreply.github.com"
-
-      - name: Push to CNB repository
-        run: |
-          echo "Setting up remote repository..."
-          git remote add cnb-remote https://cnb:${{ secrets.CNB_TOKEN }}@cnb.cool/oneclickvirt/ecs
-          echo "Pushing to remote repository..."
-          git push cnb-remote main:main --force
-        env:
-          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          docker run --rm \
+            -e PLUGIN_SOURCE_TOKEN="${{ secrets.GITHUB_TOKEN }}" \
+            -e PLUGIN_SOURCE_URL="https://github.com" \
+            -e PLUGIN_SOURCE_PLATFORM="github" \
+            -e PLUGIN_SOURCE_REPO="oneclickvirt/ecs" \
+            -e PLUGIN_CNB_ROOT_ORGANIZATION="oneclickvirt" \
+            -e PLUGIN_CNB_TOKEN="${{ secrets.CNB_TOKEN }}" \
+            -e PLUGIN_CNB_URL="https://cnb.cool" \
+            -e PLUGIN_MIGRATE_FORCE_PUSH="true" \
+            -e PLUGIN_MIGRATE_LOG_LEVEL="debug" \
+            -v ${{ github.workspace }}:${{ github.workspace }} \
+            -w ${{ github.workspace }} \
+            cnbcool/code-import
