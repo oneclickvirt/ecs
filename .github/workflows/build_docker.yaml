@@ -24,7 +24,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Login to CNB Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.CNB_DOCKER_REGISTRY }}
+          username: cnb
+          password: 34hs1c6a15KgJOVTQ1tGa9AyU3A
+
+      - name: Build and push Docker images
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -32,4 +39,6 @@ jobs:
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/riscv64
           # linux/mips,linux/mipsle 暂不支持 alpine, linux/s390x 编译卡死
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/goecs:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/goecs:latest
+            ${{ secrets.CNB_DOCKER_REGISTRY }}/${{ github.repository }}:latest
