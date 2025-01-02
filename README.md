@@ -2,8 +2,9 @@
 
 [![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
-融合怪测评脚本 - GO 重构版本  
-由于未正式发版，如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
+融合怪测评项目 - GO 重构版本  
+
+如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
 
 Go 版本：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
 

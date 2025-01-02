@@ -245,8 +245,8 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 
 // UploadText 上传文本内容到指定URL
 func UploadText(absPath string) (string, string, error) {
-	primaryURL := "http://hpaste.spiritlhl.net/api/upload"
-	backupURL := "https://paste.spiritlhl.net/api/upload"
+	primaryURL := "http://hpaste.spiritlhl.net/api/UL/upload"
+	backupURL := "https://paste.spiritlhl.net/api/UL/upload"
 	token := network.SecurityUploadToken
 	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
@@ -259,47 +259,42 @@ func UploadText(absPath string) (string, string, error) {
 	}
 	defer file.Close()
 	upload := func(url string) (string, string, error) {
-		// 重新打开文件，以确保我们总是从文件开头读取
 		file, err := os.Open(absPath)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to re-open file for %s: %w", url, err)
 		}
 		defer file.Close()
-
-		// 读取文件内容
 		content, err := io.ReadAll(file)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to read file content for %s: %w", url, err)
 		}
 		resp, err := client.R().
 			SetHeader("Authorization", token).
-			SetHeader("Format", "RANDOM").
-			SetHeader("Max-Views", "0").
-			SetHeader("UploadText", "true").
-			SetHeader("Content-Type", "multipart/form-data").
-			SetHeader("No-JSON", "true").
-			SetFileBytes("file", "goecs.txt", content).
+			SetFileBytes("file", filepath.Base(absPath), content).
 			Post(url)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to make request to %s: %w", url, err)
 		}
-		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			http_url := strings.ReplaceAll(resp.String(), "https://paste.spiritlhl.net/", "http://hpaste.spiritlhl.net/")
-			https_url := strings.ReplaceAll(resp.String(), "http://hpaste.spiritlhl.net/", "https://paste.spiritlhl.net/")
-			return http_url, https_url, nil
-		} else {
-			return "", "", fmt.Errorf("upload failed for %s with status code: %d", url, resp.StatusCode)
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 && resp.String() != "" {
+			fileID := strings.TrimSpace(resp.String())
+			if strings.Contains(fileID, "show") {
+				fileID = fileID[strings.LastIndex(fileID, "/")+1:]
+			}
+			httpURL := fmt.Sprintf("http://hpaste.spiritlhl.net/#/show/%s", fileID)
+			httpsURL := fmt.Sprintf("https://paste.spiritlhl.net/#/show/%s", fileID)
+			return httpURL, httpsURL, nil
 		}
+		return "", "", fmt.Errorf("upload failed for %s with status code: %d", url, resp.StatusCode)
 	}
-	http_url, https_url, err := upload(primaryURL)
+	httpURL, httpsURL, err := upload(primaryURL)
 	if err == nil {
-		return http_url, https_url, nil
+		return httpURL, httpsURL, nil
 	}
-	http_url, https_url, err = upload(backupURL)
+	httpURL, httpsURL, err = upload(backupURL)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to upload to both primary and backup URLs: %w", err)
 	}
-	return http_url, https_url, nil
+	return httpURL, httpsURL, nil
 }
 
 // ProcessAndUpload 创建结果文件并上传文件
