@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.3"
+	ecsVersion                                                        = "v0.1.4"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -323,7 +323,6 @@ func main() {
 				minutes := int(duration.Minutes())
 				seconds := int(duration.Seconds()) % 60
 				currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-				// 使用互斥锁保护output的写入
 				var mu sync.Mutex
 				mu.Lock()
 				output = utils.PrintAndCapture(func() {
@@ -333,14 +332,32 @@ func main() {
 					utils.PrintCenteredTitle("", width)
 				}, tempOutput, output)
 				mu.Unlock()
-				// 启动新的goroutine处理上传
+				// 创建一个通道来传递上传结果
+				resultChan := make(chan struct {
+					httpURL  string
+					httpsURL string
+				}, 1) // 使用带缓冲的通道，避免可能的阻塞
+				// 启动上传
 				go func() {
-					utils.ProcessAndUpload(output, filePath, enabelUpload)
+					httpURL, httpsURL := utils.ProcessAndUpload(output, filePath, enabelUpload)
+					resultChan <- struct {
+						httpURL  string
+						httpsURL string
+					}{httpURL, httpsURL}
 					uploadDone <- true
 				}()
 				// 等待上传完成或超时
 				select {
-				case <-uploadDone:
+				case result := <-resultChan:
+					if result.httpURL != "" || result.httpsURL != "" {
+						if language == "en" {
+							fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						} else {
+							fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						}
+					}
+					// 给打印操作一些时间完成
+					time.Sleep(100 * time.Millisecond)
 					os.Exit(0)
 				case <-time.After(30 * time.Second):
 					fmt.Println("上传超时，程序退出")
@@ -592,7 +609,14 @@ func main() {
 	default:
 		fmt.Println("Unsupported language")
 	}
-	utils.ProcessAndUpload(output, filePath, enabelUpload)
+	httpURL, httpsURL := utils.ProcessAndUpload(output, filePath, enabelUpload)
+	if httpURL != "" || httpsURL != "" {
+		if language == "en" {
+			fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+		} else {
+			fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+		}
+	}
 	finish = true
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")
