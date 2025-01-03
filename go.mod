@@ -2,8 +2,6 @@ module github.com/oneclickvirt/ecs
 
 go 1.22.10
 
-toolchain go1.23.1
-
 require (
 	github.com/imroc/req/v3 v3.49.0
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
