@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"github.com/imroc/req/v3"
@@ -299,19 +300,25 @@ func UploadText(absPath string) (string, string, error) {
 
 // ProcessAndUpload 创建结果文件并上传文件
 func ProcessAndUpload(output string, filePath string, enableUplaod bool) {
+	// 使用 defer 来处理 panic
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("处理上传时发生错误: %v\n", r)
+		}
+	}()
 	// 检查文件是否存在
 	if _, err := os.Stat(filePath); err == nil {
 		// 文件存在，删除文件
 		err = os.Remove(filePath)
 		if err != nil {
-			fmt.Println("Cannot delete file:", err)
+			fmt.Println("无法删除文件:", err)
 			return
 		}
 	}
 	// 创建文件
 	file, err := os.Create(filePath)
 	if err != nil {
-		fmt.Println("Cannot create file:", err)
+		fmt.Println("无法创建文件:", err)
 		return
 	}
 	defer file.Close()
@@ -319,28 +326,34 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) {
 	ansiRegex := regexp.MustCompile("\x1B\\[[0-9;]+[a-zA-Z]")
 	// 移除 ANSI 转义序列
 	cleanedOutput := ansiRegex.ReplaceAllString(output, "")
-	// 写入文件
-	_, err = file.WriteString(cleanedOutput)
+	// 使用 bufio.Writer 提高写入效率
+	writer := bufio.NewWriter(file)
+	_, err = writer.WriteString(cleanedOutput)
 	if err != nil {
-		fmt.Println("Cannot write to file:", err)
+		fmt.Println("无法写入文件:", err)
 		return
-	} else {
-		fmt.Println("Write test result in ", filePath)
 	}
+	// 确保写入缓冲区的数据都刷新到文件中
+	err = writer.Flush()
+	if err != nil {
+		fmt.Println("无法刷新文件缓冲:", err)
+		return
+	}
+	fmt.Printf("测试结果已写入 %s\n", filePath)
 	if enableUplaod {
 		// 获取文件的绝对路径
-		absPath, err2 := filepath.Abs(filePath)
-		if err2 != nil {
-			fmt.Println("Failed to get absolute file path:", err2)
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			fmt.Println("无法获取文件绝对路径:", err)
 			return
 		}
 		// 上传文件并生成短链接
-		http_url, https_url, err3 := UploadText(absPath)
-		if err3 != nil {
-			fmt.Println("Upload failed, cannot generate short URL.")
-			fmt.Println(err3.Error())
+		http_url, https_url, err := UploadText(absPath)
+		if err != nil {
+			fmt.Println("上传失败，无法生成链接")
+			fmt.Println(err.Error())
 			return
 		}
-		fmt.Printf("Upload successful!\nHttp URL:  %s\nHttps URL: %s\n", http_url, https_url)
+		fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", http_url, https_url)
 	}
 }

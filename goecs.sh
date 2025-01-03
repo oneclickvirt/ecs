@@ -150,201 +150,149 @@ cleanup_epel() {
 }
 
 goecs_check() {
-    os=$(uname -s)
-    arch=$(uname -m)
-    # 先进行中国IP检测
+    # Get system and architecture info with error handling
+    os=$(uname -s 2>/dev/null || echo "Unknown")
+    arch=$(uname -m 2>/dev/null || echo "Unknown")
+    # First check for China IP
     check_china
-    ECS_VERSION=$(curl -m 6 -sSL "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
-    # 如果 https://api.github.com/ 请求失败，则使用 https://githubapi.spiritlhl.workers.dev/ ，此时可能宿主机无IPV4网络
+    # Get latest version number with multiple backup sources
+    ECS_VERSION=""
+    for api in \
+        "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
+        "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" \
+        "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest"; do
+        ECS_VERSION=$(curl -m 6 -sSL "$api" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+        if [ -n "$ECS_VERSION" ]; then
+            break
+        fi
+        sleep 1
+    done
     if [ -z "$ECS_VERSION" ]; then
-        ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+        _yellow "Unable to get version info, using default version 0.1.2"
+        ECS_VERSION="0.1.2"
     fi
-    # 如果 https://githubapi.spiritlhl.workers.dev/ 请求失败，则使用 https://githubapi.spiritlhl.top/ ，此时可能宿主机在国内
-    if [ -z "$ECS_VERSION" ]; then
-        ECS_VERSION=$(curl -m 6 -sSL "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
-    fi
-    # 检测原始goecs命令是否存在，若存在则升级，不存在则安装
-    version_output=$(goecs -v command 2>/dev/null || ./goecs -v command 2>/dev/null)
-    if [ $? -eq 0 ]; then
+    # Check if original goecs command exists
+    version_output=""
+    for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do
+        if [ -x "$(command -v $cmd_path 2>/dev/null)" ]; then
+            version_output=$($cmd_path -v command 2>/dev/null)
+            break
+        fi
+    done
+    if [ -n "$version_output" ]; then
         extracted_version=${version_output//v/}
         if [ -n "$extracted_version" ]; then
             ecs_version=$ECS_VERSION
             if [[ "$(echo -e "$extracted_version\n$ecs_version" | sort -V | tail -n 1)" == "$extracted_version" ]]; then
-                _green "goecs version ($extracted_version) is latest, no need to upgrade."
+                _green "goecs version ($extracted_version) is up to date, no upgrade needed"
                 return
             else
-                _yellow "goecs version ($extracted_version) < $ecs_version, need to upgrade, 5 seconds later will start to upgrade"
-                rm -rf /usr/bin/goecs
-                rm -rf goecs
+                _yellow "goecs version ($extracted_version) < $ecs_version, upgrade needed, starting in 5 seconds"
+                rm -rf /usr/bin/goecs /usr/local/bin/goecs ./goecs
             fi
         fi
     else
-        _green "Can not find goecs, need to download and install, 5 seconds later will start to install"
+        _green "goecs not found, installation needed, starting in 5 seconds"
     fi
     sleep 5
+    # Download corresponding version with error handling
     if [[ "$CN" == true ]]; then
-        _yellow "使用中国镜像下载..."
-        case $os in
-            Linux)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_amd64.zip" "goecs.zip"
-                    ;;
-                "i386" | "i686")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_386.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_arm64.zip" "goecs.zip"
-                    ;;
-                "mips")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_mips.zip" "goecs.zip"
-                    ;;
-                "mipsle")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_mipsle.zip" "goecs.zip"
-                    ;;
-                "s390x")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_s390x.zip" "goecs.zip"
-                    ;;
-                "riscv64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_linux_riscv64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "不支持的架构: $arch"
-                    exit 1
-                    ;;
-                esac
-                ;;
-            FreeBSD)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_amd64.zip" "goecs.zip"
-                    ;;
-                "i386" | "i686")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_386.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_freebsd_arm64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "不支持的架构: $arch"
-                    exit 1
-                    ;;
-                esac
-                ;;
-            Darwin)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_darwin_amd64.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs_darwin_arm64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "不支持的架构: $arch"
-                    exit 1
-                    ;;
-                esac
-                ;;
-            *)
-                _red "不支持的操作系统: $os"
-                exit 1
-                ;;
-        esac
+        _yellow "Using China mirror for download..."
+        base_url="https://cnb.cool/oneclickvirt/ecs/-/git/raw/main"
     else
         cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
         check_cdn_file
-        case $os in
-            Linux)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_amd64.zip" "goecs.zip"
-                    ;;
-                "i386" | "i686")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_386.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_arm64.zip" "goecs.zip"
-                    ;;
-                "mips")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mips.zip" "goecs.zip"
-                    ;;
-                "mipsle")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_mipsle.zip" "goecs.zip"
-                    ;;
-                "s390x")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_s390x.zip" "goecs.zip"
-                    ;;
-                "riscv64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_linux_riscv64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-                    exit 1
-                    ;;
-                esac
-                ;;
-            FreeBSD)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_amd64.zip" "goecs.zip"
-                    ;;
-                "i386" | "i686")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_386.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_freebsd_arm64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-                    exit 1
-                    ;;
-                esac
-                ;;
-            Darwin)
-                case $arch in
-                "x86_64" | "x86" | "amd64" | "x64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}/goecs_amd64.zip" "goecs.zip"
-                    ;;
-                "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-                    download_file "${cdn_success_url}https://github.com/oneclickvirt/                ecs/releases/download/v${ECS_VERSION}/goecs_arm64.zip" "goecs.zip"
-                    ;;
-                *)
-                    _red "Unsupported architecture: $arch , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-                    exit 1
-                    ;;
-                esac
-                ;;
-            *)
-                _red "Unsupported operating system: $os , please check https://github.com/oneclickvirt/ecs/releases to download the zip for yourself and unzip it to use the binary for testing."
-                exit 1
-                ;;
-        esac
-    fi
-    unzip goecs.zip
-    rm -rf goecs.zip
-    rm -rf README.md
-    rm -rf LICENSE
-    sleep 1
-    chmod 777 goecs
-    rm -rf /usr/bin/goecs
-    sleep 1
-    cp goecs /usr/bin/goecs
-    rm -rf README_EN.md
-    rm -rf README.md
-    PARAM="net.ipv4.ping_group_range"
-    NEW_VALUE="0 2147483647"
-    CURRENT_VALUE=$(sysctl -n "$PARAM" 2>/dev/null)
-    if [ -f /etc/sysctl.conf ] && [ "$CURRENT_VALUE" != "$NEW_VALUE" ]; then
-        if grep -q "^$PARAM" /etc/sysctl.conf; then
-            sudo sed -i "s/^$PARAM.*/$PARAM = $NEW_VALUE/" /etc/sysctl.conf
+        if [ -n "$cdn_success_url" ]; then
+            base_url="${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}"
         else
-            echo "$PARAM = $NEW_VALUE" | sudo tee -a /etc/sysctl.conf
+            base_url="https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}"
         fi
-        sudo sysctl -p
     fi
-    setcap cap_net_raw=+ep goecs
-    setcap cap_net_raw=+ep /usr/bin/goecs
-    echo "goecs version:"
+    # Build download URL with architecture support
+    local zip_file=""
+    case $os in
+        Linux|linux|LINUX)
+            case $arch in
+                x86_64|amd64|x64) zip_file="goecs_linux_amd64.zip" ;;
+                i386|i686) zip_file="goecs_linux_386.zip" ;;
+                aarch64|arm64|armv8|armv8l) zip_file="goecs_linux_arm64.zip" ;;
+                arm|armv7l) zip_file="goecs_linux_arm.zip" ;;
+                mips) zip_file="goecs_linux_mips.zip" ;;
+                mipsle) zip_file="goecs_linux_mipsle.zip" ;;
+                s390x) zip_file="goecs_linux_s390x.zip" ;;
+                riscv64) zip_file="goecs_linux_riscv64.zip" ;;
+                *) zip_file="goecs_linux_amd64.zip" ;;
+            esac
+            ;;
+        FreeBSD|freebsd)
+            case $arch in
+                x86_64|amd64) zip_file="goecs_freebsd_amd64.zip" ;;
+                i386|i686) zip_file="goecs_freebsd_386.zip" ;;
+                arm64|aarch64) zip_file="goecs_freebsd_arm64.zip" ;;
+                *) zip_file="goecs_freebsd_amd64.zip" ;;
+            esac
+            ;;
+        Darwin|darwin)
+            case $arch in
+                x86_64|amd64) zip_file="goecs_darwin_amd64.zip" ;;
+                arm64|aarch64) zip_file="goecs_darwin_arm64.zip" ;;
+                *) zip_file="goecs_darwin_amd64.zip" ;;
+            esac
+            ;;
+        *)
+            _yellow "Unknown system $os, trying amd64 version"
+            zip_file="goecs_linux_amd64.zip"
+            ;;
+    esac
+    download_url="${base_url}/${zip_file}"
+    _green "Downloading $download_url"
+    # Download file with retry mechanism
+    local max_retries=3
+    local retry_count=0
+    while [ $retry_count -lt $max_retries ]; do
+        if download_file "$download_url" "goecs.zip"; then
+            break
+        fi
+        _yellow "Download failed, retrying (${retry_count}/${max_retries})..."
+        retry_count=$((retry_count + 1))
+        sleep 2
+    done
+    if [ $retry_count -eq $max_retries ]; then
+        _red "Download failed, please check your network connection or download manually"
+        return 1
+    fi
+    # Extract and install with error handling
+    if ! unzip -o goecs.zip >/dev/null 2>&1; then
+        _red "Extraction failed"
+        return 1
+    fi
+    rm -f goecs.zip README.md LICENSE README_EN.md
+    # Set execution permissions and install
+    chmod 777 goecs
+    for install_path in "/usr/bin" "/usr/local/bin"; do
+        if [ -d "$install_path" ]; then
+            cp -f goecs "$install_path/"
+            break
+        fi
+    done
+    # Set system parameters
+    if [ "$os" != "Darwin" ]; then
+        PARAM="net.ipv4.ping_group_range"
+        NEW_VALUE="0 2147483647"
+        if [ -f /etc/sysctl.conf ]; then
+            if grep -q "^$PARAM" /etc/sysctl.conf; then
+                sed -i "s/^$PARAM.*/$PARAM = $NEW_VALUE/" /etc/sysctl.conf
+            else
+                echo "$PARAM = $NEW_VALUE" >> /etc/sysctl.conf
+            fi
+            sysctl -p >/dev/null 2>&1
+        fi
+    fi
+    # Set special permissions
+    setcap cap_net_raw=+ep goecs 2>/dev/null
+    setcap cap_net_raw=+ep /usr/bin/goecs 2>/dev/null
+    setcap cap_net_raw=+ep /usr/local/bin/goecs 2>/dev/null
+    _green "goecs installation complete, current version:"
     goecs -v || ./goecs -v
 }
 
@@ -509,7 +457,7 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add --no-cache" "pkg_add -I" "yum -y install")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del" "pkg_delete -I" "yum -y remove")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "pacman -Rns --noconfirm" "pkg autoremove" "apk autoremove" "pkg_delete -a" "yum -y autoremove")
-    # 检查系统信息
+    # Check system information
     if [ -f /etc/opencloudos-release ]; then
         SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
@@ -527,65 +475,97 @@ env_check() {
     else
         SYS="$(uname -s)"
     fi
-    [[ -n $SYS ]] || exit 1
-
-    # 匹配操作系统
+    # Match operating system
+    SYSTEM=""
     for ((int = 0; int < ${#REGEX[@]}; int++)); do
         if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then
             SYSTEM="${RELEASE[int]}"
-            [[ -n $SYSTEM ]] && break
+            UPDATE_CMD=${PACKAGE_UPDATE[int]}
+            INSTALL_CMD=${PACKAGE_INSTALL[int]}
+            REMOVE_CMD=${PACKAGE_REMOVE[int]}
+            UNINSTALL_CMD=${PACKAGE_UNINSTALL[int]}
+            break
         fi
     done
-
-    # 检查是否成功匹配
-    [[ -n $SYSTEM ]] || exit 1
-
-    # 根据 SYSTEM 设置相应的包管理命令
-    UPDATE_CMD=${PACKAGE_UPDATE[int]}
-    INSTALL_CMD=${PACKAGE_INSTALL[int]}
-    REMOVE_CMD=${PACKAGE_REMOVE[int]}
-    UNINSTALL_CMD=${PACKAGE_UNINSTALL[int]}
-
-    echo "System: $SYSTEM"
-    echo "Update command: $UPDATE_CMD"
-    echo "Install command: $INSTALL_CMD"
-    echo "Remove command: $REMOVE_CMD"
-    echo "Uninstall command: $UNINSTALL_CMD"
-    
+    # If system is unrecognized, try common package managers
+    if [ -z "$SYSTEM" ]; then
+        _yellow "Unable to recognize system, trying common package managers..."
+        # Try apt
+        if command -v apt-get >/dev/null 2>&1; then
+            SYSTEM="Unknown-Debian"
+            UPDATE_CMD="apt-get update"
+            INSTALL_CMD="apt-get -y install"
+            REMOVE_CMD="apt-get -y remove"
+            UNINSTALL_CMD="apt-get -y autoremove"
+        # Try yum
+        elif command -v yum >/dev/null 2>&1; then
+            SYSTEM="Unknown-RHEL"
+            UPDATE_CMD="yum -y update"
+            INSTALL_CMD="yum -y install"
+            REMOVE_CMD="yum -y remove"
+            UNINSTALL_CMD="yum -y autoremove"
+        # Try dnf
+        elif command -v dnf >/dev/null 2>&1; then
+            SYSTEM="Unknown-Fedora"
+            UPDATE_CMD="dnf -y update"
+            INSTALL_CMD="dnf -y install"
+            REMOVE_CMD="dnf -y remove"
+            UNINSTALL_CMD="dnf -y autoremove"
+        # Try pacman
+        elif command -v pacman >/dev/null 2>&1; then
+            SYSTEM="Unknown-Arch"
+            UPDATE_CMD="pacman -Sy"
+            INSTALL_CMD="pacman -S --noconfirm"
+            REMOVE_CMD="pacman -R --noconfirm"
+            UNINSTALL_CMD="pacman -Rns --noconfirm"
+        # Try apk
+        elif command -v apk >/dev/null 2>&1; then
+            SYSTEM="Unknown-Alpine"
+            UPDATE_CMD="apk update"
+            INSTALL_CMD="apk add"
+            REMOVE_CMD="apk del"
+            UNINSTALL_CMD="apk del"
+        else
+            _red "Unable to recognize package manager, exiting installation"
+            exit 1
+        fi
+    fi
+    _green "System information: $SYSTEM"
+    _green "Update command: $UPDATE_CMD"
+    _green "Install command: $INSTALL_CMD"
     cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
     check_cdn_file
     _yellow "Warning: System update will be performed"
     _yellow "This operation may:"
-    _yellow "1. Take significant time to complete"
+    _yellow "1. Take considerable time"
     _yellow "2. Cause temporary network interruptions"
     _yellow "3. Impact system stability"
-    _yellow "4. Affect future system startup"
+    _yellow "4. Affect subsequent system startups"
     if [ "$noninteractive" != "true" ]; then
-        reading "Do you want to proceed with system update? (y/N): " update_confirm
+        reading "Continue with system update? (y/N): " update_confirm
         if [[ ! $update_confirm =~ ^[Yy]$ ]]; then
             _yellow "Skipping system update"
-            _yellow "Note: Some package installations may fail"
+            _yellow "Note: Some packages may fail to install"
         else
             _green "Updating system package manager..."
-            if ! ${PACKAGE_UPDATE[int]} 2>/dev/null; then
+            if ! ${UPDATE_CMD} 2>/dev/null; then
                 _red "System update failed!"
             fi
         fi
     fi
-    
-    # 安装必要的命令
+    # Install necessary commands
     for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
-            ${PACKAGE_INSTALL[int]} "$cmd"
+            ${INSTALL_CMD} "$cmd"
         fi
     done
-
+    # sysbench installation
     if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
-        ${PACKAGE_INSTALL[int]} sysbench
+        ${INSTALL_CMD} sysbench
         if [ $? -ne 0 ]; then
-            echo "Unable to download sysbench through the system's package manager, trying to compile and install it..."
+            echo "Unable to download sysbench through package manager, attempting compilation..."
             wget -O /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip" || curl -Lk -o /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"
             if [ ! -f /tmp/sysbench.zip ]; then
                 wget -q -O /tmp/sysbench.zip "https://hub.fgit.cf/akopytov/sysbench/archive/1.0.20.zip"
@@ -595,40 +575,28 @@ env_check() {
             Check_SysBench
         fi
     fi
-
+    # geekbench and speedtest installation
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
         bash dgb.sh -v gb5
-        _blue "If you do not want to use geekbench5, you can use"
-        echo "bash dgb.sh -v gb6"
-        echo "bash dgb.sh -v gb4"
-        _blue "to change version, or use"
-        echo "rm -rf /usr/bin/geekbench*"
-        _blue "to uninstall geekbench"
         rm -rf dgb.sh
     fi
-
     if ! command -v speedtest >/dev/null 2>&1; then
         _green "Installing speedtest"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
         bash dspt.sh
         rm -rf dspt.sh
         rm -rf speedtest.tar.gz
-        _blue "if you want to use golang original speedtest, you can use"
-        echo "rm -rf /usr/bin/speedtest"
-        echo "rm -rf /usr/bin/speedtest-go"
-        _blue "to uninstall speedtest and speedtest-go"
     fi
-
     if ! command -v ping >/dev/null 2>&1; then
         _green "Installing ping"
-        ${PACKAGE_INSTALL[int]} iputils-ping >/dev/null 2>&1
-        ${PACKAGE_INSTALL[int]} ping >/dev/null 2>&1
+        ${INSTALL_CMD} iputils-ping >/dev/null 2>&1
+        ${INSTALL_CMD} ping >/dev/null 2>&1
     fi
-
+    # MacOS support
     if [ "$(uname -s)" = "Darwin" ]; then
-        echo "Detected MacOS. Installing sysbench iproute2mac fio..."
+        echo "Detected MacOS, installing sysbench iproute2mac fio..."
         brew install --force sysbench iproute2mac fio
     else
         if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
@@ -636,8 +604,8 @@ env_check() {
             sysctl -p
         fi
     fi
-    _green "The environment is ready."
-    _green "The next command is: ./goecs.sh install"
+    _green "Environment preparation complete."
+    _green "Next command is: ./goecs.sh install"
 }
 
 uninstall_goecs() {
