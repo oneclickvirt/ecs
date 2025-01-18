@@ -6,7 +6,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - linux
       - windows
@@ -33,7 +33,7 @@ builds:
       - CC=o64-clang
       - CXX=o64-clang++
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - darwin
     goarch:
@@ -46,33 +46,10 @@ builds:
       - CC=oa64-clang
       - CXX=oa64-clang++
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}}
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - darwin
     goarch:
       - arm64
     main: ./
     binary: goecs
-universal_binaries:
-  - name_template: "goecs"
-    replace: false
-checksum:
-  name_template: "checksums.txt"
-snapshot:
-  name_template: "goecs"
-archives:
-  - name_template: "goecs_{{ .Os }}_{{ .Arch }}"
-    format: zip
-    files:
-      - none*
-changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
-      - "^chore"
-      - Merge pull request
-      - Merge branch
-      - go mod tidy
-      - New translations
