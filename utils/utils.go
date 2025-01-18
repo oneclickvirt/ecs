@@ -153,6 +153,7 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securtyCheckStatus bo
 	basicInfo := systemInfo + ipInfo
 	if errv6 == nil && ipv6Info != "" {
 		basicInfo += ipv6Info
+		basicInfo += "\n"
 	}
 	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
 		uts.IPV4 = true
