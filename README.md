@@ -1,6 +1,6 @@
 # ECS
 
-[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
+[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/) [<img src="https://api.gitsponsors.com/api/badge/img?id=819808844" height="20">](https://api.gitsponsors.com/api/badge/link?p=3sgKiCtfJJbBT6XMAb1xeTadeXZcXeRXLsRG9HW+cFAZcmACmclN+HNM72KLMvwZdHrl7sjG6in68CwoQ7CNh4hoIz2s4ksTxcCIWoH9M3OsR/kHv31sS+0ZqR3O04BD3SqFX8B7ayuM9JCC4zKblg==)
 
 融合怪测评项目 - GO 重构版本  
 
