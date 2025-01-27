@@ -255,11 +255,21 @@ func UploadText(absPath string) (string, string, error) {
 		SetRetryCount(2).
 		SetRetryBackoffInterval(1*time.Second, 5*time.Second).
 		SetRetryFixedInterval(2 * time.Second)
+	// 打开文件
 	file, err := os.Open(absPath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to open file: %w", err)
 	}
 	defer file.Close()
+	// 获取文件信息并检查大小
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get file info: %w", err)
+	}
+	if fileInfo.Size() > 25*1024 { // 25KB
+		return "", "", fmt.Errorf("file size exceeds 25KB limit")
+	}
+	// 上传逻辑
 	upload := func(url string) (string, string, error) {
 		file, err := os.Open(absPath)
 		if err != nil {
@@ -288,10 +298,12 @@ func UploadText(absPath string) (string, string, error) {
 		}
 		return "", "", fmt.Errorf("upload failed for %s with status code: %d", url, resp.StatusCode)
 	}
+	// 尝试上传到主URL
 	httpURL, httpsURL, err := upload(primaryURL)
 	if err == nil {
 		return httpURL, httpsURL, nil
 	}
+	// 尝试上传到备份URL
 	httpURL, httpsURL, err = upload(backupURL)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to upload to both primary and backup URLs: %w", err)
