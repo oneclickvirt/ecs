@@ -525,6 +525,12 @@ env_check() {
             INSTALL_CMD="apk add"
             REMOVE_CMD="apk del"
             UNINSTALL_CMD="apk del"
+        elif command -v zypper >/dev/null 2>&1; then
+            SYSTEM="Unknown-SLES"
+            UPDATE_CMD="zypper refresh"
+            INSTALL_CMD="zypper install -y"
+            REMOVE_CMD="zypper remove -y"
+            UNINSTALL_CMD="zypper remove -y"
         else
             _red "Unable to recognize package manager, exiting installation"
             exit 1
