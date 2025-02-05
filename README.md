@@ -52,12 +52,10 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ## **功能**
 
-- 系统基础信息查询：  
+- 系统基础信息查询，IP基础信息并发查询：  
   自研 [basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)
-- IP 基础信息并发查询：  
-  自研 [basics](https://github.com/oneclickvirt/basics)
 - CPU 测试：  
-  自研 [cputest](https://github.com/oneclickvirt/cputest)，支持 sysbench、geekbench、winsat
+  自研 [cputest](https://github.com/oneclickvirt/cputest)，支持 sysbench(lua/golang版本)、geekbench、winsat
 - 内存测试：  
   自研 [memorytest](https://github.com/oneclickvirt/memorytest)，支持 sysbench、dd
 - 硬盘测试：  
@@ -73,7 +71,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 三网回程测试：  
   借鉴 [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)，二次开发至 [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 - 三网路由测试：  
-  借鉴 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
+  基于 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
 - 网速测试：  
   基于 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发至 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 - 三网 Ping 值测试：  

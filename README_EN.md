@@ -32,9 +32,8 @@ Systems to be supported (hardware testing bugs not yet fixed): MacOS„ÄÅFreeBSD„Ä
 
 ## Features
 
-- [x] System basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)]
-- [x] Concurrent IP basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics)]
-- [x] CPU test [Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench, geekbench, winsat]
+- [x] System basic information query and concurrent IP basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)]
+- [x] CPU test [Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat]
 - [x] Memory test [Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd]
 - [x] Disk test [Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat]
 - [x] Concurrent streaming media unlock information query for three major platforms [Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify), [VerifyDisneyPlus](https://github.com/sjlleo/VerifyDisneyPlus), [TubeCheck](https://github.com/sjlleo/TubeCheck) to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)]
