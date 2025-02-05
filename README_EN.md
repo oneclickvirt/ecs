@@ -1,10 +1,12 @@
 # ecs
 
-[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
+[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) 
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
 Fusion Monster Evaluation Script - GO Refactored Version
 
-Please report any issues via issues.
+Please report any issues via [issues](https://github.com/oneclickvirt/ecs/issues).
 
 Go version：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
 
@@ -221,3 +223,40 @@ docker run --rm spiritlhl/goecs:latest
 Using Docker to execute tests, hardware testing will have some bias and virtualization architecture to determine the failure.
 
 Recommended direct testing without using Docker testing.
+
+## QA
+
+#### Q: Why is sysbench used by default instead of geekbench?
+
+#### A: Compare the characteristics of the two
+
+| Comparison       | sysbench | geekbench |
+|-----------------|----------|-----------|
+| Scope          | Lightweight, runs on almost any server | Heavyweight, will not run on small machines |
+| Test Requirements | No networking, no special hardware required | Requires network, IPv4 environment, minimum 1G memory |
+| Open Source    | Written in LUA, open-source, can be compiled for any architecture | Official binaries only, not open-source, cannot compile for unsupported architectures |
+| Test Stability | Core test components unchanged for over 10 years | Major releases update benchmark CPU, making scores difficult to compare across versions(Each version is benchmarked against the current best CPU) |
+| Test Content   | Only tests computing performance | Covers various performance aspects, scores are weighted, but many tests are not practically used |
+| Best Use Case  | Ideal for quick tests | Ideal for comprehensive tests |
+
+And ```goecs``` test to use what kind of CPU test method can be specified using the parameter, the default is just for more users to quickly test the needs of the
+
+#### Q: Why use Golang instead of Rust for refactoring
+
+#### A: Because of the current trend of network-related projects to Golang language, most of the components of the open source ecological maintenance, Rust a lot of their own hand rubbing, ~ ~ I'm too lazy ~ ~ I don't have the technical force!
+
+#### Q: Why did you choose to refactor instead of continuing to develop the Shell version?
+
+#### A: Because there are too many weird environment problems, it's easier to solve environment problems by compiling the test binaries in advance (better generalization)
+
+#### Q: Are there instructions for each test item?
+
+#### A: Each test project has a corresponding maintenance repository, click to see the repository description yourself
+
+#### Q: How do I manually terminate a test halfway through?
+
+#### A: Press ctrl and c to terminate the program, the termination still generates the goecs.txt file and the share link in the current directory with the information that has been tested.
+
+#### Q: How do I test in a non-Rooted environment?
+
+#### A: Manually execute the install command, it's not a problem if you can't install it, just download the zip of the corresponding architecture from the release and unzip it, as long as you can execute the file. Or use docker if you can.
