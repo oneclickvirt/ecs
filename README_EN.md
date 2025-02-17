@@ -4,139 +4,171 @@
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
-Fusion Monster Evaluation Script - GO Refactored Version
+[<img src="https://api.gitsponsors.com/api/badge/img?id=819808844" height="20">](https://api.gitsponsors.com/api/badge/link?p=3sgKiCtfJJbBT6XMAb1xeTadeXZcXeRXLsRG9HW+cFAZcmACmclN+HNM72KLMvwZdHrl7sjG6in68CwoQ7CNh4hoIz2s4ksTxcCIWoH9M3OsR/kHv31sS+0ZqR3O04BD3SqFX8B7ayuM9JCC4zKblg==)
+
+Fusion Monster Evaluation Project - GO Refactored Version
 
 Please report any issues via [issues](https://github.com/oneclickvirt/ecs/issues).
 
-Go version：[https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
+Go version: [https://github.com/oneclickvirt/ecs](https://github.com/oneclickvirt/ecs)
 
 Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https://github.com/spiritLHLS/ecs/blob/main/README_EN.md)
 
-## Language
+---
+
+## **Language**
 
 [中文文档](README.md) | [English Docs](README_EN.md)
 
-## Supported Systems and Architectures
+---
 
-Architectures supported for compilation: amd64、arm、arm64、386、mips、mipsle、s390x、riscv64
+## **Supported Systems and Architectures**
 
-Tested architectures: amd64, arm64
+### **Architectures supported for compilation**
 
-More architectures please test by yourself
+- amd64, arm, arm64, 386, mips, mipsle, s390x, riscv64
 
-Compilation support: Linux, Windows、MacOS、FreeBSD、OpenBSD
+### **Tested architectures**
 
-Tested on: Linux, Windows
+- amd64, arm64
 
-More systems to be tested
+> More architectures can be tested by yourself.
 
-Systems to be supported (hardware testing bugs not yet fixed): MacOS、FreeBSD、OpenBSD
+### **Compilation supported systems**
 
-## Features
+- Linux, Windows, MacOS, FreeBSD, OpenBSD
 
-- [x] System basic information query and concurrent IP basic information query [Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)]
-- [x] CPU test [Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat]
-- [x] Memory test [Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd]
-- [x] Disk test [Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat]
-- [x] Concurrent streaming media unlock information query for three major platforms [Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify), [VerifyDisneyPlus](https://github.com/sjlleo/VerifyDisneyPlus), [TubeCheck](https://github.com/sjlleo/TubeCheck) to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)]
-- [x] Concurrent common streaming media tests [Self-developed code, logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck), [MediaUnlockTest](https://github.com/HsukqiLee/MediaUnlockTest) to [UnlockTests](https://github.com/oneclickvirt/UnlockTests)]
-- [x] Concurrent IP quality/security information query [Self-developed, due to testing with key information, privately developed, but binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)]
-- [x] Email port test [Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)]
-- [x] Three-network return path test [Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)]
-- [x] Three-network route test [Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)]
-- [x] Speed test [Based on data from [speedtest.net-crawler](https://github.com/spiritLHLS/speedtest.net-CN-ID), [speedtest.cn-crawler](https://github.com/spiritLHLS/speedtest.cn-CN-ID), modified from [speedtest-go](https://github.com/showwin/speedtest-go) to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)]
-- [x] Three-network Ping test [Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) logic to [pingtest](https://github.com/oneclickvirt/pingtest)]
+### **Tested systems**
 
-## Instructions for Use on Linux/FreeBSD/MacOS
+- Linux, Windows
 
-### one-click command
+> More systems can be tested by yourself.
 
-```
-export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
-```
+### **Systems to be supported**
 
-### explain in detail
+- MacOS, FreeBSD, OpenBSD (hardware testing bugs not yet fixed)
 
-Download the script
+---
 
-```
-curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
-```
+## **Features**
 
-Install environment
+- System basic information query and concurrent IP basic information query:  
+  Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)
+- CPU test:  
+  Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat
+- Memory test:  
+  Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd
+- Disk test:  
+  Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat
+- Streaming media unlock information concurrent query:  
+  Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify) and more to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)
+- Common streaming media tests concurrent query:  
+  Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others
+- IP quality/security information concurrent query:  
+  Self-developed, binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)
+- Email port test:  
+  Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)
+- Three-network return path test:  
+  Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
+- Three-network route test:  
+  Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)
+- Speed test:  
+  Based on data from [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) and [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID), developed to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
+- Three-network Ping test:  
+  Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
 
-```
-./goecs.sh env
-```
+---
 
-If you don't want interaction, use ```export noninteractive=true``` and then execute the ```env``` command
+## **Instructions for Use**
 
-Install goecs
+### **Linux/FreeBSD/MacOS**
 
-```
-./goecs.sh install
-```
+#### **One-click command**
 
-Upgrade goecs
+Will install dependencies by default, update package manager by default, non-interactive mode by default. The non-one-click version below allows control of dependency installation/package manager updates/interactive mode by default.
 
-```
-./goecs.sh upgrade
-```
+- **International users without acceleration:**
 
-Uninstall goecs
+  ```bash
+  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
+  ```
 
-```
-./goecs.sh uninstall
-```
+- **International/domestic users with CDN acceleration:**
 
-Explanation of the shell script
+  ```bash
+  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
+  ```
 
-```
-Available commands:
+- **Domestic users with CNB acceleration:**
 
-./goecs.sh env             Check and Install dependencies
-                           Warning: This command performs system update(optional), which may:
-                           1. Take considerable time
-                           2. Cause temporary network interruptions
-                           3. Impact system stability
-                           4. Affect subsequent system startups
-                           For systems with less than 1GB RAM, additional risks:
-                           1. System freeze
-                           2. SSH connection loss
-                           3. Critical service failures
-                           Recommended:
-                           Hanging execution during environment dependency installation
-                           
-                           Required components:
-                           sysbench/geekbench (Required for CPU testing)
-                           
-                           Optional components:
-                           sudo, tar, unzip, dd, fio
-                           speedtest (Network testing)
-                           ping (Network connectivity)
-                           systemd-detect-virt/dmidecode (System info detection)
+  ```bash
+  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
+  ```
 
-./goecs.sh install         Install goecs command
-./goecs.sh upgrade         Upgrade goecs command
-./goecs.sh uninstall       Uninstall goecs command
-./goecs.sh help            Show this message
-```
+#### **Detailed instructions**
 
-Invoke the goecs menu
+1. **Download the script**
 
-```
-goecs -l en
-```
+   **International users without acceleration:**
 
-or
+   ```bash
+   curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
 
-```
-./goecs -l en
-```
+   **International/domestic users with CDN acceleration:**
 
-Parameterized goecs command
+   ```bash
+   curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
 
-```
+   **Domestic users with CNB acceleration:**
+
+   ```bash
+   curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
+   ```
+
+2. **Update package manager (optional) and install environment**
+
+   ```bash
+   ./goecs.sh env
+   ```
+
+   **Non-interactive mode:**
+
+   ```bash
+   export noninteractive=true && ./goecs.sh env
+   ```
+
+3. **Install `goecs`**
+
+   ```bash
+   ./goecs.sh install
+   ```
+
+4. **Upgrade `goecs`**
+
+   ```bash
+   ./goecs.sh upgrade
+   ```
+
+5. **Uninstall `goecs`**
+
+   ```bash
+   ./goecs.sh uninstall
+   ```
+
+6. **Invoke the menu**
+
+   ```bash
+   goecs -l en
+   ```
+
+#### **Command parameterization**
+
+<details>
+<summary>Expand to view parameter descriptions</summary>
+
+```bash
 Usage: goecs [options]
   -backtrace
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
@@ -189,26 +221,24 @@ Usage: goecs [options]
         Enable/Disable unlock media test (default true)
   -v    Display version information
 ```
+</details>
 
-## Instructions for Use on Windows
+---
 
-Download the compressed file with the exe file
+### **Windows**
 
-https://github.com/oneclickvirt/ecs/releases
+1. Download the compressed file with the .exe file: [Releases](https://github.com/oneclickvirt/ecs/releases)
+2. After unzipping, right-click and run as administrator.
 
-Find the latest version, download the .zip file corresponding to your architecture, and unzip it to get an exe file.
+---
 
-Right-click the exe file and select Run as administrator (running without administrator mode will not allow hardware testing), and invoke the menu to choose.
+### **Docker**
 
-No environment installation is required for Windows testing.
+International image: https://hub.docker.com/r/spiritlhl/goecs
 
-## Instructions for Use in Docker
+Please ensure Docker is installed on your machine before executing the following commands
 
-Link: https://hub.docker.com/r/spiritlhl/goecs
-
-Please make sure that Docker is installed on your machine before executing the following commands
-
-Privileged Mode + host network
+Privileged mode + host network
 
 ```shell
 docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -l en
@@ -217,46 +247,102 @@ docker run --rm --privileged --network host spiritlhl/goecs:latest -menu=false -
 Unprivileged mode + non-host network
 
 ```shell
-docker run --rm spiritlhl/goecs:latest
+docker run --rm spiritlhl/goecs:latest -menu=false -l en
 ```
 
-Using Docker to execute tests, hardware testing will have some bias and virtualization architecture to determine the failure.
+Using Docker to execute tests will result in some hardware testing bias and virtualization architecture detection failure. Direct testing is recommended over Docker testing.
 
-Recommended direct testing without using Docker testing.
+Domestic image: https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
+
+Please ensure Docker is installed on your machine before executing the following commands
+
+Privileged mode + host network
+
+```shell
+docker run --rm --privileged --network host docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l en
+```
+
+Unprivileged mode + non-host network
+
+```shell
+docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l en
+```
+
+### Compiling from source code
+
+<details>
+<summary>Expand to view compilation instructions</summary>
+
+1. Clone the public branch of the repository (without private dependencies)
+```bash
+git clone -b public https://github.com/oneclickvirt/ecs.git
+cd ecs
+```
+
+2. Install Go environment (skip if already installed)
+```bash
+# Download and install Go
+wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+```
+
+3. Compile
+```bash
+go build -o goecs
+```
+
+4. Run test
+```bash
+./goecs -menu=false -l en
+```
+
+Supported compilation parameters:
+- GOOS: supports linux, windows, darwin, freebsd, openbsd
+- GOARCH: supports amd64, arm, arm64, 386, mips, mipsle, s390x, riscv64
+
+Cross-platform compilation examples:
+```bash
+# Compile Windows version
+GOOS=windows GOARCH=amd64 go build -o goecs.exe
+# Compile MacOS version
+GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
+```
+</details>
 
 ## QA
 
 #### Q: Why is sysbench used by default instead of geekbench?
 
-#### A: Compare the characteristics of the two
+#### A: Comparing the characteristics of both:
 
-| Comparison       | sysbench | geekbench |
-|-----------------|----------|-----------|
-| Scope          | Lightweight, runs on almost any server | Heavyweight, will not run on small machines |
-| Test Requirements | No networking, no special hardware required | Requires network, IPv4 environment, minimum 1G memory |
-| Open Source    | Written in LUA, open-source, can be compiled for any architecture | Official binaries only, not open-source, cannot compile for unsupported architectures |
-| Test Stability | Core test components unchanged for over 10 years | Major releases update benchmark CPU, making scores difficult to compare across versions(Each version is benchmarked against the current best CPU) |
-| Test Content   | Only tests computing performance | Covers various performance aspects, scores are weighted, but many tests are not practically used |
-| Best Use Case  | Ideal for quick tests | Ideal for comprehensive tests |
+| Comparison | sysbench | geekbench |
+|------------|----------|-----------|
+| Application scope | Lightweight, runs on almost any server | Heavyweight, won't run on small machines |
+| Test requirements | No network needed, no special hardware requirements | Requires internet, IPv4 environment, minimum 1GB memory |
+| Open source status | Based on LUA, open source, can compile for various architectures | Official binaries are closed source, cannot compile your own version |
+| Test stability | Core test components unchanged for 10+ years | Each major version updates test items, making scores hard to compare between versions (each version benchmarks against current best CPUs) |
+| Test content | Only tests computing performance | Covers multiple performance aspects with weighted scores, though some tests aren't commonly used |
+| Suitable scenarios | Good for quick tests, focuses on computing performance | Good for comprehensive testing |
 
-And ```goecs``` test to use what kind of CPU test method can be specified using the parameter, the default is just for more users to quickly test the needs of the
+Note that `goecs` allows you to specify CPU test method via parameters. The default is chosen for faster testing across more systems.
 
-#### Q: Why use Golang instead of Rust for refactoring
+#### Q: Why use Golang instead of Rust for refactoring?
 
-#### A: Because of the current trend of network-related projects to Golang language, most of the components of the open source ecological maintenance, Rust a lot of their own hand rubbing, ~ ~ I'm too lazy ~ ~ I don't have the technical force!
+#### A: Because network-related projects currently trend toward Golang, with many components maintained by open source communities. Many Rust components would require building from scratch, ~~I'm too lazy~~ I don't have that technical capability.
 
-#### Q: Why did you choose to refactor instead of continuing to develop the Shell version?
+#### Q: Why not continue developing the Shell version instead of refactoring?
 
-#### A: Because there are too many weird environment problems, it's easier to solve environment problems by compiling the test binaries in advance (better generalization)
+#### A: Because there were too many varied environment issues. Pre-compiled binary files are easier for solving environment problems (better generalization).
 
-#### Q: Are there instructions for each test item?
+#### Q: Are there explanations for each test item?
 
-#### A: Each test project has a corresponding maintenance repository, click to see the repository description yourself
+#### A: Each test project has its own maintenance repository. Click through to view the repository description.
 
 #### Q: How do I manually terminate a test halfway through?
 
-#### A: Press ctrl and c to terminate the program, the termination still generates the goecs.txt file and the share link in the current directory with the information that has been tested.
+#### A: Press Ctrl+C to terminate the program. After termination, a goecs.txt file and share link will still be generated in the current directory containing information tested so far.
 
-#### Q: How do I test in a non-Rooted environment?
+#### Q: How do I test in a non-Root environment?
 
-#### A: Manually execute the install command, it's not a problem if you can't install it, just download the zip of the corresponding architecture from the release and unzip it, as long as you can execute the file. Or use docker if you can.
+#### A: Execute the installation command manually. If you can't install it, simply download the appropriate architecture package from releases, extract it, and run the file if you have execution permissions. Alternatively, use Docker if you can.

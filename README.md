@@ -165,6 +165,9 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 #### **命令参数化**
 
+<details>
+<summary>展开查看各参数说明</summary>
+
 ```bash
 Usage: goecs [options]
   -backtrace
@@ -218,6 +221,7 @@ Usage: goecs [options]
         Enable/Disable unlock media test (default true)
   -v    Display version information
 ```
+</details>
 
 ---
 
@@ -263,6 +267,50 @@ docker run --rm --privileged --network host docker.cnb.cool/oneclickvirt/ecs:lat
 ```shell
 docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
 ```
+
+我来帮你修复排版，以下是格式调整后的完整内容：
+
+### 从源码中进行编译
+
+<details>
+<summary>展开查看编译说明</summary>
+
+1. 克隆仓库的 public 分支（不含私有依赖）
+```bash
+git clone -b public https://github.com/oneclickvirt/ecs.git
+cd ecs
+```
+
+2. 安装 Go 环境（如已安装可跳过）
+```bash
+# 下载并安装 Go
+wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+```
+
+3. 编译
+```bash
+go build -o goecs
+```
+
+4. 运行测试
+```bash
+./goecs -menu=false -l zh
+```
+
+支持的编译参数：
+- GOOS：支持 linux、windows、darwin、freebsd、openbsd
+- GOARCH：支持 amd64、arm、arm64、386、mips、mipsle、s390x、riscv64
+
+跨平台编译示例：
+```bash
+# 编译 Windows 版本
+GOOS=windows GOARCH=amd64 go build -o goecs.exe
+# 编译 MacOS 版本
+GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
+```
+</details>
 
 ## QA
 
