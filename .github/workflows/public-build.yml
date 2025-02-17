@@ -1,0 +1,65 @@
+name: Public Build
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.4'
+        
+    - name: Create public branch
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@github.com'
+        git checkout -b public || git checkout public
+        git merge ${{ github.ref_name }} --no-edit || true
+        
+    - name: Remove security package references
+      run: |
+        # 移除 network 包中对 security 的引用
+        find . -type f -name "*.go" -exec sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' {} +
+        
+        # 修改 network/network.go
+        cat > network/network.go << 'EOF'
+        package network1
+
+        import "github.com/oneclickvirt/basics/network"
+
+        func NetworkCheck(checkType string, enableSecurityCheck bool, language string) (string, string, error) {
+            ipInfo, _, err := network.NetworkCheck(checkType, false, language)
+            return ipInfo, "", err
+        }
+        EOF
+        
+        # 修改 utils/utils.go 中的 BasicsAndSecurityCheck 函数
+        sed -i '/SecurityUploadToken/d' utils/utils.go
+        sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' utils/utils.go
+        
+        # 修改 go.mod，移除私有仓库依赖
+        sed -i '/github.com\/oneclickvirt\/security/d' go.mod
+        
+        # 更新依赖
+        go mod tidy
+        
+        # 修改 README.md 和 README_EN.md 中的敏感信息
+        sed -i 's|但二进制文件编译至 \[securityCheck\].*)|但已开源|g' README.md
+        sed -i 's|but binary files compiled in \[securityCheck\].*)|but open sourced|g' README_EN.md
+        
+    - name: Commit and push changes
+      run: |
+        git add .
+        git commit -m "Auto update public version (no security package)" || echo "No changes to commit"
+        git push -f origin public
