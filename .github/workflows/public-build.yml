@@ -51,12 +51,27 @@ jobs:
         # 修改 go.mod，移除私有仓库依赖
         sed -i '/github.com\/oneclickvirt\/security/d' go.mod
         
+        # 修改 goecs.go，禁用 security 检测
+        sed -i 's|var securityFlag = flag.Bool("security", true,|var securityFlag = flag.Bool("security", false,|g' goecs.go
+        
         # 更新依赖
         go mod tidy
         
         # 修改 README.md 和 README_EN.md 中的敏感信息
         sed -i 's|但二进制文件编译至 \[securityCheck\].*)|但已开源|g' README.md
         sed -i 's|but binary files compiled in \[securityCheck\].*)|but open sourced|g' README_EN.md
+        
+        # 修改命令行帮助信息
+        sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README.md
+        sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
+
+    - name: Build and Test
+      run: |
+        # 构建二进制文件
+        go build -o main
+        
+        # 测试无菜单模式是否正常运行（禁用 security 检测）
+        ./main -menu=false -l en -security=false || exit 1
         
     - name: Commit and push changes
       run: |
