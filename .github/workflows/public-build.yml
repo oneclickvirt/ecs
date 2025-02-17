@@ -1,9 +1,9 @@
 name: Public Build
 
 on:
-  push:
-    branches:
-      - master
+  # push:
+  #   branches:
+  #     - master
   workflow_dispatch:
 
 jobs:
