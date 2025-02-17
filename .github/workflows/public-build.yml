@@ -1,9 +1,6 @@
 name: Public Build
 
 on:
-  # push:
-  #   branches:
-  #     - master
   workflow_dispatch:
 
 jobs:
@@ -74,7 +71,7 @@ jobs:
         go build -o main
         
         # 测试无菜单模式是否正常运行（禁用 security 检测）
-        ./main -menu=false -l en -security=false || exit 1
+        ./main -menu=false -l en -security=false -upload=false || exit 1
         
     - name: Commit and push changes
       run: |
