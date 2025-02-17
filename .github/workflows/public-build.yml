@@ -48,6 +48,9 @@ jobs:
         sed -i '/SecurityUploadToken/d' utils/utils.go
         sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' utils/utils.go
         
+        # 在 utils/utils.go 中添加 token 常量
+        sed -i '/package utils/a const token = "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"' utils/utils.go
+        
         # 修改 go.mod，移除私有仓库依赖
         sed -i '/github.com\/oneclickvirt\/security/d' go.mod
         
