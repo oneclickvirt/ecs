@@ -622,8 +622,6 @@ show_help() {
 ./goecs.sh uninstall      卸载 goecs 命令
 ./goecs.sh help           显示此消息
 
-[English version follows...]
-
 Available commands:
 
 ./goecs.sh env             Check and Install dependencies

@@ -155,9 +155,14 @@ Will install dependencies by default, update package manager by default, non-int
 
    ```bash
    ./goecs.sh uninstall
-   ```
 
-6. **Invoke the menu**
+6. **help command**
+
+   ```bash
+   ./goecs.sh -h
+   ```   ```
+
+7. **Invoke the menu**
 
    ```bash
    goecs -l en

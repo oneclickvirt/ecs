@@ -157,7 +157,13 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
    ./goecs.sh uninstall
    ```
 
-6. **唤起菜单**
+6. **帮助命令**
+
+   ```bash
+   ./goecs.sh -h
+   ```
+
+7. **唤起菜单**
 
    ```bash
    goecs
