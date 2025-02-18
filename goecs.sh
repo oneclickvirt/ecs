@@ -85,40 +85,11 @@ check_china() {
                         ;;
                 esac
             else
-                # 在非交互模式下默认使用中国镜像
-                CN=true
-            fi
-        else
-            # 如果 ipapi.co 检测失败，尝试使用 cip.cc
-            if ! curl -m 6 -s https://ipapi.co/json >/dev/null 2>&1; then
-                if curl -m 6 -s cip.cc | grep -q "中国"; then
-                    _yellow "根据cip.cc提供的信息，当前IP可能在中国"
-                    if [ "$noninteractive" != "true" ]; then
-                        reading "是否使用中国镜像完成安装? ([y]/n) " input
-                        case $input in
-                            [yY][eE][sS] | [yY] | "")
-                                _green "已选择使用中国镜像"
-                                CN=true
-                                ;;
-                            [nN][oO] | [nN])
-                                _yellow "已选择不使用中国镜像"
-                                CN=false
-                                ;;
-                            *)
-                                _green "已选择使用中国镜像"
-                                CN=true
-                                ;;
-                        esac
-                    else
-                        # 在非交互模式下默认使用中国镜像
-                        CN=true
-                    fi
-                else
-                    CN=false
-                fi
-            else
+                # 在非交互模式下默认不使用中国镜像
                 CN=false
             fi
+        else
+            CN=false
         fi
     fi
 }
