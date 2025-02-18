@@ -160,7 +160,7 @@ Will install dependencies by default, update package manager by default, non-int
 
    ```bash
    ./goecs.sh -h
-   ```   ```
+   ```
 
 7. **Invoke the menu**
 
