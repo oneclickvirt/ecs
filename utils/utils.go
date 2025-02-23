@@ -60,59 +60,24 @@ func CheckChina(enableLogger bool) bool {
 		SetRetryBackoffInterval(1*time.Second, 3*time.Second).
 		SetRetryFixedInterval(2 * time.Second)
 	ipapiURL := "https://ipapi.co/json"
-	cipccURL := "http://cip.cc"
 	ipapiResp, err := client.R().Get(ipapiURL)
-	if err != nil {
-		if enableLogger {
-			Logger.Info("无法获取IP信息:" + err.Error())
-		}
-	} else {
-		defer ipapiResp.Body.Close()
-		var ipapiBody string
-		ipapiBody, err = ipapiResp.ToString()
-		if err != nil {
-			if enableLogger {
-				Logger.Info("无法读取IP信息响应:" + err.Error())
-			}
-		} else {
-			isInChina := strings.Contains(ipapiBody, "China")
-			if isInChina {
-				fmt.Println("根据ipapi.co提供的信息，当前IP可能在中国")
-				var input string
-				fmt.Print("是否选用中国专项测试(无流媒体测试，有三网Ping值测试)? ([y]/n) ")
-				fmt.Scanln(&input)
-				switch strings.ToLower(input) {
-				case "yes", "y":
-					fmt.Println("使用中国专项测试")
-					selectChina = true
-				case "no", "n":
-					fmt.Println("不使用中国专项测试")
-				default:
-					fmt.Println("使用中国专项测试")
-					selectChina = true
-				}
-				return selectChina
-			}
-		}
-	}
-	cipccResp, err := client.R().Get(cipccURL)
 	if err != nil {
 		if enableLogger {
 			Logger.Info("无法获取IP信息:" + err.Error())
 		}
 		return false
 	}
-	defer cipccResp.Body.Close()
-	cipccBody, err := cipccResp.ToString()
+	defer ipapiResp.Body.Close()
+	ipapiBody, err := ipapiResp.ToString()
 	if err != nil {
 		if enableLogger {
 			Logger.Info("无法读取IP信息响应:" + err.Error())
 		}
 		return false
 	}
-	isInChina := strings.Contains(cipccBody, "中国")
+	isInChina := strings.Contains(ipapiBody, "China")
 	if isInChina {
-		fmt.Println("根据cip.cc提供的信息，当前IP可能在中国")
+		fmt.Println("根据 ipapi.co 提供的信息，当前IP可能在中国")
 		var input string
 		fmt.Print("是否选用中国专项测试(无流媒体测试，有三网Ping值测试)? ([y]/n) ")
 		fmt.Scanln(&input)
@@ -123,7 +88,7 @@ func CheckChina(enableLogger bool) bool {
 		case "no", "n":
 			fmt.Println("不使用中国专项测试")
 		default:
-			fmt.Println("不使用中国专项测试")
+			fmt.Println("使用中国专项测试")
 			selectChina = true
 		}
 	}
