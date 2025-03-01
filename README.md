@@ -354,3 +354,19 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 #### Q: 非Root环境如何进行测试？
 
 #### A: 手动执行安装命令，实在装不上也没问题，直接在release中下载对应架构的压缩包解压后执行即可，只要你能执行的了文件。或者你能使用docker的话用docker执行。
+
+## 致谢
+
+感谢 [ipinfo.io](https://ipinfo.io) [ip.sb](https://ip.sb) [cheervision.co](https://cheervision.co) [cip.cc](http://www.cip.cc) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [virustotal.com](https://www.virustotal.com/) [ip2location.com](ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) ~~[ipip.net](https://en.ipip.net)~~ ~~[abstractapi.com](https://abstractapi.com/)~~ 等网站提供的API进行检测，感谢互联网各网站提供的查询资源
+
+感谢
+
+<a href="https://h501.io/?from=69" target="_blank">
+  <img src="https://github.com/spiritLHLS/ecs/assets/103393591/dfd47230-2747-4112-be69-b5636b34f07f" alt="h501">
+</a>
+
+提供的免费托管支持本开源项目的共享测试结果存储
+
+同时感谢以下平台提供编辑和测试支持
+
+![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.png)

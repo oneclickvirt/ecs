@@ -5,7 +5,7 @@ go 1.23.4
 require (
 	github.com/imroc/req/v3 v3.49.0
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
-	github.com/oneclickvirt/UnlockTests v0.0.26-20250223034957
+	github.com/oneclickvirt/UnlockTests v0.0.26-20250301144558
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
 	github.com/oneclickvirt/basics v0.0.9-20250205131258
 	github.com/oneclickvirt/cputest v0.0.9-20250103063414
