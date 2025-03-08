@@ -139,8 +139,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.16"
-        ECS_VERSION="0.1.16"
+        _yellow "Unable to get version info, using default version 0.1.17"
+        ECS_VERSION="0.1.17"
     fi
     # Check if original goecs command exists
     version_output=""
