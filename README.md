@@ -28,9 +28,9 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ### **测试支持的架构**
 
-- amd64、arm64
+- amd64、arm64、s390x
 
-> 更多架构请自行测试。
+> 更多架构请自行测试，如有问题请开issues。
 
 ### **编译支持的系统**
 
@@ -40,7 +40,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 - Linux、Windows
 
-> 更多系统请自行测试。
+> 更多系统请自行测试，如有问题请开issues。
 
 ### **待支持的系统**
 
@@ -355,7 +355,7 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 
 ## 致谢
 
-感谢 [ipinfo.io](https://ipinfo.io) [ip.sb](https://ip.sb) [cheervision.co](https://cheervision.co) [cip.cc](http://www.cip.cc) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [virustotal.com](https://www.virustotal.com/) [ip2location.com](ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) ~~[ipip.net](https://en.ipip.net)~~ ~~[abstractapi.com](https://abstractapi.com/)~~ 等网站提供的API进行检测，感谢互联网各网站提供的查询资源
+感谢 [ipinfo.io](https://ipinfo.io) [ip.sb](https://ip.sb) [cheervision.co](https://cheervision.co) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [virustotal.com](https://www.virustotal.com/) [ip2location.com](ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) 等网站提供的API进行检测，感谢互联网各网站提供的查询资源
 
 感谢
 
@@ -367,4 +367,6 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 
 同时感谢以下平台提供编辑和测试支持
 
-![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.png)
+![GoLand logo](https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png)
+
+![IBM logo](https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png)

@@ -28,7 +28,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 ### **Tested architectures**
 
-- amd64, arm64
+- amd64, arm64, s390x
 
 > More architectures can be tested by yourself.
 
@@ -349,3 +349,21 @@ Note that `goecs` allows you to specify CPU test method via parameters. The defa
 #### Q: How do I test in a non-Root environment?
 
 #### A: Execute the installation command manually. If you can't install it, simply download the appropriate architecture package from releases, extract it, and run the file if you have execution permissions. Alternatively, use Docker if you can.
+
+## Thanks
+
+Thank [ipinfo.io](https://ipinfo.io) [ip.sb](https://ip.sb) [cheervision.co](https://cheervision.co) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [virustotal.com](https://www.virustotal.com/) [ip2location.com](ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) and others for providing APIs for testing, and thanks to various websites on the Internet for providing query resources.
+
+Thank
+
+<a href="https://h501.io/?from=69" target="_blank">
+  <img src="https://github.com/spiritLHLS/ecs/assets/103393591/dfd47230-2747-4112-be69-b5636b34f07f" alt="h501">
+</a>
+
+provided free hosting support for this open source project's shared test results storage
+
+Thanks also to the following platforms for editorial and testing support
+
+![GoLand logo](https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png)
+
+![IBM logo](https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png)
