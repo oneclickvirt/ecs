@@ -38,7 +38,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ### **测试支持的系统**
 
-- Linux、Windows
+- Linux、Windows、FreeBSD、OpenBSD
 
 > 更多系统请自行测试，如有问题请开issues。
 

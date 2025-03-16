@@ -38,7 +38,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 ### **Tested systems**
 
-- Linux, Windows
+- Linux, Windows、FreeBSD、OpenBSD
 
 > More systems can be tested by yourself.
 
