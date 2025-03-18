@@ -22,29 +22,24 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 ## **Supported Systems and Architectures**
 
-### **Architectures supported for compilation**
+### **Compilation and Testing Support**
+| Supported for Compilation | Tested on | Supported OS for Compilation | Tested OS |
+|---------------------------|-----------|------------------------------|-----------|
+| amd64                     | amd64     | Linux                        | Linux     |
+| arm                       | arm       | Windows                      | Windows   |
+| arm64                     | arm64     | FreeBSD                      | FreeBSD   |
+| 386                       | 386       | OpenBSD                      | OpenBSD   |
+| mips                      |           | MacOS                        |           |
+| mipsle                    |           |                              |           |
+| s390x                     | s390x     |                              |           |
+| riscv64                   |           |                              |           |
 
-- amd64, arm, arm64, 386, mips, mipsle, s390x, riscv64
+> Please test additional architectures and systems yourself. If you encounter any issues, please open an issue.
 
-### **Tested architectures**
-
-- amd64, arm64, s390x
-
-> More architectures can be tested by yourself.
-
-### **Compilation supported systems**
-
-- Linux, Windows, MacOS, FreeBSD, OpenBSD
-
-### **Tested systems**
-
-- Linux, Windows、FreeBSD、OpenBSD
-
-> More systems can be tested by yourself.
-
-### **Systems to be supported**
-
-- MacOS, FreeBSD, OpenBSD (hardware testing bugs not yet fixed)
+### **Systems Pending Support**
+| OS     | Notes                                                  |
+|--------|--------------------------------------------------------|
+| MacOS  | Hardware testing bugs and environment dependencies unresolved |
 
 ---
 
