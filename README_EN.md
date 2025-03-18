@@ -105,6 +105,9 @@ Will install dependencies by default, update package manager by default, non-int
 
 #### **Detailed instructions**
 
+<details>
+<summary>Expand to view detailed instructions</summary>
+
 1. **Download the script**
 
    **International users without acceleration:**
@@ -165,6 +168,10 @@ Will install dependencies by default, update package manager by default, non-int
    ```bash
    goecs -l en
    ```
+
+</details>
+
+---
 
 #### **Command parameterization**
 
@@ -237,6 +244,9 @@ Usage: goecs [options]
 
 ### **Docker**
 
+<details>
+<summary>Expand to view how to use it</summary>
+
 International image: https://hub.docker.com/r/spiritlhl/goecs
 
 Please ensure Docker is installed on your machine before executing the following commands
@@ -255,7 +265,7 @@ docker run --rm spiritlhl/goecs:latest -menu=false -l en
 
 Using Docker to execute tests will result in some hardware testing bias and virtualization architecture detection failure. Direct testing is recommended over Docker testing.
 
-Domestic image: https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
+Mirror image: https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
 
 Please ensure Docker is installed on your machine before executing the following commands
 
@@ -270,6 +280,10 @@ Unprivileged mode + non-host network
 ```shell
 docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l en
 ```
+
+</details>
+
+---
 
 ### Compiling from source code
 
@@ -312,6 +326,8 @@ GOOS=windows GOARCH=amd64 go build -o goecs.exe
 GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 ```
 </details>
+
+---
 
 ## QA
 
@@ -364,6 +380,10 @@ provided free hosting support for this open source project's shared test results
 
 Thanks also to the following platforms for editorial and testing support
 
-![GoLand logo](https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png)
+<a href="https://www.jetbrains.com/go/" target="_blank">
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png" alt="goland">
+</a>
 
-![IBM logo](https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png)
+<a href="https://community.ibm.com/zsystems/form/l1cc-oss-vm-request/" target="_blank">
+  <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm">
+</a>

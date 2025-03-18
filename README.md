@@ -105,6 +105,8 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 #### **详细说明**
 
+<details>
+<summary>展开查看详细说明</summary>
 1. **下载脚本**
 
    **国际用户无加速：**
@@ -166,6 +168,10 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
    ```bash
    goecs
    ```
+
+</details>
+
+---
 
 #### **命令参数化**
 
@@ -238,6 +244,9 @@ Usage: goecs [options]
 
 ### **Docker**
 
+<details>
+<summary>展开查看使用说明</summary>
+
 国际镜像地址：https://hub.docker.com/r/spiritlhl/goecs
 
 请确保执行下述命令前本机已安装Docker
@@ -272,9 +281,11 @@ docker run --rm --privileged --network host docker.cnb.cool/oneclickvirt/ecs:lat
 docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
 ```
 
-我来帮你修复排版，以下是格式调整后的完整内容：
+</details>
 
-### 从源码中进行编译
+---
+
+### 从源码进行编译
 
 <details>
 <summary>展开查看编译说明</summary>
@@ -315,6 +326,8 @@ GOOS=windows GOARCH=amd64 go build -o goecs.exe
 GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 ```
 </details>
+
+---
 
 ## QA
 
@@ -367,6 +380,10 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 
 同时感谢以下平台提供编辑和测试支持
 
-![GoLand logo](https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png)
+<a href="https://www.jetbrains.com/go/" target="_blank">
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png" alt="goland">
+</a>
 
-![IBM logo](https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png)
+<a href="https://community.ibm.com/zsystems/form/l1cc-oss-vm-request/" target="_blank">
+  <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm">
+</a>
