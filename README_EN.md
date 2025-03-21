@@ -70,6 +70,8 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Three-network Ping test:  
   Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
 
+**For first-time users of this project, it is recommended to check the instructions: [Jump to](https://github.com/oneclickvirt/ecs/README_NEW_USER.md)**
+
 ---
 
 ## **Instructions for Use**

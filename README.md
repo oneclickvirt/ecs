@@ -70,6 +70,8 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 三网 Ping 值测试：  
   借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
 
+**本项目初次使用建议查看说明：[跳转](https://github.com/oneclickvirt/ecs/README_NEW_USER.md)**
+
 ---
 
 ## **使用说明**
