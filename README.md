@@ -70,7 +70,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 三网 Ping 值测试：  
   借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
 
-**本项目初次使用建议查看说明：[跳转](https://github.com/oneclickvirt/ecs/README_NEW_USER.md)**
+**本项目初次使用建议查看说明：[跳转](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
 ---
 
@@ -384,3 +384,7 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 <a href="https://community.ibm.com/zsystems/form/l1cc-oss-vm-request/" target="_blank">
   <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm">
 </a>
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://starchart.cc/oneclickvirt/ecs)

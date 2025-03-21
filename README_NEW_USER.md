@@ -1,4 +1,6 @@
-# 目录 / Table of Contents / 目次
+## 目录 / Table of Contents / 目次
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/)
 
 ## 语言 / Languages / 言語
 - [中文](#中文)

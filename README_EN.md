@@ -70,7 +70,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Three-network Ping test:  
   Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
 
-**For first-time users of this project, it is recommended to check the instructions: [Jump to](https://github.com/oneclickvirt/ecs/README_NEW_USER.md)**
+**For first-time users of this project, it is recommended to check the instructions: [Jump to](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
 ---
 
@@ -384,3 +384,7 @@ Thanks also to the following platforms for editorial and testing support
 <a href="https://community.ibm.com/zsystems/form/l1cc-oss-vm-request/" target="_blank">
   <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm">
 </a>
+
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://starchart.cc/oneclickvirt/ecs)
