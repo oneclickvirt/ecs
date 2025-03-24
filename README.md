@@ -4,7 +4,7 @@
 
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://www.spiritlhl.net/) 
 
-融合怪测评项目 - GO 重构版本  
+融合怪测评项目 - GO版本 - (除环境安装使用shell外无额外shell文件依赖)
 
 如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
 
