@@ -76,7 +76,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ## **使用说明**
 
-### **Linux/FreeBSD/MacOS**
+### **Linux/FreeBSD/OpenBSD/MacOS**
 
 #### **一键命令**
 
@@ -104,6 +104,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 <details>
 <summary>展开查看详细说明</summary>
+
 1. **下载脚本**
 
    **国际用户无加速：**

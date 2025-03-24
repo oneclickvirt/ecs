@@ -76,7 +76,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 ## **Instructions for Use**
 
-### **Linux/FreeBSD/MacOS**
+### **Linux/FreeBSD/OpenBSD/MacOS**
 
 #### **One-click command**
 
