@@ -28,9 +28,8 @@ jobs:
       run: |
         # 移除 network 包中对 security 的引用
         find . -type f -name "*.go" -exec sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' {} +
-        
-        # 修改 network/network.go
-        cat > network/network.go << 'EOF'
+        # 修改 back/network/network.go
+        cat > back/network/network.go << 'EOF'
         package network1
 
         import "github.com/oneclickvirt/basics/network"
