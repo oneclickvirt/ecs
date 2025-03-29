@@ -85,6 +85,8 @@ IPV4/IPV6 ASN: 显示宿主机IP所属的ASN组织ID和名字，同一个IDC可�
 
 IPV4/IPV6 Location: 显示对应协议的IP在数据库中的地理位置。
 
+IPV4 Active IPs: 根据 bgp.tools 信息查询当前CIDR分块中 活跃邻居数量/总邻居数量
+
 ### **CPU测试**
 
 支持通过命令行参数选择```GeekBench```和```Sysbench```进行测试：
@@ -252,6 +254,8 @@ IPv4/IPv6 ASN: Displays the ASN organization ID and name that the host machine's
 
 IPv4/IPv6 Location: Shows the geographic location of the corresponding protocol's IP in the database.
 
+IPV4 Active IPs: Query the number of active neighbours/total number of neighbours in the current CIDR chunk based on the bgp.tools information.
+
 ### **CPU Testing**
 
 Supports selecting `GeekBench` and `Sysbench` for testing through command line parameters:
@@ -394,6 +398,8 @@ TCP加速方式：一般的に ```cubic/bbr``` 輻輳制御プロトコルです
 IPV4/IPV6 ASN: ホストマシンのIPが属するASN組織IDと名前を表示します。同じIDCに複数のASNがある可能性があり、1つのASNの下に異なるIPセグメントのサーバーを販売する複数の業者がいる可能性があります。具体的な上流/下流関係は複雑です。bgp.toolを使用してさらに詳しく調べることができます。
 
 IPV4/IPV6 ロケーション: データベース内の対応するプロトコルのIPの地理的位置を表示します。
+
+IPV4 アクティブIP: bgp.tools情報に基づいて、現在のCIDRチャンクのアクティブなネイバー数/総ネイバー数を照会する。
 
 ### **CPUテスト**
 

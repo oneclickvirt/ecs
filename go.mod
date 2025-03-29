@@ -7,11 +7,11 @@ require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
 	github.com/oneclickvirt/UnlockTests v0.0.26-20250301144558
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
-	github.com/oneclickvirt/basics v0.0.10-20250319084937
+	github.com/oneclickvirt/basics v0.0.11-20250329120147
 	github.com/oneclickvirt/cputest v0.0.10-20250316113043
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.5-20250316104849
-	github.com/oneclickvirt/gostun v0.0.3-20240702054621
+	github.com/oneclickvirt/gostun v0.0.3-20250329105202
 	github.com/oneclickvirt/memorytest v0.0.4-20240820095126
 	github.com/oneclickvirt/nt3 v0.0.4-20250118032755
 	github.com/oneclickvirt/pingtest v0.0.6-20250317132907
@@ -60,6 +60,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/nxtrace/NTrace-core v1.3.7 // indirect
 	github.com/onsi/ginkgo/v2 v2.22.1 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
