@@ -7,7 +7,7 @@ require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20240704024502
 	github.com/oneclickvirt/UnlockTests v0.0.26-20250301144558
 	github.com/oneclickvirt/backtrace v0.0.4-20240702140722
-	github.com/oneclickvirt/basics v0.0.11-20250329120147
+	github.com/oneclickvirt/basics v0.0.11-20250329123504
 	github.com/oneclickvirt/cputest v0.0.10-20250316113043
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.5-20250316104849
