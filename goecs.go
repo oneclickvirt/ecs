@@ -173,7 +173,7 @@ func main() {
 		speedtestmodel.EnableLoger = true
 	}
 	go func() {
-		http.Get("https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fecs&count_bg=%2357DEFF&title_bg=%23000000&icon=cliqz.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false")
+		http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
 	}()
 	if menuMode {
 		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
