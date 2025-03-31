@@ -68,7 +68,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 #### **One-click command**
 
-Will install dependencies by default, update package manager by default, non-interactive mode by default. The non-one-click version below allows control of dependency installation/package manager updates/interactive mode by default.
+Will install dependencies by default, update package manager by default, non-interactive mode by default. The **detailed instructions below allows control of dependency installation/package manager updates/interactive mode by default**.
 
 - **International users without acceleration:**
 
