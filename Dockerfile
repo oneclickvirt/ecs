@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 FROM alpine:latest
 # 安装必要的工具
-RUN apk add --no-cache wget curl bash
+RUN apk add --no-cache wget curl bash libxml2
 RUN apk add --no-cache bind-tools --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
 RUN apk add --no-cache grep openssl ca-certificates uuidgen
 RUN export noninteractive=true
