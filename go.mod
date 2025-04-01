@@ -7,7 +7,7 @@ require (
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841
 	github.com/oneclickvirt/UnlockTests v0.0.26-20250329125926
 	github.com/oneclickvirt/backtrace v0.0.4-20250329130043
-	github.com/oneclickvirt/basics v0.0.11-20250331134007
+	github.com/oneclickvirt/basics v0.0.11-20250401121437
 	github.com/oneclickvirt/cputest v0.0.10-20250329130006
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.5-20250330105204
@@ -16,7 +16,7 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.4-20250329125813
 	github.com/oneclickvirt/pingtest v0.0.6-20250329130728
 	github.com/oneclickvirt/portchecker v0.0.3-20250329125750
-	github.com/oneclickvirt/security v0.0.4-20250331135215
+	github.com/oneclickvirt/security v0.0.4-20250401123241
 	github.com/oneclickvirt/speedtest v0.0.9-20250329130205
 )
 

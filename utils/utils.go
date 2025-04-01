@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/uts"
-	"github.com/oneclickvirt/basics/ipv6"
 	"github.com/oneclickvirt/basics/system"
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/security/network"
@@ -114,12 +113,7 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securtyCheckStatus bo
 		systemInfo = system.CheckSystemInfo(language)
 	}()
 	wgt.Wait()
-	ipv6Info, errv6 := ipv6.GetIPv6Mask(language)
 	basicInfo := systemInfo + ipInfo
-	if errv6 == nil && ipv6Info != "" {
-		basicInfo += ipv6Info
-		basicInfo += "\n"
-	}
 	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
 		uts.IPV4 = true
 		uts.IPV6 = true
