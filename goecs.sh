@@ -1,6 +1,6 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2024.12.08
+# 2025.04.02
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
@@ -139,8 +139,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.25"
-        ECS_VERSION="0.1.25"
+        _yellow "Unable to get version info, using default version 0.1.26"
+        ECS_VERSION="0.1.26"
     fi
     # Check if original goecs command exists
     version_output=""
@@ -531,7 +531,7 @@ env_check() {
         fi
     fi
     # Install necessary commands
-    for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
+    for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${INSTALL_CMD} "$cmd"
@@ -573,8 +573,8 @@ env_check() {
     fi
     # MacOS support
     if [ "$(uname -s)" = "Darwin" ]; then
-        echo "Detected MacOS, installing sysbench iproute2mac fio..."
-        brew install --force sysbench iproute2mac fio
+        echo "Detected MacOS, installing sysbench iproute2mac..."
+        brew install --force sysbench iproute2mac
     else
         if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
             echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf
@@ -612,7 +612,7 @@ show_help() {
                           sysbench/geekbench (CPU性能测试必需)
                           
                           可选组件:
-                          sudo, tar, unzip, dd, fio
+                          sudo, tar, unzip, dd
                           speedtest (网络测试)
                           ping (网络连通性测试)
                           systemd-detect-virt/dmidecode (系统信息检测)
@@ -641,7 +641,7 @@ Available commands:
                            sysbench/geekbench (Required for CPU testing)
                            
                            Optional components:
-                           sudo, tar, unzip, dd, fio
+                           sudo, tar, unzip, dd
                            speedtest (Network testing)
                            ping (Network connectivity)
                            systemd-detect-virt/dmidecode (System info detection)
