@@ -531,7 +531,7 @@ env_check() {
         fi
     fi
     # Install necessary commands
-    for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd; do
+    for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${INSTALL_CMD} "$cmd"
@@ -612,7 +612,7 @@ show_help() {
                           sysbench/geekbench (CPU性能测试必需)
                           
                           可选组件:
-                          sudo, tar, unzip, dd
+                          sudo, tar, unzip, dd, fio
                           speedtest (网络测试)
                           ping (网络连通性测试)
                           systemd-detect-virt/dmidecode (系统信息检测)
@@ -641,7 +641,7 @@ Available commands:
                            sysbench/geekbench (Required for CPU testing)
                            
                            Optional components:
-                           sudo, tar, unzip, dd
+                           sudo, tar, unzip, dd, fio
                            speedtest (Network testing)
                            ping (Network connectivity)
                            systemd-detect-virt/dmidecode (System info detection)
