@@ -4,7 +4,9 @@
 
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
-Fusion Monster Evaluation Project - GO Version - (No additional shell file dependencies other than the environment installation shell)
+Fusion Monster Evaluation Project - GO Version
+
+(No additional shell file dependencies unless necessary to install the environment using the shell, the environment is installed just to measure more accurately, in extreme cases no environment dependencies can also be fully measured project)
 
 Please report any issues via [issues](https://github.com/oneclickvirt/ecs/issues).
 

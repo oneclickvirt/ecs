@@ -4,7 +4,9 @@
 
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
-融合怪测评项目 - GO版本 - (除环境安装使用shell外无额外shell文件依赖)
+融合怪测评项目 - GO版本
+
+(除非必须的环境安装使用shell外无额外shell文件依赖，环境安装只是为了测的更准，极端情况下无环境依赖也可全测项目)
 
 如有问题请 [issues](https://github.com/oneclickvirt/ecs/issues) 反馈。
 
