@@ -358,9 +358,17 @@ func main() {
 					}
 					// 给打印操作一些时间完成
 					time.Sleep(100 * time.Millisecond)
+					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+						fmt.Println("Press Enter to exit...")
+						fmt.Scanln()
+					}
 					os.Exit(0)
 				case <-time.After(30 * time.Second):
 					fmt.Println("上传超时，程序退出")
+					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+						fmt.Println("Press Enter to exit...")
+						fmt.Scanln()
+					}
 					os.Exit(1)
 				}
 			}

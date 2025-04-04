@@ -28,7 +28,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 | amd64                     | amd64     | Linux                        | Linux     |
 | arm                       | arm       | Windows                      | Windows   |
 | arm64                     | arm64     | FreeBSD                      | FreeBSD   |
-| 386                       | 386       |                              |           |
+| 386                       | 386       | OpenBSD                      |           |
 | mips                      |           | MacOS                        |           |
 | mipsle                    |           |                              |           |
 | s390x                     | s390x     |                              |           |

@@ -24,15 +24,15 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ### **编译与测试支持情况**
 | 编译支持的架构 | 测试支持的架构 | 编译支持的系统 | 测试支持的系统 |
-|---------------------------|-----------|------------------------------|-----------|
-| amd64                     | amd64     | Linux                        | Linux     |
-| arm                       | arm       | Windows                      | Windows   |
-| arm64                     | arm64     | FreeBSD                      | FreeBSD   |
-| 386                       | 386       |                              |           |
-| mips                      |           | MacOS                        |           |
-| mipsle                    |           |                              |           |
-| s390x                     | s390x     |                              |           |
-| riscv64                   |           |                              |           |
+|---------------------------|-----------|---------|-----------|
+| amd64                     | amd64     | Linux   | Linux     |
+| arm                       | arm       | Windows | Windows   |
+| arm64                     | arm64     | FreeBSD | FreeBSD   |
+| 386                       | 386       | OpenBSD |           |
+| mips                      |           | MacOS   |           |
+| mipsle                    |           |         |           |
+| s390x                     | s390x     |         |           |
+| riscv64                   |           |         |           |
 
 
 > 更多架构与系统请自行测试，如有问题请开 issues。
