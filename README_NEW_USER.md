@@ -87,6 +87,8 @@ IPV4/IPV6 Location: 显示对应协议的IP在数据库中的地理位置。
 
 IPV4 Active IPs: 根据 bgp.tools 信息查询当前CIDR分块中 活跃邻居数量/总邻居数量
 
+IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小
+
 ### **CPU测试**
 
 支持通过命令行参数选择```GeekBench```和```Sysbench```进行测试：

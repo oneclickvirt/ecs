@@ -24,15 +24,16 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ### **编译与测试支持情况**
 | 编译支持的架构 | 测试支持的架构 | 编译支持的系统 | 测试支持的系统 |
-|-------------|------|--------|------------|
-| amd64 | amd64 | Linux  | Linux |
-| arm | arm  | Windows | Windows |
-| arm64 | arm64 | FreeBSD | FreeBSD |
-| 386 | 386  | OpenBSD | OpenBSD |
-| mips |      |  MacOS | |
-| mipsle |      | | |
-| s390x | s390x |        | |
-| riscv64 |      |        | |
+|---------------------------|-----------|------------------------------|-----------|
+| amd64                     | amd64     | Linux                        | Linux     |
+| arm                       | arm       | Windows                      | Windows   |
+| arm64                     | arm64     | FreeBSD                      | FreeBSD   |
+| 386                       | 386       |                              |           |
+| mips                      |           | MacOS                        |           |
+| mipsle                    |           |                              |           |
+| s390x                     | s390x     |                              |           |
+| riscv64                   |           |                              |           |
+
 
 > 更多架构与系统请自行测试，如有问题请开 issues。
 
@@ -68,7 +69,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 #### **一键命令**
 
-将默认安装依赖，默认更新包管理器，默认非互动模式，下面的**详细说明中的命令可控制是否安装依赖/是否更新包管理器/默认互动模式**
+**一键命令**将**默认安装依赖**，**默认更新包管理器**，**默认非互动模式**
 
 - **国际用户无加速：**
 
@@ -89,6 +90,8 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
   ```
 
 #### **详细说明**
+
+**详细说明**中的命令**可控制是否安装依赖**，**是否更新包管理器**，**默认互动模式可进行选择**
 
 <details>
 <summary>展开查看详细说明</summary>

@@ -139,8 +139,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.26"
-        ECS_VERSION="0.1.26"
+        _yellow "Unable to get version info, using default version 0.1.27"
+        ECS_VERSION="0.1.27"
     fi
     # Check if original goecs command exists
     version_output=""
@@ -607,11 +607,9 @@ show_help() {
                           3. 关键服务失败
                           推荐：
                           环境依赖安装过程中挂起执行
-
-                          必需组件:
-                          sysbench/geekbench (CPU性能测试必需)
                           
                           可选组件:
+                          sysbench/geekbench (CPU性能测试)
                           sudo, tar, unzip, dd, fio
                           speedtest (网络测试)
                           ping (网络连通性测试)
@@ -637,10 +635,8 @@ Available commands:
                            Recommended:
                            Hanging execution during environment dependency installation
                            
-                           Required components:
-                           sysbench/geekbench (Required for CPU testing)
-                           
                            Optional components:
+                           sysbench/geekbench (CPU testing)
                            sudo, tar, unzip, dd, fio
                            speedtest (Network testing)
                            ping (Network connectivity)

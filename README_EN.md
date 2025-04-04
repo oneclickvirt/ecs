@@ -28,7 +28,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 | amd64                     | amd64     | Linux                        | Linux     |
 | arm                       | arm       | Windows                      | Windows   |
 | arm64                     | arm64     | FreeBSD                      | FreeBSD   |
-| 386                       | 386       | OpenBSD                      | OpenBSD   |
+| 386                       | 386       |                              |           |
 | mips                      |           | MacOS                        |           |
 | mipsle                    |           |                              |           |
 | s390x                     | s390x     |                              |           |
@@ -68,7 +68,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 #### **One-click command**
 
-Will install dependencies by default, update package manager by default, non-interactive mode by default. The **detailed instructions below allows control of dependency installation/package manager updates/interactive mode by default**.
+**One-Click Command** will **Install Dependencies by Default**, **Update Package Manager by Default**, **Default Non-Interactive Mode***
 
 - **International users without acceleration:**
 
@@ -89,6 +89,8 @@ Will install dependencies by default, update package manager by default, non-int
   ```
 
 #### **Detailed instructions**
+
+**Detailed description** of the commands in **Command **Controls whether to install dependencies**, **Whether to update the package manager**, **Default interaction mode can be selected***
 
 <details>
 <summary>Expand to view detailed instructions</summary>
