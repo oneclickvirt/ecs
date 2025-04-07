@@ -1,6 +1,6 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2025.04.02
+# 2025.04.07
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
@@ -232,7 +232,23 @@ goecs_check() {
         _red "Download failed, please check your network connection or download manually"
         return 1
     fi
-    # Extract and install with error handling
+    if ! command -v unzip >/dev/null 2>&1; then
+        _green "Installing $cmd"
+        if command -v apt-get >/dev/null 2>&1; then
+            INSTALL_CMD="apt-get -y install"
+        elif command -v yum >/dev/null 2>&1; then
+            INSTALL_CMD="yum -y install"
+        elif command -v dnf >/dev/null 2>&1; then
+            INSTALL_CMD="dnf -y install"
+        elif command -v pacman >/dev/null 2>&1; then
+            INSTALL_CMD="pacman -S --noconfirm"
+        elif command -v apk >/dev/null 2>&1; then
+            INSTALL_CMD="apk add"
+        elif command -v zypper >/dev/null 2>&1; then
+            INSTALL_CMD="zypper install -y"
+        fi
+        ${INSTALL_CMD} "$cmd"
+    fi
     if ! unzip -o goecs.zip >/dev/null 2>&1; then
         _red "Extraction failed"
         return 1
@@ -461,35 +477,30 @@ env_check() {
     # If system is unrecognized, try common package managers
     if [ -z "$SYSTEM" ]; then
         _yellow "Unable to recognize system, trying common package managers..."
-        # Try apt
         if command -v apt-get >/dev/null 2>&1; then
             SYSTEM="Unknown-Debian"
             UPDATE_CMD="apt-get update"
             INSTALL_CMD="apt-get -y install"
             REMOVE_CMD="apt-get -y remove"
             UNINSTALL_CMD="apt-get -y autoremove"
-        # Try yum
         elif command -v yum >/dev/null 2>&1; then
             SYSTEM="Unknown-RHEL"
             UPDATE_CMD="yum -y update"
             INSTALL_CMD="yum -y install"
             REMOVE_CMD="yum -y remove"
             UNINSTALL_CMD="yum -y autoremove"
-        # Try dnf
         elif command -v dnf >/dev/null 2>&1; then
             SYSTEM="Unknown-Fedora"
             UPDATE_CMD="dnf -y update"
             INSTALL_CMD="dnf -y install"
             REMOVE_CMD="dnf -y remove"
             UNINSTALL_CMD="dnf -y autoremove"
-        # Try pacman
         elif command -v pacman >/dev/null 2>&1; then
             SYSTEM="Unknown-Arch"
             UPDATE_CMD="pacman -Sy"
             INSTALL_CMD="pacman -S --noconfirm"
             REMOVE_CMD="pacman -R --noconfirm"
             UNINSTALL_CMD="pacman -Rns --noconfirm"
-        # Try apk
         elif command -v apk >/dev/null 2>&1; then
             SYSTEM="Unknown-Alpine"
             UPDATE_CMD="apk update"
