@@ -7,22 +7,21 @@ import (
 	"fmt"
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
-	backtraceori "github.com/oneclickvirt/backtrace/bk"
+	"github.com/oneclickvirt/backtrace/bk"
+	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
 	disktestmodel "github.com/oneclickvirt/disktest/disk"
-	"github.com/oneclickvirt/ecs/backtrace"
-	"github.com/oneclickvirt/ecs/commediatest"
 	"github.com/oneclickvirt/ecs/cputest"
 	"github.com/oneclickvirt/ecs/disktest"
 	"github.com/oneclickvirt/ecs/memorytest"
-	"github.com/oneclickvirt/ecs/ntrace"
 	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"github.com/oneclickvirt/ecs/utils"
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
 	nt3model "github.com/oneclickvirt/nt3/model"
+	"github.com/oneclickvirt/nt3/nt"
 	ptmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
@@ -39,7 +38,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.28"
+	ecsVersion                                                        = "v0.1.29"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -168,7 +167,7 @@ func main() {
 		commediatests.EnableLoger = true
 		unlocktestmodel.EnableLoger = true
 		ptmodel.EnableLoger = true
-		backtraceori.EnableLoger = true
+		backtracemodel.EnableLoger = true
 		nt3model.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 	}
@@ -444,7 +443,7 @@ func main() {
 		output = utils.PrintAndCapture(func() {
 			if commTestStatus && !onlyChinaTest {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
-				commediatest.ComMediaTest(language)
+				commediatests.MediaTests(language)
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {
@@ -471,14 +470,18 @@ func main() {
 			output = utils.PrintAndCapture(func() {
 				if backtraceStatus && !onlyChinaTest {
 					utils.PrintCenteredTitle("三网回程线路检测", width)
-					backtrace.BackTrace()
+					if strings.Contains(output, "IPV6") {
+						backtrace.BackTrace(true)
+					} else {
+						backtrace.BackTrace(false)
+					}
 				}
 			}, tempOutput, output)
 			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
 			output = utils.PrintAndCapture(func() {
 				if nt3Status && !onlyChinaTest {
 					utils.PrintCenteredTitle("三网回程路由检测", width)
-					ntrace.TraceRoute3(language, nt3Location, nt3CheckType)
+					nt.TraceRoute(language, nt3Location, nt3CheckType)
 				}
 			}, tempOutput, output)
 			output = utils.PrintAndCapture(func() {

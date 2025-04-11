@@ -4,6 +4,6 @@ import (
 	"github.com/oneclickvirt/backtrace/bk"
 )
 
-func BackTrace() {
-	backtrace.BackTrace()
+func BackTrace(enableIpv6 bool) {
+	backtrace.BackTrace(enableIpv6)
 }

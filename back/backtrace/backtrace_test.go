@@ -15,6 +15,7 @@ import (
 //	}
 //}
 
+// 本包仅测试，无实际使用
 func TestBackTrace(t *testing.T) {
-	BackTrace()
+	BackTrace(false)
 }
