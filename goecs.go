@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.29"
+	ecsVersion                                                        = "v0.1.30"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -443,7 +443,7 @@ func main() {
 		output = utils.PrintAndCapture(func() {
 			if commTestStatus && !onlyChinaTest {
 				utils.PrintCenteredTitle("御三家流媒体解锁", width)
-				commediatests.MediaTests(language)
+				fmt.Printf(commediatests.MediaTests(language))
 			}
 		}, tempOutput, output)
 		output = utils.PrintAndCapture(func() {

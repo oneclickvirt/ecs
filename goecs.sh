@@ -7,17 +7,15 @@
 # curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
 cat <<"EOF"
-       GGGGGGGG        OOOOOOO         EEEEEEEE      CCCCCCCCC    SSSSSSSSSS
-     GG        GG    OO       OO      EE           CC           SS
-    GG              OO         OO     EE          CC           SS
-    GG              OO         OO     EE          CC            SS
-    GG              OO         OO     EEEEEEEE    CC             SSSSSSSSSS
-    GG     GGGGGG   OO         OO     EE          CC                      SS
-    GG        GG    OO         OO     EE          CC                       SS
-     GG      GG      OO       OO      EE           CC                     SS
-      GGGGGGGG         OOOOOOO         EEEEEEEE     CCCCCCCCC    SSSSSSSSSS
+  ,ad8888ba,     ,ad8888ba,    88888888888  ,ad8888ba,   ad88888ba
+ d8"'    `"8b   d8"'    `"8b   88          d8"'    `"8b d8"     "8b
+d8'            d8'        `8b  88         d8'           Y8a
+88             88          88  88aaaaa    88             `"Y8aaaaa,
+88      88888  88          88  88"""""    88               `"""""8b,
+Y8,        88  Y8,        ,8P  88         Y8,                    `8b
+ Y8a.    .a88   Y8a.    .a8P   88          Y8a.    .a8P  Y8a     a8P
+  `"Y88888P"     `"Y8888Y"'    88888888888  `"Y8888Y"'    "Y88888P"
 EOF
-
 cd /root >/dev/null 2>&1
 if [ ! -d "/usr/bin/" ]; then
     mkdir -p "/usr/bin/"
@@ -139,8 +137,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.29"
-        ECS_VERSION="0.1.29"
+        _yellow "Unable to get version info, using default version 0.1.30"
+        ECS_VERSION="0.1.30"
     fi
     # Check if original goecs command exists
     version_output=""
