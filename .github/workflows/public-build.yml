@@ -1,6 +1,8 @@
 name: Public Build
 
 on:
+  release:
+    types: [ published ]
   workflow_dispatch:
 
 jobs:
@@ -67,10 +69,10 @@ jobs:
     - name: Build and Test
       run: |
         # 构建二进制文件
-        go build -o main
-        
+        go build -o maintest
         # 测试无菜单模式是否正常运行（禁用 security 检测）
-        ./main -menu=false -l en -security=false -upload=false || exit 1
+        ./maintest -menu=false -l en -security=false -upload=false || exit 1
+        rm -rf maintest
         
     - name: Commit and push changes
       run: |
