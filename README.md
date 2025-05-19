@@ -91,6 +91,12 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
   export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
   ```
 
+- **短链接：**
+
+  ```bash
+  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+  ```
+
 #### **详细说明**
 
 **详细说明**中的命令**可控制是否安装依赖**，**是否更新包管理器**，**默认互动模式可进行选择**
