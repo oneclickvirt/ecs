@@ -18,7 +18,6 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.5-20250416131047
 	github.com/oneclickvirt/pingtest v0.0.7-20250413051539
 	github.com/oneclickvirt/portchecker v0.0.3-20250329125750
-	github.com/oneclickvirt/security v0.0.4-20250522031128
 	github.com/oneclickvirt/speedtest v0.0.9-20250521034111
 )
 
