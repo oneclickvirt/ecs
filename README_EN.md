@@ -39,10 +39,10 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 > Please test additional architectures and systems yourself. If you encounter any issues, please open an issue.
 
 ### **Systems Pending Support**
-| OS     | Notes                                                  |
-|--------|--------------------------------------------------------|
-| MacOS  | Hardware testing bugs and environment dependencies unresolved |
-
+| OS     | Notes                                                                                           |
+|--------|-------------------------------------------------------------------------------------------------|
+| MacOS  | Hardware testing bugs and environment dependencies unresolved                                   |
+| Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems |
 ---
 
 ## **Features**
@@ -89,6 +89,12 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
   ```bash
   export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs -l en
   ```
+
+- **Short Link:**
+
+  ```bash
+  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
+  ``
 
 #### **Detailed instructions**
 
