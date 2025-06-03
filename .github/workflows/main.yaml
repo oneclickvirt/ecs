@@ -47,18 +47,23 @@ jobs:
           VERSION="${GITHUB_REF#refs/tags/v}"
           FILE="goecs.sh"
           BRANCH="master"
-          # Checkout master branch
-          git fetch origin $BRANCH:$BRANCH
-          git switch $BRANCH
-          # Replace version in goecs.sh
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global --unset url."git@github.com:".insteadOf || true
+          git fetch origin $BRANCH
+          git checkout $BRANCH
+          if [ ! -f "$FILE" ]; then
+            echo "Error: $FILE not found"
+            exit 1
+          fi
           sed -i "s/\(_yellow \"Unable to get version info, using default version \).*\(\".*\)/\1$VERSION\2/" "$FILE"
           sed -i "s/\(ECS_VERSION=\"\).*\(\"\)/\1$VERSION\2/" "$FILE"
-          # Commit and push
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          if git diff --quiet "$FILE"; then
+            echo "No changes detected in $FILE"
+            exit 0
+          fi
           git add "$FILE"
           git commit -m "chore: update ECS_VERSION to $VERSION in goecs.sh"
           git push origin $BRANCH
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-
