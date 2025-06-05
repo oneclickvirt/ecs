@@ -119,30 +119,12 @@ cleanup_epel() {
 }
 
 goecs_check() {
-    if command -v apt-get >/dev/null 2>&1; then
-        INSTALL_CMD="apt-get -y install"
-    elif command -v yum >/dev/null 2>&1; then
-        INSTALL_CMD="yum -y install"
-    elif command -v dnf >/dev/null 2>&1; then
-        INSTALL_CMD="dnf -y install"
-    elif command -v pacman >/dev/null 2>&1; then
-        INSTALL_CMD="pacman -S --noconfirm"
-    elif command -v apk >/dev/null 2>&1; then
-        INSTALL_CMD="apk add"
-    elif command -v zypper >/dev/null 2>&1; then
-        INSTALL_CMD="zypper install -y"
-    fi
-    if ! command -v unzip >/dev/null 2>&1; then
-        _green "Installing unzip"
-        ${INSTALL_CMD} unzip
-    fi
-    if ! command -v curl >/dev/null 2>&1; then
-        _green "Installing curl"
-        ${INSTALL_CMD} curl
-    fi
+    # Get system and architecture info with error handling
     os=$(uname -s 2>/dev/null || echo "Unknown")
     arch=$(uname -m 2>/dev/null || echo "Unknown")
+    # First check for China IP
     check_china
+    # Get latest version number with multiple backup sources
     ECS_VERSION=""
     for api in \
         "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
@@ -158,6 +140,7 @@ goecs_check() {
         _yellow "Unable to get version info, using default version 0.1.33"
         ECS_VERSION="0.1.33"
     fi
+    # Check if original goecs command exists
     version_output=""
     for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do
         if [ -x "$(command -v $cmd_path 2>/dev/null)" ]; then
@@ -181,6 +164,7 @@ goecs_check() {
         _green "goecs not found, installation needed, starting in 5 seconds"
     fi
     sleep 5
+    # Download corresponding version with error handling
     if [[ "$CN" == true ]]; then
         _yellow "Using China mirror for download..."
         base_url="https://cnb.cool/oneclickvirt/ecs/-/git/raw/main"
@@ -193,6 +177,7 @@ goecs_check() {
             base_url="https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}"
         fi
     fi
+    # Build download URL with architecture support
     local zip_file=""
     case $os in
         Linux|linux|LINUX)
@@ -230,6 +215,7 @@ goecs_check() {
     esac
     download_url="${base_url}/${zip_file}"
     _green "Downloading $download_url"
+    # Download file with retry mechanism
     local max_retries=3
     local retry_count=0
     while [ $retry_count -lt $max_retries ]; do
@@ -244,11 +230,29 @@ goecs_check() {
         _red "Download failed, please check your network connection or download manually"
         return 1
     fi
+    if ! command -v unzip >/dev/null 2>&1; then
+        _green "Installing $cmd"
+        if command -v apt-get >/dev/null 2>&1; then
+            INSTALL_CMD="apt-get -y install"
+        elif command -v yum >/dev/null 2>&1; then
+            INSTALL_CMD="yum -y install"
+        elif command -v dnf >/dev/null 2>&1; then
+            INSTALL_CMD="dnf -y install"
+        elif command -v pacman >/dev/null 2>&1; then
+            INSTALL_CMD="pacman -S --noconfirm"
+        elif command -v apk >/dev/null 2>&1; then
+            INSTALL_CMD="apk add"
+        elif command -v zypper >/dev/null 2>&1; then
+            INSTALL_CMD="zypper install -y"
+        fi
+        ${INSTALL_CMD} "$cmd"
+    fi
     if ! unzip -o goecs.zip >/dev/null 2>&1; then
         _red "Extraction failed"
         return 1
     fi
     rm -f goecs.zip README.md LICENSE README_EN.md
+    # Set execution permissions and install
     chmod 777 goecs
     for install_path in "/usr/bin" "/usr/local/bin"; do
         if [ -d "$install_path" ]; then
@@ -256,6 +260,7 @@ goecs_check() {
             break
         fi
     done
+    # Set system parameters
     if [ "$os" != "Darwin" ]; then
         PARAM="net.ipv4.ping_group_range"
         NEW_VALUE="0 2147483647"
@@ -268,6 +273,7 @@ goecs_check() {
             sysctl -p >/dev/null 2>&1
         fi
     fi
+    # Set special permissions
     setcap cap_net_raw=+ep goecs 2>/dev/null
     setcap cap_net_raw=+ep /usr/bin/goecs 2>/dev/null
     setcap cap_net_raw=+ep /usr/local/bin/goecs 2>/dev/null
@@ -436,6 +442,7 @@ env_check() {
     PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add --no-cache" "pkg_add -I" "yum -y install")
     PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del" "pkg_delete -I" "yum -y remove")
     PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "pacman -Rns --noconfirm" "pkg autoremove" "apk autoremove" "pkg_delete -a" "yum -y autoremove")
+    # Check system information
     if [ -f /etc/opencloudos-release ]; then
         SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
@@ -453,6 +460,7 @@ env_check() {
     else
         SYS="$(uname -s)"
     fi
+    # Match operating system
     SYSTEM=""
     for ((int = 0; int < ${#REGEX[@]}; int++)); do
         if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then
@@ -464,6 +472,7 @@ env_check() {
             break
         fi
     done
+    # If system is unrecognized, try common package managers
     if [ -z "$SYSTEM" ]; then
         _yellow "Unable to recognize system, trying common package managers..."
         if command -v apt-get >/dev/null 2>&1; then
@@ -530,12 +539,14 @@ env_check() {
             fi
         fi
     fi
+    # Install necessary commands
     for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${INSTALL_CMD} "$cmd"
         fi
     done
+    # sysbench installation
     if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
         ${INSTALL_CMD} sysbench
@@ -550,6 +561,7 @@ env_check() {
             Check_SysBench
         fi
     fi
+    # geekbench and speedtest installation
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
@@ -568,6 +580,7 @@ env_check() {
         ${INSTALL_CMD} iputils-ping >/dev/null 2>&1
         ${INSTALL_CMD} ping >/dev/null 2>&1
     fi
+    # MacOS support
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS, installing sysbench iproute2mac..."
         brew install --force sysbench iproute2mac

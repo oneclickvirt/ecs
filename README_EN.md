@@ -385,4 +385,4 @@ Thanks also to the following platforms for editorial and testing support
 
 ## Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://www.spiritlhl.net)
+[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://starchart.cc/oneclickvirt/ecs)
