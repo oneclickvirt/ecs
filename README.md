@@ -388,4 +388,4 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 
 ## Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://starchart.cc/oneclickvirt/ecs)
+[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://www.spiritlhl.net)
