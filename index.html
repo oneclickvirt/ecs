@@ -26,6 +26,7 @@
             margin-bottom: 48px;
             padding-bottom: 24px;
             border-bottom: 1px solid #e9e9e7;
+            position: relative;
         }
         .header h1 {
             font-size: 32px;
@@ -36,6 +37,32 @@
         .header p {
             font-size: 16px;
             color: #6b6b6b;
+        }
+        .language-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+        }
+        .language-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+            color: #6b6b6b;
+        }
+        .language-toggle button.active {
+            background: #0066cc;
+            color: white;
+        }
+        .language-toggle button:hover:not(.active) {
+            background: #f7f7f5;
         }
         .controls {
             display: flex;
@@ -258,9 +285,54 @@
             padding: 60px 20px;
             color: #6b6b6b;
         }
+        .footer {
+            margin-top: 60px;
+            padding: 32px 0;
+            border-top: 1px solid #e9e9e7;
+            text-align: center;
+            background: white;
+            border-radius: 12px;
+        }
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .footer-link {
+            color: #0066cc;
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s ease;
+        }
+        .footer-link:hover {
+            color: #004499;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #6b6b6b;
+        }
         @media (max-width: 768px) {
             .container {
                 padding: 20px 16px;
+            }
+            .header {
+                position: static;
+            }
+            .language-toggle {
+                position: static;
+                margin-bottom: 16px;
+                align-self: center;
             }
             .header h1 {
                 font-size: 24px;
@@ -297,55 +369,78 @@
                 flex-wrap: wrap;
                 gap: 8px;
             }
+            .footer-links {
+                flex-direction: column;
+                gap: 16px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>CPU Performance Ladder For Sysbench</h1>
-            <p>Sysbench天梯图</p>
+            <div class="language-toggle">
+                <button id="langZh" class="active">中文</button>
+                <button id="langEn">English</button>
+            </div>
+            <h1 data-zh="CPU Performance Ladder For Sysbench" data-en="CPU Performance Ladder For Sysbench">CPU Performance Ladder For Sysbench</h1>
+            <p data-zh="Sysbench天梯图" data-en="Sysbench CPU Benchmark Rankings">Sysbench天梯图</p>
         </div>
         <div class="controls">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="搜索CPU型号或关键词...">
+                <input type="text" id="searchInput" placeholder="搜索CPU型号或关键词..." data-placeholder-zh="搜索CPU型号或关键词..." data-placeholder-en="Search CPU model or keywords...">
             </div>
             <div class="view-toggle">
-                <button id="compactView" class="active">紧凑视图</button>
-                <button id="detailView">详细视图</button>
+                <button id="compactView" class="active" data-zh="紧凑视图" data-en="Compact View">紧凑视图</button>
+                <button id="detailView" data-zh="详细视图" data-en="Detail View">详细视图</button>
             </div>
         </div>
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-value" id="totalCpus">-</div>
-                <div class="stat-label">CPU型号总数</div>
+                <div class="stat-label" data-zh="CPU型号总数" data-en="Total CPU Models">CPU型号总数</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalTests">-</div>
-                <div class="stat-label">测试样本数</div>
+                <div class="stat-label" data-zh="测试样本数" data-en="Test Samples">测试样本数</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="topSingle">-</div>
-                <div class="stat-label">最高单核分数</div>
+                <div class="stat-label" data-zh="最高单核分数" data-en="Highest Single Score">最高单核分数</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="topMulti">-</div>
-                <div class="stat-label">最高多核分数</div>
+                <div class="stat-label" data-zh="最高多核分数" data-en="Highest Multi Score">最高多核分数</div>
             </div>
         </div>
         <div id="loadingIndicator" class="loading">
             <div class="spinner"></div>
-            <div>正在加载CPU数据...</div>
+            <div data-zh="正在加载CPU数据..." data-en="Loading CPU data...">正在加载CPU数据...</div>
         </div>
         <div class="pagination" id="pagination" style="display: none;">
-            <button id="prevPage">上一页</button>
+            <button id="prevPage" data-zh="上一页" data-en="Previous">上一页</button>
             <div class="pagination-info" id="pageInfo">-</div>
-            <button id="nextPage">下一页</button>
+            <button id="nextPage" data-zh="下一页" data-en="Next">下一页</button>
         </div>
         <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
         <div id="noData" class="no-data" style="display: none;">
-            <div>📄 未找到CPU数据文件</div>
-            <p>请确保 all_cpu_results.json 文件存在于当前目录</p>
+            <div data-zh="📄 未找到CPU数据文件" data-en="📄 CPU data file not found">📄 未找到CPU数据文件</div>
+            <p data-zh="请确保 all_cpu_results.json 文件存在于当前目录" data-en="Please ensure all_cpu_results.json file exists in current directory">请确保 all_cpu_results.json 文件存在于当前目录</p>
+        </div>
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="https://github.com/oneclickvirt/ecs" class="footer-link" target="_blank" rel="noopener">
+                        <span>🚀</span>
+                        <span data-zh="测试脚本" data-en="Test Script">测试脚本</span>
+                    </a>
+                    <a href="https://www.spiritlhl.net/" class="footer-link" target="_blank" rel="noopener">
+                        <span>🌐</span>
+                        <span data-zh="spiritlhl 官网" data-en="spiritlhl Official">spiritlhl 官网</span>
+                    </a>
+                </div>
+                <div class="footer-text" data-zh="本项目隶属于 spiritlhl 旗下" data-en="This project is under spiritlhl">本项目隶属于 spiritlhl 旗下</div>
+            </div>
         </div>
     </div>
     <script>
@@ -359,6 +454,7 @@
                 this.searchTerm = '';
                 this.currentPage = 1;
                 this.itemsPerPage = 10;
+                this.currentLang = 'zh';
                 this.initializeEventListeners();
                 this.loadData();
             }
@@ -387,6 +483,27 @@
                         this.renderGroups();
                     }
                 });
+                document.getElementById('langZh').addEventListener('click', () => {
+                    this.setLanguage('zh');
+                });
+                document.getElementById('langEn').addEventListener('click', () => {
+                    this.setLanguage('en');
+                });
+            }
+            setLanguage(lang) {
+                this.currentLang = lang;
+                document.getElementById('langZh').classList.toggle('active', lang === 'zh');
+                document.getElementById('langEn').classList.toggle('active', lang === 'en');
+                
+                document.querySelectorAll('[data-zh]').forEach(el => {
+                    if (el.tagName === 'INPUT') {
+                        el.placeholder = el.getAttribute(`data-placeholder-${lang}`);
+                    } else {
+                        el.textContent = el.getAttribute(`data-${lang}`);
+                    }
+                });
+                
+                this.updatePagination();
             }
             async loadData() {
                 try {
@@ -463,14 +580,19 @@
                     const topCpu = cpus[0];
                     const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
                     const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
+                    
+                    const sampleText = this.currentLang === 'zh' ? '样本' : 'Samples';
+                    const singleText = this.currentLang === 'zh' ? '单核最高' : 'Max Single';
+                    const multiText = this.currentLang === 'zh' ? '多核最高' : 'Max Multi';
+                    
                     return `
                         <div class="cpu-group" data-prefix="${prefix}">
                             <div class="group-header">
                                 <div class="group-title">${topCpu.cpu_model}</div>
                                 <div class="group-stats">
-                                    <span>样本: ${cpus.length}</span>
-                                    <span>单核最高: ${maxSingle.toLocaleString()}</span>
-                                    <span>多核最高: ${maxMulti.toLocaleString()}</span>
+                                    <span>${sampleText}: ${cpus.length}</span>
+                                    <span>${singleText}: ${maxSingle.toLocaleString()}</span>
+                                    <span>${multiText}: ${maxMulti.toLocaleString()}</span>
                                 </div>
                                 <div class="expand-icon">▼</div>
                             </div>
@@ -491,16 +613,27 @@
             updatePagination() {
                 const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
                 const pageInfo = document.getElementById('pageInfo');
+                
+                const pageText = this.currentLang === 'zh' 
+                    ? `第 ${this.currentPage} 页，共 ${totalPages} 页`
+                    : `Page ${this.currentPage} of ${totalPages}`;
+                    
+                pageInfo.textContent = pageText;
+                
                 const prevBtn = document.getElementById('prevPage');
                 const nextBtn = document.getElementById('nextPage');
-                pageInfo.textContent = `第 ${this.currentPage} 页，共 ${totalPages} 页`;
                 prevBtn.disabled = this.currentPage === 1;
                 nextBtn.disabled = this.currentPage === totalPages;
             }
             renderTable(cpus) {
                 const headers = this.isDetailView 
-                    ? ['CPU型号', '核心数', '单核分数', '多核分数', '多核线程']
-                    : ['CPU型号', '核心数', '单核分数', '多核分数'];
+                    ? (this.currentLang === 'zh' 
+                        ? ['CPU型号', '核心数', '单核分数', '多核分数', '多核线程']
+                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score', 'Multi Threads'])
+                    : (this.currentLang === 'zh'
+                        ? ['CPU型号', '核心数', '单核分数', '多核分数']
+                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score']);
+                        
                 const rows = cpus.slice(0, this.isDetailView ? cpus.length : 10).map(cpu => {
                     const cells = this.isDetailView
                         ? [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
