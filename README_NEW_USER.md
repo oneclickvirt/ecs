@@ -110,6 +110,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 有时候多核得分和单核得分一样，证明商家在限制程序并发使用CPU，典型例子腾讯云。
 
+```Sysbench```的基准可见 [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) 天梯图，具体得分不分测试的sysbench的版本。
+
 ```GeekBench```的基准可见 [官方网站](https://browser.geekbench.com/processor-benchmarks/) 天梯图，具体得分每个```GeekBench```版本都不一样，注意使用时测试的```GeekBench```版本是什么。
 
 多说一句，```GeekBench```测的很多内容，实际在服务器使用过程中根本用不到，测试仅供参考。当然```Sysbench```非常不全面，但它基于最基础的计算性能可以大致比较CPU的性能。
@@ -279,6 +281,8 @@ AMD's 7950x single-core full performance score is around 6500, AMD's 5950x singl
 
 Sometimes multi-core scores are the same as single-core scores, proving that the vendor is limiting program concurrent use of CPU, a typical example being Tencent Cloud.
 
+Benchmarks for ```Sysbench`` can be found in the [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) ladder chart, with specific scores regardless of the version of sysbench tested.
+
 For `GeekBench` baselines, see the [official website](https://browser.geekbench.com/processor-benchmarks/) ladder chart. Specific scores differ for each `GeekBench` version, so note which `GeekBench` version is being used when testing.
 
 As an additional note, many things tested by `GeekBench` are not actually used in server usage processes, so the test is for reference only. Of course, `Sysbench` is very incomplete, but it can roughly compare CPU performance based on the most basic computational performance.
@@ -423,6 +427,8 @@ CPUテストのシングルコア```Sysbench```スコアが5000以上なら第�
 AMDの7950xシングルコアのフルパフォーマンススコアは約6500、AMDの5950xシングルコアのフルパフォーマンススコアは約5700、Intelの通常のCPU（E5など）は約1000〜800、500未満のシングルコアCPUはパフォーマンスが比較的低いと言えます。
 
 時々、マルチコアスコアとシングルコアスコアが同じ場合があります。これは販売者がプログラムの並列CPU使用を制限していることを示しています。典型的な例はTencent Cloudです。
+
+Sysbenchのベンチマークは[CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/)のラダーチャートで見ることができる。
 
 ```GeekBench```の基準は[公式ウェブサイト](https://browser.geekbench.com/processor-benchmarks/)の階層チャートを参照してください。具体的なスコアは各```GeekBench```バージョンで異なるため、テスト時の```GeekBench```バージョンに注意してください。
 
