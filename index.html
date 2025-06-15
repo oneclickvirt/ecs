@@ -75,9 +75,11 @@
             flex: 1;
             min-width: 200px;
             position: relative;
+            display: flex;
+            gap: 8px;
         }
         .search-box input {
-            width: 100%;
+            flex: 1;
             padding: 12px 16px;
             border: 1px solid #e9e9e7;
             border-radius: 8px;
@@ -89,6 +91,33 @@
             outline: none;
             border-color: #0066cc;
             box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        .search-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .search-btn {
+            padding: 12px 16px;
+            border: 1px solid #e9e9e7;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            color: #6b6b6b;
+        }
+        .search-btn:hover {
+            background: #f7f7f5;
+        }
+        .search-btn.search {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        .search-btn.clear {
+            background: #e91e63;
+            color: white;
+            border-color: #e91e63;
         }
         .view-toggle {
             display: flex;
@@ -146,6 +175,7 @@
             align-items: center;
             gap: 16px;
             margin-bottom: 32px;
+            flex-wrap: wrap;
         }
         .pagination button {
             padding: 8px 16px;
@@ -172,6 +202,23 @@
             font-size: 14px;
             color: #6b6b6b;
         }
+        .page-jump {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .page-jump input {
+            width: 60px;
+            padding: 6px 8px;
+            border: 1px solid #e9e9e7;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .page-jump button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
         .cpu-groups {
             display: grid;
             gap: 24px;
@@ -197,6 +244,21 @@
         }
         .group-header:hover {
             background: #f0f0ef;
+        }
+        .group-title-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rank-badge {
+            background: #0066cc;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 40px;
+            text-align: center;
         }
         .group-title {
             font-size: 18px;
@@ -343,6 +405,10 @@
             }
             .search-box {
                 min-width: auto;
+                flex-direction: column;
+            }
+            .search-buttons {
+                justify-content: center;
             }
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -357,6 +423,11 @@
             .group-stats {
                 flex-direction: column;
                 gap: 8px;
+            }
+            .group-title-section {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
             }
             .cpu-table {
                 font-size: 12px;
@@ -389,6 +460,10 @@
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="搜索CPU型号或关键词..." data-placeholder-zh="搜索CPU型号或关键词..." data-placeholder-en="Search CPU model or keywords...">
+                <div class="search-buttons">
+                    <button id="searchBtn" class="search-btn search" data-zh="搜索" data-en="Search">搜索</button>
+                    <button id="clearBtn" class="search-btn clear" data-zh="清除" data-en="Clear">清除</button>
+                </div>
             </div>
             <div class="view-toggle">
                 <button id="compactView" class="active" data-zh="紧凑视图" data-en="Compact View">紧凑视图</button>
@@ -420,6 +495,12 @@
         <div class="pagination" id="pagination" style="display: none;">
             <button id="prevPage" data-zh="上一页" data-en="Previous">上一页</button>
             <div class="pagination-info" id="pageInfo">-</div>
+            <div class="page-jump">
+                <span data-zh="跳转到" data-en="Go to">跳转到</span>
+                <input type="number" id="pageInput" min="1">
+                <span data-zh="页" data-en="page">页</span>
+                <button id="jumpBtn" data-zh="跳转" data-en="Go">跳转</button>
+            </div>
             <button id="nextPage" data-zh="下一页" data-en="Next">下一页</button>
         </div>
         <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
@@ -450,6 +531,8 @@
                 this.groupedData = {};
                 this.filteredGroups = {};
                 this.sortedPrefixes = [];
+                this.allSortedPrefixes = [];
+                this.prefixRanks = {};
                 this.isDetailView = false;
                 this.searchTerm = '';
                 this.currentPage = 1;
@@ -459,8 +542,21 @@
                 this.loadData();
             }
             initializeEventListeners() {
-                document.getElementById('searchInput').addEventListener('input', (e) => {
-                    this.searchTerm = e.target.value.toLowerCase();
+                const searchInput = document.getElementById('searchInput');
+                const searchBtn = document.getElementById('searchBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const performSearch = () => {
+                    this.searchTerm = searchInput.value.toLowerCase();
+                    this.currentPage = 1;
+                    this.filterAndRender();
+                };
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') performSearch();
+                });
+                searchBtn.addEventListener('click', performSearch);
+                clearBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    this.searchTerm = '';
                     this.currentPage = 1;
                     this.filterAndRender();
                 });
@@ -483,6 +579,14 @@
                         this.renderGroups();
                     }
                 });
+                document.getElementById('jumpBtn').addEventListener('click', () => {
+                    const page = parseInt(document.getElementById('pageInput').value);
+                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
+                    if (page >= 1 && page <= totalPages) {
+                        this.currentPage = page;
+                        this.renderGroups();
+                    }
+                });
                 document.getElementById('langZh').addEventListener('click', () => {
                     this.setLanguage('zh');
                 });
@@ -494,7 +598,6 @@
                 this.currentLang = lang;
                 document.getElementById('langZh').classList.toggle('active', lang === 'zh');
                 document.getElementById('langEn').classList.toggle('active', lang === 'en');
-                
                 document.querySelectorAll('[data-zh]').forEach(el => {
                     if (el.tagName === 'INPUT') {
                         el.placeholder = el.getAttribute(`data-placeholder-${lang}`);
@@ -502,8 +605,8 @@
                         el.textContent = el.getAttribute(`data-${lang}`);
                     }
                 });
-                
                 this.updatePagination();
+                this.renderGroups();
             }
             async loadData() {
                 try {
@@ -534,11 +637,15 @@
                 Object.keys(this.groupedData).forEach(prefix => {
                     this.groupedData[prefix].sort((a, b) => b.single_score - a.single_score);
                 });
-                this.sortedPrefixes = Object.keys(this.groupedData).sort((a, b) => {
+                this.allSortedPrefixes = Object.keys(this.groupedData).sort((a, b) => {
                     const maxSingleA = Math.max(...this.groupedData[a].map(cpu => cpu.single_score));
                     const maxSingleB = Math.max(...this.groupedData[b].map(cpu => cpu.single_score));
                     return maxSingleB - maxSingleA;
                 });
+                this.allSortedPrefixes.forEach((prefix, index) => {
+                    this.prefixRanks[prefix] = index + 1;
+                });
+                this.sortedPrefixes = [...this.allSortedPrefixes];
             }
             updateStats() {
                 const totalCpus = Object.keys(this.groupedData).length;
@@ -554,7 +661,7 @@
                 if (this.searchTerm) {
                     this.filteredGroups = {};
                     const filteredPrefixes = [];
-                    this.sortedPrefixes.forEach(prefix => {
+                    this.allSortedPrefixes.forEach(prefix => {
                         const filteredCpus = this.groupedData[prefix].filter(cpu => 
                             cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
                             cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
@@ -567,6 +674,7 @@
                     this.sortedPrefixes = filteredPrefixes;
                 } else {
                     this.filteredGroups = this.groupedData;
+                    this.sortedPrefixes = [...this.allSortedPrefixes];
                 }
                 this.renderGroups();
             }
@@ -580,15 +688,17 @@
                     const topCpu = cpus[0];
                     const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
                     const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
-                    
+                    const rank = this.prefixRanks[prefix];
                     const sampleText = this.currentLang === 'zh' ? '样本' : 'Samples';
                     const singleText = this.currentLang === 'zh' ? '单核最高' : 'Max Single';
                     const multiText = this.currentLang === 'zh' ? '多核最高' : 'Max Multi';
-                    
                     return `
                         <div class="cpu-group" data-prefix="${prefix}">
                             <div class="group-header">
-                                <div class="group-title">${topCpu.cpu_model}</div>
+                                <div class="group-title-section">
+                                    <div class="rank-badge">#${rank}</div>
+                                    <div class="group-title">${topCpu.cpu_model}</div>
+                                </div>
                                 <div class="group-stats">
                                     <span>${sampleText}: ${cpus.length}</span>
                                     <span>${singleText}: ${maxSingle.toLocaleString()}</span>
@@ -613,13 +723,13 @@
             updatePagination() {
                 const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
                 const pageInfo = document.getElementById('pageInfo');
-                
                 const pageText = this.currentLang === 'zh' 
                     ? `第 ${this.currentPage} 页，共 ${totalPages} 页`
-                    : `Page ${this.currentPage} of ${totalPages}`;
-                    
+                    : `Page ${this.currentPage} of ${totalPages}`;  
                 pageInfo.textContent = pageText;
-                
+                const pageInput = document.getElementById('pageInput');
+                pageInput.max = totalPages;
+                pageInput.value = this.currentPage;
                 const prevBtn = document.getElementById('prevPage');
                 const nextBtn = document.getElementById('nextPage');
                 prevBtn.disabled = this.currentPage === 1;
@@ -633,7 +743,6 @@
                     : (this.currentLang === 'zh'
                         ? ['CPU型号', '核心数', '单核分数', '多核分数']
                         : ['CPU Model', 'Cores', 'Single Score', 'Multi Score']);
-                        
                 const rows = cpus.slice(0, this.isDetailView ? cpus.length : 10).map(cpu => {
                     const cells = this.isDetailView
                         ? [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
