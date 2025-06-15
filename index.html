@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +54,7 @@
             padding: 12px 16px;
             border: 1px solid #e9e9e7;
             border-radius: 8px;
-            font-size:14px;
+            font-size: 14px;
             background: white;
             transition: all 0.2s ease;
         }
@@ -111,6 +110,38 @@
             margin-bottom: 4px;
         }
         .stat-label {
+            font-size: 14px;
+            color: #6b6b6b;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #e9e9e7;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #f7f7f5;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination button.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        .pagination-info {
             font-size: 14px;
             color: #6b6b6b;
         }
@@ -262,10 +293,13 @@
             .cpu-table td {
                 padding: 12px 16px;
             }
+            .pagination {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <div class="header">
@@ -303,6 +337,11 @@
             <div class="spinner"></div>
             <div>正在加载CPU数据...</div>
         </div>
+        <div class="pagination" id="pagination" style="display: none;">
+            <button id="prevPage">上一页</button>
+            <div class="pagination-info" id="pageInfo">-</div>
+            <button id="nextPage">下一页</button>
+        </div>
         <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
         <div id="noData" class="no-data" style="display: none;">
             <div>📄 未找到CPU数据文件</div>
@@ -315,14 +354,18 @@
                 this.data = [];
                 this.groupedData = {};
                 this.filteredGroups = {};
+                this.sortedPrefixes = [];
                 this.isDetailView = false;
                 this.searchTerm = '';
+                this.currentPage = 1;
+                this.itemsPerPage = 10;
                 this.initializeEventListeners();
                 this.loadData();
             }
             initializeEventListeners() {
                 document.getElementById('searchInput').addEventListener('input', (e) => {
                     this.searchTerm = e.target.value.toLowerCase();
+                    this.currentPage = 1;
                     this.filterAndRender();
                 });
                 document.getElementById('compactView').addEventListener('click', () => {
@@ -330,6 +373,19 @@
                 });
                 document.getElementById('detailView').addEventListener('click', () => {
                     this.setViewMode(true);
+                });
+                document.getElementById('prevPage').addEventListener('click', () => {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.renderGroups();
+                    }
+                });
+                document.getElementById('nextPage').addEventListener('click', () => {
+                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
+                    if (this.currentPage < totalPages) {
+                        this.currentPage++;
+                        this.renderGroups();
+                    }
                 });
             }
             async loadData() {
@@ -341,6 +397,7 @@
                     this.updateStats();
                     this.filterAndRender();
                     document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('pagination').style.display = 'flex';
                     document.getElementById('cpuGroups').style.display = 'block';
                 } catch (error) {
                     console.error('加载数据失败:', error);
@@ -357,9 +414,13 @@
                     }
                     this.groupedData[prefix].push(cpu);
                 });
-                // 对每组内的CPU按单核分数排序
                 Object.keys(this.groupedData).forEach(prefix => {
                     this.groupedData[prefix].sort((a, b) => b.single_score - a.single_score);
+                });
+                this.sortedPrefixes = Object.keys(this.groupedData).sort((a, b) => {
+                    const maxSingleA = Math.max(...this.groupedData[a].map(cpu => cpu.single_score));
+                    const maxSingleB = Math.max(...this.groupedData[b].map(cpu => cpu.single_score));
+                    return maxSingleB - maxSingleA;
                 });
             }
             updateStats() {
@@ -375,15 +436,18 @@
             filterAndRender() {
                 if (this.searchTerm) {
                     this.filteredGroups = {};
-                    Object.keys(this.groupedData).forEach(prefix => {
+                    const filteredPrefixes = [];
+                    this.sortedPrefixes.forEach(prefix => {
                         const filteredCpus = this.groupedData[prefix].filter(cpu => 
                             cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
                             cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
                         );
                         if (filteredCpus.length > 0) {
                             this.filteredGroups[prefix] = filteredCpus;
+                            filteredPrefixes.push(prefix);
                         }
                     });
+                    this.sortedPrefixes = filteredPrefixes;
                 } else {
                     this.filteredGroups = this.groupedData;
                 }
@@ -391,17 +455,18 @@
             }
             renderGroups() {
                 const container = document.getElementById('cpuGroups');
-                const sortedPrefixes = Object.keys(this.filteredGroups).sort();
-                container.innerHTML = sortedPrefixes.map(prefix => {
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = startIndex + this.itemsPerPage;
+                const currentPagePrefixes = this.sortedPrefixes.slice(startIndex, endIndex);
+                container.innerHTML = currentPagePrefixes.map(prefix => {
                     const cpus = this.filteredGroups[prefix];
-                    const avgSingle = Math.round(cpus.reduce((sum, cpu) => sum + cpu.single_score, 0) / cpus.length);
-                    const avgMulti = Math.round(cpus.reduce((sum, cpu) => sum + cpu.multi_score, 0) / cpus.length);
+                    const topCpu = cpus[0];
                     const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
                     const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
                     return `
                         <div class="cpu-group" data-prefix="${prefix}">
                             <div class="group-header">
-                                <div class="group-title">${prefix}</div>
+                                <div class="group-title">${topCpu.cpu_model}</div>
                                 <div class="group-stats">
                                     <span>样本: ${cpus.length}</span>
                                     <span>单核最高: ${maxSingle.toLocaleString()}</span>
@@ -415,13 +480,22 @@
                         </div>
                     `;
                 }).join('');
-                // 添加点击事件
                 container.querySelectorAll('.group-header').forEach(header => {
                     header.addEventListener('click', () => {
                         const group = header.parentElement;
                         group.classList.toggle('expanded');
                     });
                 });
+                this.updatePagination();
+            }
+            updatePagination() {
+                const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
+                const pageInfo = document.getElementById('pageInfo');
+                const prevBtn = document.getElementById('prevPage');
+                const nextBtn = document.getElementById('nextPage');
+                pageInfo.textContent = `第 ${this.currentPage} 页，共 ${totalPages} 页`;
+                prevBtn.disabled = this.currentPage === 1;
+                nextBtn.disabled = this.currentPage === totalPages;
             }
             renderTable(cpus) {
                 const headers = this.isDetailView 
@@ -464,7 +538,6 @@
                 this.renderGroups();
             }
         }
-        // 初始化应用
         new CPUDashboard();
     </script>
 </body>
