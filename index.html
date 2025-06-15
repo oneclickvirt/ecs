@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Performance Ladder For Sysbench</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fafafa;
+            color: #37352f;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e9e9e7;
+        }
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2d2d2d;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            color: #6b6b6b;
+        }
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.2s ease;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        .view-toggle {
+            display: flex;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .view-toggle button {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .view-toggle button.active {
+            background: #0066cc;
+            color: white;
+        }
+        .view-toggle button:hover:not(.active) {
+            background: #f7f7f5;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e9e9e7;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 4px;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b6b6b;
+        }
+        .cpu-groups {
+            display: grid;
+            gap: 24px;
+        }
+        .cpu-group {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e9e9e7;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        .cpu-group:hover {
+            box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
+        }
+        .group-header {
+            padding: 20px 24px;
+            background: #f7f7f5;
+            border-bottom: 1px solid #e9e9e7;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .group-header:hover {
+            background: #f0f0ef;
+        }
+        .group-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+        .group-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #6b6b6b;
+        }
+        .expand-icon {
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }
+        .cpu-group.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        .group-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .cpu-group.expanded .group-content {
+            max-height: 2000px;
+        }
+        .cpu-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cpu-table th,
+        .cpu-table td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0ef;
+        }
+        .cpu-table th {
+            font-weight: 600;
+            color: #6b6b6b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #fafafa;
+        }
+        .cpu-table td {
+            font-size: 14px;
+        }
+        .cpu-table tbody tr:hover {
+            background: #fafafa;
+        }
+        .score-cell {
+            font-weight: 600;
+        }
+        .score-single {
+            color: #0066cc;
+        }
+        .score-multi {
+            color: #e91e63;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b6b6b;
+        }
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #f0f0ef;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b6b6b;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                min-width: auto;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            .stat-card {
+                padding: 16px;
+            }
+            .stat-value {
+                font-size: 20px;
+            }
+            .group-stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .cpu-table {
+                font-size: 12px;
+            }
+            .cpu-table th,
+            .cpu-table td {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CPU Performance Ladder For Sysbench</h1>
+            <p>Sysbench天梯图</p>
+        </div>
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索CPU型号或关键词...">
+            </div>
+            <div class="view-toggle">
+                <button id="compactView" class="active">紧凑视图</button>
+                <button id="detailView">详细视图</button>
+            </div>
+        </div>
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCpus">-</div>
+                <div class="stat-label">CPU型号总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTests">-</div>
+                <div class="stat-label">测试样本数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="topSingle">-</div>
+                <div class="stat-label">最高单核分数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="topMulti">-</div>
+                <div class="stat-label">最高多核分数</div>
+            </div>
+        </div>
+        <div id="loadingIndicator" class="loading">
+            <div class="spinner"></div>
+            <div>正在加载CPU数据...</div>
+        </div>
+        <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
+        <div id="noData" class="no-data" style="display: none;">
+            <div>📄 未找到CPU数据文件</div>
+            <p>请确保 all_cpu_results.json 文件存在于当前目录</p>
+        </div>
+    </div>
+    <script>
+        class CPUDashboard {
+            constructor() {
+                this.data = [];
+                this.groupedData = {};
+                this.filteredGroups = {};
+                this.isDetailView = false;
+                this.searchTerm = '';
+                this.initializeEventListeners();
+                this.loadData();
+            }
+            initializeEventListeners() {
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value.toLowerCase();
+                    this.filterAndRender();
+                });
+                document.getElementById('compactView').addEventListener('click', () => {
+                    this.setViewMode(false);
+                });
+                document.getElementById('detailView').addEventListener('click', () => {
+                    this.setViewMode(true);
+                });
+            }
+            async loadData() {
+                try {
+                    const response = await fetch('all_cpu_results.json');
+                    if (!response.ok) throw new Error('数据文件不存在');
+                    this.data = await response.json();
+                    this.processData();
+                    this.updateStats();
+                    this.filterAndRender();
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('cpuGroups').style.display = 'block';
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('noData').style.display = 'block';
+                }
+            }
+            processData() {
+                this.groupedData = {};
+                this.data.forEach(cpu => {
+                    const prefix = cpu.cpu_prefix;
+                    if (!this.groupedData[prefix]) {
+                        this.groupedData[prefix] = [];
+                    }
+                    this.groupedData[prefix].push(cpu);
+                });
+                // 对每组内的CPU按单核分数排序
+                Object.keys(this.groupedData).forEach(prefix => {
+                    this.groupedData[prefix].sort((a, b) => b.single_score - a.single_score);
+                });
+            }
+            updateStats() {
+                const totalCpus = Object.keys(this.groupedData).length;
+                const totalTests = this.data.length;
+                const topSingle = Math.max(...this.data.map(cpu => cpu.single_score));
+                const topMulti = Math.max(...this.data.map(cpu => cpu.multi_score));
+
+                document.getElementById('totalCpus').textContent = totalCpus.toLocaleString();
+                document.getElementById('totalTests').textContent = totalTests.toLocaleString();
+                document.getElementById('topSingle').textContent = topSingle.toLocaleString();
+                document.getElementById('topMulti').textContent = topMulti.toLocaleString();
+            }
+            filterAndRender() {
+                if (this.searchTerm) {
+                    this.filteredGroups = {};
+                    Object.keys(this.groupedData).forEach(prefix => {
+                        const filteredCpus = this.groupedData[prefix].filter(cpu => 
+                            cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
+                            cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
+                        );
+                        if (filteredCpus.length > 0) {
+                            this.filteredGroups[prefix] = filteredCpus;
+                        }
+                    });
+                } else {
+                    this.filteredGroups = this.groupedData;
+                }
+                this.renderGroups();
+            }
+            renderGroups() {
+                const container = document.getElementById('cpuGroups');
+                const sortedPrefixes = Object.keys(this.filteredGroups).sort();
+                container.innerHTML = sortedPrefixes.map(prefix => {
+                    const cpus = this.filteredGroups[prefix];
+                    const avgSingle = Math.round(cpus.reduce((sum, cpu) => sum + cpu.single_score, 0) / cpus.length);
+                    const avgMulti = Math.round(cpus.reduce((sum, cpu) => sum + cpu.multi_score, 0) / cpus.length);
+                    const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
+                    const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
+                    return `
+                        <div class="cpu-group" data-prefix="${prefix}">
+                            <div class="group-header">
+                                <div class="group-title">${prefix}</div>
+                                <div class="group-stats">
+                                    <span>样本: ${cpus.length}</span>
+                                    <span>单核最高: ${maxSingle.toLocaleString()}</span>
+                                    <span>多核最高: ${maxMulti.toLocaleString()}</span>
+                                </div>
+                                <div class="expand-icon">▼</div>
+                            </div>
+                            <div class="group-content">
+                                ${this.renderTable(cpus)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                // 添加点击事件
+                container.querySelectorAll('.group-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const group = header.parentElement;
+                        group.classList.toggle('expanded');
+                    });
+                });
+            }
+            renderTable(cpus) {
+                const headers = this.isDetailView 
+                    ? ['CPU型号', '核心数', '单核分数', '多核分数', '多核线程', '文件名']
+                    : ['CPU型号', '核心数', '单核分数', '多核分数'];
+                const rows = cpus.slice(0, this.isDetailView ? cpus.length : 10).map(cpu => {
+                    const cells = this.isDetailView
+                        ? [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
+                           cpu.multi_score.toLocaleString(), cpu.multi_threads, cpu.file_name]
+                        : [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
+                           cpu.multi_score.toLocaleString()];
+                    return `
+                        <tr>
+                            ${cells.map((cell, index) => {
+                                let className = '';
+                                if (index === 2) className = 'score-cell score-single';
+                                else if (index === 3) className = 'score-cell score-multi';
+                                return `<td class="${className}">${cell}</td>`;
+                            }).join('')}
+                        </tr>
+                    `;
+                }).join('');
+                return `
+                    <table class="cpu-table">
+                        <thead>
+                            <tr>
+                                ${headers.map(header => `<th>${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            }
+            setViewMode(isDetail) {
+                this.isDetailView = isDetail;
+                document.getElementById('compactView').classList.toggle('active', !isDetail);
+                document.getElementById('detailView').classList.toggle('active', isDetail);
+                this.renderGroups();
+            }
+        }
+        // 初始化应用
+        new CPUDashboard();
+    </script>
+</body>
+</html>
