@@ -7,9 +7,9 @@ toolchain go1.24.2
 require (
 	github.com/imroc/req/v3 v3.50.0
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841
-	github.com/oneclickvirt/UnlockTests v0.0.26-20250329125926
+	github.com/oneclickvirt/UnlockTests v0.0.27-20250628125053
 	github.com/oneclickvirt/backtrace v0.0.5-20250517095024
-	github.com/oneclickvirt/basics v0.0.12-20250521031609
+	github.com/oneclickvirt/basics v0.0.13-20250628134234
 	github.com/oneclickvirt/cputest v0.0.10-20250404151448
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.8-20250425015826
