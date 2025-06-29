@@ -387,8 +387,7 @@ func handleLanguageSpecificSettings() {
 	}
 }
 
-func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool) {
-	*startTime = time.Now()
+func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
 	case <-sig:
 		if !finish {
@@ -397,21 +396,23 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 			minutes := int(duration.Minutes())
 			seconds := int(duration.Seconds()) % 60
 			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-			var mu sync.Mutex
-			mu.Lock()
+			outputMutex.Lock()
 			*output = utils.PrintAndCapture(func() {
 				utils.PrintCenteredTitle("", width)
 				fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
 				fmt.Printf("Current Time          : %s\n", currentTime)
 				utils.PrintCenteredTitle("", width)
 			}, tempOutput, *output)
-			mu.Unlock()
+			outputMutex.Unlock()
 			resultChan := make(chan struct {
 				httpURL  string
 				httpsURL string
 			}, 1)
 			go func() {
-				httpURL, httpsURL := utils.ProcessAndUpload(*output, filePath, enabelUpload)
+				outputMutex.Lock()
+				finalOutput := *output
+				outputMutex.Unlock()
+				httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, filePath, enabelUpload)
 				resultChan <- struct {
 					httpURL  string
 					httpsURL string
@@ -434,7 +435,11 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 				}
 				os.Exit(0)
 			case <-time.After(30 * time.Second):
-				fmt.Println("上传超时，程序退出")
+				if language == "en" {
+					fmt.Println("Upload timeout, program exit")
+				} else {
+					fmt.Println("上传超时，程序退出")
+				}
 				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 					fmt.Println("Press Enter to exit...")
 					fmt.Scanln()
@@ -446,11 +451,11 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 	}
 }
 
-func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output, tempOutput string, startTime time.Time) string {
-	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput)
-	output = runCPUTest(output, tempOutput)
-	output = runMemoryTest(output, tempOutput)
-	output = runDiskTest(output, tempOutput)
+func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
+	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput, outputMutex)
+	output = runCPUTest(output, tempOutput, outputMutex)
+	output = runMemoryTest(output, tempOutput, outputMutex)
+	output = runDiskTest(output, tempOutput, outputMutex)
 	if (onlyChinaTest || pingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg3.Add(1)
 		go func() {
@@ -458,14 +463,14 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 			*ptInfo = pt.PingTest()
 		}()
 	}
-	if emailTestStatus {
+	if emailTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg2.Add(1)
 		go func() {
 			defer wg2.Done()
 			*emailInfo = email.EmailCheck()
 		}()
 	}
-	if utTestStatus && !onlyChinaTest {
+	if utTestStatus && !onlyChinaTest && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
@@ -473,24 +478,24 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 		}()
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput)
-		output = runSecurityTests(*securityInfo, output, tempOutput)
-		output = runEmailTests(wg2, *emailInfo, output, tempOutput)
+		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput, outputMutex)
+		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
+		output = runEmailTests(wg2, *emailInfo, output, tempOutput, outputMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runNetworkTests(wg3, *ptInfo, output, tempOutput)
+		output = runNetworkTests(wg3, *ptInfo, output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runSpeedTests(output, tempOutput)
+		output = runSpeedTests(output, tempOutput, outputMutex)
 	}
-	return appendTimeInfo(output, tempOutput, startTime)
+	return appendTimeInfo(output, tempOutput, startTime, outputMutex)
 }
 
-func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output, tempOutput string, startTime time.Time) string {
-	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput)
-	output = runCPUTest(output, tempOutput)
-	output = runMemoryTest(output, tempOutput)
-	output = runDiskTest(output, tempOutput)
+func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
+	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput, outputMutex)
+	output = runCPUTest(output, tempOutput, outputMutex)
+	output = runMemoryTest(output, tempOutput, outputMutex)
+	output = runDiskTest(output, tempOutput, outputMutex)
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		if utTestStatus {
 			wg1.Add(1)
@@ -506,15 +511,15 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 				*emailInfo = email.EmailCheck()
 			}()
 		}
-		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput)
-		output = runSecurityTests(*securityInfo, output, tempOutput)
-		output = runEmailTests(wg2, *emailInfo, output, tempOutput)
-		output = runEnglishSpeedTests(output, tempOutput)
+		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput, outputMutex)
+		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
+		output = runEmailTests(wg2, *emailInfo, output, tempOutput, outputMutex)
+		output = runEnglishSpeedTests(output, tempOutput, outputMutex)
 	}
-	return appendTimeInfo(output, tempOutput, startTime)
+	return appendTimeInfo(output, tempOutput, startTime, outputMutex)
 }
 
-func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string) string {
+func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		utils.PrintHead(language, width, ecsVersion)
 		if basicStatus || securityTestStatus {
@@ -550,7 +555,7 @@ func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *strin
 	}, tempOutput, output)
 }
 
-func runCPUTest(output, tempOutput string) string {
+func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if cpuTestStatus {
 			if language == "zh" {
@@ -563,7 +568,7 @@ func runCPUTest(output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func runMemoryTest(output, tempOutput string) string {
+func runMemoryTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if memoryTestStatus {
 			if language == "zh" {
@@ -576,7 +581,7 @@ func runMemoryTest(output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func runDiskTest(output, tempOutput string) string {
+func runDiskTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if diskTestStatus && autoChangeDiskTestMethod {
 			if language == "zh" {
@@ -601,7 +606,7 @@ func runDiskTest(output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput string) string {
+func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if language == "zh" {
 			if commTestStatus && !onlyChinaTest {
@@ -610,18 +615,20 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput
 			}
 		}
 		if utTestStatus && (language == "zh" && !onlyChinaTest || language == "en") {
+			wg1.Wait()
 			if language == "zh" {
 				utils.PrintCenteredTitle("跨国流媒体解锁", width)
 			} else {
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
 			}
 			fmt.Printf("%s", mediaInfo)
+		} else {
+			wg1.Wait()
 		}
-		wg1.Wait()
 	}, tempOutput, output)
 }
 
-func runSecurityTests(securityInfo string, output, tempOutput string) string {
+func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if securityTestStatus {
 			if language == "zh" {
@@ -634,21 +641,23 @@ func runSecurityTests(securityInfo string, output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput string) string {
+func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if emailTestStatus {
+			wg2.Wait()
 			if language == "zh" {
 				utils.PrintCenteredTitle("邮件端口检测", width)
 			} else {
 				utils.PrintCenteredTitle("Email-Port-Check", width)
 			}
 			fmt.Println(emailInfo)
+		} else {
+			wg2.Wait()
 		}
-		wg2.Wait()
 	}, tempOutput, output)
 }
 
-func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput string) string {
+func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程线路检测", width)
@@ -667,14 +676,16 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput stri
 	}, tempOutput, output)
 	return utils.PrintAndCapture(func() {
 		if onlyChinaTest || pingTestStatus {
+			wg3.Wait()
 			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
 			fmt.Println(ptInfo)
+		} else {
+			wg3.Wait()
 		}
-		wg3.Wait()
 	}, tempOutput, output)
 }
 
-func runSpeedTests(output, tempOutput string) string {
+func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("就近节点测速", width)
@@ -694,7 +705,7 @@ func runSpeedTests(output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func runEnglishSpeedTests(output, tempOutput string) string {
+func runEnglishSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("Speed-Test", width)
@@ -705,7 +716,7 @@ func runEnglishSpeedTests(output, tempOutput string) string {
 	}, tempOutput, output)
 }
 
-func appendTimeInfo(output, tempOutput string, startTime time.Time) string {
+func appendTimeInfo(output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	minutes := int(duration.Minutes())
@@ -750,21 +761,21 @@ func main() {
 	}
 	handleLanguageSpecificSettings()
 	var (
-		startTime                                             time.Time
 		wg1, wg2, wg3                                         sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
 		output, tempOutput                                    string
+		outputMutex                                           sync.Mutex
 	)
+	startTime := time.Now()
 	uploadDone := make(chan bool, 1)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	go handleSignalInterrupt(sig, &startTime, &output, tempOutput, uploadDone)
-	startTime = time.Now()
+	go handleSignalInterrupt(sig, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch language {
 	case "zh":
-		output = runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, output, tempOutput, startTime)
+		output = runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, output, tempOutput, startTime, &outputMutex)
 	case "en":
-		output = runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, output, tempOutput, startTime)
+		output = runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, output, tempOutput, startTime, &outputMutex)
 	default:
 		fmt.Println("Unsupported language")
 	}
