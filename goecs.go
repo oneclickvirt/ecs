@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.41"
+	ecsVersion                                                        = "v0.1.42"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -470,7 +470,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 			*emailInfo = email.EmailCheck()
 		}()
 	}
-	if utTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+	if utTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" && !onlyChinaTest {
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
@@ -622,8 +622,6 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
 			}
 			fmt.Printf("%s", mediaInfo)
-		} else {
-			wg1.Wait()
 		}
 	}, tempOutput, output)
 }
@@ -651,8 +649,6 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput str
 				utils.PrintCenteredTitle("Email-Port-Check", width)
 			}
 			fmt.Println(emailInfo)
-		} else {
-			wg2.Wait()
 		}
 	}, tempOutput, output)
 }
@@ -679,8 +675,6 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput stri
 			wg3.Wait()
 			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
 			fmt.Println(ptInfo)
-		} else {
-			wg3.Wait()
 		}
 	}, tempOutput, output)
 }
