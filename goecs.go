@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.42"
+	ecsVersion                                                        = "v0.1.43"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -478,12 +478,12 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 		}()
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput, outputMutex)
+		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex)
 		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
-		output = runEmailTests(wg2, *emailInfo, output, tempOutput, outputMutex)
+		output = runEmailTests(wg2, emailInfo, output, tempOutput, outputMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runNetworkTests(wg3, *ptInfo, output, tempOutput, outputMutex)
+		output = runNetworkTests(wg3, ptInfo, output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		output = runSpeedTests(output, tempOutput, outputMutex)
@@ -511,9 +511,9 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 				*emailInfo = email.EmailCheck()
 			}()
 		}
-		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput, outputMutex)
+		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex)  // 传递指针
 		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
-		output = runEmailTests(wg2, *emailInfo, output, tempOutput, outputMutex)
+		output = runEmailTests(wg2, emailInfo, output, tempOutput, outputMutex)
 		output = runEnglishSpeedTests(output, tempOutput, outputMutex)
 	}
 	return appendTimeInfo(output, tempOutput, startTime, outputMutex)
@@ -606,7 +606,7 @@ func runDiskTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 	}, tempOutput, output)
 }
 
-func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if language == "zh" {
 			if commTestStatus && !onlyChinaTest {
@@ -621,7 +621,7 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput
 			} else {
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
 			}
-			fmt.Printf("%s", mediaInfo)
+			fmt.Printf("%s", *mediaInfo)
 		}
 	}, tempOutput, output)
 }
@@ -639,7 +639,7 @@ func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync
 	}, tempOutput, output)
 }
 
-func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	return utils.PrintAndCapture(func() {
 		if emailTestStatus {
 			wg2.Wait()
@@ -648,12 +648,12 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput str
 			} else {
 				utils.PrintCenteredTitle("Email-Port-Check", width)
 			}
-			fmt.Println(emailInfo)
+			fmt.Println(*emailInfo)
 		}
 	}, tempOutput, output)
 }
 
-func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程线路检测", width)
@@ -674,7 +674,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput stri
 		if onlyChinaTest || pingTestStatus {
 			wg3.Wait()
 			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
-			fmt.Println(ptInfo)
+			fmt.Println(*ptInfo)
 		}
 	}, tempOutput, output)
 }
