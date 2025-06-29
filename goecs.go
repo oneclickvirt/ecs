@@ -615,9 +615,9 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput
 			} else {
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
 			}
-			wg1.Wait()
 			fmt.Printf("%s", mediaInfo)
 		}
+		wg1.Wait()
 	}, tempOutput, output)
 }
 
@@ -642,9 +642,9 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput str
 			} else {
 				utils.PrintCenteredTitle("Email-Port-Check", width)
 			}
-			wg2.Wait()
 			fmt.Println(emailInfo)
 		}
+		wg2.Wait()
 	}, tempOutput, output)
 }
 
@@ -668,9 +668,9 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput stri
 	return utils.PrintAndCapture(func() {
 		if onlyChinaTest || pingTestStatus {
 			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
-			wg3.Wait()
 			fmt.Println(ptInfo)
 		}
+		wg3.Wait()
 	}, tempOutput, output)
 }
 
