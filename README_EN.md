@@ -368,7 +368,7 @@ Thank [he.net](https://he.net) [bgp.tools](https://bgp.tools) [ipinfo.io](https:
 Thank
 
 <a href="https://h501.io/?from=69" target="_blank">
-  <img src="https://github.com/spiritLHLS/ecs/assets/103393591/dfd47230-2747-4112-be69-b5636b34f07f" alt="h501">
+  <img src="https://github.com/spiritLHLS/ecs/assets/103393591/dfd47230-2747-4112-be69-b5636b34f07f" alt="h501" style="height: 50px;">
 </a>
 
 provided free hosting support for this open source project's shared test results storage
@@ -376,15 +376,15 @@ provided free hosting support for this open source project's shared test results
 Thanks also to the following platforms for editorial and testing support
 
 <a href="https://www.jetbrains.com/go/" target="_blank">
-  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png" alt="goland">
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/GoLand.png" alt="goland" style="height: 50px;">
 </a>
 
 <a href="https://community.ibm.com/zsystems/form/l1cc-oss-vm-request/" target="_blank">
-  <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm">
+  <img src="https://linuxone.cloud.marist.edu/oss/resources/images/linuxonelogo03.png" alt="ibm" style="height: 50px;">
 </a>
 
 <a href="https://console.zmto.com/?affid=1524" target="_blank">
-  <img src="https://console.zmto.com/templates/2019/dist/images/logo_dark.svg" alt="zmto">
+  <img src="https://console.zmto.com/templates/2019/dist/images/logo_dark.svg" alt="zmto" style="height: 50px;">
 </a>
 
 ## Stargazers over time
