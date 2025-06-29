@@ -470,7 +470,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 			*emailInfo = email.EmailCheck()
 		}()
 	}
-	if utTestStatus && !onlyChinaTest && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+	if utTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
