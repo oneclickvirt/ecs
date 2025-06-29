@@ -6,7 +6,9 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
     goos:
       - linux
       - windows
@@ -34,6 +36,8 @@ builds:
       - CXX=o64-clang++
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
     goos:
       - darwin
     goarch:
@@ -47,6 +51,8 @@ builds:
       - CXX=oa64-clang++
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
     goos:
       - darwin
     goarch:
