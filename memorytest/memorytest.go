@@ -31,5 +31,5 @@ func MemoryTest(language, testMethod string) {
 	if !strings.Contains(res, "\n") && res != "" {
 		res += "\n"
 	}
-	fmt.Printf(res)
+	fmt.Printf("%s", res)
 }

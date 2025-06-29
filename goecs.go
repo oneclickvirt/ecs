@@ -5,9 +5,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"regexp"
+	"runtime"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
-	"github.com/oneclickvirt/backtrace/bk"
+	backtrace "github.com/oneclickvirt/backtrace/bk"
 	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
@@ -26,19 +36,10 @@ import (
 	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
 	speedtestmodel "github.com/oneclickvirt/speedtest/model"
-	"net/http"
-	"os"
-	"os/signal"
-	"regexp"
-	"runtime"
-	"strings"
-	"sync"
-	"syscall"
-	"time"
 )
 
 var (
-	ecsVersion                                                        = "v0.1.37"
+	ecsVersion                                                        = "v0.1.38"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -79,7 +80,6 @@ func getMenuChoice(language string) string {
 			return
 		}
 	}()
-
 	for {
 		go func() {
 			var input string
@@ -95,7 +95,7 @@ func getMenuChoice(language string) string {
 		}()
 		select {
 		case input := <-inputChan:
-			re := regexp.MustCompile(`^\d+$`) // 正则表达式匹配纯数字
+			re := regexp.MustCompile(`^\d+$`)
 			if re.MatchString(input) {
 				inChoice := input
 				switch inChoice {
@@ -121,7 +121,7 @@ func getMenuChoice(language string) string {
 	}
 }
 
-func main() {
+func parseFlags() {
 	goecsFlag.BoolVar(&help, "h", false, "Show help information")
 	goecsFlag.BoolVar(&showVersion, "v", false, "Display version information")
 	goecsFlag.BoolVar(&menuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false") // true 默认启用菜单栏模式
@@ -149,15 +149,22 @@ func main() {
 	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
 	goecsFlag.BoolVar(&enabelUpload, "upload", true, "Enable/Disable upload the result")
 	goecsFlag.Parse(os.Args[1:])
+}
+
+func handleHelpAndVersion() bool {
 	if help {
 		fmt.Printf("Usage: %s [options]\n", os.Args[0])
 		goecsFlag.PrintDefaults()
-		return
+		return true
 	}
 	if showVersion {
 		fmt.Println(ecsVersion)
-		return
+		return true
 	}
+	return false
+}
+
+func initLogger() {
 	if enableLogger {
 		gostunmodel.EnableLoger = true
 		basicmodel.EnableLoger = true
@@ -171,129 +178,206 @@ func main() {
 		nt3model.EnableLoger = true
 		speedtestmodel.EnableLoger = true
 	}
-	go func() {
-		http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
-	}()
-	if menuMode {
-		basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
-		commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
-		backtraceStatus, nt3Status, speedTestStatus = false, false, false
-		autoChangeDiskTestMethod = true
-		switch language {
-		case "zh":
-			fmt.Println("VPS融合怪版本: ", ecsVersion)
-			fmt.Println("1. 融合怪完全体")
-			fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
-			fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
-			fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
-			fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
-			fmt.Println("6. 网络单项(IP质量检测+三网回程+三网路由与延迟+测速节点11个)")
-			fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
-			fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
-			fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
-			fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
-		case "en":
-			fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
-			fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
-			fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
-			fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
-			fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
-			fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
-			fmt.Println("6. Network-Only Test (IP Quality Test + 5 Speed Test Nodes)")
-			fmt.Println("7. Unlock-Only Test (Basic Unlock Tests + Common Streaming Services Unlock)")
-			fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
-			fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
-		}
-	Loop:
-		for {
-			choice = getMenuChoice(language)
-			switch choice {
-			case "1":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				commTestStatus = true
-				utTestStatus = true
-				securityTestStatus = true
-				emailTestStatus = true
-				backtraceStatus = true
-				nt3Status = true
-				speedTestStatus = true
-				onlyChinaTest = utils.CheckChina(enableLogger)
-				break Loop
-			case "2":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				speedTestStatus = true
-				break Loop
-			case "3":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				utTestStatus = true
-				nt3Status = true
-				speedTestStatus = true
-				break Loop
-			case "4":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				backtraceStatus = true
-				nt3Status = true
-				speedTestStatus = true
-				break Loop
-			case "5":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				commTestStatus = true
-				utTestStatus = true
-				speedTestStatus = true
-				break Loop
-			case "6":
-				securityTestStatus = true
-				speedTestStatus = true
-				backtraceStatus = true
-				nt3Status = true
-				break Loop
-			case "7":
-				commTestStatus = true
-				utTestStatus = true
-				enabelUpload = false
-				break Loop
-			case "8":
-				basicStatus = true
-				cpuTestStatus = true
-				memoryTestStatus = true
-				diskTestStatus = true
-				securityTestStatus = false
-				autoChangeDiskTestMethod = false
-				break Loop
-			case "9":
-				securityTestStatus = true
-				emailTestStatus = true
-				break Loop
-			case "10":
-				backtraceStatus = true
-				nt3Status = true
-				pingTestStatus = true
-				enabelUpload = false
-				break Loop
-			default:
-				if language == "zh" {
-					fmt.Println("无效的选项")
-				} else {
-					fmt.Println("Invalid choice")
-				}
+}
+
+func handleMenuMode(preCheck utils.NetCheckResult) {
+	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
+	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
+	backtraceStatus, nt3Status, speedTestStatus = false, false, false
+	autoChangeDiskTestMethod = true
+	printMenuOptions()
+Loop:
+	for {
+		choice = getMenuChoice(language)
+		switch choice {
+		case "1":
+			setFullTestStatus(preCheck)
+			onlyChinaTest = utils.CheckChina(enableLogger)
+			break Loop
+		case "2":
+			setMinimalTestStatus(preCheck)
+			break Loop
+		case "3":
+			setStandardTestStatus(preCheck)
+			break Loop
+		case "4":
+			setNetworkFocusedTestStatus(preCheck)
+			break Loop
+		case "5":
+			setUnlockFocusedTestStatus(preCheck)
+			break Loop
+		case "6":
+			if !preCheck.Connected {
+				fmt.Println("Can not test without network connection!")
+				return
 			}
+			setNetworkOnlyTestStatus()
+			break Loop
+		case "7":
+			if !preCheck.Connected {
+				fmt.Println("Can not test without network connection!")
+				return
+			}
+			setUnlockOnlyTestStatus()
+			break Loop
+		case "8":
+			setHardwareOnlyTestStatus(preCheck)
+			break Loop
+		case "9":
+			if !preCheck.Connected {
+				fmt.Println("Can not test without network connection!")
+				return
+			}
+			setIPQualityTestStatus()
+			break Loop
+		case "10":
+			if !preCheck.Connected {
+				fmt.Println("Can not test without network connection!")
+				return
+			}
+			setRouteTestStatus()
+			break Loop
+		default:
+			printInvalidChoice()
 		}
 	}
+}
+
+func printMenuOptions() {
+	switch language {
+	case "zh":
+		fmt.Println("VPS融合怪版本: ", ecsVersion)
+		fmt.Println("1. 融合怪完全体")
+		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
+		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
+		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
+		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
+		fmt.Println("6. 网络单项(IP质量检测+三网回程+三网路由与延迟+测速节点11个)")
+		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
+		fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
+		fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
+		fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
+	case "en":
+		fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
+		fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
+		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
+		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
+		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
+		fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
+		fmt.Println("6. Network-Only Test (IP Quality Test + 5 Speed Test Nodes)")
+		fmt.Println("7. Unlock-Only Test (Basic Unlock Tests + Common Streaming Services Unlock)")
+		fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
+		fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
+	}
+}
+
+func setFullTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		commTestStatus = true
+		utTestStatus = true
+		securityTestStatus = true
+		emailTestStatus = true
+		backtraceStatus = true
+		nt3Status = true
+		speedTestStatus = true
+	}
+}
+
+func setMinimalTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		speedTestStatus = true
+	}
+}
+
+func setStandardTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		utTestStatus = true
+		nt3Status = true
+		speedTestStatus = true
+	}
+}
+
+func setNetworkFocusedTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		backtraceStatus = true
+		nt3Status = true
+		speedTestStatus = true
+	}
+}
+
+func setUnlockFocusedTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		commTestStatus = true
+		utTestStatus = true
+		speedTestStatus = true
+	}
+}
+
+func setNetworkOnlyTestStatus() {
+	securityTestStatus = true
+	speedTestStatus = true
+	backtraceStatus = true
+	nt3Status = true
+}
+
+func setUnlockOnlyTestStatus() {
+	commTestStatus = true
+	utTestStatus = true
+	enabelUpload = false
+}
+
+func setHardwareOnlyTestStatus(preCheck utils.NetCheckResult) {
+	basicStatus = true
+	cpuTestStatus = true
+	memoryTestStatus = true
+	diskTestStatus = true
+	if preCheck.Connected {
+		securityTestStatus = false
+		autoChangeDiskTestMethod = false
+	}
+}
+
+func setIPQualityTestStatus() {
+	securityTestStatus = true
+	emailTestStatus = true
+}
+
+func setRouteTestStatus() {
+	backtraceStatus = true
+	nt3Status = true
+	pingTestStatus = true
+	enabelUpload = false
+}
+
+func printInvalidChoice() {
+	if language == "zh" {
+		fmt.Println("无效的选项")
+	} else {
+		fmt.Println("Invalid choice")
+	}
+}
+
+func handleLanguageSpecificSettings() {
 	if language == "en" {
 		backtraceStatus = false
 		nt3Status = false
@@ -301,325 +385,346 @@ func main() {
 	if !enabelUpload {
 		securityTestStatus = false
 	}
-	var (
-		startTime                                             time.Time
-		wg1, wg2, wg3                                         sync.WaitGroup
-		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
-		output, tempOutput                                    string
-	)
-	// 信号处理部分
-	uploadDone := make(chan bool, 1)
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	// 启动一个goroutine来等待信号
-	go func() {
-		startTime = time.Now()
-		select {
-		case <-sig:
-			if !finish {
-				endTime := time.Now()
-				duration := endTime.Sub(startTime)
-				minutes := int(duration.Minutes())
-				seconds := int(duration.Seconds()) % 60
-				currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-				var mu sync.Mutex
-				mu.Lock()
-				output = utils.PrintAndCapture(func() {
-					utils.PrintCenteredTitle("", width)
-					fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
-					fmt.Printf("Current Time          : %s\n", currentTime)
-					utils.PrintCenteredTitle("", width)
-				}, tempOutput, output)
-				mu.Unlock()
-				// 创建一个通道来传递上传结果
-				resultChan := make(chan struct {
+}
+
+func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool) {
+	*startTime = time.Now()
+	select {
+	case <-sig:
+		if !finish {
+			endTime := time.Now()
+			duration := endTime.Sub(*startTime)
+			minutes := int(duration.Minutes())
+			seconds := int(duration.Seconds()) % 60
+			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+			var mu sync.Mutex
+			mu.Lock()
+			*output = utils.PrintAndCapture(func() {
+				utils.PrintCenteredTitle("", width)
+				fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
+				fmt.Printf("Current Time          : %s\n", currentTime)
+				utils.PrintCenteredTitle("", width)
+			}, tempOutput, *output)
+			mu.Unlock()
+			resultChan := make(chan struct {
+				httpURL  string
+				httpsURL string
+			}, 1)
+			go func() {
+				httpURL, httpsURL := utils.ProcessAndUpload(*output, filePath, enabelUpload)
+				resultChan <- struct {
 					httpURL  string
 					httpsURL string
-				}, 1) // 使用带缓冲的通道，避免可能的阻塞
-				// 启动上传
-				go func() {
-					httpURL, httpsURL := utils.ProcessAndUpload(output, filePath, enabelUpload)
-					resultChan <- struct {
-						httpURL  string
-						httpsURL string
-					}{httpURL, httpsURL}
-					uploadDone <- true
-				}()
-				// 等待上传完成或超时
-				select {
-				case result := <-resultChan:
-					if result.httpURL != "" || result.httpsURL != "" {
-						if language == "en" {
-							fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
-						} else {
-							fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
-						}
+				}{httpURL, httpsURL}
+				uploadDone <- true
+			}()
+			select {
+			case result := <-resultChan:
+				if result.httpURL != "" || result.httpsURL != "" {
+					if language == "en" {
+						fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+					} else {
+						fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
 					}
-					// 给打印操作一些时间完成
-					time.Sleep(100 * time.Millisecond)
-					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-						fmt.Println("Press Enter to exit...")
-						fmt.Scanln()
-					}
-					os.Exit(0)
-				case <-time.After(30 * time.Second):
-					fmt.Println("上传超时，程序退出")
-					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-						fmt.Println("Press Enter to exit...")
-						fmt.Scanln()
-					}
-					os.Exit(1)
 				}
+				time.Sleep(100 * time.Millisecond)
+				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+					fmt.Println("Press Enter to exit...")
+					fmt.Scanln()
+				}
+				os.Exit(0)
+			case <-time.After(30 * time.Second):
+				fmt.Println("上传超时，程序退出")
+				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+					fmt.Println("Press Enter to exit...")
+					fmt.Scanln()
+				}
+				os.Exit(1)
 			}
-			os.Exit(0)
 		}
-	}()
-	switch language {
-	case "zh":
-		output = utils.PrintAndCapture(func() {
-			utils.PrintHead(language, width, ecsVersion)
-			if basicStatus || securityTestStatus {
-				if basicStatus {
-					utils.PrintCenteredTitle("系统基础信息", width)
-				}
-				basicInfo, securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
-				if basicStatus {
-					fmt.Printf(basicInfo)
-				} else if (input == "6" || input == "9") && securityTestStatus {
-					scanner := bufio.NewScanner(strings.NewReader(basicInfo))
-					for scanner.Scan() {
-						line := scanner.Text()
-						if strings.Contains(line, "IPV") {
-							fmt.Println(line)
-						}
-					}
-				}
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if cpuTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
-				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if memoryTestStatus {
-				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", memoryTestMethod), width)
-				memorytest.MemoryTest(language, memoryTestMethod)
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if diskTestStatus && autoChangeDiskTestMethod {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
-			} else if diskTestStatus && !autoChangeDiskTestMethod {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), width)
-				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), width)
-				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
-			}
-		}, tempOutput, output)
-		if onlyChinaTest || pingTestStatus {
-			wg3.Add(1)
+		os.Exit(0)
+	}
+}
+
+func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output, tempOutput string, startTime time.Time) string {
+	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput)
+	output = runCPUTest(output, tempOutput)
+	output = runMemoryTest(output, tempOutput)
+	output = runDiskTest(output, tempOutput)
+	if (onlyChinaTest || pingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		wg3.Add(1)
+		go func() {
+			defer wg3.Done()
+			*ptInfo = pt.PingTest()
+		}()
+	}
+	if emailTestStatus {
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			*emailInfo = email.EmailCheck()
+		}()
+	}
+	if utTestStatus && !onlyChinaTest {
+		wg1.Add(1)
+		go func() {
+			defer wg1.Done()
+			*mediaInfo = unlocktest.MediaTest(language)
+		}()
+	}
+	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput)
+		output = runSecurityTests(*securityInfo, output, tempOutput)
+		output = runEmailTests(wg2, *emailInfo, output, tempOutput)
+	}
+	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		output = runNetworkTests(wg3, *ptInfo, output, tempOutput)
+	}
+	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		output = runSpeedTests(output, tempOutput)
+	}
+	return appendTimeInfo(output, tempOutput, startTime)
+}
+
+func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output, tempOutput string, startTime time.Time) string {
+	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput)
+	output = runCPUTest(output, tempOutput)
+	output = runMemoryTest(output, tempOutput)
+	output = runDiskTest(output, tempOutput)
+	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		if utTestStatus {
+			wg1.Add(1)
 			go func() {
-				defer wg3.Done()
-				ptInfo = pt.PingTest()
+				defer wg1.Done()
+				*mediaInfo = unlocktest.MediaTest(language)
 			}()
 		}
 		if emailTestStatus {
 			wg2.Add(1)
 			go func() {
 				defer wg2.Done()
-				emailInfo = email.EmailCheck()
+				*emailInfo = email.EmailCheck()
 			}()
 		}
-		if utTestStatus && !onlyChinaTest {
-			wg1.Add(1)
-			go func() {
-				defer wg1.Done()
-				mediaInfo = unlocktest.MediaTest(language)
-			}()
-		}
-		output = utils.PrintAndCapture(func() {
-			if commTestStatus && !onlyChinaTest {
-				utils.PrintCenteredTitle("御三家流媒体解锁", width)
-				fmt.Printf(commediatests.MediaTests(language))
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if utTestStatus && !onlyChinaTest {
-				utils.PrintCenteredTitle("跨国流媒体解锁", width)
-				wg1.Wait()
-				fmt.Printf(mediaInfo)
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if securityTestStatus {
-				utils.PrintCenteredTitle("IP质量检测", width)
-				fmt.Printf(securityInfo)
-			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if emailTestStatus {
-				utils.PrintCenteredTitle("邮件端口检测", width)
-				wg2.Wait()
-				fmt.Println(emailInfo)
-			}
-		}, tempOutput, output)
-		if runtime.GOOS != "windows" {
-			output = utils.PrintAndCapture(func() {
-				if backtraceStatus && !onlyChinaTest {
-					utils.PrintCenteredTitle("三网回程线路检测", width)
-					if strings.Contains(output, "IPV6") {
-						backtrace.BackTrace(true)
-					} else {
-						backtrace.BackTrace(false)
-					}
-				}
-			}, tempOutput, output)
-			// nexttrace 在win上不支持检测，报错 bind: An invalid argument was supplied.
-			output = utils.PrintAndCapture(func() {
-				if nt3Status && !onlyChinaTest {
-					utils.PrintCenteredTitle("三网回程路由检测", width)
-					nt.TraceRoute(language, nt3Location, nt3CheckType)
-				}
-			}, tempOutput, output)
-			output = utils.PrintAndCapture(func() {
-				if onlyChinaTest || pingTestStatus {
-					utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
-					wg3.Wait()
-					fmt.Println(ptInfo)
-				}
-			}, tempOutput, output)
-		}
-		output = utils.PrintAndCapture(func() {
-			if speedTestStatus {
-				utils.PrintCenteredTitle("就近节点测速", width)
-				speedtest.ShowHead(language)
-				if choice == "1" || !menuMode {
-					speedtest.NearbySP()
-					speedtest.CustomSP("net", "global", 2, language)
-					speedtest.CustomSP("net", "cu", spNum, language)
-					speedtest.CustomSP("net", "ct", spNum, language)
-					speedtest.CustomSP("net", "cmcc", spNum, language)
-				} else if choice == "2" || choice == "3" || choice == "4" || choice == "5" {
-					speedtest.CustomSP("net", "global", 4, language)
-				} else if choice == "6" {
-					speedtest.CustomSP("net", "global", 11, language)
-				}
-			}
-		}, tempOutput, output)
-		endTime := time.Now()
-		duration := endTime.Sub(startTime)
-		minutes := int(duration.Minutes())
-		seconds := int(duration.Seconds()) % 60
-		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-		output = utils.PrintAndCapture(func() {
-			utils.PrintCenteredTitle("", width)
-			fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
-			fmt.Printf("时间          : %s\n", currentTime)
-			utils.PrintCenteredTitle("", width)
-		}, tempOutput, output)
-	case "en":
-		output = utils.PrintAndCapture(func() {
-			utils.PrintHead(language, width, ecsVersion)
-			if basicStatus || securityTestStatus {
-				if basicStatus {
+		output = runStreamingTests(wg1, *mediaInfo, output, tempOutput)
+		output = runSecurityTests(*securityInfo, output, tempOutput)
+		output = runEmailTests(wg2, *emailInfo, output, tempOutput)
+		output = runEnglishSpeedTests(output, tempOutput)
+	}
+	return appendTimeInfo(output, tempOutput, startTime)
+}
+
+func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		utils.PrintHead(language, width, ecsVersion)
+		if basicStatus || securityTestStatus {
+			if basicStatus {
+				if language == "zh" {
+					utils.PrintCenteredTitle("系统基础信息", width)
+				} else {
 					utils.PrintCenteredTitle("System-Basic-Information", width)
 				}
-				basicInfo, securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
-				if basicStatus {
-					fmt.Printf(basicInfo)
-				} else if (input == "6" || input == "9") && securityTestStatus {
-					scanner := bufio.NewScanner(strings.NewReader(basicInfo))
-					for scanner.Scan() {
-						line := scanner.Text()
-						if strings.Contains(line, "IPV") {
-							fmt.Println(line)
-						}
+			}
+			if preCheck.Connected && preCheck.StackType == "DualStack" {
+				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
+			} else if preCheck.Connected && preCheck.StackType == "IPv4" {
+				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv4", securityTestStatus)
+			} else if preCheck.Connected && preCheck.StackType == "IPv6" {
+				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv6", securityTestStatus)
+			} else {
+				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "", false)
+				securityTestStatus = false
+			}
+			if basicStatus {
+				fmt.Printf("%s", *basicInfo)
+			} else if (input == "6" || input == "9") && securityTestStatus {
+				scanner := bufio.NewScanner(strings.NewReader(*basicInfo))
+				for scanner.Scan() {
+					line := scanner.Text()
+					if strings.Contains(line, "IPV") {
+						fmt.Println(line)
 					}
 				}
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if cpuTestStatus {
+		}
+	}, tempOutput, output)
+}
+
+func runCPUTest(output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if cpuTestStatus {
+			if language == "zh" {
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
+			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", cpuTestMethod), width)
-				cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if memoryTestStatus {
+			cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+		}
+	}, tempOutput, output)
+}
+
+func runMemoryTest(output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if memoryTestStatus {
+			if language == "zh" {
+				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", memoryTestMethod), width)
+			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("Memory-Test--%s-Method", memoryTestMethod), width)
-				memorytest.MemoryTest(language, memoryTestMethod)
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if diskTestStatus && autoChangeDiskTestMethod {
+			memorytest.MemoryTest(language, memoryTestMethod)
+		}
+	}, tempOutput, output)
+}
+
+func runDiskTest(output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if diskTestStatus && autoChangeDiskTestMethod {
+			if language == "zh" {
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
+			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", diskTestMethod), width)
-				disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
-			} else if diskTestStatus && !autoChangeDiskTestMethod {
+			}
+			disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+		} else if diskTestStatus && !autoChangeDiskTestMethod {
+			if language == "zh" {
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), width)
+				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), width)
+				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "dd"), width)
 				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "fio"), width)
 				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
 			}
-		}, tempOutput, output)
-		if utTestStatus {
-			wg1.Add(1)
-			go func() {
-				defer wg1.Done()
-				mediaInfo = unlocktest.MediaTest(language)
-			}()
 		}
-		if emailTestStatus {
-			wg2.Add(1)
-			go func() {
-				defer wg2.Done()
-				emailInfo = email.EmailCheck()
-			}()
+	}, tempOutput, output)
+}
+
+func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo string, output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if language == "zh" {
+			if commTestStatus && !onlyChinaTest {
+				utils.PrintCenteredTitle("御三家流媒体解锁", width)
+				fmt.Printf("%s", commediatests.MediaTests(language))
+			}
 		}
-		output = utils.PrintAndCapture(func() {
-			if utTestStatus {
+		if utTestStatus && (language == "zh" && !onlyChinaTest || language == "en") {
+			if language == "zh" {
+				utils.PrintCenteredTitle("跨国流媒体解锁", width)
+			} else {
 				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", width)
-				wg1.Wait()
-				fmt.Printf(mediaInfo)
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if securityTestStatus {
+			wg1.Wait()
+			fmt.Printf("%s", mediaInfo)
+		}
+	}, tempOutput, output)
+}
+
+func runSecurityTests(securityInfo string, output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if securityTestStatus {
+			if language == "zh" {
+				utils.PrintCenteredTitle("IP质量检测", width)
+			} else {
 				utils.PrintCenteredTitle("IP-Quality-Check", width)
-				fmt.Printf(securityInfo)
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if emailTestStatus {
+			fmt.Printf("%s", securityInfo)
+		}
+	}, tempOutput, output)
+}
+
+func runEmailTests(wg2 *sync.WaitGroup, emailInfo string, output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if emailTestStatus {
+			if language == "zh" {
+				utils.PrintCenteredTitle("邮件端口检测", width)
+			} else {
 				utils.PrintCenteredTitle("Email-Port-Check", width)
-				wg2.Wait()
-				fmt.Println(emailInfo)
 			}
-		}, tempOutput, output)
-		output = utils.PrintAndCapture(func() {
-			if speedTestStatus {
-				utils.PrintCenteredTitle("Speed-Test", width)
-				speedtest.ShowHead(language)
+			wg2.Wait()
+			fmt.Println(emailInfo)
+		}
+	}, tempOutput, output)
+}
+
+func runNetworkTests(wg3 *sync.WaitGroup, ptInfo string, output, tempOutput string) string {
+	output = utils.PrintAndCapture(func() {
+		if backtraceStatus && !onlyChinaTest {
+			utils.PrintCenteredTitle("三网回程线路检测", width)
+			if strings.Contains(output, "IPV6") {
+				backtrace.BackTrace(true)
+			} else {
+				backtrace.BackTrace(false)
+			}
+		}
+	}, tempOutput, output)
+	output = utils.PrintAndCapture(func() {
+		if nt3Status && !onlyChinaTest {
+			utils.PrintCenteredTitle("三网回程路由检测", width)
+			nt.TraceRoute(language, nt3Location, nt3CheckType)
+		}
+	}, tempOutput, output)
+	return utils.PrintAndCapture(func() {
+		if onlyChinaTest || pingTestStatus {
+			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
+			wg3.Wait()
+			fmt.Println(ptInfo)
+		}
+	}, tempOutput, output)
+}
+
+func runSpeedTests(output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if speedTestStatus {
+			utils.PrintCenteredTitle("就近节点测速", width)
+			speedtest.ShowHead(language)
+			if choice == "1" || !menuMode {
 				speedtest.NearbySP()
-				speedtest.CustomSP("net", "global", -1, language)
+				speedtest.CustomSP("net", "global", 2, language)
+				speedtest.CustomSP("net", "cu", spNum, language)
+				speedtest.CustomSP("net", "ct", spNum, language)
+				speedtest.CustomSP("net", "cmcc", spNum, language)
+			} else if choice == "2" || choice == "3" || choice == "4" || choice == "5" {
+				speedtest.CustomSP("net", "global", 4, language)
+			} else if choice == "6" {
+				speedtest.CustomSP("net", "global", 11, language)
 			}
-		}, tempOutput, output)
-		endTime := time.Now()
-		duration := endTime.Sub(startTime)
-		minutes := int(duration.Minutes())
-		seconds := int(duration.Seconds()) % 60
-		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
-		output = utils.PrintAndCapture(func() {
-			utils.PrintCenteredTitle("", width)
+		}
+	}, tempOutput, output)
+}
+
+func runEnglishSpeedTests(output, tempOutput string) string {
+	return utils.PrintAndCapture(func() {
+		if speedTestStatus {
+			utils.PrintCenteredTitle("Speed-Test", width)
+			speedtest.ShowHead(language)
+			speedtest.NearbySP()
+			speedtest.CustomSP("net", "global", -1, language)
+		}
+	}, tempOutput, output)
+}
+
+func appendTimeInfo(output, tempOutput string, startTime time.Time) string {
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	minutes := int(duration.Minutes())
+	seconds := int(duration.Seconds()) % 60
+	currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+	return utils.PrintAndCapture(func() {
+		utils.PrintCenteredTitle("", width)
+		if language == "zh" {
+			fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
+			fmt.Printf("时间          : %s\n", currentTime)
+		} else {
 			fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
 			fmt.Printf("Current Time          : %s\n", currentTime)
-			utils.PrintCenteredTitle("", width)
-		}, tempOutput, output)
-	default:
-		fmt.Println("Unsupported language")
-	}
+		}
+		utils.PrintCenteredTitle("", width)
+	}, tempOutput, output)
+}
+
+func handleUploadResults(output string) {
 	httpURL, httpsURL := utils.ProcessAndUpload(output, filePath, enabelUpload)
 	if httpURL != "" || httpsURL != "" {
 		if language == "en" {
@@ -628,6 +733,42 @@ func main() {
 			fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
 		}
 	}
+}
+
+func main() {
+	parseFlags()
+	if handleHelpAndVersion() {
+		return
+	}
+	initLogger()
+	go func() {
+		http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+	}()
+	preCheck := utils.CheckPublicAccess(3 * time.Second)
+	if menuMode {
+		handleMenuMode(preCheck)
+	}
+	handleLanguageSpecificSettings()
+	var (
+		startTime                                             time.Time
+		wg1, wg2, wg3                                         sync.WaitGroup
+		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
+		output, tempOutput                                    string
+	)
+	uploadDone := make(chan bool, 1)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go handleSignalInterrupt(sig, &startTime, &output, tempOutput, uploadDone)
+	startTime = time.Now()
+	switch language {
+	case "zh":
+		output = runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, output, tempOutput, startTime)
+	case "en":
+		output = runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, output, tempOutput, startTime)
+	default:
+		fmt.Println("Unsupported language")
+	}
+	handleUploadResults(output)
 	finish = true
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")

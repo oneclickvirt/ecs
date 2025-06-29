@@ -101,10 +101,10 @@ github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841 h1:Zef93z9UiZQwRA
 github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841/go.mod h1:DAmFPRjFV5p9fEzUUSml5jJGn2f1NZJQCzTxITHDjc4=
 github.com/oneclickvirt/UnlockTests v0.0.27-20250628125053 h1:Ug8kySZR1weRUcsnGOv+f3HAl791AfkA7EWV3JmiMQA=
 github.com/oneclickvirt/UnlockTests v0.0.27-20250628125053/go.mod h1:yXWIZB6iLS88pEd9m4QJi1GENn+7I91zA72y5ONz2Oc=
-github.com/oneclickvirt/backtrace v0.0.5-20250517095024 h1:j912aga/17znOqMB2VAxWOQYa4GL6YMFBhv+6c7jkvA=
-github.com/oneclickvirt/backtrace v0.0.5-20250517095024/go.mod h1:5AH00bo41hH3d2/JVuCTlBkZUs3AXX4nlKVXb6piZcI=
-github.com/oneclickvirt/basics v0.0.13-20250628134234 h1:ykbtiheQsN/lPc6z4X6oMYco4ZpDwQZ7z98jWnKi8oU=
-github.com/oneclickvirt/basics v0.0.13-20250628134234/go.mod h1:yN1IEOXN6v/GJqJSA70Pooo6nXBI/6rq72vTY72wJMQ=
+github.com/oneclickvirt/backtrace v0.0.5-20250629024536 h1:caHCa0DHmbYWBFN1bqKxpvPnN0wOxDEqJv1VDvDdLWs=
+github.com/oneclickvirt/backtrace v0.0.5-20250629024536/go.mod h1:5AH00bo41hH3d2/JVuCTlBkZUs3AXX4nlKVXb6piZcI=
+github.com/oneclickvirt/basics v0.0.13-20250629023612 h1:cQg+cGBt2NMRrjhJPH+CbevZrwtMU8pIZIY2Lp6zmt4=
+github.com/oneclickvirt/basics v0.0.13-20250629023612/go.mod h1:yN1IEOXN6v/GJqJSA70Pooo6nXBI/6rq72vTY72wJMQ=
 github.com/oneclickvirt/cputest v0.0.10-20250404151448 h1:ovGtCwFXG0qmpyNDRqcNDIiAmhrtemCjIUXTJ1fPH0o=
 github.com/oneclickvirt/cputest v0.0.10-20250404151448/go.mod h1:MmaHN9+XMntI3rLycwj8Ne31fG18IfNoa8N2utDK1CY=
 github.com/oneclickvirt/dd v0.0.1-20250406062523 h1:jegTww4fuoFEqwFozvGJEqUNI/5ew3QJ0XcKZZ/zuTs=
@@ -125,8 +125,8 @@ github.com/oneclickvirt/pingtest v0.0.7-20250413051539 h1:mYOsEmMtwKr40hwM2NimVL
 github.com/oneclickvirt/pingtest v0.0.7-20250413051539/go.mod h1:d3Ntx5m9lMll3a/k3+2B+5emj//vgDh4/NHTxs2qQE8=
 github.com/oneclickvirt/portchecker v0.0.3-20250329125750 h1:TTNL0pnQlRsn046kW59I/9UWRpihttFHWnU7Ixycggk=
 github.com/oneclickvirt/portchecker v0.0.3-20250329125750/go.mod h1:HQxSTrqM8/QFqHMTBZ7S8H9eEO5FkUXU1eb7ZX5Mk+k=
-github.com/oneclickvirt/security v0.0.4-20250522031128 h1:k/zpiES/W0lW6Rumlmo4i7zp2ncimfeOUKadrylde8M=
-github.com/oneclickvirt/security v0.0.4-20250522031128/go.mod h1:hdCr9UFkJ0tQfFP4mIycZehF5v7VfzSQwNn2qkY0bGo=
+github.com/oneclickvirt/security v0.0.4-20250629033626 h1:DEchQ7WKKz4CzQpMlweoqA993BGncvmp1rL1ICNDJ2g=
+github.com/oneclickvirt/security v0.0.4-20250629033626/go.mod h1:/5eVnZLvP7RUjwhoI6d8iIMP7msbkHC5So3ZxM+A7Zg=
 github.com/oneclickvirt/speedtest v0.0.9-20250521034111 h1:yygDk+s5qFhPMDRzdMfyopm1xU512peNqY6WYyvYcfY=
 github.com/oneclickvirt/speedtest v0.0.9-20250521034111/go.mod h1:zd5ZgIGslmtQLQehEfRjyumlvgDHTpCSMchKfKXoASI=
 github.com/onsi/ginkgo/v2 v2.22.1 h1:QW7tbJAUDyVDVOM5dFa7qaybo+CRfR7bemlQUN6Z8aM=

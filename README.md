@@ -1,7 +1,8 @@
 # ECS
 
-[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs?ref=badge_shield)
+[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml)
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs?ref=badge_shield)
 
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
@@ -138,19 +139,19 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
    export noninteractive=true && ./goecs.sh env
    ```
 
-3. **安装 `goecs`**
+3. **安装 `goecs` 本体(仅下载二进制文件无依赖安装)**
 
    ```bash
    ./goecs.sh install
    ```
 
-4. **升级 `goecs`**
+4. **升级 `goecs` 本体**
 
    ```bash
    ./goecs.sh upgrade
    ```
 
-5. **卸载 `goecs`**
+5. **卸载 `goecs` 本体**
 
    ```bash
    ./goecs.sh uninstall
@@ -342,6 +343,7 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 | 测试稳定性       | 核心测试组件10年以上未变 | 每个大版本更新测试项，分数不同版本间难以对比(每个版本对标当前最好的CPU) |
 | 测试内容         | 仅测试计算性能 | 覆盖多种性能测试，分数加权计算，但部分测试实际不常用 |
 | 适用场景         | 适合快速测试，仅测试计算性能 | 适合综合全面的测试 |
+| 排行榜         | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
 且```goecs```测试使用何种CPU测试方式可使用参数指定，默认只是为了更多用户快速测试的需求
 

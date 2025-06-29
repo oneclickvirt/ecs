@@ -36,6 +36,6 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChan
 	if !strings.Contains(res, "\n") && res != "" {
 		res += "\n"
 	}
-	fmt.Printf(res)
+	fmt.Printf("%s", res)
 	//fmt.Println("--------------------------------------------------")
 }
