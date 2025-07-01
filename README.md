@@ -33,7 +33,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 | arm                       | arm       | Windows | Windows   |
 | arm64                     | arm64     | FreeBSD | FreeBSD   |
 | 386                       | 386       | OpenBSD |           |
-| mips                      |           | MacOS   |           |
+| mips                      |           | MacOS   | MacOS     |
 | mipsle                    |           |         |           |
 | s390x                     | s390x     |         |           |
 | riscv64                   |           |         |           |
@@ -44,7 +44,6 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 ### **待支持的系统**
 | 系统 | 说明                        |
 |-----|---------------------------|
-| MacOS | 存在硬件测试 BUG 未修复，存在环境依赖未修复  |
 | Android(arm64) | 存在权限问题未修复，非安卓系统的ARM架构无问题  |
 
 ---

@@ -31,7 +31,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 | arm                       | arm       | Windows                      | Windows   |
 | arm64                     | arm64     | FreeBSD                      | FreeBSD   |
 | 386                       | 386       | OpenBSD                      |           |
-| mips                      |           | MacOS                        |           |
+| mips                      |           | MacOS                        | MacOS     |
 | mipsle                    |           |                              |           |
 | s390x                     | s390x     |                              |           |
 | riscv64                   |           |                              |           |
@@ -41,7 +41,6 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 ### **Systems Pending Support**
 | OS     | Notes                                                                                           |
 |--------|-------------------------------------------------------------------------------------------------|
-| MacOS  | Hardware testing bugs and environment dependencies unresolved                                   |
 | Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems |
 ---
 
