@@ -29,7 +29,8 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChan
 				res += disk.FioTest(language, isMultiCheck, testPath)
 			}
 		default:
-			res = "Unsupported test method specified.\n"
+			res = "Unsupported test method specified, switching to DD for testing.\n"
+			res += disk.DDTest(language, isMultiCheck, testPath)
 		}
 	}
 	//fmt.Println("--------------------------------------------------")

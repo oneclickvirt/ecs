@@ -25,7 +25,8 @@ func MemoryTest(language, testMethod string) {
 		case "dd":
 			res = memory.DDTest(language)
 		default:
-			res = "Unsupported test method"
+			res = "Unsupported test method, switch to use dd test.\n"
+			res += memory.DDTest(language)
 		}
 	}
 	if !strings.Contains(res, "\n") && res != "" {

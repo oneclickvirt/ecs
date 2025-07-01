@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.48"
+	ecsVersion                                                        = "v0.1.49"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -351,10 +351,8 @@ func setHardwareOnlyTestStatus(preCheck utils.NetCheckResult) {
 	cpuTestStatus = true
 	memoryTestStatus = true
 	diskTestStatus = true
-	if preCheck.Connected {
-		securityTestStatus = false
-		autoChangeDiskTestMethod = false
-	}
+	securityTestStatus = false
+	autoChangeDiskTestMethod = false
 }
 
 func setIPQualityTestStatus() {
@@ -511,7 +509,7 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 				*emailInfo = email.EmailCheck()
 			}()
 		}
-		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex)  // 传递指针
+		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex) // 传递指针
 		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
 		output = runEmailTests(wg2, emailInfo, output, tempOutput, outputMutex)
 		output = runEnglishSpeedTests(output, tempOutput, outputMutex)
