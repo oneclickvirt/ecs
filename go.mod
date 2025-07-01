@@ -12,9 +12,9 @@ require (
 	github.com/oneclickvirt/basics v0.0.13-20250629023612
 	github.com/oneclickvirt/cputest v0.0.10-20250404151448
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.8-20250425015826
+	github.com/oneclickvirt/disktest v0.0.8-20250701031254
 	github.com/oneclickvirt/gostun v0.0.3-20250329105202
-	github.com/oneclickvirt/memorytest v0.0.6-20250630141424
+	github.com/oneclickvirt/memorytest v0.0.6-20250630141424.0.20250701022859-5967f9d8d3eb
 	github.com/oneclickvirt/nt3 v0.0.5-20250416131047
 	github.com/oneclickvirt/pingtest v0.0.7-20250413051539
 	github.com/oneclickvirt/portchecker v0.0.3-20250329125750
@@ -61,7 +61,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxtrace/NTrace-core v1.4.0 // indirect
-	github.com/oneclickvirt/dd v0.0.1-20250406062523 // indirect
+	github.com/oneclickvirt/dd v0.0.2-20250701030820 // indirect
 	github.com/oneclickvirt/fio v0.0.1-20250406060851 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250630140849 // indirect
 	github.com/onsi/ginkgo/v2 v2.22.1 // indirect
