@@ -16,10 +16,10 @@ require (
 	github.com/oneclickvirt/gostun v0.0.3-20250329105202
 	github.com/oneclickvirt/memorytest v0.0.6-20250630141424.0.20250701113027-9edfc91f68e6
 	github.com/oneclickvirt/nt3 v0.0.5-20250416131047
-	github.com/oneclickvirt/pingtest v0.0.7-20250413051539
+	github.com/oneclickvirt/pingtest v0.0.8-20250701125637
 	github.com/oneclickvirt/portchecker v0.0.3-20250329125750
 	github.com/oneclickvirt/security v0.0.4-20250629033626
-	github.com/oneclickvirt/speedtest v0.0.10-20250701114947
+	github.com/oneclickvirt/speedtest v0.0.10-20250701123931
 )
 
 require (
