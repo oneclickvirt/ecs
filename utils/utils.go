@@ -20,8 +20,9 @@ import (
 	"github.com/oneclickvirt/UnlockTests/uts"
 	"github.com/oneclickvirt/basics/system"
 	. "github.com/oneclickvirt/defaultset"
-	"github.com/oneclickvirt/security/network"
+	"github.com/oneclickvirt/basics/network"
 )
+const token = "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"
 
 // PrintCenteredTitle 根据指定的宽度打印居中标题
 func PrintCenteredTitle(title string, width int) {
@@ -212,7 +213,6 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 func UploadText(absPath string) (string, string, error) {
 	primaryURL := "http://hpaste.spiritlhl.net/api/UL/upload"
 	backupURL := "https://paste.spiritlhl.net/api/UL/upload"
-	token := network.SecurityUploadToken
 	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
 		SetRetryCount(2).
