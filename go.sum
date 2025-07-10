@@ -103,8 +103,8 @@ github.com/oneclickvirt/UnlockTests v0.0.27-20250628125053 h1:Ug8kySZR1weRUcsnGO
 github.com/oneclickvirt/UnlockTests v0.0.27-20250628125053/go.mod h1:yXWIZB6iLS88pEd9m4QJi1GENn+7I91zA72y5ONz2Oc=
 github.com/oneclickvirt/backtrace v0.0.5-20250629024536 h1:caHCa0DHmbYWBFN1bqKxpvPnN0wOxDEqJv1VDvDdLWs=
 github.com/oneclickvirt/backtrace v0.0.5-20250629024536/go.mod h1:5AH00bo41hH3d2/JVuCTlBkZUs3AXX4nlKVXb6piZcI=
-github.com/oneclickvirt/basics v0.0.13-20250629023612 h1:cQg+cGBt2NMRrjhJPH+CbevZrwtMU8pIZIY2Lp6zmt4=
-github.com/oneclickvirt/basics v0.0.13-20250629023612/go.mod h1:yN1IEOXN6v/GJqJSA70Pooo6nXBI/6rq72vTY72wJMQ=
+github.com/oneclickvirt/basics v0.0.14-20250710074251 h1:1qFSjCAy28utNv9d3RF6Hav9HKa1Q3aqxYY5ABpcli0=
+github.com/oneclickvirt/basics v0.0.14-20250710074251/go.mod h1:yN1IEOXN6v/GJqJSA70Pooo6nXBI/6rq72vTY72wJMQ=
 github.com/oneclickvirt/cputest v0.0.10-20250404151448 h1:ovGtCwFXG0qmpyNDRqcNDIiAmhrtemCjIUXTJ1fPH0o=
 github.com/oneclickvirt/cputest v0.0.10-20250404151448/go.mod h1:MmaHN9+XMntI3rLycwj8Ne31fG18IfNoa8N2utDK1CY=
 github.com/oneclickvirt/dd v0.0.2-20250701085922 h1:WiWZwcnCPhRc8hLZdvkjD2kOEpnqn1S31z1j0x3V4l0=
@@ -127,8 +127,8 @@ github.com/oneclickvirt/pingtest v0.0.8-20250701125637 h1:J28Ai5miTq1J0I4gdT8rew
 github.com/oneclickvirt/pingtest v0.0.8-20250701125637/go.mod h1:d3Ntx5m9lMll3a/k3+2B+5emj//vgDh4/NHTxs2qQE8=
 github.com/oneclickvirt/portchecker v0.0.3-20250329125750 h1:TTNL0pnQlRsn046kW59I/9UWRpihttFHWnU7Ixycggk=
 github.com/oneclickvirt/portchecker v0.0.3-20250329125750/go.mod h1:HQxSTrqM8/QFqHMTBZ7S8H9eEO5FkUXU1eb7ZX5Mk+k=
-github.com/oneclickvirt/security v0.0.4-20250629033626 h1:DEchQ7WKKz4CzQpMlweoqA993BGncvmp1rL1ICNDJ2g=
-github.com/oneclickvirt/security v0.0.4-20250629033626/go.mod h1:/5eVnZLvP7RUjwhoI6d8iIMP7msbkHC5So3ZxM+A7Zg=
+github.com/oneclickvirt/security v0.0.5-20250710075323 h1:HRy2Q/BGHRB/NWKeF7ydfTpP4jm5hM7HyaZd7OH31uk=
+github.com/oneclickvirt/security v0.0.5-20250710075323/go.mod h1:KGfv/BvsPliKZhWXn3Ckp6cSl1RogcXysNFQbe+0E5M=
 github.com/oneclickvirt/speedtest v0.0.10-20250701123931 h1:IMUM0F3trrlCdl9JTO+FBIJ9zc8mbi+oyd66IkO/8mI=
 github.com/oneclickvirt/speedtest v0.0.10-20250701123931/go.mod h1:zd5ZgIGslmtQLQehEfRjyumlvgDHTpCSMchKfKXoASI=
 github.com/onsi/ginkgo/v2 v2.22.1 h1:QW7tbJAUDyVDVOM5dFa7qaybo+CRfR7bemlQUN6Z8aM=

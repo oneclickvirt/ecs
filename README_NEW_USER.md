@@ -250,9 +250,9 @@ Load: Displays system load.
 
 Virtualization Architecture: Shows what virtualization architecture the host machine uses. Generally speaking, the recommended order is `Dedicated > KVM > Xen` virtualization. Other virtualization will have performance losses, leading to shared/degraded performance during use. However, this is not definitive. Only dedicated servers have completely independent resource usage; other virtualization methods basically all have resource sharing, depending on whether the host machine seller has a conscience. The specific performance merits still depend on the specialized tests that follow.
 
-NAT Type: Displays NAT type. Specifically recommended in order: `Full Cone > Restricted Cone > Port Restricted Cone > Symmetric`. When not detectable, it will show `Inconclusive`. Generally speaking, if you're not using it for special purposes (related to special proxy and real-time communication needs), you don't need to pay attention to this metric.
+NAT Type: Displays NAT type. Specifically recommended in order: ```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```. When not detectable, it will show ```Inconclusive```. Generally speaking, if you're not using it for special purposes (related to special proxy and real-time communication needs), you don't need to pay attention to this metric.
 
-TCP Acceleration Method: Generally this is the `cubic/bbr` congestion control protocol. Generally speaking, using bbr for proxy servers can improve network speed; for ordinary purposes, you don't need to pay attention to this indicator.
+TCP Acceleration Method: Generally this is the ```cubic/bbr``` congestion control protocol. Generally speaking, using bbr for proxy servers can improve network speed; for ordinary purposes, you don't need to pay attention to this indicator.
 
 IPv4/IPv6 ASN: Displays the ASN organization ID and name that the host machine's IP belongs to. The same IDC may have multiple ASNs, and an ASN may have multiple vendors selling servers with different IP segments. The specific upstream and downstream relationships are complex and can be further viewed using bgp.tool.
 
@@ -273,17 +273,17 @@ Supports selecting `GeekBench` and `Sysbench` for testing through command line p
 | Test Content | Only tests computational performance, based on prime number calculation | Covers multiple performance tests, weighted score calculation, but some tests are not commonly used in practice |
 | Applicable Scenarios | Suitable for quick testing, only tests computational performance | Suitable for comprehensive testing |
 
-By default, `Sysbench` is used for testing, with the baseline roughly as follows:
+By default, ```Sysbench``` is used for testing, with the baseline roughly as follows:
 
-CPU test single-core `Sysbench` scores above 5000 can be considered first tier, 4000 to 5000 points second tier, with roughly one tier per 1000 points.
+CPU test single-core ```Sysbench``` scores above 5000 can be considered first tier, 4000 to 5000 points second tier, with roughly one tier per 1000 points.
 
 AMD's 7950x single-core full performance score is around 6500, AMD's 5950x single-core full performance score is around 5700, Intel's ordinary CPUs (E5 series, etc.) are around 1000~800, and single-core CPUs scoring below 500 can be said to have relatively poor performance.
 
 Sometimes multi-core scores are the same as single-core scores, proving that the vendor is limiting program concurrent use of CPU, a typical example being Tencent Cloud.
 
-Benchmarks for ```Sysbench`` can be found in the [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) ladder chart, with specific scores regardless of the version of sysbench tested.
+Benchmarks for ```Sysbench``` can be found in the [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) ladder chart, with specific scores regardless of the version of sysbench tested.
 
-For `GeekBench` baselines, see the [official website](https://browser.geekbench.com/processor-benchmarks/) ladder chart. Specific scores differ for each `GeekBench` version, so note which `GeekBench` version is being used when testing.
+For ```GeekBench``` baselines, see the [official website](https://browser.geekbench.com/processor-benchmarks/) ladder chart. Specific scores differ for each ```GeekBench``` version, so note which ```GeekBench``` version is being used when testing.
 
 As an additional note, many things tested by `GeekBench` are not actually used in server usage processes, so the test is for reference only. Of course, `Sysbench` is very incomplete, but it can roughly compare CPU performance based on the most basic computational performance.
 
