@@ -1,17 +1,17 @@
 package cputest
 
 import (
-	"fmt"
-	"github.com/oneclickvirt/cputest/cpu"
 	"runtime"
 	"strings"
+
+	"github.com/oneclickvirt/cputest/cpu"
 )
 
-func CpuTest(language, testMethod, testThread string) {
-	var res string
+func CpuTest(language, testMethod, testThread string) (realTestMethod, res string) {
 	if runtime.GOOS == "windows" {
 		if testMethod != "winsat" && testMethod != "" {
-			res = "Detected host is Windows, using Winsat for testing.\n"
+			// res = "Detected host is Windows, using Winsat for testing.\n"
+			realTestMethod = "winsat"
 		}
 		res += cpu.WinsatTest(language, testThread)
 	} else {
@@ -19,14 +19,20 @@ func CpuTest(language, testMethod, testThread string) {
 		case "sysbench":
 			res = cpu.SysBenchTest(language, testThread)
 			if res == "" {
-				res = "Sysbench test failed, switching to Geekbench for testing.\n"
+				// res = "Sysbench test failed, switching to Geekbench for testing.\n"
+				realTestMethod = "geekbench"
 				res += cpu.GeekBenchTest(language, testThread)
+			} else {
+				realTestMethod = "sysbench"
 			}
 		case "geekbench":
 			res = cpu.GeekBenchTest(language, testThread)
 			if res == "" {
-				res = "Geekbench test failed, switching to Sysbench for testing.\n"
+				// res = "Geekbench test failed, switching to Sysbench for testing.\n"
+				realTestMethod = "sysbench"
 				res += cpu.SysBenchTest(language, testThread)
+			} else {
+				realTestMethod = "geekbench"
 			}
 		default:
 			res = "Invalid test method specified.\n"
@@ -35,5 +41,5 @@ func CpuTest(language, testMethod, testThread string) {
 	if !strings.Contains(res, "\n") && res != "" {
 		res += "\n"
 	}
-	fmt.Print(res)
+	return
 }

@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.52"
+	ecsVersion                                                        = "v0.1.53"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -570,12 +570,13 @@ func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if cpuTestStatus {
+			realTestMethod, res := cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
 			if language == "zh" {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", cpuTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", realTestMethod), width)
 			} else {
-				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", cpuTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", realTestMethod), width)
 			}
-			cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
+			fmt.Print(res)
 		}
 	}, tempOutput, output)
 }
