@@ -1,7 +1,11 @@
 package disktest
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestDiskIoTest(t *testing.T) {
-	DiskTest("zh", "sysbench", "", false, false)
+	_, res := DiskTest("zh", "sysbench", "", false, false)
+	fmt.Print(res)
 }

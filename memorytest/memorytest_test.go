@@ -1,9 +1,11 @@
 package memorytest
 
 import (
+	"fmt"
 	"testing"
 )
 
 func Test(t *testing.T) {
-	MemoryTest("zh", "sysbench")
+	_, res := MemoryTest("zh", "sysbench")
+	fmt.Print(res)
 }

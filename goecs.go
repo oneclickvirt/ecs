@@ -396,7 +396,7 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 			seconds := int(duration.Seconds()) % 60
 			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 			outputMutex.Lock()
-			*output = utils.PrintAndCapture(func() {
+			timeInfo := utils.PrintAndCapture(func() {
 				utils.PrintCenteredTitle("", width)
 				if language == "zh" {
 					fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
@@ -406,7 +406,8 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 					fmt.Printf("Current Time          : %s\n", currentTime)
 				}
 				utils.PrintCenteredTitle("", width)
-			}, tempOutput, *output)
+			}, "", "")
+			*output += timeInfo
 			finalOutput := *output
 			outputMutex.Unlock()
 			resultChan := make(chan struct {
@@ -530,7 +531,8 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 }
 
 func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		utils.PrintHead(language, width, ecsVersion)
 		if basicStatus || securityTestStatus {
@@ -567,7 +569,8 @@ func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *strin
 }
 
 func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if cpuTestStatus {
 			realTestMethod, res := cputest.CpuTest(language, cpuTestMethod, cpuTestThreadMode)
@@ -582,47 +585,56 @@ func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runMemoryTest(output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if memoryTestStatus {
+			realTestMethod, res := memorytest.MemoryTest(language, memoryTestMethod)
 			if language == "zh" {
-				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", memoryTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", realTestMethod), width)
 			} else {
-				utils.PrintCenteredTitle(fmt.Sprintf("Memory-Test--%s-Method", memoryTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("Memory-Test--%s-Method", realTestMethod), width)
 			}
-			memorytest.MemoryTest(language, memoryTestMethod)
+			fmt.Print(res)
 		}
 	}, tempOutput, output)
 }
 
 func runDiskTest(output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if diskTestStatus && autoChangeDiskTestMethod {
+			realTestMethod, res := disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
 			if language == "zh" {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", diskTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", realTestMethod), width)
 			} else {
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", diskTestMethod), width)
+				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", realTestMethod), width)
 			}
-			disktest.DiskTest(language, diskTestMethod, diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+			fmt.Print(res)
 		} else if diskTestStatus && !autoChangeDiskTestMethod {
 			if language == "zh" {
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), width)
-				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				_, res := disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				fmt.Print(res)
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), width)
-				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				_, res = disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				fmt.Print(res)
 			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "dd"), width)
-				disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				_, res := disktest.DiskTest(language, "dd", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				fmt.Print(res)
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "fio"), width)
-				disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				_, res = disktest.DiskTest(language, "fio", diskTestPath, diskMultiCheck, autoChangeDiskTestMethod)
+				fmt.Print(res)
 			}
 		}
 	}, tempOutput, output)
 }
 
 func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if language == "zh" {
 			if commTestStatus && !onlyChinaTest {
@@ -643,7 +655,8 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutpu
 }
 
 func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if securityTestStatus {
 			if language == "zh" {
@@ -657,7 +670,8 @@ func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync
 }
 
 func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if emailTestStatus {
 			wg2.Wait()
@@ -672,7 +686,8 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput st
 }
 
 func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程线路检测", width)
@@ -699,7 +714,8 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 }
 
 func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("就近节点测速", width)
@@ -720,7 +736,8 @@ func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runEnglishSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("Speed-Test", width)
@@ -732,7 +749,8 @@ func runEnglishSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) st
 }
 
 func appendTimeInfo(output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
-	_ = outputMutex
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	minutes := int(duration.Minutes())

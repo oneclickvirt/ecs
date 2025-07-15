@@ -1,9 +1,11 @@
 package cputest
 
 import (
+	"fmt"
 	"testing"
 )
 
 func Test(t *testing.T) {
-	CpuTest("zh", "sysbench", "1")
+	_, res := CpuTest("zh", "sysbench", "1")
+	fmt.Print(res)
 }

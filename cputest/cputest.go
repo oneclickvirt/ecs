@@ -36,6 +36,7 @@ func CpuTest(language, testMethod, testThread string) (realTestMethod, res strin
 			}
 		default:
 			res = "Invalid test method specified.\n"
+			realTestMethod = "null"
 		}
 	}
 	if !strings.Contains(res, "\n") && res != "" {
