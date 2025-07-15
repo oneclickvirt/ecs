@@ -396,7 +396,6 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 			seconds := int(duration.Seconds()) % 60
 			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 			outputMutex.Lock()
-			finalOutput := *output
 			*output = utils.PrintAndCapture(func() {
 				utils.PrintCenteredTitle("", width)
 				if language == "zh" {
@@ -407,8 +406,8 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 					fmt.Printf("Current Time          : %s\n", currentTime)
 				}
 				utils.PrintCenteredTitle("", width)
-			}, tempOutput, finalOutput)
-			finalOutput = *output
+			}, tempOutput, *output)
+			finalOutput := *output
 			outputMutex.Unlock()
 			resultChan := make(chan struct {
 				httpURL  string
