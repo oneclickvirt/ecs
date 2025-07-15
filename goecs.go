@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.54"
+	ecsVersion                                                        = "v0.1.55"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -462,11 +462,11 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 	}
 }
 
-func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
-	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput, outputMutex)
-	output = runCPUTest(output, tempOutput, outputMutex)
-	output = runMemoryTest(output, tempOutput, outputMutex)
-	output = runDiskTest(output, tempOutput, outputMutex)
+func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+	*output = runBasicTests(preCheck, basicInfo, securityInfo, *output, tempOutput, outputMutex)
+	*output = runCPUTest(*output, tempOutput, outputMutex)
+	*output = runMemoryTest(*output, tempOutput, outputMutex)
+	*output = runDiskTest(*output, tempOutput, outputMutex)
 	if (onlyChinaTest || pingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg3.Add(1)
 		go func() {
@@ -489,24 +489,24 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 		}()
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex)
-		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
-		output = runEmailTests(wg2, emailInfo, output, tempOutput, outputMutex)
+		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
+		*output = runSecurityTests(*securityInfo, *output, tempOutput, outputMutex)
+		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runNetworkTests(wg3, ptInfo, output, tempOutput, outputMutex)
+		*output = runNetworkTests(wg3, ptInfo, *output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		output = runSpeedTests(output, tempOutput, outputMutex)
+		*output = runSpeedTests(*output, tempOutput, outputMutex)
 	}
-	return appendTimeInfo(output, tempOutput, startTime, outputMutex)
+	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
 }
 
-func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
-	output = runBasicTests(preCheck, basicInfo, securityInfo, output, tempOutput, outputMutex)
-	output = runCPUTest(output, tempOutput, outputMutex)
-	output = runMemoryTest(output, tempOutput, outputMutex)
-	output = runDiskTest(output, tempOutput, outputMutex)
+func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+	*output = runBasicTests(preCheck, basicInfo, securityInfo, *output, tempOutput, outputMutex)
+	*output = runCPUTest(*output, tempOutput, outputMutex)
+	*output = runMemoryTest(*output, tempOutput, outputMutex)
+	*output = runDiskTest(*output, tempOutput, outputMutex)
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		if utTestStatus {
 			wg1.Add(1)
@@ -522,12 +522,12 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 				*emailInfo = email.EmailCheck()
 			}()
 		}
-		output = runStreamingTests(wg1, mediaInfo, output, tempOutput, outputMutex) // 传递指针
-		output = runSecurityTests(*securityInfo, output, tempOutput, outputMutex)
-		output = runEmailTests(wg2, emailInfo, output, tempOutput, outputMutex)
-		output = runEnglishSpeedTests(output, tempOutput, outputMutex)
+		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
+		*output = runSecurityTests(*securityInfo, *output, tempOutput, outputMutex)
+		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
+		*output = runEnglishSpeedTests(*output, tempOutput, outputMutex)
 	}
-	return appendTimeInfo(output, tempOutput, startTime, outputMutex)
+	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
 }
 
 func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
@@ -810,9 +810,9 @@ func main() {
 	go handleSignalInterrupt(sig, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch language {
 	case "zh":
-		output = runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, output, tempOutput, startTime, &outputMutex)
+		runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
 	case "en":
-		output = runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, output, tempOutput, startTime, &outputMutex)
+		runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &output, tempOutput, startTime, &outputMutex)
 	default:
 		fmt.Println("Unsupported language")
 	}
