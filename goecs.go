@@ -414,40 +414,48 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 				httpURL  string
 				httpsURL string
 			}, 1)
-			go func() {
-				httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, filePath, enabelUpload)
-				resultChan <- struct {
-					httpURL  string
-					httpsURL string
-				}{httpURL, httpsURL}
-				uploadDone <- true
-			}()
-			select {
-			case result := <-resultChan:
-				if result.httpURL != "" || result.httpsURL != "" {
-					if language == "en" {
-						fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
-					} else {
-						fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+			if enabelUpload {
+				go func() {
+					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, filePath, enabelUpload)
+					resultChan <- struct {
+						httpURL  string
+						httpsURL string
+					}{httpURL, httpsURL}
+					uploadDone <- true
+				}()
+				select {
+				case result := <-resultChan:
+					if result.httpURL != "" || result.httpsURL != "" {
+						if language == "en" {
+							fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						} else {
+							fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						}
 					}
+					time.Sleep(100 * time.Millisecond)
+					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+						fmt.Println("Press Enter to exit...")
+						fmt.Scanln()
+					}
+					os.Exit(0)
+				case <-time.After(30 * time.Second):
+					if language == "en" {
+						fmt.Println("Upload timeout, program exit")
+					} else {
+						fmt.Println("上传超时，程序退出")
+					}
+					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+						fmt.Println("Press Enter to exit...")
+						fmt.Scanln()
+					}
+					os.Exit(1)
 				}
-				time.Sleep(100 * time.Millisecond)
+			} else {
 				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 					fmt.Println("Press Enter to exit...")
 					fmt.Scanln()
 				}
 				os.Exit(0)
-			case <-time.After(30 * time.Second):
-				if language == "en" {
-					fmt.Println("Upload timeout, program exit")
-				} else {
-					fmt.Println("上传超时，程序退出")
-				}
-				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-					fmt.Println("Press Enter to exit...")
-					fmt.Scanln()
-				}
-				os.Exit(1)
 			}
 		}
 		os.Exit(0)
@@ -768,6 +776,9 @@ func main() {
 		handleMenuMode(preCheck)
 	}
 	handleLanguageSpecificSettings()
+	if !preCheck.Connected {
+		enabelUpload = false
+	}
 	var (
 		wg1, wg2, wg3                                         sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
@@ -787,7 +798,9 @@ func main() {
 	default:
 		fmt.Println("Unsupported language")
 	}
-	handleUploadResults(output)
+	if preCheck.Connected {
+		handleUploadResults(output)
+	}
 	finish = true
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")
