@@ -347,6 +347,7 @@ func setUnlockOnlyTestStatus() {
 }
 
 func setHardwareOnlyTestStatus(preCheck utils.NetCheckResult) {
+	_ = preCheck
 	basicStatus = true
 	cpuTestStatus = true
 	memoryTestStatus = true
@@ -395,21 +396,25 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 			seconds := int(duration.Seconds()) % 60
 			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
 			outputMutex.Lock()
+			finalOutput := *output
 			*output = utils.PrintAndCapture(func() {
 				utils.PrintCenteredTitle("", width)
-				fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
-				fmt.Printf("Current Time          : %s\n", currentTime)
+				if language == "zh" {
+					fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
+					fmt.Printf("时间          : %s\n", currentTime)
+				} else {
+					fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
+					fmt.Printf("Current Time          : %s\n", currentTime)
+				}
 				utils.PrintCenteredTitle("", width)
-			}, tempOutput, *output)
+			}, tempOutput, finalOutput)
+			finalOutput = *output
 			outputMutex.Unlock()
 			resultChan := make(chan struct {
 				httpURL  string
 				httpsURL string
 			}, 1)
 			go func() {
-				outputMutex.Lock()
-				finalOutput := *output
-				outputMutex.Unlock()
 				httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, filePath, enabelUpload)
 				resultChan <- struct {
 					httpURL  string
@@ -518,6 +523,7 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 }
 
 func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		utils.PrintHead(language, width, ecsVersion)
 		if basicStatus || securityTestStatus {
@@ -554,6 +560,7 @@ func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *strin
 }
 
 func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if cpuTestStatus {
 			if language == "zh" {
@@ -567,6 +574,7 @@ func runCPUTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runMemoryTest(output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if memoryTestStatus {
 			if language == "zh" {
@@ -580,6 +588,7 @@ func runMemoryTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runDiskTest(output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if diskTestStatus && autoChangeDiskTestMethod {
 			if language == "zh" {
@@ -605,6 +614,7 @@ func runDiskTest(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if language == "zh" {
 			if commTestStatus && !onlyChinaTest {
@@ -625,6 +635,7 @@ func runStreamingTests(wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutpu
 }
 
 func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if securityTestStatus {
 			if language == "zh" {
@@ -638,6 +649,7 @@ func runSecurityTests(securityInfo, output, tempOutput string, outputMutex *sync
 }
 
 func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if emailTestStatus {
 			wg2.Wait()
@@ -652,6 +664,7 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput st
 }
 
 func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程线路检测", width)
@@ -678,6 +691,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 }
 
 func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("就近节点测速", width)
@@ -698,6 +712,7 @@ func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 }
 
 func runEnglishSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	return utils.PrintAndCapture(func() {
 		if speedTestStatus {
 			utils.PrintCenteredTitle("Speed-Test", width)
@@ -709,6 +724,7 @@ func runEnglishSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) st
 }
 
 func appendTimeInfo(output, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) string {
+	_ = outputMutex
 	endTime := time.Now()
 	duration := endTime.Sub(startTime)
 	minutes := int(duration.Minutes())
