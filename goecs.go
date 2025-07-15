@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.51"
+	ecsVersion                                                        = "v0.1.52"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
