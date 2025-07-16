@@ -25,10 +25,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo)"
+        - echo "---"
   - id: linux-cgo-risc
     env:
       - CGO_ENABLED=1
@@ -45,10 +45,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-risc)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-risc)"
+        - echo "---"
   - id: linux-cgo-mips
     env:
       - CGO_ENABLED=1
@@ -66,10 +66,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-mips)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-mips)"
+        - echo "---"
   - id: linux-cgo-ppc
     env:
       - CGO_ENABLED=1
@@ -86,10 +86,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-ppc)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-ppc)"
+        - echo "---"
   - id: windows-cgo
     env:
       - CGO_ENABLED=1
@@ -107,10 +107,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (windows-cgo)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (windows-cgo)"
+        - echo "---"
   - id: darwin-cgo
     env:
       - CGO_ENABLED=1
@@ -128,10 +128,10 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (darwin-cgo)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (darwin-cgo)"
+        - echo "---"
   - id: universal
     env:
       - CGO_ENABLED=0
@@ -200,17 +200,17 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "Building for {{.Os}}/{{.Arch}}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (universal)"
       post:
-        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (universal)"
         - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "---"
+
 universal_binaries:
   - name_template: "goecs"
     replace: false
     ids:
       - darwin-cgo
-partial:
-  by: target
 checksum:
   name_template: "checksums.txt"
   algorithm: sha256

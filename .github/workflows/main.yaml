@@ -54,12 +54,6 @@ jobs:
             gcc-mingw-w64-x86-64 \
             gcc-mingw-w64-i686 \
             libc6-dev-i386 \
-            linux-libc-dev-i386-cross \
-            linux-libc-dev-arm64-cross \
-            linux-libc-dev-riscv64-cross \
-            linux-libc-dev-mips64-cross \
-            linux-libc-dev-mips64el-cross \
-            linux-libc-dev-ppc64el-cross \
             || echo "Some packages may already be installed"
       - name: Set up cross-compilation environment
         run: |
@@ -75,7 +69,7 @@ jobs:
           echo "CC_windows_386=i686-w64-mingw32-gcc" >> $GITHUB_ENV
           echo "CC_darwin_amd64=o64-clang" >> $GITHUB_ENV
           echo "CC_darwin_arm64=oa64-clang" >> $GITHUB_ENV
-
+          
           # 设置CGO_CFLAGS
           echo "CGO_CFLAGS_linux_amd64=-O2 -static -fno-stack-protector -Wl,--gc-sections" >> $GITHUB_ENV
           echo "CGO_CFLAGS_linux_386=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector" >> $GITHUB_ENV
@@ -88,7 +82,7 @@ jobs:
           echo "CGO_CFLAGS_windows_386=-O2 -static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
           echo "CGO_CFLAGS_darwin_amd64=-O2 -arch x86_64 -mmacosx-version-min=10.12" >> $GITHUB_ENV
           echo "CGO_CFLAGS_darwin_arm64=-O2 -arch arm64 -mmacosx-version-min=11.0" >> $GITHUB_ENV
-
+          
           # 设置CGO_LDFLAGS
           echo "CGO_LDFLAGS_windows_amd64=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
           echo "CGO_LDFLAGS_windows_386=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
@@ -97,7 +91,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --partial
+          args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security
