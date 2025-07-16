@@ -45,6 +45,7 @@ jobs:
           dpkg --add-architecture i386
           apt-get update
           apt-get install -y \
+            linux-libc-dev \
             gcc-aarch64-linux-gnu \
             gcc-riscv64-linux-gnu \
             gcc-mips64-linux-gnuabi64 \
