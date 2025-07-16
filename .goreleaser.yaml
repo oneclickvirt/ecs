@@ -20,13 +20,76 @@ builds:
       - amd64
       - 386
       - arm64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
+  - id: linux-cgo-risc
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - riscv64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
+  - id: linux-cgo-mips
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - mips64
       - mips64le
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
+  - id: linux-cgo-ppc
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - ppc64le
     main: ./
     binary: goecs
     no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
   - id: windows-cgo
     env:
       - CGO_ENABLED=1
@@ -42,6 +105,12 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
   - id: darwin-cgo
     env:
       - CGO_ENABLED=1
@@ -57,6 +126,12 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
   - id: universal
     env:
       - CGO_ENABLED=0
@@ -123,28 +198,50 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Building for {{.Os}}/{{.Arch}}"
+      post:
+        - echo "Built {{.Os}}/{{.Arch}} successfully"
+        - echo "Binary size:" && du -h "{{ .Path }}"
 universal_binaries:
   - name_template: "goecs"
     replace: false
     ids:
       - darwin-cgo
+partial:
+  by: target
 checksum:
   name_template: "checksums.txt"
   algorithm: sha256
   disable: false
   ids:
     - linux-cgo
+    - linux-cgo-risc
+    - linux-cgo-mips
+    - linux-cgo-ppc
     - windows-cgo
     - darwin-cgo
     - universal
+  extra_files:
+    - glob: "./goecs.sh"
 snapshot:
   name_template: "goecs"
 archives:
-  - name_template: "goecs_{{ .Os }}_{{ .Arch }}"
+  - id: default
+    name_template: "goecs_{{ .Os }}_{{ .Arch }}"
     format: zip
     files:
       - none*
     allow_different_binary_count: true
+    builds:
+      - linux-cgo
+      - linux-cgo-risc
+      - linux-cgo-mips
+      - linux-cgo-ppc
+      - windows-cgo
+      - darwin-cgo
+      - universal
 changelog:
   sort: asc
   filters:
