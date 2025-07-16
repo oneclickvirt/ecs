@@ -144,7 +144,6 @@ builds:
       - windows
       - freebsd
       - openbsd
-      - netbsd
     goarch:
       - arm
       - arm64
