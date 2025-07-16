@@ -27,7 +27,6 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
-    allow_different_binary_count: true
   - id: windows-cgo
     env:
       - CGO_ENABLED=1
@@ -43,7 +42,6 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
-    allow_different_binary_count: true
   - id: darwin-cgo
     env:
       - CGO_ENABLED=1
@@ -59,7 +57,6 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
-    allow_different_binary_count: true
   - id: universal
     env:
       - CGO_ENABLED=0
@@ -126,7 +123,6 @@ builds:
     main: ./
     binary: goecs
     no_unique_dist_dir: true
-    allow_different_binary_count: true
 universal_binaries:
   - name_template: "goecs"
     replace: false
