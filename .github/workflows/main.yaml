@@ -97,7 +97,7 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --skip-validate --partial
+          args: release --partial
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security
