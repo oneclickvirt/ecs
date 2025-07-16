@@ -1,7 +1,64 @@
+project_name: goecs
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
 before:
   hooks:
     - go mod tidy -v
 builds:
+  - id: linux-cgo
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - riscv64
+      - mips64
+      - mips64le
+      - ppc64le
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    allow_different_binary_count: true
+  - id: windows-cgo
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - windows
+    goarch:
+      - amd64
+      - 386
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    allow_different_binary_count: true
+  - id: darwin-cgo
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    allow_different_binary_count: true
   - id: universal
     env:
       - CGO_ENABLED=0
@@ -13,57 +70,76 @@ builds:
       - linux
       - windows
       - freebsd
+      - openbsd
+      - netbsd
     goarch:
       - arm
       - arm64
       - 386
       - amd64
+      - s390x
       - mips
       - mipsle
-      - s390x
-      - riscv64
+      - ppc64
+    goarm:
+      - "5"
+      - "6"
+      - "7"
     gomips:
       - softfloat
     ignore:
+      # 避免和 linux-cgo 重叠
+      - goos: linux
+        goarch: amd64
+      - goos: linux
+        goarch: 386
+      - goos: linux
+        goarch: arm64
+      - goos: linux
+        goarch: riscv64
+      - goos: linux
+        goarch: mips64
+      - goos: linux
+        goarch: mips64le
+      - goos: linux
+        goarch: ppc64le
+      # 避免和 windows-cgo 重叠
+      - goos: windows
+        goarch: amd64
+      - goos: windows
+        goarch: 386
+      # 避免和 darwin-cgo 重叠
+      - goos: darwin
+        goarch: amd64
+      - goos: darwin
+        goarch: arm64
+      # 原系统不支持的忽略规则
       - goos: windows
         goarch: arm
+      - goos: freebsd
+        goarch: 386
+      - goos: openbsd
+        goarch: 386
+      - goos: netbsd
+        goarch: 386
     main: ./
     binary: goecs
-  - id: darwin-amd64
-    env:
-      - CGO_ENABLED=1
-      - CC=o64-clang
-      - CXX=o64-clang++
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-    flags:
-      - -trimpath
-    goos:
-      - darwin
-    goarch:
-      - amd64
-    main: ./
-    binary: goecs
-  - id: darwin-arm64
-    env:
-      - CGO_ENABLED=1
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-    flags:
-      - -trimpath
-    goos:
-      - darwin
-    goarch:
-      - arm64
-    main: ./
-    binary: goecs
+    no_unique_dist_dir: true
+    allow_different_binary_count: true
 universal_binaries:
   - name_template: "goecs"
     replace: false
+    ids:
+      - darwin-cgo
 checksum:
   name_template: "checksums.txt"
+  algorithm: sha256
+  disable: false
+  ids:
+    - linux-cgo
+    - windows-cgo
+    - darwin-cgo
+    - universal
 snapshot:
   name_template: "goecs"
 archives:
@@ -71,6 +147,7 @@ archives:
     format: zip
     files:
       - none*
+    allow_different_binary_count: true
 changelog:
   sort: asc
   filters:

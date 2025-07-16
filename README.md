@@ -30,9 +30,9 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 | 编译支持的架构 | 测试支持的架构 | 编译支持的系统 | 测试支持的系统 |
 |---------------------------|-----------|---------|-----------|
 | amd64                     | amd64     | Linux   | Linux     |
-| arm                       | arm       | Windows | Windows   |
-| arm64                     | arm64     | FreeBSD | FreeBSD   |
-| 386                       | 386       | OpenBSD |           |
+| arm                       |           | Windows | Windows   |
+| arm64                     | arm64     | FreeBSD |           |
+| 386                       |           | OpenBSD |           |
 | mips                      |           | MacOS   | MacOS     |
 | mipsle                    |           |         |           |
 | s390x                     | s390x     |         |           |
