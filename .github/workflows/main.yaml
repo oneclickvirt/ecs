@@ -1,10 +1,8 @@
 name: Goreleaser
-
 on:
   workflow_dispatch:
     tags:
       - "v*.*.*"
-
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -18,19 +16,75 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.23.4
-
       - name: Configure Git for Private Modules
         run: |
           git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
           git config --global url."git@github.com:".insteadOf "https://github.com/"
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-
+      - name: Verify cross-compilation tools
+        run: |
+          echo "Checking available cross-compilation tools..."
+          which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
+          which x86_64-w64-mingw32-gcc || echo "x86_64-w64-mingw32-gcc not found"
+          which i686-w64-mingw32-gcc || echo "i686-w64-mingw32-gcc not found"
+          which riscv64-linux-gnu-gcc || echo "riscv64-linux-gnu-gcc not found"
+          which mips64-linux-gnuabi64-gcc || echo "mips64-linux-gnuabi64-gcc not found"
+          which mips64el-linux-gnuabi64-gcc || echo "mips64el-linux-gnuabi64-gcc not found"
+          which powerpc64le-linux-gnu-gcc || echo "powerpc64le-linux-gnu-gcc not found"
+          ls -la /usr/bin/*-gcc* | head -20
+      - name: Install additional cross-compilation tools if needed
+        run: |
+          apt-get update
+          apt-get install -y gcc-multilib g++-multilib
+          # 确保所有需要的交叉编译器都可用
+          dpkg --add-architecture i386
+          apt-get update
+          apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            gcc-riscv64-linux-gnu \
+            gcc-mips64-linux-gnuabi64 \
+            gcc-mips64el-linux-gnuabi64 \
+            gcc-powerpc64le-linux-gnu \
+            gcc-mingw-w64-x86-64 \
+            gcc-mingw-w64-i686 \
+            libc6-dev-i386 \
+            || echo "Some packages may already be installed"
+      - name: Set up cross-compilation environment
+        run: |
+          # 为CGO交叉编译设置环境变量
+          echo "CC_linux_amd64=gcc" >> $GITHUB_ENV
+          echo "CC_linux_386=gcc -m32" >> $GITHUB_ENV
+          echo "CC_linux_arm64=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CC_linux_riscv64=riscv64-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CC_linux_mips64=mips64-linux-gnuabi64-gcc" >> $GITHUB_ENV
+          echo "CC_linux_mips64le=mips64el-linux-gnuabi64-gcc" >> $GITHUB_ENV
+          echo "CC_linux_ppc64le=powerpc64le-linux-gnu-gcc" >> $GITHUB_ENV
+          echo "CC_windows_amd64=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+          echo "CC_windows_386=i686-w64-mingw32-gcc" >> $GITHUB_ENV
+          echo "CC_darwin_amd64=o64-clang" >> $GITHUB_ENV
+          echo "CC_darwin_arm64=oa64-clang" >> $GITHUB_ENV
+          
+          # 设置CGO_CFLAGS
+          echo "CGO_CFLAGS_linux_amd64=-O2 -static -fno-stack-protector -Wl,--gc-sections" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_386=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_arm64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_riscv64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_mips64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_mips64le=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_linux_ppc64le=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_windows_amd64=-O2 -static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_windows_386=-O2 -static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_darwin_amd64=-O2 -arch x86_64 -mmacosx-version-min=10.12" >> $GITHUB_ENV
+          echo "CGO_CFLAGS_darwin_arm64=-O2 -arch arm64 -mmacosx-version-min=11.0" >> $GITHUB_ENV
+          
+          # 设置CGO_LDFLAGS
+          echo "CGO_LDFLAGS_windows_amd64=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
+          echo "CGO_LDFLAGS_windows_386=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -40,7 +94,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security
-
       - name: Update goecs.sh with new version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
