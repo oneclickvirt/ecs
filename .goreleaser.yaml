@@ -29,9 +29,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/amd64 (CGO)"
+        - echo "Starting build for linux/amd64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/amd64 (CGO)"
+        - echo "Successfully built linux/amd64 (CGO)"
         - echo "---"
 
   # Linux 386 with CGO
@@ -53,9 +53,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/386 (CGO)"
+        - echo "Starting build for linux/386 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/386 (CGO)"
+        - echo "Successfully built linux/386 (CGO)"
         - echo "---"
 
   # Linux ARM64 with CGO
@@ -78,9 +78,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/arm64 (CGO)"
+        - echo "Starting build for linux/arm64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/arm64 (CGO)"
+        - echo "Successfully built linux/arm64 (CGO)"
         - echo "---"
 
   # Windows AMD64 with CGO
@@ -103,9 +103,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/amd64 (CGO)"
+        - echo "Starting build for windows/amd64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/amd64 (CGO)"
+        - echo "Successfully built windows/amd64 (CGO)"
         - echo "---"
 
   # Windows 386 with CGO
@@ -128,9 +128,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/386 (CGO)"
+        - echo "Starting build for windows/386 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/386 (CGO)"
+        - echo "Successfully built windows/386 (CGO)"
         - echo "---"
 
   # Darwin AMD64 with CGO
@@ -154,12 +154,12 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/amd64 (CGO)"
+        - echo "Starting build for darwin/amd64 (CGO)"
         - echo "Checking osxcross tools..."
         - which o64-clang || echo "o64-clang not found"
         - which o64-clang++ || echo "o64-clang++ not found"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/amd64 (CGO)"
+        - echo "Successfully built darwin/amd64 (CGO)"
         - echo "---"
 
   # Darwin ARM64 with CGO
@@ -183,12 +183,12 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/arm64 (CGO)"
+        - echo "Starting build for darwin/arm64 (CGO)"
         - echo "Checking osxcross tools..."
         - which oa64-clang || echo "oa64-clang not found"
         - which oa64-clang++ || echo "oa64-clang++ not found"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/arm64 (CGO)"
+        - echo "Successfully built darwin/arm64 (CGO)"
         - echo "---"
 
   # Linux RISC-V 64 with CGO
@@ -210,9 +210,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/riscv64 (CGO)"
+        - echo "Starting build for linux/riscv64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/riscv64 (CGO)"
+        - echo "Successfully built linux/riscv64 (CGO)"
         - echo "---"
 
   # Linux MIPS64 with CGO
@@ -234,9 +234,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips64 (CGO)"
+        - echo "Starting build for linux/mips64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips64 (CGO)"
+        - echo "Successfully built linux/mips64 (CGO)"
         - echo "---"
 
   # Linux MIPS64LE with CGO
@@ -258,9 +258,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips64le (CGO)"
+        - echo "Starting build for linux/mips64le (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips64le (CGO)"
+        - echo "Successfully built linux/mips64le (CGO)"
         - echo "---"
 
   # Linux PPC64LE with CGO
@@ -282,9 +282,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/ppc64le (CGO)"
+        - echo "Starting build for linux/ppc64le (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/ppc64le (CGO)"
+        - echo "Successfully built linux/ppc64le (CGO)"
         - echo "---"
 
   # Linux ARM (no CGO)
@@ -308,9 +308,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/arm (no CGO)"
+        - echo "Starting build for linux/arm (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/arm (no CGO)"
+        - echo "Successfully built linux/arm (no CGO)"
         - echo "---"
 
   # Linux S390X (no CGO)
@@ -330,9 +330,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/s390x (no CGO)"
+        - echo "Starting build for linux/s390x (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/s390x (no CGO)"
+        - echo "Successfully built linux/s390x (no CGO)"
         - echo "---"
 
   # Linux MIPS (no CGO)
@@ -354,9 +354,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips (no CGO)"
+        - echo "Starting build for linux/mips (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips (no CGO)"
+        - echo "Successfully built linux/mips (no CGO)"
         - echo "---"
 
   # Linux MIPSLE (no CGO)
@@ -378,9 +378,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mipsle (no CGO)"
+        - echo "Starting build for linux/mipsle (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mipsle (no CGO)"
+        - echo "Successfully built linux/mipsle (no CGO)"
         - echo "---"
 
   # Linux PPC64 (no CGO)
@@ -400,9 +400,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/ppc64 (no CGO)"
+        - echo "Starting build for linux/ppc64 (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/ppc64 (no CGO)"
+        - echo "Successfully built linux/ppc64 (no CGO)"
         - echo "---"
 
   # FreeBSD AMD64 (no CGO)
@@ -422,9 +422,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for freebsd/amd64 (no CGO)"
+        - echo "Starting build for freebsd/amd64 (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built freebsd/amd64 (no CGO)"
+        - echo "Successfully built freebsd/amd64 (no CGO)"
         - echo "---"
 
   # FreeBSD ARM64 (no CGO)
@@ -444,9 +444,9 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for freebsd/arm64 (no CGO)"
+        - echo "Starting build for freebsd/arm64 (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built freebsd/arm64 (no CGO)"
+        - echo "Successfully built freebsd/arm64 (no CGO)"
         - echo "---"
 
 universal_binaries:
