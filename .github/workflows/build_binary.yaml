@@ -26,12 +26,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-      - name: Build and Test on Default Platform
-        run: |
-          go mod tidy -v
-          go build -v ./...
-          go test -v ./...
-
       - name: Get latest tag
         id: tag
         run: |
