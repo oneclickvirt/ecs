@@ -32,17 +32,17 @@ jobs:
       run: |
         # 移除 network 包中对 security 的引用
         find . -type f -name "*.go" -exec sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' {} +
-        # 修改 back/network/network.go
-        cat > back/network/network.go << 'EOF'
-        package network1
+        # # 修改 .back/network/network.go
+        # cat > .back/network/network.go << 'EOF'
+        # package network1
 
-        import "github.com/oneclickvirt/basics/network"
+        # import "github.com/oneclickvirt/basics/network"
 
-        func NetworkCheck(checkType string, enableSecurityCheck bool, language string) (string, string, error) {
-            ipInfo, _, err := network.NetworkCheck(checkType, false, language)
-            return ipInfo, "", err
-        }
-        EOF
+        # func NetworkCheck(checkType string, enableSecurityCheck bool, language string) (string, string, error) {
+        #     ipInfo, _, err := network.NetworkCheck(checkType, false, language)
+        #     return ipInfo, "", err
+        # }
+        # EOF
         
         # 修改 utils/utils.go 中的 BasicsAndSecurityCheck 函数
         sed -i '/SecurityUploadToken/d' utils/utils.go
