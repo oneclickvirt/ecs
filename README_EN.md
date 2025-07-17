@@ -1,6 +1,6 @@
 # ecs
 
-[![release](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/main.yaml) 
+[![Build and Release](https://github.com/oneclickvirt/ecs/actions/workflows/build_binary.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/build_binary.yaml)
 
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
