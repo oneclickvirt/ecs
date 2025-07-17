@@ -427,27 +427,27 @@ builds:
         - echo "Successfully built freebsd/amd64 (no CGO)"
         - echo "---"
 
-  # FreeBSD ARM64 (no CGO)
-  - id: freebsd-arm64-nocgo
-    env:
-      - CGO_ENABLED=0
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-    flags:
-      - -trimpath
-    goos:
-      - freebsd
-    goarch:
-      - arm64
-    main: ./
-    binary: goecs
-    no_unique_dist_dir: true
-    hooks:
-      pre:
-        - echo "Starting build for freebsd/arm64 (no CGO)"
-      post:
-        - echo "Successfully built freebsd/arm64 (no CGO)"
-        - echo "---"
+  # # FreeBSD ARM64 (no CGO)
+  # - id: freebsd-arm64-nocgo
+  #   env:
+  #     - CGO_ENABLED=0
+  #   ldflags:
+  #     - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+  #   flags:
+  #     - -trimpath
+  #   goos:
+  #     - freebsd
+  #   goarch:
+  #     - arm64
+  #   main: ./
+  #   binary: goecs
+  #   no_unique_dist_dir: true
+  #   hooks:
+  #     pre:
+  #       - echo "Starting build for freebsd/arm64 (no CGO)"
+  #     post:
+  #       - echo "Successfully built freebsd/arm64 (no CGO)"
+  #       - echo "---"
 
 universal_binaries:
   - name_template: "goecs"
@@ -478,7 +478,7 @@ checksum:
     - linux-mipsle-nocgo
     - linux-ppc64-nocgo
     - freebsd-amd64-nocgo
-    - freebsd-arm64-nocgo
+    # - freebsd-arm64-nocgo
   extra_files:
     - glob: "./goecs.sh"
 
@@ -510,7 +510,7 @@ archives:
       - linux-mipsle-nocgo
       - linux-ppc64-nocgo
       - freebsd-amd64-nocgo
-      - freebsd-arm64-nocgo
+      # - freebsd-arm64-nocgo
 
 changelog:
   sort: asc
