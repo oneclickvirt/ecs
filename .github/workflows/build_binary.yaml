@@ -140,9 +140,8 @@ jobs:
             goarch: amd64
             cgo_enabled: "1"
             cc: x86_64-w64-mingw32-gcc
-            # cflags: "-O2 -static-libgcc -static-libstdc++"
+            cflags: "-O2 -static-libgcc -static-libstdc++"
             # ldflags: "-extldflags=-static -s -w"
-            cflags: "-O2 -static-libgcc -static-libstdc++ -DWIN32_LEAN_AND_MEAN"
             ldflags: "-extldflags=-static -s -w -H=console"
             packages: "build-essential gcc-mingw-w64-x86-64"
             runner: ubuntu-latest
@@ -151,9 +150,8 @@ jobs:
             goarch: 386
             cgo_enabled: "1"
             cc: i686-w64-mingw32-gcc
-            # cflags: "-O2 -static-libgcc -static-libstdc++"
+            cflags: "-O2 -static-libgcc -static-libstdc++"
             # ldflags: "-extldflags=-static -s -w"
-            cflags: "-O2 -static-libgcc -static-libstdc++ -DWIN32_LEAN_AND_MEAN"
             ldflags: "-extldflags=-static -s -w -H=console"
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
