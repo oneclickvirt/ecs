@@ -32,6 +32,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
+      - name: Install missing cross-compilation tools
+        run: |
+          echo "Installing missing cross-compilation tools..."
+          apt-get update
+          apt-get install -y gcc-multilib g++-multilib linux-headers-$(uname -r)
+          dpkg --add-architecture i386
+          apt-get update
+          apt-get install -y \
+            linux-libc-dev \
+            gcc-aarch64-linux-gnu \
+            gcc-riscv64-linux-gnu \
+            gcc-mips64-linux-gnuabi64 \
+            gcc-mips64el-linux-gnuabi64 \
+            gcc-powerpc64le-linux-gnu \
+            gcc-mingw-w64-x86-64 \
+            gcc-mingw-w64-i686 \
+            libc6-dev-i386 \
+            || echo "Some packages may already be installed"
+
       - name: Verify cross-compilation tools
         run: |
           echo "Checking available cross-compilation tools..."
@@ -59,25 +78,6 @@ jobs:
           ls -la /usr/bin/*clang* | head -10
           echo "=== OSXCross directory ==="
           ls -la /usr/osxcross/bin/ 2>/dev/null || echo "OSXCross not found in /usr/osxcross/bin/"
-
-      - name: Install missing cross-compilation tools
-        run: |
-          echo "Installing missing cross-compilation tools..."
-          apt-get update
-          apt-get install -y gcc-multilib g++-multilib
-          dpkg --add-architecture i386
-          apt-get update
-          apt-get install -y \
-            linux-libc-dev \
-            gcc-aarch64-linux-gnu \
-            gcc-riscv64-linux-gnu \
-            gcc-mips64-linux-gnuabi64 \
-            gcc-mips64el-linux-gnuabi64 \
-            gcc-powerpc64le-linux-gnu \
-            gcc-mingw-w64-x86-64 \
-            gcc-mingw-w64-i686 \
-            libc6-dev-i386 \
-            || echo "Some packages may already be installed"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
