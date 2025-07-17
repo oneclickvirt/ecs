@@ -285,7 +285,9 @@ jobs:
 
       - name: Build Binary
         run: |
+          go clean -cache
           go clean -modcache
+          go clean -testcache
           export CGO_ENABLED=${{ matrix.cgo_enabled }}
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
@@ -296,6 +298,7 @@ jobs:
             export GOMIPS=${{ matrix.gomips }}
           fi
           if [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.goos }}" == "darwin" ]]; then
+            # 设置 osxcross 的编译器
             if [[ "${{ matrix.goarch }}" == "amd64" ]]; then
               export CC="x86_64-apple-darwin21.4-clang"
               export CXX="x86_64-apple-darwin21.4-clang++"
@@ -305,6 +308,7 @@ jobs:
             fi
             export CGO_CFLAGS="${{ matrix.cflags }}"
             export CGO_LDFLAGS="${{ matrix.ldflags }}"
+            # 设置 osxcross 根目录
             export OSXCROSS_ROOT="${OSXCROSS_ROOT}"
           elif [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
             export CC="${{ matrix.cc }}"
@@ -327,6 +331,7 @@ jobs:
             rm -f test.c test
             echo "Compiler test passed"
           fi
+          rm -rf vendor/
           go mod download
           go mod tidy -v
           mkdir -p bin
@@ -339,8 +344,8 @@ jobs:
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
             echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} with CGO"
             echo "Final build command: CGO_ENABLED=$CGO_ENABLED GOOS=$GOOS GOARCH=$GOARCH CC=$CC go build"
-            env CGO_ENABLED=$CGO_ENABLED GOOS=$GOOS GOARCH=$GOARCH CC="$CC" CGO_CFLAGS="$CGO_CFLAGS" CGO_LDFLAGS="$CGO_LDFLAGS" \
-              go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+            env CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH CC="$CC" CGO_CFLAGS="$CGO_CFLAGS" CGO_LDFLAGS="$CGO_LDFLAGS" \
+              go build -x -a -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
             echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} without CGO"
