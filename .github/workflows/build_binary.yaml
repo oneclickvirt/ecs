@@ -155,7 +155,8 @@ jobs:
             # cc: "clang --target=x86_64-apple-darwin"
             # cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
             ldflags: "-s -w"
-            runner: ubuntu-latest
+            runner: macos-latest
+            # runner: ubuntu-latest
             # requires_osxcross: true
 
           - goos: darwin
@@ -164,7 +165,8 @@ jobs:
             # cc: "clang --target=aarch64-apple-darwin"
             # cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
             ldflags: "-s -w"
-            runner: ubuntu-latest
+            runner: macos-latest
+            # runner: ubuntu-latest
             # requires_osxcross: true
 
           - goos: linux
