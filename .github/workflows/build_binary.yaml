@@ -200,6 +200,12 @@ jobs:
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
+          
+          - goos: windows
+            goarch: arm
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: freebsd
             goarch: amd64
@@ -234,7 +240,7 @@ jobs:
 
       - name: Install cross-compilation tools
         run: |
-          sudo apt-get update
+          sudo apt-get update || true
           case "${{ matrix.goos }}-${{ matrix.goarch }}" in
             linux-386)
               sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
@@ -250,7 +256,7 @@ jobs:
               sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
-            darwin-*)
+            darwin-amd64|darwin-arm64)
               echo "Darwin builds without setup" ;;
             *)
               sudo apt-get install -y build-essential || true ;;
