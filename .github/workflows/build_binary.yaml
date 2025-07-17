@@ -273,7 +273,8 @@ jobs:
           wget -nc https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
           mv MacOSX12.3.sdk.tar.xz tarballs/
           UNATTENDED=yes OSX_VERSION_MIN=10.12 ./build.sh
-          export PATH="$PWD/target/bin:$PATH"
+          echo "$PWD/target/bin" >> $GITHUB_PATH
+          echo "OSXCROSS_ROOT=$PWD" >> $GITHUB_ENV
 
       - name: Get latest tag
         id: tag
@@ -293,7 +294,18 @@ jobs:
           if [[ -n "${{ matrix.gomips }}" ]]; then
             export GOMIPS=${{ matrix.gomips }}
           fi
-          if [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
+          if [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.goos }}" == "darwin" ]]; then
+            if [[ "${{ matrix.goarch }}" == "amd64" ]]; then
+              export CC="x86_64-apple-darwin21.4-clang"
+              export CXX="x86_64-apple-darwin21.4-clang++"
+            elif [[ "${{ matrix.goarch }}" == "arm64" ]]; then
+              export CC="aarch64-apple-darwin21.4-clang"
+              export CXX="aarch64-apple-darwin21.4-clang++"
+            fi
+            export CGO_CFLAGS="${{ matrix.cflags }}"
+            export CGO_LDFLAGS="${{ matrix.ldflags }}"
+            export OSXCROSS_ROOT="${OSXCROSS_ROOT}"
+          elif [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
             export CC="${{ matrix.cc }}"
             export CGO_CFLAGS="${{ matrix.cflags }}"
             if [[ "${{ matrix.goos }}" == "windows" ]]; then
@@ -310,6 +322,7 @@ jobs:
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
             echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} with CGO"
+            echo "CC=$CC, CGO_CFLAGS=$CGO_CFLAGS, CGO_LDFLAGS=$CGO_LDFLAGS"
             CGO_ENABLED=1 go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
