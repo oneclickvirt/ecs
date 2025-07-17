@@ -256,12 +256,8 @@ jobs:
               sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
-            darwin-amd64)
-              echo "CC=o64-clang" >> $GITHUB_ENV
-              echo "CXX=o64-clang++" >> $GITHUB_ENV ;;
-            darwin-arm64)
-              echo "CC=oa64-clang" >> $GITHUB_ENV
-              echo "CXX=oa64-clang++" >> $GITHUB_ENV ;;
+            darwin-amd64|darwin-arm64)
+              echo "No need to do" ;;
             *)
               sudo apt-get install -y build-essential || true ;;
           esac
@@ -300,11 +296,14 @@ jobs:
           LDFLAGS="-s -w -X main.version=${{ steps.tag.outputs.version }} -X main.arch=${{ matrix.goarch }}"
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
+            echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }}"
+            CGO_ENABLED=1 go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
+            echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }}"
+            CGO_ENABLED=0 go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           fi
-          echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }}"
-          go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+          
           if [[ -f "bin/$BINARY_NAME" ]]; then
             echo "Successfully built bin/$BINARY_NAME"
             ls -la bin/$BINARY_NAME
