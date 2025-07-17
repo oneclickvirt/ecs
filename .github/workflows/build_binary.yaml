@@ -285,6 +285,7 @@ jobs:
 
       - name: Build Binary
         run: |
+          go clean -modcache
           export CGO_ENABLED=${{ matrix.cgo_enabled }}
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
@@ -312,6 +313,21 @@ jobs:
               export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
             fi
           fi
+          echo "CGO Configuration:"
+          echo "CGO_ENABLED=$CGO_ENABLED"
+          echo "GOOS=$GOOS"
+          echo "GOARCH=$GOARCH"
+          echo "CC=$CC"
+          echo "CGO_CFLAGS=$CGO_CFLAGS"
+          echo "CGO_LDFLAGS=$CGO_LDFLAGS"
+          if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
+            echo "Testing compiler..."
+            echo 'int main() { return 0; }' > test.c
+            $CC $CGO_CFLAGS test.c -o test || (echo "Compiler test failed" && exit 1)
+            rm -f test.c test
+            echo "Compiler test passed"
+          fi
+          go mod download
           go mod tidy -v
           mkdir -p bin
           BINARY_NAME="goecs"
@@ -322,12 +338,14 @@ jobs:
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
             echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} with CGO"
-            echo "CC=$CC, CGO_CFLAGS=$CGO_CFLAGS, CGO_LDFLAGS=$CGO_LDFLAGS"
-            CGO_ENABLED=1 go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+            echo "Final build command: CGO_ENABLED=$CGO_ENABLED GOOS=$GOOS GOARCH=$GOARCH CC=$CC go build"
+            env CGO_ENABLED=$CGO_ENABLED GOOS=$GOOS GOARCH=$GOARCH CC="$CC" CGO_CFLAGS="$CGO_CFLAGS" CGO_LDFLAGS="$CGO_LDFLAGS" \
+              go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
             echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} without CGO"
-            CGO_ENABLED=0 go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+            env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH \
+              go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
           fi
           if [[ -f "bin/$BINARY_NAME" ]]; then
             echo "Successfully built bin/$BINARY_NAME"
