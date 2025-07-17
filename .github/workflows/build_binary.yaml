@@ -6,25 +6,13 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Release Check And Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.23.4
-
-      - name: Configure Git for Private Modules
-        run: |
-          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHT }}
 
       - name: Get latest tag
         id: tag
@@ -33,15 +21,32 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --oneline --pretty=format:"* %H %s" "$TAG" | head -20)
+          else
+            CHANGELOG=$(git log --oneline --pretty=format:"* %H %s" "$PREV_TAG..$TAG")
+          fi
+          FULL_CHANGELOG="## Changelog"$'\n'"$CHANGELOG"
+          echo "$FULL_CHANGELOG" > changelog.txt
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$FULL_CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create release if not exists
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           RELEASE_EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id // empty')
           if [ -z "$RELEASE_EXISTS" ]; then
             echo "Creating release for tag $TAG"
+            CHANGELOG_BODY=$(cat changelog.txt | jq -Rs .)
             RELEASE_RESPONSE=$(curl -s -X POST -H "Authorization: Bearer ${{ secrets.GHT }}" \
               -H "Content-Type: application/json" \
-              -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":\"Release $TAG\",\"draft\":false,\"prerelease\":false}" \
+              -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":$CHANGELOG_BODY,\"draft\":false,\"prerelease\":false}" \
               "https://api.github.com/repos/${{ github.repository }}/releases")
             echo "Release created: $(echo $RELEASE_RESPONSE | jq -r '.id')"
           else
@@ -83,7 +88,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-linux-gnu-gcc
             cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
-            ldflags: "-extldflags=-m32 -static -s -w"
+            ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-multilib"
 
           - goos: linux
@@ -240,8 +245,6 @@ jobs:
 
       - name: Build Binary
         run: |
-          go mod tidy -v
-          mkdir -p bin
           export CGO_ENABLED=${{ matrix.cgo_enabled }}
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
@@ -258,6 +261,8 @@ jobs:
               export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
             fi
           fi
+          go mod tidy -v
+          mkdir -p bin
           BINARY_NAME="goecs"
           if [[ "${{ matrix.goos }}" == "windows" ]]; then
             BINARY_NAME="${BINARY_NAME}.exe"
@@ -353,7 +358,7 @@ jobs:
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           RELEASE_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id')
-          
+
           curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" \
             -H "Content-Type: text/plain" \
             --data-binary @assets/checksums.txt \
