@@ -1,8 +1,10 @@
 name: Sync Latest Release
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Build and Release"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:

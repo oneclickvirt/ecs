@@ -1,8 +1,10 @@
 name: Public Build
 
 on:
-  release:
-    types: [ published ]
+  workflow_run:
+    workflows: ["Build and Release"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
@@ -68,9 +70,7 @@ jobs:
 
     - name: Build and Test
       run: |
-        # 构建二进制文件
-        go build -o maintest
-        # 测试无菜单模式是否正常运行（禁用 security 检测）
+        env CGO_ENABLED=1 go build -o maintest
         ./maintest -menu=false -l en -security=false -upload=false || exit 1
         rm -rf maintest
         

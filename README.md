@@ -62,7 +62,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 三网路由测试：基于 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
 - 网速测试：基于 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发至 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 - 三网 Ping 值测试：借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
-- 支持root或admin环境下测试，也支持非root或非admin环境下测试，半支持离线环境下进行测试，未支持无DNS环境下进行测试
+- 支持root或admin环境下测试，支持非root或非admin环境下测试，支持离线环境下进行测试，**暂未**支持无DNS环境下进行测试
 
 **本项目初次使用建议查看说明：[跳转](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
@@ -306,8 +306,10 @@ export PATH=$PATH:/usr/local/go/bin
 
 3. 编译
 ```bash
-go build -o goecs
+env CGO_ENABLED=1 go build -o goecs
 ```
+
+CGO在某些系统和架构中可能需要设置为0，请都进行尝试直到编译成功无报错。
 
 4. 运行测试
 ```bash

@@ -58,7 +58,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Three-network route test: Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)
 - Speed test: Based on data from [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) and [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID), developed to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 - Three-network Ping test: Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
-- Support root or admin environment testing, also support non-root or non-admin environment testing, semi-support offline environment for testing, not support no DNS environment for testing
+- Support root or admin environment testing, support non-root or non-admin environment testing, support offline environment for testing, not support no DNS environment for testing
 
 **For first-time users of this project, it is recommended to check the instructions: [Jump to](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
@@ -301,8 +301,10 @@ export PATH=$PATH:/usr/local/go/bin
 
 3. Compile
 ```bash
-go build -o goecs
+env CGO_ENABLED=1 go build -o goecs
 ```
+
+CGO may need to be set to 0 in some systems and architectures, please try them all until they compile successfully without errors.
 
 4. Run test
 ```bash
