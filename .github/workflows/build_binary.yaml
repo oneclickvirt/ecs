@@ -151,21 +151,21 @@ jobs:
 
           - goos: darwin
             goarch: amd64
-            cgo_enabled: "1"
-            cc: "clang --target=x86_64-apple-darwin"
-            cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
+            cgo_enabled: "0"
+            # cc: "clang --target=x86_64-apple-darwin"
+            # cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
             ldflags: "-s -w"
             runner: ubuntu-latest
-            requires_osxcross: true
+            # requires_osxcross: true
 
           - goos: darwin
             goarch: arm64
-            cgo_enabled: "1"
-            cc: "clang --target=aarch64-apple-darwin"
-            cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
+            cgo_enabled: "0"
+            # cc: "clang --target=aarch64-apple-darwin"
+            # cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
             ldflags: "-s -w"
             runner: ubuntu-latest
-            requires_osxcross: true
+            # requires_osxcross: true
 
           - goos: linux
             goarch: arm
@@ -257,16 +257,16 @@ jobs:
               sudo apt-get install -y build-essential ;;
           esac
 
-      - name: Install osxcross for Darwin
-        if: matrix.requires_osxcross == true
-        run: |
-          git clone --depth=1 https://github.com/tpoechtrager/osxcross.git
-          cd osxcross
-          wget -nc https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
-          mv MacOSX12.3.sdk.tar.xz tarballs/
-          UNATTENDED=yes OSX_VERSION_MIN=10.12 ./build.sh
-          echo "$PWD/target/bin" >> $GITHUB_PATH
-          echo "OSXCROSS_ROOT=$PWD" >> $GITHUB_ENV
+      # - name: Install osxcross for Darwin
+      #   if: matrix.requires_osxcross == true
+      #   run: |
+      #     git clone --depth=1 https://github.com/tpoechtrager/osxcross.git
+      #     cd osxcross
+      #     wget -nc https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
+      #     mv MacOSX12.3.sdk.tar.xz tarballs/
+      #     UNATTENDED=yes OSX_VERSION_MIN=10.12 ./build.sh
+      #     echo "$PWD/target/bin" >> $GITHUB_PATH
+      #     echo "OSXCROSS_ROOT=$PWD" >> $GITHUB_ENV
 
       - name: Get latest tag
         id: tag
