@@ -36,7 +36,7 @@ jobs:
         run: |
           echo "Installing missing cross-compilation tools..."
           apt-get update
-          apt-get install -y gcc-multilib g++-multilib linux-headers-$(uname -r)
+          apt-get install -y gcc-multilib g++-multilib linux-headers
           dpkg --add-architecture i386
           apt-get update
           apt-get install -y \
