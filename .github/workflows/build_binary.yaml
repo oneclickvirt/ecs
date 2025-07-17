@@ -69,7 +69,6 @@ jobs:
 
   release-binary:
     name: Release Go Binary
-    runs-on: ${{ (matrix.goos == 'windows' && (matrix.goarch == 'arm64' || matrix.goarch == 'arm')) && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     needs: build
     strategy:
       fail-fast: false
@@ -82,6 +81,7 @@ jobs:
             cflags: "-O2 -static -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: 386
@@ -90,6 +90,7 @@ jobs:
             cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-multilib"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: arm64
@@ -98,6 +99,7 @@ jobs:
             cflags: "-O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-aarch64-linux-gnu"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: riscv64
@@ -106,6 +108,7 @@ jobs:
             cflags: "-O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-riscv64-linux-gnu"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64
@@ -114,6 +117,7 @@ jobs:
             cflags: "-O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips64-linux-gnuabi64"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64le
@@ -122,6 +126,7 @@ jobs:
             cflags: "-O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips64el-linux-gnuabi64"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: ppc64le
@@ -130,6 +135,7 @@ jobs:
             cflags: "-O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-powerpc64le-linux-gnu"
+            runner: ubuntu-latest
 
           - goos: windows
             goarch: amd64
@@ -138,6 +144,7 @@ jobs:
             cflags: "-O2 -static-libgcc -static-libstdc++"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-x86-64"
+            runner: ubuntu-latest
 
           - goos: windows
             goarch: 386
@@ -146,54 +153,67 @@ jobs:
             cflags: "-O2 -static-libgcc -static-libstdc++"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-i686"
+            runner: ubuntu-latest
 
           - goos: darwin
             goarch: amd64
-            cgo_enabled: "0"
+            cgo_enabled: "1"
+            cc: clang
+            cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
             ldflags: "-s -w"
+            runner: macos-latest
 
           - goos: darwin
             goarch: arm64
-            cgo_enabled: "0"
+            cgo_enabled: "1"
+            cc: clang
+            cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
             ldflags: "-s -w"
+            runner: macos-latest
 
           - goos: linux
             goarch: arm
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: s390x
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: mips
-            # gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: mipsle
-            # gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: linux
             goarch: ppc64
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: freebsd
             goarch: amd64
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
           - goos: freebsd
             goarch: arm64
             cgo_enabled: "0"
             ldflags: "-s -w"
+            runner: ubuntu-latest
 
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
