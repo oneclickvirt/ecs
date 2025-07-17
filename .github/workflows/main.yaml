@@ -1,8 +1,10 @@
 name: Goreleaser
 on:
   workflow_dispatch:
+  push:
     tags:
       - "v*.*.*"
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -10,42 +12,62 @@ jobs:
       # 1.20 是 Windows 7/8 Server 2008/2012 最后一个支持版本
       image: goreleaser/goreleaser-cross:v1.24.5
     steps:
-      - run: |
+      - name: Configure git safe directory
+        run: |
           git config --global --add safe.directory /__w/ecs/ecs
+
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.23.4
+
       - name: Configure Git for Private Modules
         run: |
           git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
           git config --global url."git@github.com:".insteadOf "https://github.com/"
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
+
       - name: Verify cross-compilation tools
         run: |
           echo "Checking available cross-compilation tools..."
+          echo "=== GCC compilers ==="
+          which gcc || echo "gcc not found"
+          which x86_64-linux-gnu-gcc || echo "x86_64-linux-gnu-gcc not found"
           which aarch64-linux-gnu-gcc || echo "aarch64-linux-gnu-gcc not found"
-          which x86_64-w64-mingw32-gcc || echo "x86_64-w64-mingw32-gcc not found"
-          which i686-w64-mingw32-gcc || echo "i686-w64-mingw32-gcc not found"
           which riscv64-linux-gnu-gcc || echo "riscv64-linux-gnu-gcc not found"
           which mips64-linux-gnuabi64-gcc || echo "mips64-linux-gnuabi64-gcc not found"
           which mips64el-linux-gnuabi64-gcc || echo "mips64el-linux-gnuabi64-gcc not found"
           which powerpc64le-linux-gnu-gcc || echo "powerpc64le-linux-gnu-gcc not found"
-          ls -la /usr/bin/*-gcc* | head -20
-      - name: Install additional cross-compilation tools if needed
+          echo "=== MinGW compilers ==="
+          which x86_64-w64-mingw32-gcc || echo "x86_64-w64-mingw32-gcc not found"
+          which i686-w64-mingw32-gcc || echo "i686-w64-mingw32-gcc not found"
+          echo "=== OSXCross compilers ==="
+          which o64-clang || echo "o64-clang not found"
+          which oa64-clang || echo "oa64-clang not found"
+          which o64-clang++ || echo "o64-clang++ not found"
+          which oa64-clang++ || echo "oa64-clang++ not found"
+          echo "=== Clang compilers ==="
+          which clang || echo "clang not found"
+          echo "=== Available gcc binaries ==="
+          ls -la /usr/bin/*gcc* | head -20
+          echo "=== Available clang binaries ==="
+          ls -la /usr/bin/*clang* | head -10
+          echo "=== OSXCross directory ==="
+          ls -la /usr/osxcross/bin/ 2>/dev/null || echo "OSXCross not found in /usr/osxcross/bin/"
+
+      - name: Install missing cross-compilation tools
         run: |
-          apt-get update
-          apt-get install -y gcc-multilib g++-multilib
-          # 确保所有需要的交叉编译器都可用
-          dpkg --add-architecture i386
+          echo "Installing missing cross-compilation tools..."
           apt-get update
           apt-get install -y \
-            linux-libc-dev \
+            gcc-multilib \
+            g++-multilib \
             gcc-aarch64-linux-gnu \
             gcc-riscv64-linux-gnu \
             gcc-mips64-linux-gnuabi64 \
@@ -55,46 +77,17 @@ jobs:
             gcc-mingw-w64-i686 \
             libc6-dev-i386 \
             || echo "Some packages may already be installed"
-      - name: Set up cross-compilation environment
-        run: |
-          # 为CGO交叉编译设置环境变量
-          # echo "CC_linux_amd64=gcc" >> $GITHUB_ENV
-          echo "CC_linux_386=gcc -m32" >> $GITHUB_ENV
-          echo "CC_linux_arm64=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CC_linux_riscv64=riscv64-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CC_linux_mips64=mips64-linux-gnuabi64-gcc" >> $GITHUB_ENV
-          echo "CC_linux_mips64le=mips64el-linux-gnuabi64-gcc" >> $GITHUB_ENV
-          echo "CC_linux_ppc64le=powerpc64le-linux-gnu-gcc" >> $GITHUB_ENV
-          echo "CC_windows_amd64=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
-          echo "CC_windows_386=i686-w64-mingw32-gcc" >> $GITHUB_ENV
-          echo "CC_darwin_amd64=o64-clang" >> $GITHUB_ENV
-          echo "CC_darwin_arm64=oa64-clang" >> $GITHUB_ENV
-          
-          # 设置CGO_CFLAGS
-          echo "CGO_CFLAGS_linux_amd64=-O2 -static -fno-stack-protector -Wl,--gc-sections" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_386=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_arm64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_riscv64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_mips64=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_mips64le=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_linux_ppc64le=-static -O1 -fno-stack-protector" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_windows_amd64=-O2 -static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_windows_386=-O2 -static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_darwin_amd64=-O2 -arch x86_64 -mmacosx-version-min=10.12" >> $GITHUB_ENV
-          echo "CGO_CFLAGS_darwin_arm64=-O2 -arch arm64 -mmacosx-version-min=11.0" >> $GITHUB_ENV
-          
-          # 设置CGO_LDFLAGS
-          echo "CGO_LDFLAGS_windows_amd64=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
-          echo "CGO_LDFLAGS_windows_386=-static -static-libgcc -static-libstdc++" >> $GITHUB_ENV
+
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release
+          args: release --parallelism 1 --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security
+
       - name: Update goecs.sh with new version
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then

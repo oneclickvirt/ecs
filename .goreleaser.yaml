@@ -1,15 +1,20 @@
 version: 2
 project_name: goecs
+
 env:
   - GO111MODULE=on
-  - CGO_ENABLED=0
+
 before:
   hooks:
     - go mod tidy -v
+
 builds:
-  - id: linux-cgo
+  # Linux AMD64 with CGO
+  - id: linux-amd64-cgo
     env:
       - CGO_ENABLED=1
+      - CC=x86_64-linux-gnu-gcc
+      - CGO_CFLAGS=-O2 -static -fno-stack-protector -Wl,--gc-sections
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -18,20 +23,70 @@ builds:
       - linux
     goarch:
       - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/amd64 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/amd64 (CGO)"
+        - echo "---"
+
+  # Linux 386 with CGO
+  - id: linux-386-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-gnu-gcc -m32
+      - CGO_CFLAGS=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - 386
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/386 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/386 (CGO)"
+        - echo "---"
+
+  # Linux ARM64 with CGO
+  - id: linux-arm64-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - arm64
     main: ./
     binary: goecs
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/arm64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/arm64 (CGO)"
         - echo "---"
-  - id: linux-cgo-risc
+
+  # Linux RISC-V 64 with CGO
+  - id: linux-riscv64-cgo
     env:
       - CGO_ENABLED=1
+      - CC=riscv64-linux-gnu-gcc
+      - CGO_CFLAGS=-static -O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -45,13 +100,17 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-risc)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/riscv64 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-risc)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/riscv64 (CGO)"
         - echo "---"
-  - id: linux-cgo-mips
+
+  # Linux MIPS64 with CGO
+  - id: linux-mips64-cgo
     env:
       - CGO_ENABLED=1
+      - CC=mips64-linux-gnuabi64-gcc
+      - CGO_CFLAGS=-static -O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -60,19 +119,46 @@ builds:
       - linux
     goarch:
       - mips64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips64 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips64 (CGO)"
+        - echo "---"
+
+  # Linux MIPS64LE with CGO
+  - id: linux-mips64le-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=mips64el-linux-gnuabi64-gcc
+      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
       - mips64le
     main: ./
     binary: goecs
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-mips)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips64le (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-mips)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips64le (CGO)"
         - echo "---"
-  - id: linux-cgo-ppc
+
+  # Linux PPC64LE with CGO
+  - id: linux-ppc64le-cgo
     env:
       - CGO_ENABLED=1
+      - CC=powerpc64le-linux-gnu-gcc
+      - CGO_CFLAGS=-static -O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -86,13 +172,18 @@ builds:
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (linux-cgo-ppc)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/ppc64le (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (linux-cgo-ppc)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/ppc64le (CGO)"
         - echo "---"
-  - id: windows-cgo
+
+  # Windows AMD64 with CGO
+  - id: windows-amd64-cgo
     env:
       - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -101,19 +192,49 @@ builds:
       - windows
     goarch:
       - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/amd64 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/amd64 (CGO)"
+        - echo "---"
+
+  # Windows 386 with CGO
+  - id: windows-386-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=i686-w64-mingw32-gcc
+      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - windows
+    goarch:
       - 386
     main: ./
     binary: goecs
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (windows-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/386 (CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (windows-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/386 (CGO)"
         - echo "---"
-  - id: darwin-cgo
+
+  # Darwin AMD64 with CGO
+  - id: darwin-amd64-cgo
     env:
       - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+      - CGO_CFLAGS=-O2 -arch x86_64 -mmacosx-version-min=10.12
+      - CGO_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.12
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
     flags:
@@ -122,110 +243,246 @@ builds:
       - darwin
     goarch:
       - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/amd64 (CGO)"
+        - echo "Checking osxcross tools..."
+        - which o64-clang || echo "o64-clang not found"
+        - which o64-clang++ || echo "o64-clang++ not found"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/amd64 (CGO)"
+        - echo "---"
+
+  # Darwin ARM64 with CGO
+  - id: darwin-arm64-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+      - CGO_CFLAGS=-O2 -arch arm64 -mmacosx-version-min=11.0
+      - CGO_LDFLAGS=-arch arm64 -mmacosx-version-min=11.0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+    goarch:
       - arm64
     main: ./
     binary: goecs
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (darwin-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/arm64 (CGO)"
+        - echo "Checking osxcross tools..."
+        - which oa64-clang || echo "oa64-clang not found"
+        - which oa64-clang++ || echo "oa64-clang++ not found"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (darwin-cgo)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/arm64 (CGO)"
         - echo "---"
-  - id: universal
+
+  # Linux ARM (no CGO)
+  - id: linux-arm-nocgo
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
     flags:
       - -trimpath
     goos:
       - linux
-      - windows
-      - freebsd
-      # - openbsd
     goarch:
       - arm
-      - arm64
-      - 386
-      - amd64
-      - s390x
-      - mips
-      - mipsle
-      - ppc64
     goarm:
       - "5"
       - "6"
       - "7"
-    gomips:
-      - softfloat
-    ignore:
-      # 避免和 linux-cgo 重叠
-      - goos: linux
-        goarch: amd64
-      - goos: linux
-        goarch: 386
-      - goos: linux
-        goarch: arm64
-      - goos: linux
-        goarch: riscv64
-      - goos: linux
-        goarch: mips64
-      - goos: linux
-        goarch: mips64le
-      - goos: linux
-        goarch: ppc64le
-      # 避免和 windows-cgo 重叠
-      - goos: windows
-        goarch: amd64
-      - goos: windows
-        goarch: 386
-      # 避免和 darwin-cgo 重叠
-      - goos: darwin
-        goarch: amd64
-      - goos: darwin
-        goarch: arm64
-      # 原系统不支持的忽略规则
-      - goos: windows
-        goarch: arm
-      - goos: freebsd
-        goarch: 386
-      - goos: openbsd
-        goarch: 386
-      - goos: netbsd
-        goarch: 386
     main: ./
     binary: goecs
     no_unique_dist_dir: true
     hooks:
       pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for {{.Os}}/{{.Arch}} (universal)"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/arm (no CGO)"
       post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built {{.Os}}/{{.Arch}} (universal)"
-        - echo "Binary size:" && du -h "{{ .Path }}"
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/arm (no CGO)"
+        - echo "---"
+
+  # Linux S390X (no CGO)
+  - id: linux-s390x-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - s390x
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/s390x (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/s390x (no CGO)"
+        - echo "---"
+
+  # Linux MIPS (no CGO)
+  - id: linux-mips-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - mips
+    gomips:
+      - softfloat
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mips (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mips (no CGO)"
+        - echo "---"
+
+  # Linux MIPSLE (no CGO)
+  - id: linux-mipsle-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - mipsle
+    gomips:
+      - softfloat
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/mipsle (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/mipsle (no CGO)"
+        - echo "---"
+
+  # Linux PPC64 (no CGO)
+  - id: linux-ppc64-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+    goarch:
+      - ppc64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/ppc64 (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/ppc64 (no CGO)"
+        - echo "---"
+
+  # FreeBSD AMD64 (no CGO)
+  - id: freebsd-amd64-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+    goarch:
+      - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for freebsd/amd64 (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built freebsd/amd64 (no CGO)"
+        - echo "---"
+
+  # FreeBSD ARM64 (no CGO)
+  - id: freebsd-arm64-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+    goarch:
+      - arm64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for freebsd/arm64 (no CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built freebsd/arm64 (no CGO)"
         - echo "---"
 
 universal_binaries:
   - name_template: "goecs"
     replace: false
     ids:
-      - darwin-cgo
+      - darwin-amd64-cgo
+      - darwin-arm64-cgo
+
 checksum:
   name_template: "checksums.txt"
   algorithm: sha256
   disable: false
   ids:
-    - linux-cgo
-    - linux-cgo-risc
-    - linux-cgo-mips
-    - linux-cgo-ppc
-    - windows-cgo
-    - darwin-cgo
-    - universal
+    - linux-amd64-cgo
+    - linux-386-cgo
+    - linux-arm64-cgo
+    - linux-riscv64-cgo
+    - linux-mips64-cgo
+    - linux-mips64le-cgo
+    - linux-ppc64le-cgo
+    - windows-amd64-cgo
+    - windows-386-cgo
+    - darwin-amd64-cgo
+    - darwin-arm64-cgo
+    - linux-arm-nocgo
+    - linux-s390x-nocgo
+    - linux-mips-nocgo
+    - linux-mipsle-nocgo
+    - linux-ppc64-nocgo
+    - freebsd-amd64-nocgo
+    - freebsd-arm64-nocgo
   extra_files:
     - glob: "./goecs.sh"
+
 snapshot:
   name_template: "goecs"
+
 archives:
   - id: default
     name_template: "goecs_{{ .Os }}_{{ .Arch }}"
@@ -234,13 +491,25 @@ archives:
       - none*
     allow_different_binary_count: true
     builds:
-      - linux-cgo
-      - linux-cgo-risc
-      - linux-cgo-mips
-      - linux-cgo-ppc
-      - windows-cgo
-      - darwin-cgo
-      - universal
+      - linux-amd64-cgo
+      - linux-386-cgo
+      - linux-arm64-cgo
+      - linux-riscv64-cgo
+      - linux-mips64-cgo
+      - linux-mips64le-cgo
+      - linux-ppc64le-cgo
+      - windows-amd64-cgo
+      - windows-386-cgo
+      - darwin-amd64-cgo
+      - darwin-arm64-cgo
+      - linux-arm-nocgo
+      - linux-s390x-nocgo
+      - linux-mips-nocgo
+      - linux-mipsle-nocgo
+      - linux-ppc64-nocgo
+      - freebsd-amd64-nocgo
+      - freebsd-arm64-nocgo
+
 changelog:
   sort: asc
   filters:
