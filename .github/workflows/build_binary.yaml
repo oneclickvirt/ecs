@@ -37,16 +37,21 @@ jobs:
           echo "$FULL_CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create release if not exists
+      - name: Create or update release
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
+          CHANGELOG_BODY=$(cat changelog.txt | jq -Rs .)
           RELEASE_EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id // empty')
           if [ -z "$RELEASE_EXISTS" ]; then
-            CHANGELOG_BODY=$(cat changelog.txt | jq -Rs .)
             curl -s -X POST -H "Authorization: Bearer ${{ secrets.GHT }}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":$CHANGELOG_BODY,\"draft\":false,\"prerelease\":false}" \
               "https://api.github.com/repos/${{ github.repository }}/releases" > /dev/null
+          else
+            curl -s -X PATCH -H "Authorization: Bearer ${{ secrets.GHT }}" \
+              -H "Content-Type: application/json" \
+              -d "{\"body\":$CHANGELOG_BODY}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_EXISTS" > /dev/null
           fi
 
       - name: Delete existing release assets
