@@ -36,20 +36,31 @@ jobs:
         run: |
           echo "Installing missing cross-compilation tools..."
           apt-get update
-          apt-get install -y gcc-multilib g++-multilib
-          dpkg --add-architecture i386
-          apt-get update
-          apt-get install -y \
-            linux-libc-dev \
-            gcc-aarch64-linux-gnu \
-            gcc-riscv64-linux-gnu \
-            gcc-mips64-linux-gnuabi64 \
-            gcc-mips64el-linux-gnuabi64 \
-            gcc-powerpc64le-linux-gnu \
-            gcc-mingw-w64-x86-64 \
-            gcc-mingw-w64-i686 \
-            libc6-dev-i386 \
-            || echo "Some packages may already be installed"
+          PACKAGES=(
+            gcc-multilib
+            g++-multilib
+            linux-libc-dev
+            linux-libc-dev:i386
+            libc6-dev-i386
+            libc6-dev-i386-cross
+            gcc-aarch64-linux-gnu
+            gcc-riscv64-linux-gnu
+            gcc-mips64-linux-gnuabi64
+            gcc-mips64el-linux-gnuabi64
+            gcc-powerpc64le-linux-gnu
+            gcc-mingw-w64-x86-64
+            gcc-mingw-w64-i686
+            libc6-dev-amd64-cross
+            libc6-dev-arm64-cross
+            libc6-dev-riscv64-cross
+            libc6-dev-mips64-cross
+            libc6-dev-mips64el-cross
+            libc6-dev-ppc64el-cross
+          )
+          for pkg in "${PACKAGES[@]}"; do
+            echo "Installing $pkg..."
+            apt-get install -y "$pkg" || echo "Failed to install $pkg, continuing..."
+          done
 
       - name: Verify cross-compilation tools
         run: |
