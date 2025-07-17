@@ -83,7 +83,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-linux-gnu-gcc
             cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
-            ldflags: "-extldflags=\"-m32 -static\" -s -w"
+            ldflags: "-extldflags=-m32 -static -s -w"
             packages: "build-essential gcc-multilib"
 
           - goos: linux
@@ -164,13 +164,13 @@ jobs:
 
           - goos: linux
             goarch: mips
-            gomips: softfloat
+            # gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
 
           - goos: linux
             goarch: mipsle
-            gomips: softfloat
+            # gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
 
