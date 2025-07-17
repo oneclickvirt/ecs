@@ -202,7 +202,7 @@ jobs:
             runner: ubuntu-latest
           
           - goos: windows
-            goarch: arm
+            goarch: arm64
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
