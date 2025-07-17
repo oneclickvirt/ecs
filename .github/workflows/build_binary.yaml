@@ -81,7 +81,7 @@ jobs:
           - goos: linux
             goarch: 386
             cgo_enabled: "1"
-            cc: gcc
+            cc: x86_64-linux-gnu-gcc
             cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
             ldflags: "-extldflags=\"-m32 -static\" -s -w"
             packages: "build-essential gcc-multilib"
@@ -144,19 +144,13 @@ jobs:
 
           - goos: darwin
             goarch: amd64
-            cgo_enabled: "1"
-            cc: o64-clang
-            cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
+            cgo_enabled: "0"
             ldflags: "-s -w"
-            packages: "osxcross"
 
           - goos: darwin
             goarch: arm64
-            cgo_enabled: "1"
-            cc: oa64-clang
-            cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
+            cgo_enabled: "0"
             ldflags: "-s -w"
-            packages: "osxcross"
 
           - goos: linux
             goarch: arm
@@ -245,7 +239,7 @@ jobs:
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
             darwin-*)
-              echo "Darwin builds require osxcross setup" ;;
+              echo "Darwin builds without setup" ;;
             *)
               sudo apt-get install -y build-essential || true ;;
           esac
