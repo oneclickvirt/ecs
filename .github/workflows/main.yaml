@@ -58,7 +58,7 @@ jobs:
       - name: Set up cross-compilation environment
         run: |
           # 为CGO交叉编译设置环境变量
-          echo "CC_linux_amd64=gcc" >> $GITHUB_ENV
+          # echo "CC_linux_amd64=gcc" >> $GITHUB_ENV
           echo "CC_linux_386=gcc -m32" >> $GITHUB_ENV
           echo "CC_linux_arm64=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           echo "CC_linux_riscv64=riscv64-linux-gnu-gcc" >> $GITHUB_ENV
