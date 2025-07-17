@@ -42,15 +42,11 @@ jobs:
           TAG="${{ steps.tag.outputs.tag }}"
           RELEASE_EXISTS=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id // empty')
           if [ -z "$RELEASE_EXISTS" ]; then
-            echo "Creating release for tag $TAG"
             CHANGELOG_BODY=$(cat changelog.txt | jq -Rs .)
-            RELEASE_RESPONSE=$(curl -s -X POST -H "Authorization: Bearer ${{ secrets.GHT }}" \
+            curl -s -X POST -H "Authorization: Bearer ${{ secrets.GHT }}" \
               -H "Content-Type: application/json" \
               -d "{\"tag_name\":\"$TAG\",\"name\":\"$TAG\",\"body\":$CHANGELOG_BODY,\"draft\":false,\"prerelease\":false}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases")
-            echo "Release created: $(echo $RELEASE_RESPONSE | jq -r '.id')"
-          else
-            echo "Release already exists for tag $TAG"
+              "https://api.github.com/repos/${{ github.repository }}/releases" > /dev/null
           fi
 
       - name: Delete existing release assets
@@ -58,10 +54,8 @@ jobs:
           TAG="${{ steps.tag.outputs.tag }}"
           RELEASE_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id')
           if [ "$RELEASE_ID" != "null" ]; then
-            echo "Deleting existing release assets..."
             ASSETS=$(curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets" | jq -r '.[] | .id')
             for asset in $ASSETS; do
-              echo "Deleting asset with ID: $asset"
               curl -s -X DELETE -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/assets/$asset"
             done
             sleep 30
@@ -202,7 +196,7 @@ jobs:
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
-          
+
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
@@ -240,11 +234,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-      # 只在非macOS环境安装交叉编译工具
       - name: Install cross-compilation tools
         if: matrix.runner != 'macos-latest'
         run: |
-          sudo apt-get update || true
+          sudo apt-get update -qq
           case "${{ matrix.goos }}-${{ matrix.goarch }}" in
             linux-386)
               sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
@@ -261,14 +254,13 @@ jobs:
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
             *)
-              sudo apt-get install -y build-essential || true ;;
+              sudo apt-get install -y build-essential ;;
           esac
 
-      # 需要支持CGO的Darwin交叉编译，需要安装osxcross
       - name: Install osxcross for Darwin
         if: matrix.requires_osxcross == true
         run: |
-          git clone https://github.com/tpoechtrager/osxcross.git
+          git clone --depth=1 https://github.com/tpoechtrager/osxcross.git
           cd osxcross
           wget -nc https://github.com/joseluisq/macosx-sdks/releases/download/12.3/MacOSX12.3.sdk.tar.xz
           mv MacOSX12.3.sdk.tar.xz tarballs/
@@ -285,9 +277,7 @@ jobs:
 
       - name: Build Binary
         run: |
-          go clean -cache
-          go clean -modcache
-          go clean -testcache
+          go clean -cache -modcache -testcache
           export CGO_ENABLED=${{ matrix.cgo_enabled }}
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
@@ -298,7 +288,6 @@ jobs:
             export GOMIPS=${{ matrix.gomips }}
           fi
           if [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.goos }}" == "darwin" ]]; then
-            # 设置 osxcross 的编译器
             if [[ "${{ matrix.goarch }}" == "amd64" ]]; then
               export CC="x86_64-apple-darwin21.4-clang"
               export CXX="x86_64-apple-darwin21.4-clang++"
@@ -308,7 +297,6 @@ jobs:
             fi
             export CGO_CFLAGS="${{ matrix.cflags }}"
             export CGO_LDFLAGS="${{ matrix.ldflags }}"
-            # 设置 osxcross 根目录
             export OSXCROSS_ROOT="${OSXCROSS_ROOT}"
           elif [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
             export CC="${{ matrix.cc }}"
@@ -317,23 +305,14 @@ jobs:
               export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
             fi
           fi
-          echo "CGO Configuration:"
-          echo "CGO_ENABLED=$CGO_ENABLED"
-          echo "GOOS=$GOOS"
-          echo "GOARCH=$GOARCH"
-          echo "CC=$CC"
-          echo "CGO_CFLAGS=$CGO_CFLAGS"
-          echo "CGO_LDFLAGS=$CGO_LDFLAGS"
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
-            echo "Testing compiler..."
             echo 'int main() { return 0; }' > test.c
-            $CC $CGO_CFLAGS test.c -o test || (echo "Compiler test failed" && exit 1)
+            $CC $CGO_CFLAGS test.c -o test || exit 1
             rm -f test.c test
-            echo "Compiler test passed"
           fi
           rm -rf vendor/
           go mod download
-          go mod tidy -v
+          go mod tidy
           mkdir -p bin
           BINARY_NAME="goecs"
           if [[ "${{ matrix.goos }}" == "windows" ]]; then
@@ -342,23 +321,14 @@ jobs:
           LDFLAGS="-s -w -X main.version=${{ steps.tag.outputs.version }} -X main.arch=${{ matrix.goarch }}"
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
-            echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} with CGO"
-            echo "Final build command: CGO_ENABLED=$CGO_ENABLED GOOS=$GOOS GOARCH=$GOARCH CC=$CC go build"
             env CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH CC="$CC" CGO_CFLAGS="$CGO_CFLAGS" CGO_LDFLAGS="$CGO_LDFLAGS" \
-              go build -x -a -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+              go build -a -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
-            echo "Building $BINARY_NAME for ${{ matrix.goos }}/${{ matrix.goarch }} without CGO"
             env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH \
-              go build -o bin/$BINARY_NAME -v -ldflags="$LDFLAGS" -trimpath ./
+              go build -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
           fi
-          if [[ -f "bin/$BINARY_NAME" ]]; then
-            echo "Successfully built bin/$BINARY_NAME"
-            ls -la bin/$BINARY_NAME
-          else
-            echo "Build failed for ${{ matrix.goos }}/${{ matrix.goarch }}"
-            exit 1
-          fi
+          [[ -f "bin/$BINARY_NAME" ]] || exit 1
 
       - name: Create ZIP archive
         run: |
@@ -376,8 +346,6 @@ jobs:
           fi
           ZIP_NAME="${ZIP_NAME}.zip"
           zip "$ZIP_NAME" "$BINARY_NAME"
-          echo "Created $ZIP_NAME"
-          ls -la "$ZIP_NAME"
 
       - name: Upload to Release
         run: |
@@ -386,7 +354,6 @@ jobs:
           cd bin
           for file in *.zip; do
             if [[ -f "$file" ]]; then
-              echo "Uploading $file to release..."
               curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" \
                 -H "Content-Type: application/zip" \
                 --data-binary @"$file" \
@@ -418,7 +385,6 @@ jobs:
           ASSETS=$(curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets")
           echo "$ASSETS" | jq -r '.[] | select(.name | endswith(".zip")) | .browser_download_url' | while read url; do
             filename=$(basename "$url")
-            echo "Downloading $filename..."
             curl -L -H "Authorization: Bearer ${{ secrets.GHT }}" "$url" -o "assets/$filename"
           done
 
@@ -429,13 +395,11 @@ jobs:
           if [[ -f "../goecs.sh" ]]; then
             sha256sum ../goecs.sh >> checksums.txt
           fi
-          cat checksums.txt
 
       - name: Upload checksums
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
           RELEASE_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG" | jq -r '.id')
-
           curl -s -H "Authorization: Bearer ${{ secrets.GHT }}" \
             -H "Content-Type: text/plain" \
             --data-binary @assets/checksums.txt \
@@ -474,12 +438,7 @@ jobs:
               git add "goecs.sh"
               git commit -m "chore: update ECS_VERSION to $VERSION in goecs.sh"
               git push origin $BRANCH
-              echo "Updated goecs.sh with version $VERSION"
-            else
-              echo "No changes needed in goecs.sh"
             fi
-          else
-            echo "goecs.sh not found, skipping version update"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
