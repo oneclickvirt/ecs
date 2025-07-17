@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       # 1.20 是 Windows 7/8 Server 2008/2012 最后一个支持版本
-      image: goreleaser/goreleaser-cross:v1.24.5
+      image: goreleaser/goreleaser-cross:v1.20
     steps:
       - name: Configure git safe directory
         run: |
@@ -65,9 +65,11 @@ jobs:
         run: |
           echo "Installing missing cross-compilation tools..."
           apt-get update
+          apt-get install -y gcc-multilib g++-multilib
+          dpkg --add-architecture i386
+          apt-get update
           apt-get install -y \
-            gcc-multilib \
-            g++-multilib \
+            linux-libc-dev \
             gcc-aarch64-linux-gnu \
             gcc-riscv64-linux-gnu \
             gcc-mips64-linux-gnuabi64 \

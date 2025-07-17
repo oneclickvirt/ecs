@@ -14,6 +14,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
       - CGO_CFLAGS=-O2 -static -fno-stack-protector -Wl,--gc-sections
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
@@ -37,7 +38,7 @@ builds:
   - id: linux-386-cgo
     env:
       - CGO_ENABLED=1
-      - CC=x86_64-linux-gnu-gcc -m32
+      - CC=gcc -m32
       - CGO_CFLAGS=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
@@ -62,6 +63,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-gcc
       - CGO_CFLAGS=-static -O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
@@ -79,6 +81,114 @@ builds:
         - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/arm64 (CGO)"
       post:
         - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/arm64 (CGO)"
+        - echo "---"
+
+  # Windows AMD64 with CGO
+  - id: windows-amd64-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - windows
+    goarch:
+      - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/amd64 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/amd64 (CGO)"
+        - echo "---"
+
+  # Windows 386 with CGO
+  - id: windows-386-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=gcc-mingw-w64-i686
+      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+    flags:
+      - -trimpath
+    goos:
+      - windows
+    goarch:
+      - 386
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/386 (CGO)"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/386 (CGO)"
+        - echo "---"
+
+  # Darwin AMD64 with CGO
+  - id: darwin-amd64-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+      - CGO_CFLAGS=-O2 -arch x86_64 -mmacosx-version-min=10.12
+      - CGO_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.12
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/amd64 (CGO)"
+        - echo "Checking osxcross tools..."
+        - which o64-clang || echo "o64-clang not found"
+        - which o64-clang++ || echo "o64-clang++ not found"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/amd64 (CGO)"
+        - echo "---"
+
+  # Darwin ARM64 with CGO
+  - id: darwin-arm64-cgo
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+      - CGO_CFLAGS=-O2 -arch arm64 -mmacosx-version-min=11.0
+      - CGO_LDFLAGS=-arch arm64 -mmacosx-version-min=11.0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/arm64 (CGO)"
+        - echo "Checking osxcross tools..."
+        - which oa64-clang || echo "oa64-clang not found"
+        - which oa64-clang++ || echo "oa64-clang++ not found"
+      post:
+        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/arm64 (CGO)"
         - echo "---"
 
   # Linux RISC-V 64 with CGO
@@ -175,114 +285,6 @@ builds:
         - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for linux/ppc64le (CGO)"
       post:
         - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built linux/ppc64le (CGO)"
-        - echo "---"
-
-  # Windows AMD64 with CGO
-  - id: windows-amd64-cgo
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
-      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
-    flags:
-      - -trimpath
-    goos:
-      - windows
-    goarch:
-      - amd64
-    main: ./
-    binary: goecs
-    no_unique_dist_dir: true
-    hooks:
-      pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/amd64 (CGO)"
-      post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/amd64 (CGO)"
-        - echo "---"
-
-  # Windows 386 with CGO
-  - id: windows-386-cgo
-    env:
-      - CGO_ENABLED=1
-      - CC=i686-w64-mingw32-gcc
-      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
-      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
-    flags:
-      - -trimpath
-    goos:
-      - windows
-    goarch:
-      - 386
-    main: ./
-    binary: goecs
-    no_unique_dist_dir: true
-    hooks:
-      pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for windows/386 (CGO)"
-      post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built windows/386 (CGO)"
-        - echo "---"
-
-  # Darwin AMD64 with CGO
-  - id: darwin-amd64-cgo
-    env:
-      - CGO_ENABLED=1
-      - CC=o64-clang
-      - CXX=o64-clang++
-      - CGO_CFLAGS=-O2 -arch x86_64 -mmacosx-version-min=10.12
-      - CGO_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.12
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-    flags:
-      - -trimpath
-    goos:
-      - darwin
-    goarch:
-      - amd64
-    main: ./
-    binary: goecs
-    no_unique_dist_dir: true
-    hooks:
-      pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/amd64 (CGO)"
-        - echo "Checking osxcross tools..."
-        - which o64-clang || echo "o64-clang not found"
-        - which o64-clang++ || echo "o64-clang++ not found"
-      post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/amd64 (CGO)"
-        - echo "---"
-
-  # Darwin ARM64 with CGO
-  - id: darwin-arm64-cgo
-    env:
-      - CGO_ENABLED=1
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-      - CGO_CFLAGS=-O2 -arch arm64 -mmacosx-version-min=11.0
-      - CGO_LDFLAGS=-arch arm64 -mmacosx-version-min=11.0
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-    flags:
-      - -trimpath
-    goos:
-      - darwin
-    goarch:
-      - arm64
-    main: ./
-    binary: goecs
-    no_unique_dist_dir: true
-    hooks:
-      pre:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting build for darwin/arm64 (CGO)"
-        - echo "Checking osxcross tools..."
-        - which oa64-clang || echo "oa64-clang not found"
-        - which oa64-clang++ || echo "oa64-clang++ not found"
-      post:
-        - echo "[$(date '+%Y-%m-%d %H:%M:%S')] Successfully built darwin/arm64 (CGO)"
         - echo "---"
 
   # Linux ARM (no CGO)
