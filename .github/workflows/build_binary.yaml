@@ -154,19 +154,6 @@ jobs:
 
           - goos: linux
             goarch: arm
-            goarm: "5"
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-
-          - goos: linux
-            goarch: arm
-            goarm: "6"
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-
-          - goos: linux
-            goarch: arm
-            goarm: "7"
             cgo_enabled: "0"
             ldflags: "-s -w"
 
