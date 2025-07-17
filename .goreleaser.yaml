@@ -14,8 +14,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=x86_64-linux-gnu-gcc
-      - CXX=x86_64-linux-gnu-g++
-      - CGO_CFLAGS=-O2 -static -fno-stack-protector -Wl,--gc-sections
+      - CGO_CFLAGS=-O2 -static -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -34,14 +33,15 @@ builds:
         - echo "Successfully built linux/amd64 (CGO)"
         - echo "---"
 
-  # Linux 386 with CGO
+  # Linux 386 with CGO - 修复了编译器和标志
   - id: linux-386-cgo
     env:
       - CGO_ENABLED=1
-      - CC=gcc -m32
-      - CGO_CFLAGS=-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector
+      - CC=gcc
+      - CGO_CFLAGS=-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector
+      - CGO_LDFLAGS=-m32
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags="-m32 -static"
     flags:
       - -trimpath
     goos:
@@ -63,8 +63,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=aarch64-linux-gnu-gcc
-      - CXX=aarch64-linux-gnu-gcc
-      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+      - CGO_CFLAGS=-O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -88,8 +87,8 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
-      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
-      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
+      - CGO_CFLAGS=-O2 -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static-libgcc -static-libstdc++
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -108,13 +107,13 @@ builds:
         - echo "Successfully built windows/amd64 (CGO)"
         - echo "---"
 
-  # Windows 386 with CGO
+  # Windows 386 with CGO - 修复了编译器名称
   - id: windows-386-cgo
     env:
       - CGO_ENABLED=1
-      - CC=gcc-mingw-w64-i686
-      - CGO_CFLAGS=-O2 -static -static-libgcc -static-libstdc++
-      - CGO_LDFLAGS=-static -static-libgcc -static-libstdc++
+      - CC=i686-w64-mingw32-gcc
+      - CGO_CFLAGS=-O2 -static-libgcc -static-libstdc++
+      - CGO_LDFLAGS=-static-libgcc -static-libstdc++
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -138,7 +137,6 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=o64-clang
-      - CXX=o64-clang++
       - CGO_CFLAGS=-O2 -arch x86_64 -mmacosx-version-min=10.12
       - CGO_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.12
     ldflags:
@@ -167,7 +165,6 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=oa64-clang
-      - CXX=oa64-clang++
       - CGO_CFLAGS=-O2 -arch arm64 -mmacosx-version-min=11.0
       - CGO_LDFLAGS=-arch arm64 -mmacosx-version-min=11.0
     ldflags:
@@ -196,7 +193,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=riscv64-linux-gnu-gcc
-      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+      - CGO_CFLAGS=-O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -220,7 +217,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=mips64-linux-gnuabi64-gcc
-      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+      - CGO_CFLAGS=-O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -244,7 +241,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=mips64el-linux-gnuabi64-gcc
-      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+      - CGO_CFLAGS=-O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -268,7 +265,7 @@ builds:
     env:
       - CGO_ENABLED=1
       - CC=powerpc64le-linux-gnu-gcc
-      - CGO_CFLAGS=-static -O1 -fno-stack-protector
+      - CGO_CFLAGS=-O1 -fno-stack-protector
     ldflags:
       - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0 -extldflags=-static
     flags:
@@ -405,49 +402,49 @@ builds:
         - echo "Successfully built linux/ppc64 (no CGO)"
         - echo "---"
 
-  # # FreeBSD AMD64 (no CGO)
-  # - id: freebsd-amd64-nocgo
-  #   env:
-  #     - CGO_ENABLED=0
-  #   ldflags:
-  #     - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-  #   flags:
-  #     - -trimpath
-  #   goos:
-  #     - freebsd
-  #   goarch:
-  #     - amd64
-  #   main: ./
-  #   binary: goecs
-  #   no_unique_dist_dir: true
-  #   hooks:
-  #     pre:
-  #       - echo "Starting build for freebsd/amd64 (no CGO)"
-  #     post:
-  #       - echo "Successfully built freebsd/amd64 (no CGO)"
-  #       - echo "---"
+  # FreeBSD AMD64 (no CGO)
+  - id: freebsd-amd64-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+    goarch:
+      - amd64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Starting build for freebsd/amd64 (no CGO)"
+      post:
+        - echo "Successfully built freebsd/amd64 (no CGO)"
+        - echo "---"
 
-  # # FreeBSD ARM64 (no CGO)
-  # - id: freebsd-arm64-nocgo
-  #   env:
-  #     - CGO_ENABLED=0
-  #   ldflags:
-  #     - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
-  #   flags:
-  #     - -trimpath
-  #   goos:
-  #     - freebsd
-  #   goarch:
-  #     - arm64
-  #   main: ./
-  #   binary: goecs
-  #   no_unique_dist_dir: true
-  #   hooks:
-  #     pre:
-  #       - echo "Starting build for freebsd/arm64 (no CGO)"
-  #     post:
-  #       - echo "Successfully built freebsd/arm64 (no CGO)"
-  #       - echo "---"
+  # FreeBSD ARM64 (no CGO)
+  - id: freebsd-arm64-nocgo
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+    goarch:
+      - arm64
+    main: ./
+    binary: goecs
+    no_unique_dist_dir: true
+    hooks:
+      pre:
+        - echo "Starting build for freebsd/arm64 (no CGO)"
+      post:
+        - echo "Successfully built freebsd/arm64 (no CGO)"
+        - echo "---"
 
 universal_binaries:
   - name_template: "goecs"
@@ -477,8 +474,8 @@ checksum:
     - linux-mips-nocgo
     - linux-mipsle-nocgo
     - linux-ppc64-nocgo
-    # - freebsd-amd64-nocgo
-    # - freebsd-arm64-nocgo
+    - freebsd-amd64-nocgo
+    - freebsd-arm64-nocgo
   extra_files:
     - glob: "./goecs.sh"
 
@@ -509,8 +506,8 @@ archives:
       - linux-mips-nocgo
       - linux-mipsle-nocgo
       - linux-ppc64-nocgo
-      # - freebsd-amd64-nocgo
-      # - freebsd-arm64-nocgo
+      - freebsd-amd64-nocgo
+      - freebsd-arm64-nocgo
 
 changelog:
   sort: asc
