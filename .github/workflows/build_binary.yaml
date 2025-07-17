@@ -208,18 +208,6 @@ jobs:
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
-          
-          - goos: openbsd
-            goarch: amd64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: openbsd
-            goarch: arm64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
 
     runs-on: ${{ matrix.runner }}
     steps:

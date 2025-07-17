@@ -28,11 +28,11 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 | Supported for Compilation | Tested on | Supported OS for Compilation | Tested OS |
 |---------------------------|-----------|------------------------------|-----------|
 | amd64                     | amd64     | Linux                        | Linux     |
-| arm                       |           | Windows                      | Windows   |
-| arm64                     | arm64     | FreeBSD                      |           |
-| 386                       |           | OpenBSD                      |           |
-| mips                      |           | MacOS(darwin)                | MacOS     |
-| mipsle                    |           |                              |           |
+| arm64                     | arm64     | Windows                      | Windows   |
+| arm                       |           | MacOS(darwin)                | MacOS     |
+| 386                       |           | FreeBSD                      |           |
+| mips,mipsle               |           | Android                      |           |
+| ppc64,ppc64le             |           |                              |           |
 | s390x                     | s390x     |                              |           |
 | riscv64                   |           |                              |           |
 
