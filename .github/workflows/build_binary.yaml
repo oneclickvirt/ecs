@@ -138,7 +138,7 @@ jobs:
           
           - goos: linux
             goarch: arm
-            goarm: 7
+            # goarm: 7
             cgo_enabled: "1"
             cc: arm-linux-gnueabihf-gcc
             cflags: "-O1 -fno-stack-protector"
