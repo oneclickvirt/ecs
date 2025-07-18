@@ -175,6 +175,7 @@ jobs:
 
           - goos: linux
             goarch: arm
+            goarm: 7
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
@@ -271,17 +272,25 @@ jobs:
           echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
       - name: Build Binary
+        env:
+          CGO_ENABLED: ${{ matrix.cgo_enabled }}
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CC: ${{ matrix.cc }}
+          CGO_CFLAGS: ${{ matrix.cflags }}
+          CGO_LDFLAGS: ${{ matrix.ldflags }}
         run: |
           go clean -cache -modcache -testcache
-          export CGO_ENABLED=${{ matrix.cgo_enabled }}
-          export GOOS=${{ matrix.goos }}
-          export GOARCH=${{ matrix.goarch }}
+          
+          # 设置额外的环境变量
           if [[ -n "${{ matrix.goarm }}" ]]; then
             export GOARM=${{ matrix.goarm }}
           fi
           if [[ -n "${{ matrix.gomips }}" ]]; then
             export GOMIPS=${{ matrix.gomips }}
           fi
+          
+          # 针对 Darwin 的特殊处理
           if [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.goos }}" == "darwin" ]]; then
             if [[ "${{ matrix.goarch }}" == "amd64" ]]; then
               export CC="x86_64-apple-darwin21.4-clang"
@@ -290,40 +299,54 @@ jobs:
               export CC="aarch64-apple-darwin21.4-clang"
               export CXX="aarch64-apple-darwin21.4-clang++"
             fi
-            export CGO_CFLAGS="${{ matrix.cflags }}"
-            export CGO_LDFLAGS="${{ matrix.ldflags }}"
             export OSXCROSS_ROOT="${OSXCROSS_ROOT}"
           elif [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
-            export CC="${{ matrix.cc }}"
-            export CGO_CFLAGS="${{ matrix.cflags }}"
+            # 对于 Windows 的特殊处理
             if [[ "${{ matrix.goos }}" == "windows" ]]; then
               export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
             fi
           fi
-          if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
+          
+          # 测试编译器（仅在启用 CGO 时）
+          if [[ "${{ matrix.cgo_enabled }}" == "1" && -n "$CC" ]]; then
             echo 'int main() { return 0; }' > test.c
             $CC $CGO_CFLAGS test.c -o test || exit 1
             rm -f test.c test
           fi
+          
+          # 清理和准备
           rm -rf vendor/
           go mod download
           go mod tidy
           mkdir -p bin
+          
+          # 设置二进制文件名
           BINARY_NAME="goecs"
           if [[ "${{ matrix.goos }}" == "windows" ]]; then
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
+          
+          # 构建 LDFLAGS
           LDFLAGS="-s -w -X main.version=${{ steps.tag.outputs.version }} -X main.arch=${{ matrix.goarch }}"
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
-            env CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH CC="$CC" CGO_CFLAGS="$CGO_CFLAGS" CGO_LDFLAGS="$CGO_LDFLAGS" \
-              go build -a -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
           else
             LDFLAGS="${LDFLAGS} -checklinkname=0 ${{ matrix.ldflags }}"
-            env CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH \
-              go build -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
           fi
+          
+          # 执行构建
+          echo "Building for GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED"
+          go build -a -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
+          
+          # 验证文件是否存在
           [[ -f "bin/$BINARY_NAME" ]] || exit 1
+          
+          # 显示构建信息
+          echo "Built binary: bin/$BINARY_NAME"
+          ls -la bin/
+          if command -v file >/dev/null 2>&1; then
+            file bin/$BINARY_NAME
+          fi
 
       - name: Create ZIP archive
         run: |
