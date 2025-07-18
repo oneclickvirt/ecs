@@ -265,21 +265,23 @@ docker run --rm spiritlhl/goecs:latest -menu=false -l zh
 
 使用Docker执行测试，硬件测试会有一些偏差和虚拟化架构判断失效，还是推荐直接测试而不使用Docker测试。
 
-国内镜像地址：https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
+国内阿里云镜像加速
 
 请确保执行下述命令前本机已安装Docker
 
 特权模式+host网络
 
 ```shell
-docker run --rm --privileged --network host docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
+docker run --rm --privileged --network host crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs:latest -menu=false -l zh
 ```
 
 非特权模式+非host网络
 
 ```shell
-docker run --rm docker.cnb.cool/oneclickvirt/ecs:latest -menu=false -l zh
+docker run --rm crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs:latest -menu=false -l zh
 ```
+
+实际上还有CNB镜像地址 https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs 但很可惜组织空间不足无法推送了，更推荐使用阿里云镜像加速
 
 </details>
 
