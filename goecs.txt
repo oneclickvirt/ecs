@@ -1,0 +1,111 @@
+-----------------------------VPS Fusion Monster Test------------------------------
+Version: v0.1.63
+Review Channel: https://t.me/vps_reviews
+Go Project: https://github.com/oneclickvirt/ecs
+Shell Project: https://github.com/spiritLHLS/ecs
+-----------------------------System-Basic-Information-----------------------------
+ CPU Model           : AMD EPYC 7763 64-Core Processor @ 3240.131 MHz
+ CPU Cores           : 4 Physical CPU(s)
+ CPU Cache           : L1: 128 KB / L2: 1 MB / L3: 32 MB
+ AES-NI              : ✔️ Enabled
+ VM-x/AMD-V/Hyper-V  : ✔️ Enabled
+ RAM                 : 876.08 MB / 15.62 GB
+ Virtio Balloon      : ❌ Undetected
+ KSM                 : ❌ Undetected
+ Swap                : 0.00 MB / 4.00 GB
+ Disk 1              : 4.00 GB / 73.27 GB [5.5%%] /dev/sda1 - /mnt
+ Disk 2              : 46.36 GB / 71.61 GB [64.7%%] /dev/sdb1 - /
+ Boot Path           : /dev/sdb1
+ OS Release          : ubuntu 24.04 [x86_64] 
+ Kernel              : 6.11.0-1018-azure
+ Uptime              : 0 days, 00 hours, 05 minutes
+ Current Time Zone   : UTC
+ Load                : 3.35 / 0.83 / 0.28
+ VM Type             : Microsoft Hyper-V
+ Tcp Accelerate      : cubic
+ IPV4 ASN            : AS8075 MICROSOFT-CORP-MSN-AS-BLOCK
+ IPV4 Location       : San Jose / California / United States
+ IPV4 Active IPs     : 1/256 (subnet /24) 38624/2097152 (prefix /11)
+----------------------------CPU-Test--sysbench-Method-----------------------------
+1 Thread(s) Test: 169334.70
+4 Thread(s) Test: 199987.53
+Current system detected no root permission
+---------------------------Memory-Test--sysbench-Method---------------------------
+Memory Copy Speed (MEMCPY)   :   19545.34 MB/s 
+Memory Copy Speed (DUMB)     :   11316.84 MB/s 
+Memory Copy Speed (MCBLOCK)  :   15078.07 MB/s 
+------------------------------Disk-Test--fio-Method-------------------------------
+Test Path     Block    Read(IOPS)              Write(IOPS)             Total(IOPS)
+/tmp          4k       39.14 MB/s(9785)        39.23 MB/s(9806)        78.37 MB/s(19.6k)       
+/tmp          64k      206.72 MB/s(3230)       207.81 MB/s(3247)       414.54 MB/s(6477)       
+/tmp          512k     201.97 MB/s(394)        212.70 MB/s(415)        414.66 MB/s(809)        
+/tmp          1m       200.45 MB/s(195)        213.80 MB/s(208)        414.25 MB/s(403)        
+-----------------------Cross-Border-Streaming-Media-Unlock------------------------
+IPV4:
+===============[ Global ]===============
+Apple                     YES (Region: USA) [Native]
+BingSearch                YES (Region: US)
+Claude                    YES [Native]
+Dazn                      Banned
+Disney+                   NO (forbidden-location)
+Gemini                    YES (Region: US) [Native]
+GoogleSearch              YES
+Google Play Store         YES (Region: US) [Native]
+IQiYi                     YES (Region: US) [Native]
+Instagram Licensed Audio  YES [Native]
+KOCOWA                    YES [Native]
+MetaAI                    YES (Region: US) [Native]
+Netflix                   YES (Region: US) [Native]
+Netflix CDN               CO
+OneTrust                  YES (Region: US CALIFORNIA) [Via DNS]
+ChatGPT                   YES (Region: US) [Native]
+Paramount+                YES [Native]
+Amazon Prime Video        YES (Region: US) [Native]
+Reddit                    NO
+SonyLiv                   YES (Region: US) [Native]
+Sora                      YES (Region: US)
+Spotify Registration      YES (Region: US) [Native]
+Steam Store               YES (Community Available) (Region: US)
+TVBAnywhere+              YES (Region: US) [Native]
+TikTok                    YES (Region: US) [Native]
+Viu.com                   YES [Native]
+Wikipedia Editability     NO
+YouTube Region            YES (Region: US) [Native]
+YouTube CDN               SFO
+---------------------------------Email-Port-Check---------------------------------
+Platform  SMTP  SMTPS POP3  POP3S IMAP  IMAPS
+LocalPort ✘     ✘     ✘     ✘     ✘     ✘    
+QQ        ✔     ✔     ✔     ✘     ✔     ✘    
+163       ✔     ✔     ✔     ✘     ✔     ✘    
+Sohu      ✔     ✔     ✔     ✘     ✔     ✘    
+Yandex    ✔     ✔     ✔     ✘     ✔     ✘    
+Gmail     ✔     ✔     ✘     ✘     ✘     ✘    
+Outlook   ✔     ✘     ✔     ✘     ✔     ✘    
+Office365 ✔     ✘     ✔     ✘     ✔     ✘    
+Yahoo     ✔     ✔     ✘     ✘     ✘     ✘    
+MailCOM   ✔     ✔     ✔     ✘     ✔     ✘    
+MailRU    ✔     ✔     ✘     ✘     ✔     ✘    
+AOL       ✔     ✔     ✘     ✘     ✘     ✘    
+GMX       ✔     ✔     ✔     ✘     ✔     ✘    
+Sina      ✔     ✘     ✔     ✘     ✔     ✘    
+Apple     ✘     ✔     ✘     ✘     ✘     ✘    
+FastMail  ✘     ✔     ✘     ✘     ✘     ✘    
+ProtonMail✘     ✘     ✘     ✘     ✘     ✘    
+MXRoute   ✔     ✘     ✔     ✘     ✔     ✘    
+Namecrane ✔     ✔     ✔     ✘     ✔     ✘    
+XYAMail   ✘     ✘     ✘     ✘     ✘     ✘    
+ZohoMail  ✘     ✔     ✘     ✘     ✘     ✘    
+Inbox_eu  ✔     ✔     ✔     ✘     ✘     ✘    
+Free_fr   ✘     ✔     ✔     ✘     ✔     ✘    
+------------------------------------Speed-Test------------------------------------
+Location        Upload Speed    Download Speed  Latency         PacketLoss      
+Speedtest.net   3632.73 Mbps    5611.66 Mbps    1.083963ms      0.00% (Sent: 358/Dup: 0/Max: 357)
+LosAngeles      1353.91 Mbps    5339.14 Mbps    8.583964ms      N/A             
+Tokyo,Japan     34.01 Mbps      13.40 Mbps      139.227244ms    N/A             
+HongKong        77.85 Mbps      525.66 Mbps     152.805076ms    N/A             
+Frankfurt       70.19 Mbps      641.67 Mbps     161.885931ms    N/A             
+Singapore       73.33 Mbps      551.95 Mbps     167.699735ms    N/A             
+----------------------------------------------------------------------------------
+Cost    Time          : 5 min 10 sec
+Current Time          : Fri Jul 18 15:03:48 UTC 2025
+----------------------------------------------------------------------------------
