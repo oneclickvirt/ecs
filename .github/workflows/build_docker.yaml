@@ -48,9 +48,9 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/386,linux/riscv64
-          # linux/mips,linux/mipsle 暂不支持 alpine, linux/s390x 编译卡死
+          # linux/mips,linux/mipsle 暂不支持 alpine, linux/s390x 编译卡死，cnb组织空间不足无法推送
+          # ${{ secrets.CNB_DOCKER_REGISTRY }}/oneclickvirt/ecs:latest
           push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/goecs:latest
-            # ${{ secrets.CNB_DOCKER_REGISTRY }}/oneclickvirt/ecs:latest
             crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs:latest
