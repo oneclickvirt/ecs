@@ -135,6 +135,16 @@ jobs:
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-powerpc64le-linux-gnu"
             runner: ubuntu-latest
+          
+          - goos: linux
+            goarch: arm
+            goarm: 7
+            cgo_enabled: "1"
+            cc: arm-linux-gnueabihf-gcc
+            cflags: "-O1 -fno-stack-protector"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-arm-linux-gnueabihf"
+            runner: ubuntu-latest
 
           - goos: windows
             goarch: amd64
@@ -172,13 +182,6 @@ jobs:
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: macos-latest
-
-          - goos: linux
-            goarch: arm
-            goarm: 7
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
 
           - goos: linux
             goarch: s390x
@@ -258,6 +261,8 @@ jobs:
               sudo apt-get install -y build-essential gcc-mips64el-linux-gnuabi64 ;;
             linux-ppc64le)
               sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
+            linux-arm)
+              sudo apt-get install -y build-essential gcc-arm-linux-gnueabihf ;;
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
             *)
