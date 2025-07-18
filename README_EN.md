@@ -31,7 +31,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 | arm64                     | arm64     | Windows                      | Windows   |
 | arm                       |           | MacOS(darwin)                | MacOS     |
 | 386                       |           | FreeBSD                      |           |
-| mips,mipsle               |           | Android                      |           |
+| mips,mipsle,mips64le      |           | Android                      |           |
 | ppc64,ppc64le             |           |                              |           |
 | s390x                     | s390x     |                              |           |
 | riscv64                   |           |                              |           |

@@ -33,7 +33,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 | arm64                     | arm64        | Windows                   | Windows       |
 | arm                       |              | MacOS(darwin)             | MacOS         |
 | 386                       |              | FreeBSD                   |               |
-| mips,mipsle               |              | Android                   |               |
+| mips,mipsle,mips64le      |              | Android                   |               |
 | ppc64,ppc64le             |              |                           |               |
 | s390x                     | s390x        |                           |               |
 | riscv64                   |              |                           |               |
