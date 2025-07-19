@@ -31,15 +31,15 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 |---------------------------|--------------|---------------------------|---------------|
 | amd64                     | amd64        | Linux                     | Linux         |
 | arm64                     | arm64        | Windows                   | Windows       |
-| arm                       |              | MacOS(darwin)             | MacOS         |
+| arm                       |              | MacOS(Darwin)             | MacOS         |
 | 386                       |              | FreeBSD                   |               |
-| mips,mipsle,mips64le      |              | Android                   |               |
+| mips,mipsle               |              | Android                   |               |
+| mips64,mips64le           |              |                           |               | 
 | ppc64,ppc64le             |              |                           |               |
 | s390x                     | s390x        |                           |               |
 | riscv64                   |              |                           |               |
 
-
-> 更多架构与系统请自行测试，如有问题请开 issues。
+> 更多架构与系统请自行测试或编译，如有问题请开 issues。
 
 ### **待支持的系统**
 | 系统 | 说明                        |

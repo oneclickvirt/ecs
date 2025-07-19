@@ -29,14 +29,15 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 |---------------------------|-----------|------------------------------|-----------|
 | amd64                     | amd64     | Linux                        | Linux     |
 | arm64                     | arm64     | Windows                      | Windows   |
-| arm                       |           | MacOS(darwin)                | MacOS     |
+| arm                       |           | MacOS(Darwin)                | MacOS     |
 | 386                       |           | FreeBSD                      |           |
-| mips,mipsle,mips64le      |           | Android                      |           |
+| mips,mipsle               |           | Android                      |           |
+| mips64,mips64le           |           |                              |           | 
 | ppc64,ppc64le             |           |                              |           |
 | s390x                     | s390x     |                              |           |
 | riscv64                   |           |                              |           |
 
-> Please test additional architectures and systems yourself. If you encounter any issues, please open an issue.
+> For more information about the architecture and system, please test or compile it yourself, and open issues if you have any questions.
 
 ### **Systems Pending Support**
 | OS     | Notes                                                                                           |
