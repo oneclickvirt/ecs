@@ -263,52 +263,76 @@ jobs:
       - name: Install cross-compilation tools
         if: matrix.runner != 'macos-latest'
         run: |
-          sudo apt-get update -qq
+          # Fix DNS and add retry logic for apt-get
+          sudo systemctl restart systemd-resolved || true
+          sudo apt-get update -qq || (sleep 10 && sudo apt-get update -qq)
+          
           case "${{ matrix.goos }}-${{ matrix.goarch }}" in
             linux-386)
               # sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
-              wget -q https://musl.cc/i686-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/i686-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/i686-linux-musl-cross/bin/i686-linux-musl-gcc /usr/local/bin/ ;;
             linux-arm64)
               # sudo apt-get install -y build-essential gcc-aarch64-linux-gnu ;;
-              wget -q https://musl.cc/aarch64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/aarch64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc /usr/local/bin/ ;;
             linux-riscv64)
               # sudo apt-get install -y build-essential gcc-riscv64-linux-gnu ;;
-              wget -q https://musl.cc/riscv64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/riscv64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/riscv64-linux-musl-cross/bin/riscv64-linux-musl-gcc /usr/local/bin/ ;;
             linux-mips64)
               # sudo apt-get install -y build-essential gcc-mips64-linux-gnuabi64 ;;
-              wget -q https://musl.cc/mips64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/mips64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/mips64-linux-musl-cross/bin/mips64-linux-musl-gcc /usr/local/bin/ ;;
             linux-mips64le)
               # sudo apt-get install -y build-essential gcc-mips64el-linux-gnuabi64 ;;
-              wget -q https://musl.cc/mips64el-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/mips64el-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/mips64el-linux-musl-cross/bin/mips64el-linux-musl-gcc /usr/local/bin/ ;;
             linux-ppc64le)
               # sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
-              wget -q https://musl.cc/powerpc64le-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/powerpc64le-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/powerpc64le-linux-musl-cross/bin/powerpc64le-linux-musl-gcc /usr/local/bin/ ;;
             linux-arm)
               # sudo apt-get install -y build-essential gcc-arm-linux-gnueabihf ;;
-              wget -q https://musl.cc/arm-linux-musleabihf-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/arm-linux-musleabihf-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/arm-linux-musleabihf-cross/bin/arm-linux-musleabihf-gcc /usr/local/bin/ ;;
             linux-amd64)
               # sudo apt-get install -y build-essential ;;
-              wget -q https://musl.cc/x86_64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
+              for i in 1 2 3; do
+                wget -q https://musl.cc/x86_64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
+              done
               sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
               sudo ln -sf /opt/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc /usr/local/bin/ ;;
             windows-amd64|windows-386)
-              sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
+              for i in 1 2 3; do
+                sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 && break || sleep 10
+              done ;;
             *)
-              sudo apt-get install -y build-essential ;;
+              sudo systemctl restart systemd-resolved || true
+              for i in 1 2 3; do
+                sudo apt-get install -y build-essential && break || sleep 10
+              done ;;
           esac
 
       - name: Get latest tag
