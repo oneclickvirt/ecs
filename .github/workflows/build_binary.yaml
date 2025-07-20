@@ -78,7 +78,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-linux-gnu-gcc
             cflags: "-O2 -static -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc"
             runner: ubuntu-latest
 
@@ -87,7 +87,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-linux-gnu-gcc
             cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-multilib"
             runner: ubuntu-latest
 
@@ -96,7 +96,7 @@ jobs:
             cgo_enabled: "1"
             cc: aarch64-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-aarch64-linux-gnu"
             runner: ubuntu-latest
 
@@ -105,7 +105,7 @@ jobs:
             cgo_enabled: "1"
             cc: riscv64-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-riscv64-linux-gnu"
             runner: ubuntu-latest
 
@@ -114,7 +114,7 @@ jobs:
             cgo_enabled: "1"
             cc: mips64-linux-gnuabi64-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-mips64-linux-gnuabi64"
             runner: ubuntu-latest
 
@@ -123,7 +123,7 @@ jobs:
             cgo_enabled: "1"
             cc: mips64el-linux-gnuabi64-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-mips64el-linux-gnuabi64"
             runner: ubuntu-latest
 
@@ -132,7 +132,7 @@ jobs:
             cgo_enabled: "1"
             cc: powerpc64le-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-powerpc64le-linux-gnu"
             runner: ubuntu-latest
           
@@ -142,7 +142,7 @@ jobs:
             cgo_enabled: "1"
             cc: arm-linux-gnueabihf-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-arm-linux-gnueabihf"
             runner: ubuntu-latest
 
@@ -151,7 +151,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-mingw-w64-x86-64"
             runner: ubuntu-latest
 
@@ -160,14 +160,14 @@ jobs:
             cgo_enabled: "1"
             cc: i686-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
 
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
-            ldflags: "-extldflags=-static -s -w"
+            ldflags: "-extldflags=-static" # -s -w
             packages: "build-essential"
             runner: ubuntu-latest
 
