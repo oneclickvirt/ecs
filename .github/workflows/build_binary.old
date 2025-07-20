@@ -76,90 +76,74 @@ jobs:
           - goos: linux
             goarch: amd64
             cgo_enabled: "1"
-            cc: x86_64-linux-musl-gcc
-            # cc: x86_64-linux-gnu-gcc
+            cc: x86_64-linux-gnu-gcc
             cflags: "-O2 -static -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: 386
             cgo_enabled: "1"
-            # cc: x86_64-linux-gnu-gcc
-            # cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
-            cflags: "-O1 -march=i686 -mtune=generic -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-multilib"
-            packages: "musl-tools"
+            cc: x86_64-linux-gnu-gcc
+            cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-multilib"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: arm64
             cgo_enabled: "1"
-            cc: aarch64-linux-musl-gcc
-            # cc: aarch64-linux-gnu-gcc
+            cc: aarch64-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-aarch64-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-aarch64-linux-gnu"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: riscv64
             cgo_enabled: "1"
-            cc: riscv64-linux-musl-gcc
-            # cc: riscv64-linux-gnu-gcc
+            cc: riscv64-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-riscv64-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-riscv64-linux-gnu"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64
             cgo_enabled: "1"
-            cc: mips64-linux-musl-gcc
-            # cc: mips64-linux-gnuabi64-gcc
+            cc: mips64-linux-gnuabi64-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-mips64-linux-gnuabi64"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-mips64-linux-gnuabi64"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64le
             cgo_enabled: "1"
-            cc: mips64el-linux-musl-gcc
-            # cc: mips64el-linux-gnuabi64-gcc
+            cc: mips64el-linux-gnuabi64-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-mips64el-linux-gnuabi64"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-mips64el-linux-gnuabi64"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: ppc64le
             cgo_enabled: "1"
-            cc: powerpc64le-linux-musl-gcc
-            # cc: powerpc64le-linux-gnu-gcc
+            cc: powerpc64le-linux-gnu-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-powerpc64le-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-powerpc64le-linux-gnu"
             runner: ubuntu-latest
           
           - goos: linux
             goarch: arm
             # goarm: 7
             cgo_enabled: "1"
-            cc: arm-linux-musleabihf-gcc
-            # cc: arm-linux-gnueabihf-gcc
+            cc: arm-linux-gnueabihf-gcc
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-arm-linux-gnueabihf"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-arm-linux-gnueabihf"
             runner: ubuntu-latest
 
           - goos: windows
@@ -167,7 +151,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-x86-64"
             runner: ubuntu-latest
 
@@ -176,14 +160,14 @@ jobs:
             cgo_enabled: "1"
             cc: i686-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
 
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-extldflags=-static -s -w"
             packages: "build-essential"
             runner: ubuntu-latest
 
@@ -266,45 +250,19 @@ jobs:
           sudo apt-get update -qq
           case "${{ matrix.goos }}-${{ matrix.goarch }}" in
             linux-386)
-              # sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
-              wget -q https://musl.cc/i686-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/i686-linux-musl-cross/bin/i686-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
             linux-arm64)
-              # sudo apt-get install -y build-essential gcc-aarch64-linux-gnu ;;
-              wget -q https://musl.cc/aarch64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-aarch64-linux-gnu ;;
             linux-riscv64)
-              # sudo apt-get install -y build-essential gcc-riscv64-linux-gnu ;;
-              wget -q https://musl.cc/riscv64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/riscv64-linux-musl-cross/bin/riscv64-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-riscv64-linux-gnu ;;
             linux-mips64)
-              # sudo apt-get install -y build-essential gcc-mips64-linux-gnuabi64 ;;
-              wget -q https://musl.cc/mips64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/mips64-linux-musl-cross/bin/mips64-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-mips64-linux-gnuabi64 ;;
             linux-mips64le)
-              # sudo apt-get install -y build-essential gcc-mips64el-linux-gnuabi64 ;;
-              wget -q https://musl.cc/mips64el-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/mips64el-linux-musl-cross/bin/mips64el-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-mips64el-linux-gnuabi64 ;;
             linux-ppc64le)
-              # sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
-              wget -q https://musl.cc/powerpc64le-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/powerpc64le-linux-musl-cross/bin/powerpc64le-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
             linux-arm)
-              # sudo apt-get install -y build-essential gcc-arm-linux-gnueabihf ;;
-              wget -q https://musl.cc/arm-linux-musleabihf-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/arm-linux-musleabihf-cross/bin/arm-linux-musleabihf-gcc /usr/local/bin/ ;;
-            linux-amd64)
-              # sudo apt-get install -y build-essential ;;
-              wget -q https://musl.cc/x86_64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc /usr/local/bin/ ;;
+              sudo apt-get install -y build-essential gcc-arm-linux-gnueabihf ;;
             windows-amd64|windows-386)
               sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 ;;
             *)
@@ -351,10 +309,6 @@ jobs:
             # 对于 Windows 的特殊处理
             if [[ "${{ matrix.goos }}" == "windows" ]]; then
               export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
-            fi
-            # 对于 Linux i386 架构的特殊处理
-            if [[ "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "386" ]]; then
-              export CC="i686-linux-musl-gcc"
             fi
           fi
           
