@@ -302,10 +302,8 @@ export PATH=$PATH:/usr/local/go/bin
 
 3. Compile
 ```bash
-env CGO_ENABLED=1 go build -o goecs
+go build -o goecs
 ```
-
-CGO may need to be set to 0 in some systems and architectures, please try them all until they compile successfully without errors.
 
 4. Run test
 ```bash

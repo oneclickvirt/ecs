@@ -308,10 +308,8 @@ export PATH=$PATH:/usr/local/go/bin
 
 3. 编译
 ```bash
-env CGO_ENABLED=1 go build -o goecs
+go build -o goecs
 ```
-
-CGO在某些系统和架构中可能需要设置为0，请都进行尝试直到编译成功无报错。
 
 4. 运行测试
 ```bash
