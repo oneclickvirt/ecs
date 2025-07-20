@@ -197,7 +197,7 @@ jobs:
             cgo_enabled: "1"
             musl_target: arm-linux-musleabihf
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static"
+            ldflags: "-extldflags=-latomic -static"
             runner: ubuntu-latest
 
           - goos: windows
