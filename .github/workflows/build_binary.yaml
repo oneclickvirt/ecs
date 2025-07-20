@@ -66,9 +66,72 @@ jobs:
             sleep 30
           fi
 
+  build-musl-toolchain:
+    name: Build musl Cross-Compiler Toolchain
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - x86_64-linux-musl
+          - i686-linux-musl
+          - aarch64-linux-musl
+          - riscv64-linux-musl
+          - mips64-linux-musl
+          - mips64el-linux-musl
+          - powerpc64le-linux-musl
+          - arm-linux-musleabihf
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y build-essential curl
+
+      - name: Cache musl toolchain
+        id: cache-musl
+        uses: actions/cache@v3
+        with:
+          path: /opt/musl-${{ matrix.target }}
+          key: musl-toolchain-${{ matrix.target }}-v2
+
+      - name: Build musl cross-compiler
+        if: steps.cache-musl.outputs.cache-hit != 'true'
+        run: |
+          # Clone musl-cross-make
+          git clone https://github.com/richfelker/musl-cross-make.git
+          cd musl-cross-make
+          
+          # Create config for target
+          cat > config.mak << EOF
+          TARGET = ${{ matrix.target }}
+          OUTPUT = /opt/musl-${{ matrix.target }}
+          COMMON_CONFIG += --disable-nls
+          GCC_CONFIG += --enable-languages=c,c++
+          GCC_CONFIG += --disable-libquadmath --disable-decimal-float
+          GCC_CONFIG += --disable-libitm --disable-fixed-point
+          EOF
+          
+          # Build the toolchain
+          make -j$(nproc)
+          sudo make install
+          
+          # Verify installation
+          ls -la /opt/musl-${{ matrix.target }}/bin/
+          /opt/musl-${{ matrix.target }}/bin/${{ matrix.target }}-gcc --version
+
+      - name: Create toolchain artifact
+        run: |
+          sudo tar -czf musl-${{ matrix.target }}-toolchain.tar.gz -C /opt musl-${{ matrix.target }}
+
+      - name: Upload toolchain artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: musl-${{ matrix.target }}-toolchain
+          path: musl-${{ matrix.target }}-toolchain.tar.gz
+          retention-days: 1
+
   release-binary:
     name: Release Go Binary
-    needs: build
+    needs: [build, build-musl-toolchain]
     strategy:
       fail-fast: false
       matrix:
@@ -76,90 +139,65 @@ jobs:
           - goos: linux
             goarch: amd64
             cgo_enabled: "1"
-            cc: x86_64-linux-musl-gcc
-            # cc: x86_64-linux-gnu-gcc
+            musl_target: x86_64-linux-musl
             cflags: "-O2 -static -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: 386
             cgo_enabled: "1"
-            # cc: x86_64-linux-gnu-gcc
-            # cflags: "-m32 -O1 -march=i686 -mtune=generic -fno-stack-protector"
+            musl_target: i686-linux-musl
             cflags: "-O1 -march=i686 -mtune=generic -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-multilib"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: arm64
             cgo_enabled: "1"
-            cc: aarch64-linux-musl-gcc
-            # cc: aarch64-linux-gnu-gcc
+            musl_target: aarch64-linux-musl
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-aarch64-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: riscv64
             cgo_enabled: "1"
-            cc: riscv64-linux-musl-gcc
-            # cc: riscv64-linux-gnu-gcc
+            musl_target: riscv64-linux-musl
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-riscv64-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64
             cgo_enabled: "1"
-            cc: mips64-linux-musl-gcc
-            # cc: mips64-linux-gnuabi64-gcc
+            musl_target: mips64-linux-musl
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-mips64-linux-gnuabi64"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: mips64le
             cgo_enabled: "1"
-            cc: mips64el-linux-musl-gcc
-            # cc: mips64el-linux-gnuabi64-gcc
+            musl_target: mips64el-linux-musl
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-mips64el-linux-gnuabi64"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: linux
             goarch: ppc64le
             cgo_enabled: "1"
-            cc: powerpc64le-linux-musl-gcc
-            # cc: powerpc64le-linux-gnu-gcc
+            musl_target: powerpc64le-linux-musl
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-powerpc64le-linux-gnu"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
           
           - goos: linux
             goarch: arm
-            # goarm: 7
             cgo_enabled: "1"
-            cc: arm-linux-musleabihf-gcc
-            # cc: arm-linux-gnueabihf-gcc
+            musl_target: arm-linux-musleabihf
             cflags: "-O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static" # -s -w
-            # packages: "build-essential gcc-arm-linux-gnueabihf"
-            packages: "musl-tools"
+            ldflags: "-extldflags=-static"
             runner: ubuntu-latest
 
           - goos: windows
@@ -167,7 +205,7 @@ jobs:
             cgo_enabled: "1"
             cc: x86_64-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-extldflags=-static"
             packages: "build-essential gcc-mingw-w64-x86-64"
             runner: ubuntu-latest
 
@@ -176,14 +214,14 @@ jobs:
             cgo_enabled: "1"
             cc: i686-w64-mingw32-gcc
             cflags: "-O2 -static-libgcc -static-libstdc++"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-extldflags=-static"
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
 
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
-            ldflags: "-extldflags=-static" # -s -w
+            ldflags: "-s -w"
             packages: "build-essential"
             runner: ubuntu-latest
 
@@ -223,12 +261,6 @@ jobs:
             ldflags: "-s -w"
             runner: ubuntu-latest
 
-          - goos: windows
-            goarch: arm64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
           - goos: freebsd
             goarch: amd64
             cgo_enabled: "0"
@@ -260,70 +292,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-      - name: Install cross-compilation tools
-        if: matrix.runner != 'macos-latest'
+      - name: Download musl toolchain
+        if: matrix.musl_target != ''
+        uses: actions/download-artifact@v3
+        with:
+          name: musl-${{ matrix.musl_target }}-toolchain
+
+      - name: Setup musl toolchain
+        if: matrix.musl_target != ''
         run: |
-          # Fix DNS and add retry logic for apt-get
+          sudo tar -xzf musl-${{ matrix.musl_target }}-toolchain.tar.gz -C /opt/
+          echo "/opt/musl-${{ matrix.musl_target }}/bin" >> $GITHUB_PATH
+          
+          # Verify toolchain is working
+          /opt/musl-${{ matrix.musl_target }}/bin/${{ matrix.musl_target }}-gcc --version
+          
+          # Test compiler
+          echo 'int main() { return 0; }' > test.c
+          /opt/musl-${{ matrix.musl_target }}/bin/${{ matrix.musl_target }}-gcc ${{ matrix.cflags }} test.c -o test
+          rm -f test.c test
+
+      - name: Install cross-compilation tools (non-musl)
+        if: matrix.runner != 'macos-latest' && matrix.musl_target == ''
+        run: |
           sudo systemctl restart systemd-resolved || true
           sudo apt-get update -qq || (sleep 10 && sudo apt-get update -qq)
           
           case "${{ matrix.goos }}-${{ matrix.goarch }}" in
-            linux-386)
-              # sudo apt-get install -y build-essential gcc-multilib g++-multilib ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/i686-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/i686-linux-musl-cross/bin/i686-linux-musl-gcc /usr/local/bin/ ;;
-            linux-arm64)
-              # sudo apt-get install -y build-essential gcc-aarch64-linux-gnu ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/aarch64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc /usr/local/bin/ ;;
-            linux-riscv64)
-              # sudo apt-get install -y build-essential gcc-riscv64-linux-gnu ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/riscv64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/riscv64-linux-musl-cross/bin/riscv64-linux-musl-gcc /usr/local/bin/ ;;
-            linux-mips64)
-              # sudo apt-get install -y build-essential gcc-mips64-linux-gnuabi64 ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/mips64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/mips64-linux-musl-cross/bin/mips64-linux-musl-gcc /usr/local/bin/ ;;
-            linux-mips64le)
-              # sudo apt-get install -y build-essential gcc-mips64el-linux-gnuabi64 ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/mips64el-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/mips64el-linux-musl-cross/bin/mips64el-linux-musl-gcc /usr/local/bin/ ;;
-            linux-ppc64le)
-              # sudo apt-get install -y build-essential gcc-powerpc64le-linux-gnu ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/powerpc64le-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/powerpc64le-linux-musl-cross/bin/powerpc64le-linux-musl-gcc /usr/local/bin/ ;;
-            linux-arm)
-              # sudo apt-get install -y build-essential gcc-arm-linux-gnueabihf ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/arm-linux-musleabihf-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/arm-linux-musleabihf-cross/bin/arm-linux-musleabihf-gcc /usr/local/bin/ ;;
-            linux-amd64)
-              # sudo apt-get install -y build-essential ;;
-              for i in 1 2 3; do
-                wget -q https://musl.cc/x86_64-linux-musl-cross.tgz -O /tmp/musl-cross.tgz && break || sleep 10
-              done
-              sudo tar -xzf /tmp/musl-cross.tgz -C /opt/
-              sudo ln -sf /opt/x86_64-linux-musl-cross/bin/x86_64-linux-musl-gcc /usr/local/bin/ ;;
             windows-amd64|windows-386)
               for i in 1 2 3; do
                 sudo apt-get install -y build-essential gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 && break || sleep 10
@@ -347,11 +342,18 @@ jobs:
           CGO_ENABLED: ${{ matrix.cgo_enabled }}
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-          CC: ${{ matrix.cc }}
           CGO_CFLAGS: ${{ matrix.cflags }}
           CGO_LDFLAGS: ${{ matrix.ldflags }}
         run: |
           go clean -cache -modcache -testcache
+          
+          # Set CC based on target
+          if [[ "${{ matrix.musl_target }}" != "" ]]; then
+            export CC="/opt/musl-${{ matrix.musl_target }}/bin/${{ matrix.musl_target }}-gcc"
+            export CXX="/opt/musl-${{ matrix.musl_target }}/bin/${{ matrix.musl_target }}-g++"
+          elif [[ "${{ matrix.cc }}" != "" ]]; then
+            export CC="${{ matrix.cc }}"
+          fi
           
           # 设置额外的环境变量
           if [[ -n "${{ matrix.goarm }}" ]]; then
@@ -371,22 +373,6 @@ jobs:
               export CXX="aarch64-apple-darwin21.4-clang++"
             fi
             export OSXCROSS_ROOT="${OSXCROSS_ROOT}"
-          elif [[ "${{ matrix.cgo_enabled }}" == "1" && "${{ matrix.runner }}" != "macos-latest" ]]; then
-            # 对于 Windows 的特殊处理
-            if [[ "${{ matrix.goos }}" == "windows" ]]; then
-              export CGO_LDFLAGS="-static-libgcc -static-libstdc++"
-            fi
-            # 对于 Linux i386 架构的特殊处理
-            if [[ "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "386" ]]; then
-              export CC="i686-linux-musl-gcc"
-            fi
-          fi
-          
-          # 测试编译器（仅在启用 CGO 时）
-          if [[ "${{ matrix.cgo_enabled }}" == "1" && -n "$CC" ]]; then
-            echo 'int main() { return 0; }' > test.c
-            $CC $CGO_CFLAGS test.c -o test || exit 1
-            rm -f test.c test
           fi
           
           # 清理和准备
@@ -411,6 +397,10 @@ jobs:
           
           # 执行构建
           echo "Building for GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=$CGO_ENABLED"
+          if [[ -n "$CC" ]]; then
+            echo "Using CC=$CC"
+          fi
+          
           go build -a -o bin/$BINARY_NAME -ldflags="$LDFLAGS" -trimpath ./
           
           # 验证文件是否存在
