@@ -123,7 +123,7 @@ jobs:
           sudo tar -czf musl-${{ matrix.target }}-toolchain.tar.gz -C /opt musl-${{ matrix.target }}
 
       - name: Upload toolchain artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: musl-${{ matrix.target }}-toolchain
           path: musl-${{ matrix.target }}-toolchain.tar.gz
