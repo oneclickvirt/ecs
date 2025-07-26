@@ -42,10 +42,13 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 > 更多架构与系统请自行测试或编译，如有问题请开 issues。
 
 ### **待支持的系统**
-| 系统 | 说明                        |
-|-----|---------------------------|
-| Android(arm64) | 存在权限问题未修复，非安卓系统的ARM架构无问题  |
 
+| 系统           | 说明                       |
+|----------------|---------------------------|
+| Android(arm64) | 存在权限问题未修复，非安卓系统的ARM架构无问题      |
+| OpenBSD/NetBSD | 部分Goalng的官方库未支持本系统(尤其是net相关项目)  |
+| Windows虚拟机   | 非物理机器不支持winsat测试硬件性能(硬盘和内存测试) |
+| Windows物理机(非Admin下)   | 无Admin权限不支持winsat测试硬件性能(硬盘和内存测试) |
 ---
 
 ## **功能**
@@ -70,7 +73,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ## **使用说明**
 
-### **Linux/FreeBSD/OpenBSD/MacOS**
+### **Linux/FreeBSD/MacOS**
 
 #### **一键命令**
 

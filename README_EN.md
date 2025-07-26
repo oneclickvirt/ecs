@@ -40,9 +40,14 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 > For more information about the architecture and system, please test or compile it yourself, and open issues if you have any questions.
 
 ### **Systems Pending Support**
+
 | OS     | Notes                                                                                           |
 |--------|-------------------------------------------------------------------------------------------------|
-| Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems |
+| Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems    |
+| OpenBSD/NetBSD | Some of Goalng's official libraries do not support this system (especially net-related items) |
+| Windows(Virtual Machines) | Non-Physical Machines do not support winsat to test hardware performance (hard disk and memory tests) | 
+| Windows(Physical Machines)(not under Admin) | No Admin privileges do not support winsat to test hardware performance (hard disk and memory tests) |
+
 ---
 
 ## **Features**
@@ -67,7 +72,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 ## **Instructions for Use**
 
-### **Linux/FreeBSD/OpenBSD/MacOS**
+### **Linux/FreeBSD/MacOS**
 
 #### **One-click command**
 
