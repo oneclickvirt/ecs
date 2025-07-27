@@ -19,6 +19,7 @@ import (
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/uts"
 	"github.com/oneclickvirt/basics/system"
+	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/security/network"
 )
@@ -483,6 +484,7 @@ result:
 		stack = "IPv6"
 	}
 	StackType = stack
+	butils.CheckPublicAccess(3 * time.Second) // 设置basics检测，避免部分测试未启用
 	return NetCheckResult{
 		HasIPv4:   hasV4,
 		HasIPv6:   hasV6,

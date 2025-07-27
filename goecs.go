@@ -17,6 +17,7 @@ import (
 
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
+	"github.com/oneclickvirt/UnlockTests/uts"
 	backtrace "github.com/oneclickvirt/backtrace/bk"
 	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
@@ -39,7 +40,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.69"
+	ecsVersion                                                        = "v0.1.70"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -691,7 +692,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程线路检测", width)
-			if strings.Contains(output, "IPV6") {
+			if uts.IPV6 {
 				backtrace.BackTrace(true)
 			} else {
 				backtrace.BackTrace(false)
