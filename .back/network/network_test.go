@@ -15,8 +15,8 @@ func TestIpv4SecurityCheck(t *testing.T) {
 	// 全项测试
 	ipInfo, securityInfo, _ := NetworkCheck("both", true, "zh")
 	fmt.Println("--------------------------------------------------")
-	fmt.Printf(ipInfo)
+	fmt.Print(ipInfo)
 	fmt.Println("--------------------------------------------------")
-	fmt.Printf(securityInfo)
+	fmt.Print(securityInfo)
 	fmt.Println("--------------------------------------------------")
 }

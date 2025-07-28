@@ -12,5 +12,5 @@ func Basic(language string) {
 	ipInfo, _, _ := network.NetworkCheck("both", false, language)
 	systemInfo := system.CheckSystemInfo(language)
 	basicInfo := strings.ReplaceAll(systemInfo+ipInfo, "\n\n", "\n")
-	fmt.Printf(basicInfo)
+	fmt.Print(basicInfo)
 }

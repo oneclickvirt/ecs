@@ -7,5 +7,5 @@ import (
 
 func ComMediaTest(language string) {
 	res := commediatests.MediaTests(language)
-	fmt.Printf(res)
+	fmt.Print(res)
 }
