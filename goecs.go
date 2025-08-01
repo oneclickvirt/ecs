@@ -17,8 +17,6 @@ import (
 
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
-	"github.com/oneclickvirt/UnlockTests/uts"
-	backtrace "github.com/oneclickvirt/backtrace/bk"
 	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
@@ -28,6 +26,7 @@ import (
 	"github.com/oneclickvirt/ecs/memorytest"
 	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
+	"github.com/oneclickvirt/ecs/upstreams"
 	"github.com/oneclickvirt/ecs/utils"
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
@@ -691,12 +690,8 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 	defer outputMutex.Unlock()
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
-			utils.PrintCenteredTitle("三网回程线路检测", width)
-			if uts.IPV6 {
-				backtrace.BackTrace(true)
-			} else {
-				backtrace.BackTrace(false)
-			}
+			utils.PrintCenteredTitle("上游及回程线路检测", width)
+			upstreams.UpstreamsCheck()
 		}
 	}, tempOutput, output)
 	output = utils.PrintAndCapture(func() {

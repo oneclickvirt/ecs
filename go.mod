@@ -6,7 +6,7 @@ require (
 	github.com/imroc/req/v3 v3.54.0
 	github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841
 	github.com/oneclickvirt/UnlockTests v0.0.28-20250727155204
-	github.com/oneclickvirt/backtrace v0.0.5-20250727160732
+	github.com/oneclickvirt/backtrace v0.0.6-20250801151556
 	github.com/oneclickvirt/basics v0.0.15-20250728021329
 	github.com/oneclickvirt/cputest v0.0.12-20250720122317
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
