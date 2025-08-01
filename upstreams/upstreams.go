@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
-
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/uts"
 	bgptools "github.com/oneclickvirt/backtrace/bgptools"
 	backtrace "github.com/oneclickvirt/backtrace/bk"
+	"net"
+	"os/exec"
+	"strings"
+	"time"
 )
 
 type IpInfo struct {
@@ -32,11 +33,24 @@ func fetchIP(ctx context.Context, url string, parse func([]byte) (string, error)
 		ch <- ip
 	}
 }
-
+func fetchLocalIP(ctx context.Context, ch chan<- string) {
+	cmd := exec.CommandContext(ctx, "bash", "-c", "ip addr show | awk '/inet .*global/ && !/inet6/ {print $2}' | sed -n '1p'")
+	output, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	ipCidr := strings.TrimSpace(string(output))
+	if ipCidr != "" {
+		ip, _, err := net.ParseCIDR(ipCidr)
+		if err == nil && ip.To4() != nil {
+			ch <- ip.String()
+		}
+	}
+}
 func UpstreamsCheck() {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	ipChan := make(chan string, 3)
+	ipChan := make(chan string, 4)
 	go fetchIP(ctx, "https://ipinfo.io", func(b []byte) (string, error) {
 		var data IpInfo
 		err := json.Unmarshal(b, &data)
@@ -52,6 +66,7 @@ func UpstreamsCheck() {
 		err := json.Unmarshal(b, &data)
 		return data.Query, err
 	}, ipChan)
+	go fetchLocalIP(ctx, ipChan)
 	var ip string
 	select {
 	case ip = <-ipChan:
