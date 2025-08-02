@@ -1,6 +1,8 @@
-# ecs
+# ECS
 
 [![Build and Release](https://github.com/oneclickvirt/ecs/actions/workflows/build_binary.yaml/badge.svg)](https://github.com/oneclickvirt/ecs/actions/workflows/build_binary.yaml)
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs?ref=badge_shield)
 
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
@@ -344,6 +346,7 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
 | Test stability | Core test components unchanged for 10+ years | Each major version updates test items, making scores hard to compare between versions (each version benchmarks against current best CPUs) |
 | Test content | Only tests computing performance | Covers multiple performance aspects with weighted scores, though some tests aren't commonly used |
 | Suitable scenarios | Good for quick tests, focuses on computing performance | Good for comprehensive testing |
+| Ranking         | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
 Note that `goecs` allows you to specify CPU test method via parameters. The default is chosen for faster testing across more systems.
 
@@ -393,6 +396,13 @@ Thanks also to the following platforms for editorial and testing support
   <img src="https://console.zmto.com/templates/2019/dist/images/logo_dark.svg" alt="zmto" style="height: 50px;">
 </a>
 
+## History Usage
+
+![goecs](https://hits.spiritlhl.net/chart/goecs.svg)
+
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://www.spiritlhl.net)
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs?ref=badge_large)

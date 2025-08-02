@@ -398,6 +398,10 @@ GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
   <img src="https://console.zmto.com/templates/2019/dist/images/logo_dark.svg" alt="zmto" style="height: 50px;">
 </a>
 
+## History Usage
+
+![goecs](https://hits.spiritlhl.net/chart/goecs.svg)
+
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://www.spiritlhl.net)

@@ -101,6 +101,7 @@ IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小
 | 测试稳定性       | 核心测试组件10年以上未变 | 每个大版本更新测试项，分数不同版本间难以对比(每个版本对标当前最好的CPU) |
 | 测试内容         | 仅测试计算性能，基于素数计算 | 覆盖多种性能测试，分数加权计算，但部分测试实际不常用 |
 | 适用场景         | 适合快速测试，仅测试计算性能 | 适合综合全面的测试 |
+| 排行榜         | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
 默认使用```Sysbench```进行测试，基准大致如下：
 
@@ -186,9 +187,13 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 具体当前宿主机不做邮局或者不收电子邮件，那么该项目指标不用理会。
 
-### **三网回程线路检测**
+### **上游及回程线路检测**
 
-检测当前的宿主机的IP地址 到 四个主要POP点城市的三个主要运营商的接入点的IP地址 的线路，具体来说
+先是检测当前IP地址的BGP拓扑图，展示直接/间接接入的上游有哪些，直接接入的好上游越多，一般来说连通性越好
+
+区别什么上游好一般来说无法准确判断，因为除了```Tier1 Global```，其他接入都是需要给钱的，买的什么套餐对等口子多大这块可查不出来
+
+然后是检测当前的宿主机的IP地址 到 四个主要POP点城市的三个主要运营商的接入点的IP地址 的线路，具体来说
 
 电信163、联通4837、移动CMI 是常见的线路
 
@@ -272,6 +277,7 @@ Supports selecting `GeekBench` and `Sysbench` for testing through command line p
 | Test Stability | Core test components unchanged for over 10 years | Test items updated with each major version, scores difficult to compare between different versions (each version benchmarks against current best CPUs) |
 | Test Content | Only tests computational performance, based on prime number calculation | Covers multiple performance tests, weighted score calculation, but some tests are not commonly used in practice |
 | Applicable Scenarios | Suitable for quick testing, only tests computational performance | Suitable for comprehensive testing |
+| Ranking         | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
 By default, ```Sysbench``` is used for testing, with the baseline roughly as follows:
 
