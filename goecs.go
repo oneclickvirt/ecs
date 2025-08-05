@@ -144,7 +144,7 @@ func parseFlags() {
 	goecsFlag.StringVar(&diskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
 	goecsFlag.StringVar(&diskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
 	goecsFlag.BoolVar(&diskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
-	goecsFlag.StringVar(&nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu)")
+	goecsFlag.StringVar(&nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
 	goecsFlag.StringVar(&nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	goecsFlag.IntVar(&spNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
@@ -236,6 +236,7 @@ Loop:
 				fmt.Println("Can not test without network connection!")
 				return
 			}
+			nt3Location = "ALL"
 			setRouteTestStatus()
 			break Loop
 		default:
@@ -248,16 +249,16 @@ func printMenuOptions() {
 	switch language {
 	case "zh":
 		fmt.Println("VPS融合怪版本: ", ecsVersion)
-		fmt.Println("1. 融合怪完全体")
+		fmt.Println("1. 融合怪完全体(能测全测)")
 		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
 		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
 		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
 		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
-		fmt.Println("6. 网络单项(IP质量检测+三网回程+三网路由与延迟+测速节点11个)")
+		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+测速节点11个)")
 		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
-		fmt.Println("10. 三网回程线路+广州三网路由+全国三网延迟")
+		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)")
 	case "en":
 		fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
 		fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
@@ -339,6 +340,7 @@ func setNetworkOnlyTestStatus() {
 	speedTestStatus = true
 	backtraceStatus = true
 	nt3Status = true
+	pingTestStatus = true
 }
 
 func setUnlockOnlyTestStatus() {
