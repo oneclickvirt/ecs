@@ -98,10 +98,10 @@ github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841 h1:Zef93z9UiZQwRA
 github.com/oneclickvirt/CommonMediaTests v0.0.4-20250329123841/go.mod h1:DAmFPRjFV5p9fEzUUSml5jJGn2f1NZJQCzTxITHDjc4=
 github.com/oneclickvirt/UnlockTests v0.0.28-20250727155204 h1:apFaEbHGKflYMZzK17nXzEai4GG873mTd+d9hCO/KdY=
 github.com/oneclickvirt/UnlockTests v0.0.28-20250727155204/go.mod h1:oOa6wj/qECtRMxwBO6D7o0L0F0Q/5sQ747OCnFQqoGE=
-github.com/oneclickvirt/backtrace v0.0.6-20250801151556 h1:qxCHjNkaUH2z4buO5qrqqXE1XPB0bTU3wfkCEp8G51w=
-github.com/oneclickvirt/backtrace v0.0.6-20250801151556/go.mod h1:/+KUtOWz48TyiTTbhVTsp3D6b5WY+4pCgvFBYtUGtns=
-github.com/oneclickvirt/basics v0.0.15-20250728021329 h1:bXat5W1twZdOdzJ15BFZUYsjAEcTH9ly9oMDIg5+Rbo=
-github.com/oneclickvirt/basics v0.0.15-20250728021329/go.mod h1:2PV+1ge01zb0Sqzj2V2I7P0wAdFSLF1XgAiumchJJbg=
+github.com/oneclickvirt/backtrace v0.0.6-20250805091811 h1:mKXh/SB+8Aud1TdgmekIXiRR1ZTduIwoCpvrwa5gyyo=
+github.com/oneclickvirt/backtrace v0.0.6-20250805091811/go.mod h1:/+KUtOWz48TyiTTbhVTsp3D6b5WY+4pCgvFBYtUGtns=
+github.com/oneclickvirt/basics v0.0.15-20250805084236 h1:guYO6wGooSIOAIutuy/zfJ4sXj525nBITw8cjEPRaK8=
+github.com/oneclickvirt/basics v0.0.15-20250805084236/go.mod h1:2PV+1ge01zb0Sqzj2V2I7P0wAdFSLF1XgAiumchJJbg=
 github.com/oneclickvirt/cputest v0.0.12-20250720122317 h1:toiwAK1hZE5b8klu2mOQ7J4sv5yV9lpPKwgPahfRYBQ=
 github.com/oneclickvirt/cputest v0.0.12-20250720122317/go.mod h1:vjlH8tkPFft1tlLOpeNskXVvurxkHaJ3+dgFxQGLXY4=
 github.com/oneclickvirt/dd v0.0.2-20250701085922 h1:WiWZwcnCPhRc8hLZdvkjD2kOEpnqn1S31z1j0x3V4l0=
@@ -124,8 +124,8 @@ github.com/oneclickvirt/pingtest v0.0.8-20250728015259 h1:egoxZRZBOWN3JqBwqEsULD
 github.com/oneclickvirt/pingtest v0.0.8-20250728015259/go.mod h1:gxwsxxwitNQiGq2OI0ZogYoOLwc8DtuOdSRe6/EvRqs=
 github.com/oneclickvirt/portchecker v0.0.3-20250728015900 h1:AomzdppSOFB70AJESQhlp0IPbsHTTJGimAWDk2TzCWM=
 github.com/oneclickvirt/portchecker v0.0.3-20250728015900/go.mod h1:9sjMDPCd4Z40wkYB0S9gQPGH8YPtnNE1ZJthVIuHUzA=
-github.com/oneclickvirt/security v0.0.6-20250727160145 h1://sqEyAITvv04zXZwWurTkMDMD4nUAl7Wukj5lEDALI=
-github.com/oneclickvirt/security v0.0.6-20250727160145/go.mod h1:WpzPJsQFP0uOHmUUsqT9sjNhD5b+1LFd90HiM8cz4nM=
+github.com/oneclickvirt/security v0.0.6-20250805090112 h1:lUNtsnpZ3JNLS4xxjFGGECaxA46yNyxbYjdust9W0M4=
+github.com/oneclickvirt/security v0.0.6-20250805090112/go.mod h1:JB6SJWm5pbrngCgSTYLd2m4Hj8mHO6mJua1WgHMZOcE=
 github.com/oneclickvirt/speedtest v0.0.10-20250728015734 h1:HKO7/JQ74ueXA8Wo8NIvcK9DphbEG/YTfAAVz/akSiY=
 github.com/oneclickvirt/speedtest v0.0.10-20250728015734/go.mod h1:0W8vnMbA3iucXLXFdGfe9Ia6RPS0izRO7jvu/SnH1P8=
 github.com/oschwald/maxminddb-golang v1.13.1 h1:G3wwjdN9JmIK2o/ermkHM+98oX5fS+k5MbwsmL4MRQE=

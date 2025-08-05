@@ -100,14 +100,14 @@ func CheckChina(enableLogger bool) bool {
 }
 
 // BasicsAndSecurityCheck 执行安全检查
-func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus bool) (string, string, string) {
+func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus bool) (string, string, string, string, string) {
 	var wgt sync.WaitGroup
-	var ipInfo, securityInfo, systemInfo string
+	var ipv4, ipv6, ipInfo, securityInfo, systemInfo string
 	var err error
 	wgt.Add(1)
 	go func() {
 		defer wgt.Done()
-		ipInfo, securityInfo, err = network.NetworkCheck("both", securityCheckStatus, language)
+		ipv4, ipv6, ipInfo, securityInfo, err = network.NetworkCheck("both", securityCheckStatus, language)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
@@ -119,19 +119,19 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 	}()
 	wgt.Wait()
 	basicInfo := systemInfo + ipInfo
-	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") {
+	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") && ipv4 != "" && ipv6 != "" {
 		uts.IPV4 = true
 		uts.IPV6 = true
 		if nt3CheckType == "" {
 			nt3CheckType = "ipv4"
 		}
-	} else if strings.Contains(ipInfo, "IPV4") {
+	} else if strings.Contains(ipInfo, "IPV4") && ipv4 != "" {
 		uts.IPV4 = true
 		uts.IPV6 = false
 		if nt3CheckType == "" {
 			nt3CheckType = "ipv4"
 		}
-	} else if strings.Contains(ipInfo, "IPV6") {
+	} else if strings.Contains(ipInfo, "IPV6") && ipv6 != "" {
 		uts.IPV6 = true
 		uts.IPV4 = false
 		if nt3CheckType == "" {
@@ -144,7 +144,7 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 		nt3CheckType = "ipv4"
 	}
 	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
-	return basicInfo, securityInfo, nt3CheckType
+	return ipv4, ipv6, basicInfo, securityInfo, nt3CheckType
 }
 
 // CaptureOutput 捕获函数输出和错误输出，实时输出，并返回字符串

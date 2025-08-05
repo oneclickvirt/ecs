@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.72"
+	ecsVersion                                                        = "v0.1.73"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -62,6 +62,7 @@ var (
 	help                                                              bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 	finish                                                            bool
+	IPV4, IPV6                                                        string
 )
 
 func getMenuChoice(language string) string {
@@ -544,13 +545,13 @@ func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *strin
 				}
 			}
 			if preCheck.Connected && preCheck.StackType == "DualStack" {
-				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
+				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv4" {
-				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv4", securityTestStatus)
+				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv4", securityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv6" {
-				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv6", securityTestStatus)
+				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv6", securityTestStatus)
 			} else {
-				*basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "", false)
+				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "", false)
 				securityTestStatus = false
 			}
 			if basicStatus {
@@ -691,7 +692,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("上游及回程线路检测", width)
-			upstreams.UpstreamsCheck()
+			upstreams.UpstreamsCheck(IPV4)
 		}
 	}, tempOutput, output)
 	output = utils.PrintAndCapture(func() {

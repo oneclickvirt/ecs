@@ -24,7 +24,7 @@ func TestBasicsAndSecurityCheck(t *testing.T) {
 	} else {
 		fmt.Println("❌ 本机未检测到公网连接")
 	}
-	basicInfo, securityInfo, nt3CheckType := BasicsAndSecurityCheck("zh", "ipv4", false)
+	_, _, basicInfo, securityInfo, nt3CheckType := BasicsAndSecurityCheck("zh", "ipv4", false)
 	fmt.Println(basicInfo)
 	fmt.Println(securityInfo)
 	fmt.Println(nt3CheckType)
