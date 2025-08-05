@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,21 @@ import (
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/security/network"
 )
+
+// 获取本程序本日及总执行的统计信息
+type StatsResponse struct {
+	Counter   string `json:"counter"`
+	Action    string `json:"action"`
+	Total     int    `json:"total"`
+	Daily     int    `json:"daily"`
+	Date      string `json:"date"`
+	Timestamp string `json:"timestamp"`
+}
+
+// 获取最新的Github的仓库中的版本
+type GitHubRelease struct {
+	TagName string `json:"tag_name"`
+}
 
 // PrintCenteredTitle 根据指定的宽度打印居中标题
 func PrintCenteredTitle(title string, width int) {
@@ -336,8 +352,6 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) (string
 	return "", ""
 }
 
-// ============================= 前置联网能力检测 =============================
-
 var StackType string
 
 type NetCheckResult struct {
@@ -359,6 +373,7 @@ func makeResolver(proto, dnsAddr string) *net.Resolver {
 	}
 }
 
+// 前置联网能力检测
 func CheckPublicAccess(timeout time.Duration) NetCheckResult {
 	if timeout < 2*time.Second {
 		timeout = 2 * time.Second
@@ -491,4 +506,78 @@ result:
 		Connected: hasV4 || hasV6,
 		StackType: stack,
 	}
+}
+
+// 获取每日/总的程序执行统计信息
+func GetGoescStats() (*StatsResponse, error) {
+	client := req.C().SetTimeout(5 * time.Second)
+	var stats StatsResponse
+	resp, err := client.R().
+		SetSuccessResult(&stats).
+		Get("https://hits.spiritlhl.net/goecs")
+	if err != nil {
+		return nil, err
+	}
+	if !resp.IsSuccessState() {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return &stats, nil
+}
+
+// 统计结果单位转换
+func FormatGoecsNumber(num int) string {
+	if num >= 1000000 {
+		return fmt.Sprintf("%.1fM", float64(num)/1000000)
+	} else if num >= 1000 {
+		return fmt.Sprintf("%.1fK", float64(num)/1000)
+	}
+	return fmt.Sprintf("%d", num)
+}
+
+// 通过Github的API检索仓库最新TAG的版本
+func GetLatestEcsRelease() (*GitHubRelease, error) {
+	urls := []string{
+		"https://api.github.com/repos/oneclickvirt/ecs/releases/latest",
+		"https://fd.spiritlhl.top/https://api.github.com/repos/oneclickvirt/ecs/releases/latest",
+		"https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest",
+		"https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest",
+	}
+	client := req.C().SetTimeout(3 * time.Second)
+	for _, url := range urls {
+		var release GitHubRelease
+		resp, err := client.R().
+			SetSuccessResult(&release).
+			Get(url)
+		if err != nil {
+			continue
+		}
+		if resp.IsSuccessState() && release.TagName != "" {
+			return &release, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to fetch release from all sources")
+}
+
+// 比较程序版本是否需要升级
+func CompareVersions(v1, v2 string) int {
+	normalize := func(s string) []int {
+		s = strings.TrimPrefix(strings.ToLower(s), "v")
+		parts := strings.Split(s, ".")
+		result := make([]int, 3)
+		for i := 0; i < 3 && i < len(parts); i++ {
+			n, _ := strconv.Atoi(parts[i])
+			result[i] = n
+		}
+		return result
+	}
+	a := normalize(v1)
+	b := normalize(v2)
+	for i := 0; i < 3; i++ {
+		if a[i] < b[i] {
+			return -1
+		} else if a[i] > b[i] {
+			return 1
+		}
+	}
+	return 0
 }

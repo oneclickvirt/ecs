@@ -246,9 +246,43 @@ Loop:
 }
 
 func printMenuOptions() {
+	var stats *utils.StatsResponse
+	var statsErr error
+	var githubInfo *utils.GitHubRelease
+	var githubErr error
+	var pwg sync.WaitGroup
+	pwg.Add(2)
+	go func() {
+		defer pwg.Done()
+		stats, statsErr = utils.GetGoescStats()
+	}()
+	go func() {
+		defer pwg.Done()
+		githubInfo, githubErr = utils.GetLatestEcsRelease()
+	}()
+	pwg.Wait()
+	var statsInfo string
+	if statsErr != nil {
+		statsInfo = "NULL"
+	} else {
+		statsInfo = fmt.Sprintf("总使用量: %s | 今日使用: %s",
+			utils.FormatGoecsNumber(stats.Total),
+			utils.FormatGoecsNumber(stats.Daily))
+	}
+	var cmp int
+	if githubErr == nil {
+		cmp = utils.CompareVersions(ecsVersion, githubInfo.TagName)
+	} else {
+		cmp = 0
+	}
 	switch language {
 	case "zh":
-		fmt.Println("VPS融合怪版本: ", ecsVersion)
+		fmt.Printf("VPS融合怪版本: %s\n", ecsVersion)
+		switch cmp {
+		case -1:
+			fmt.Printf("检测到新版本 %s 如有必要请更新！\n", githubInfo.TagName)
+		}
+		fmt.Printf("使用统计: %s\n", statsInfo)
 		fmt.Println("1. 融合怪完全体(能测全测)")
 		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
 		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
@@ -256,11 +290,18 @@ func printMenuOptions() {
 		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
 		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+测速节点11个)")
 		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
-		fmt.Println("8. 硬件单项(系统信息+CPU+内存+dd磁盘测试+fio磁盘测试)")
+		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
 		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)")
 	case "en":
-		fmt.Println("VPS Fusion Monster Test Version: ", ecsVersion)
+		fmt.Printf("VPS Fusion Monster Test Version: %s\n", ecsVersion)
+		switch cmp {
+		case -1:
+			fmt.Printf("New version detected %s update if necessary!\n", githubInfo.TagName)
+		}
+		fmt.Printf("Total Usage: %s | Daily Usage: %s\n",
+			utils.FormatGoecsNumber(stats.Total),
+			utils.FormatGoecsNumber(stats.Daily))
 		fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
 		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
