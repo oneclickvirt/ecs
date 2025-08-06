@@ -62,7 +62,6 @@ var (
 	onlyIpInfoCheckStatus, help                                       bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 	finish                                                            bool
-	IPV4, IPV6                                                        string
 )
 
 func getMenuChoice(language string) string {
@@ -587,7 +586,8 @@ func runIpInfoCheck(output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
-		_, _, ipinfo := utils.OnlyBasicsIpInfo(language)
+		var ipinfo string
+		upstreams.IPV4, upstreams.IPV6, ipinfo = utils.OnlyBasicsIpInfo(language)
 		if ipinfo != "" {
 			if language == "zh" {
 				utils.PrintCenteredTitle("IP信息", width)
@@ -613,13 +613,13 @@ func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *strin
 				}
 			}
 			if preCheck.Connected && preCheck.StackType == "DualStack" {
-				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
+				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, nt3CheckType, securityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv4" {
-				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv4", securityTestStatus)
+				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv4", securityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv6" {
-				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv6", securityTestStatus)
+				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "ipv6", securityTestStatus)
 			} else {
-				IPV4, IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "", false)
+				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, nt3CheckType = utils.BasicsAndSecurityCheck(language, "", false)
 				securityTestStatus = false
 			}
 			if basicStatus {
@@ -760,7 +760,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 	output = utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest {
 			utils.PrintCenteredTitle("上游及回程线路检测", width)
-			upstreams.UpstreamsCheck(IPV4)
+			upstreams.UpstreamsCheck()
 		}
 	}, tempOutput, output)
 	output = utils.PrintAndCapture(func() {

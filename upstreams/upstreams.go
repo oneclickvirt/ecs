@@ -8,9 +8,11 @@ import (
 	backtrace "github.com/oneclickvirt/backtrace/bk"
 )
 
-func UpstreamsCheck(ip string) {
-	if ip != "" {
-		if result, err := bgptools.GetPoPInfo(ip); err == nil {
+var IPV4, IPV6 string
+
+func UpstreamsCheck() {
+	if IPV4 != "" {
+		if result, err := bgptools.GetPoPInfo(IPV4); err == nil {
 			fmt.Print(result.Result)
 		}
 	}
