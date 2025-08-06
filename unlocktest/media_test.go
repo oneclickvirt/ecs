@@ -6,5 +6,5 @@ import (
 )
 
 func Test(t *testing.T) {
-	fmt.Print("%s", MediaTest("zh"))
+	fmt.Printf("%s", MediaTest("zh"))
 }

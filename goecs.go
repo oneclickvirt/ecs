@@ -449,7 +449,7 @@ func handleLanguageSpecificSettings() {
 	}
 }
 
-func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
+func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *string, _ string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
 	case <-sig:
 		if !finish {
