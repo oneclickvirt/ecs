@@ -19,6 +19,7 @@ import (
 
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/uts"
+	bnetwork "github.com/oneclickvirt/basics/network"
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
@@ -115,18 +116,38 @@ func CheckChina(enableLogger bool) bool {
 	return selectChina
 }
 
+// OnlyBasicsIpInfo 仅检查和输出IP信息
+func OnlyBasicsIpInfo(language string) (string, string, string) {
+	ipv4, ipv6, ipInfo, _, err := bnetwork.NetworkCheck("both", false, language)
+	if err != nil {
+		return "", "", ""
+	}
+	basicInfo := ipInfo
+	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") && ipv4 != "" && ipv6 != "" {
+		uts.IPV4 = true
+		uts.IPV6 = true
+	} else if strings.Contains(ipInfo, "IPV4") && ipv4 != "" {
+		uts.IPV4 = true
+		uts.IPV6 = false
+	} else if strings.Contains(ipInfo, "IPV6") && ipv6 != "" {
+		uts.IPV6 = true
+		uts.IPV4 = false
+	}
+	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
+	return ipv4, ipv6, basicInfo
+}
+
 // BasicsAndSecurityCheck 执行安全检查
 func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus bool) (string, string, string, string, string) {
 	var wgt sync.WaitGroup
 	var ipv4, ipv6, ipInfo, securityInfo, systemInfo string
-	var err error
 	wgt.Add(1)
 	go func() {
 		defer wgt.Done()
-		ipv4, ipv6, ipInfo, securityInfo, err = network.NetworkCheck("both", securityCheckStatus, language)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+		ipv4, ipv6, ipInfo, securityInfo, _ = network.NetworkCheck("both", securityCheckStatus, language)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// }
 	}()
 	wgt.Add(1)
 	go func() {

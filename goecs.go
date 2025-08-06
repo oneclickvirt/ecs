@@ -59,7 +59,7 @@ var (
 	autoChangeDiskTestMethod                                          = true
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
-	help                                                              bool
+	onlyIpInfoCheckStatus, help                                       bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 	finish                                                            bool
 	IPV4, IPV6                                                        string
@@ -181,6 +181,7 @@ func initLogger() {
 	}
 }
 
+// TODO: 6 7 9 10 以及 纯命令行模式 需要加入一个函数查询和输出ASN和地址，方便后续一些网络查询的依赖函数调用
 func handleMenuMode(preCheck utils.NetCheckResult) {
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
@@ -377,6 +378,7 @@ func setUnlockFocusedTestStatus(preCheck utils.NetCheckResult) {
 }
 
 func setNetworkOnlyTestStatus() {
+	onlyIpInfoCheckStatus = true
 	securityTestStatus = true
 	speedTestStatus = true
 	backtraceStatus = true
@@ -385,9 +387,9 @@ func setNetworkOnlyTestStatus() {
 }
 
 func setUnlockOnlyTestStatus() {
+	onlyIpInfoCheckStatus = true
 	commTestStatus = true
 	utTestStatus = true
-	enabelUpload = false
 }
 
 func setHardwareOnlyTestStatus(preCheck utils.NetCheckResult) {
@@ -401,15 +403,16 @@ func setHardwareOnlyTestStatus(preCheck utils.NetCheckResult) {
 }
 
 func setIPQualityTestStatus() {
+	onlyIpInfoCheckStatus = true
 	securityTestStatus = true
 	emailTestStatus = true
 }
 
 func setRouteTestStatus() {
+	onlyIpInfoCheckStatus = true
 	backtraceStatus = true
 	nt3Status = true
 	pingTestStatus = true
-	enabelUpload = false
 }
 
 func printInvalidChoice() {
@@ -511,6 +514,9 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 	*output = runCPUTest(*output, tempOutput, outputMutex)
 	*output = runMemoryTest(*output, tempOutput, outputMutex)
 	*output = runDiskTest(*output, tempOutput, outputMutex)
+	if onlyIpInfoCheckStatus && !basicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		*output = runIpInfoCheck(*output, tempOutput, outputMutex)
+	}
 	if (onlyChinaTest || pingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg3.Add(1)
 		go func() {
@@ -551,6 +557,9 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 	*output = runCPUTest(*output, tempOutput, outputMutex)
 	*output = runMemoryTest(*output, tempOutput, outputMutex)
 	*output = runDiskTest(*output, tempOutput, outputMutex)
+	if onlyIpInfoCheckStatus && !basicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		*output = runIpInfoCheck(*output, tempOutput, outputMutex)
+	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		if utTestStatus {
 			wg1.Add(1)
@@ -572,6 +581,22 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 		*output = runEnglishSpeedTests(*output, tempOutput, outputMutex)
 	}
 	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
+}
+
+func runIpInfoCheck(output, tempOutput string, outputMutex *sync.Mutex) string {
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
+	return utils.PrintAndCapture(func() {
+		_, _, ipinfo := utils.OnlyBasicsIpInfo(language)
+		if ipinfo != "" {
+			if language == "zh" {
+				utils.PrintCenteredTitle("IP信息", width)
+			} else {
+				utils.PrintCenteredTitle("IP-Information", width)
+			}
+			fmt.Printf("%s", ipinfo)
+		}
+	}, tempOutput, output)
 }
 
 func runBasicTests(preCheck utils.NetCheckResult, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
