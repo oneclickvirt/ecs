@@ -180,13 +180,12 @@ func initLogger() {
 	}
 }
 
-// TODO: 6 7 9 10 以及 纯命令行模式 需要加入一个函数查询和输出ASN和地址，方便后续一些网络查询的依赖函数调用
 func handleMenuMode(preCheck utils.NetCheckResult) {
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
 	backtraceStatus, nt3Status, speedTestStatus = false, false, false
 	autoChangeDiskTestMethod = true
-	printMenuOptions()
+	printMenuOptions(preCheck)
 Loop:
 	for {
 		choice = getMenuChoice(language)
@@ -245,44 +244,62 @@ Loop:
 	}
 }
 
-func printMenuOptions() {
+func printMenuOptions(preCheck utils.NetCheckResult) {
 	var stats *utils.StatsResponse
 	var statsErr error
 	var githubInfo *utils.GitHubRelease
 	var githubErr error
-	var pwg sync.WaitGroup
-	pwg.Add(2)
-	go func() {
-		defer pwg.Done()
-		stats, statsErr = utils.GetGoescStats()
-	}()
-	go func() {
-		defer pwg.Done()
-		githubInfo, githubErr = utils.GetLatestEcsRelease()
-	}()
-	pwg.Wait()
-	var statsInfo string
-	if statsErr != nil {
-		statsInfo = "NULL"
+	// 只有在网络连接正常时才获取统计信息和版本信息
+	if preCheck.Connected {
+		var pwg sync.WaitGroup
+		pwg.Add(2)
+		go func() {
+			defer pwg.Done()
+			stats, statsErr = utils.GetGoescStats()
+		}()
+		go func() {
+			defer pwg.Done()
+			githubInfo, githubErr = utils.GetLatestEcsRelease()
+		}()
+		pwg.Wait()
 	} else {
-		statsInfo = fmt.Sprintf("总使用量: %s | 今日使用: %s",
-			utils.FormatGoecsNumber(stats.Total),
-			utils.FormatGoecsNumber(stats.Daily))
+		statsErr = fmt.Errorf("network not connected")
+		githubErr = fmt.Errorf("network not connected")
 	}
+	var statsInfo string
 	var cmp int
-	if githubErr == nil {
-		cmp = utils.CompareVersions(ecsVersion, githubInfo.TagName)
-	} else {
-		cmp = 0
+	if preCheck.Connected {
+		// 网络连接正常时处理统计信息和版本比较
+		if statsErr != nil {
+			statsInfo = "NULL"
+		} else {
+			switch language {
+			case "zh":
+				statsInfo = fmt.Sprintf("总使用量: %s | 今日使用: %s",
+					utils.FormatGoecsNumber(stats.Total),
+					utils.FormatGoecsNumber(stats.Daily))
+			case "en":
+				statsInfo = fmt.Sprintf("Total Usage: %s | Daily Usage: %s",
+					utils.FormatGoecsNumber(stats.Total),
+					utils.FormatGoecsNumber(stats.Daily))
+			}
+		}
+		if githubErr == nil {
+			cmp = utils.CompareVersions(ecsVersion, githubInfo.TagName)
+		} else {
+			cmp = 0
+		}
 	}
 	switch language {
 	case "zh":
 		fmt.Printf("VPS融合怪版本: %s\n", ecsVersion)
-		switch cmp {
-		case -1:
-			fmt.Printf("检测到新版本 %s 如有必要请更新！\n", githubInfo.TagName)
+		if preCheck.Connected {
+			switch cmp {
+			case -1:
+				fmt.Printf("检测到新版本 %s 如有必要请更新！\n", githubInfo.TagName)
+			}
+			fmt.Printf("使用统计: %s\n", statsInfo)
 		}
-		fmt.Printf("使用统计: %s\n", statsInfo)
 		fmt.Println("1. 融合怪完全体(能测全测)")
 		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
 		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
@@ -295,13 +312,13 @@ func printMenuOptions() {
 		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", ecsVersion)
-		switch cmp {
-		case -1:
-			fmt.Printf("New version detected %s update if necessary!\n", githubInfo.TagName)
+		if preCheck.Connected {
+			switch cmp {
+			case -1:
+				fmt.Printf("New version detected %s update if necessary!\n", githubInfo.TagName)
+			}
+			fmt.Printf("%s\n", statsInfo)
 		}
-		fmt.Printf("Total Usage: %s | Daily Usage: %s\n",
-			utils.FormatGoecsNumber(stats.Total),
-			utils.FormatGoecsNumber(stats.Daily))
 		fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
 		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
@@ -851,12 +868,16 @@ func main() {
 		return
 	}
 	initLogger()
-	go func() {
-		http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
-	}()
 	preCheck := utils.CheckPublicAccess(3 * time.Second)
+	go func() {
+		if preCheck.Connected {
+			http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+		}
+	}()
 	if menuMode {
 		handleMenuMode(preCheck)
+	} else {
+		onlyIpInfoCheckStatus = true
 	}
 	handleLanguageSpecificSettings()
 	if !preCheck.Connected {
