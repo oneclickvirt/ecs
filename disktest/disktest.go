@@ -26,7 +26,7 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChan
 			realTestMethod = "dd"
 		}
 	default:
-		if runtime.GOOS == "windows" && testMethod != "winsat" && testMethod != "" {
+		if runtime.GOOS == "windows" {
 			realTestMethod = "winsat"
 			res = disk.WinsatTest(language, isMultiCheck, testPath)
 		} else {
