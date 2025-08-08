@@ -10,7 +10,7 @@ require (
 	github.com/oneclickvirt/basics v0.0.15-20250805084236
 	github.com/oneclickvirt/cputest v0.0.12-20250720122317
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.9-20250801101625
+	github.com/oneclickvirt/disktest v0.0.10-20250808140407
 	github.com/oneclickvirt/gostun v0.0.5-20250727155022
 	github.com/oneclickvirt/memorytest v0.0.9-20250720135728
 	github.com/oneclickvirt/nt3 v0.0.7-20250805133514
@@ -58,8 +58,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxtrace/NTrace-core v1.4.2 // indirect
-	github.com/oneclickvirt/dd v0.0.2-20250701085922 // indirect
-	github.com/oneclickvirt/fio v0.0.2-20250701085933 // indirect
+	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
+	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250630140849 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
