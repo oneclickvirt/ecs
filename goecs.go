@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.79"
+	ecsVersion                                                        = "v0.1.80"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -554,7 +554,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 	if onlyIpInfoCheckStatus && !basicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = runIpInfoCheck(*output, tempOutput, outputMutex)
 	}
-	var backtraceInfo, nt3Info string
+	var backtraceInfo string
 	if utTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" && !onlyChinaTest {
 		wg1.Add(1)
 		go func() {
@@ -586,15 +586,6 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 				}, "", "")
 			}()
 		}
-		if nt3Status && !onlyChinaTest {
-			wg5.Add(1)
-			go func() {
-				defer wg5.Done()
-				nt3Info = utils.PrintAndCapture(func() {
-					nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType)
-				}, "", "")
-			}()
-		}
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
@@ -602,7 +593,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = runNetworkTests(wg3, wg4, wg5, ptInfo, &backtraceInfo, &nt3Info, *output, tempOutput, outputMutex)
+		*output = runNetworkTests(wg3, wg4, wg5, ptInfo, &backtraceInfo, *output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = runSpeedTests(*output, tempOutput, outputMutex)
@@ -814,7 +805,7 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput st
 	}, tempOutput, output)
 }
 
-func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo, nt3Info *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -825,12 +816,20 @@ func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo, nt3In
 			utils.PrintCenteredTitle("上游及回程线路检测", width)
 			fmt.Print(*backtraceInfo)
 		}
-		if nt3Status && !onlyChinaTest && *nt3Info != "" {
-			if wg5 != nil {
+		if nt3Status && !onlyChinaTest {
+			var nt3Info string
+			if nt3Status && !onlyChinaTest {
+				wg5.Add(1)
+				go func() {
+					defer wg5.Done()
+					nt3Info = utils.PrintAndCapture(func() {
+						nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType)
+					}, "", "")
+				}()
 				wg5.Wait()
 			}
 			utils.PrintCenteredTitle("三网回程路由检测", width)
-			fmt.Print(*nt3Info)
+			fmt.Print(nt3Info)
 		}
 		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
 			wg3.Wait()
