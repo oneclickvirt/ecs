@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"regexp"
 	"runtime"
@@ -190,6 +191,8 @@ Loop:
 	for {
 		choice = getMenuChoice(language)
 		switch choice {
+		case "0":
+			os.Exit(0)
 		case "1":
 			setFullTestStatus(preCheck)
 			onlyChinaTest = utils.CheckChina(enableLogger)
@@ -244,7 +247,23 @@ Loop:
 	}
 }
 
+// clearScreen 清屏
+func clearScreen() {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "cls")
+	case "darwin":
+		cmd = exec.Command("clear")
+	default:
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	_ = cmd.Run()
+}
+
 func printMenuOptions(preCheck utils.NetCheckResult) {
+	clearScreen() // 清屏
 	var stats *utils.StatsResponse
 	var statsErr error
 	var githubInfo *utils.GitHubRelease
@@ -308,8 +327,9 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+测速节点11个)")
 		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
-		fmt.Println("9. IP质量检测(15个数据库的IP检测+邮件端口检测)")
+		fmt.Println("9. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
 		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)")
+		fmt.Println("0. 退出程序")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", ecsVersion)
 		if preCheck.Connected {
@@ -319,7 +339,7 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 			}
 			fmt.Printf("%s\n", statsInfo)
 		}
-		fmt.Println("1. VPS Fusion Monster Test Comprehensive Test Suite")
+		fmt.Println("1. VPS Fusion Monster Test (Full Test)")
 		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
 		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
@@ -328,6 +348,7 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 		fmt.Println("7. Unlock-Only Test (Basic Unlock Tests + Common Streaming Services Unlock)")
 		fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
 		fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
+		fmt.Println("0. Exit Program")
 	}
 }
 
@@ -622,6 +643,7 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
 }
 
+// runIpInfoCheck 系统和网络基础信息检测不进行测试的时候，该函数检测取得本机IP信息并显示(单项测试中输出)
 func runIpInfoCheck(output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
