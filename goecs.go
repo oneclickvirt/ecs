@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.77"
+	ecsVersion                                                        = "v0.1.78"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -100,7 +100,7 @@ func getMenuChoice(language string) string {
 			if re.MatchString(input) {
 				inChoice := input
 				switch inChoice {
-				case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
+				case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
 					return inChoice
 				default:
 					if language == "zh" {
