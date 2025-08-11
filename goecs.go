@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.81"
+	ecsVersion                                                        = "v0.1.82"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -818,9 +818,7 @@ func runNetworkTests(wg3, wg4 *sync.WaitGroup, ptInfo, backtraceInfo *string, ou
 		}
 		if nt3Status && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程路由检测", width)
-			utils.PrintAndCapture(func() {
-				nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType) // 不能在重定向的同时外部并发，此处仅可以顺序执行
-			}, "", "")
+			nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType) // 不能在重定向的同时外部并发，此处仅可以顺序执行
 		}
 		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
 			wg3.Wait()

@@ -1,0 +1,163 @@
+-------------------------------------VPS融合怪测试-------------------------------------
+版本：v0.1.80
+测评频道: https://t.me/vps_reviews
+Go项目地址：https://github.com/oneclickvirt/ecs
+Shell项目地址：https://github.com/spiritLHLS/ecs
+--------------------------------------系统基础信息--------------------------------------
+ CPU 型号            : AMD EPYC 7763 64-Core Processor @ 3240.186 MHz
+ CPU 数量            : 2 Virtual CPU(s)
+ CPU 缓存            : L1: 64 KB / L2: 512 KB / L3: 32 MB
+ AES-NI              : ✔️ Enabled
+ VM-x/AMD-V/Hyper-V  : ✔️ Enabled
+ 内存                : 3.29 GB / 7.76 GB
+ 气球驱动            : ❌ Undetected
+ 内核页合并          : ❌ Undetected
+ 虚拟内存 Swap       : [ no swap partition or swap file detected ]
+ 硬盘空间 Disk 1     : 11.97 GB / 31.33 GB [38.2%%] /dev/loop4 - /workspaces
+ 硬盘空间 Disk 2     : 11.97 GB / 31.33 GB [41%%] overlay - /
+ 硬盘空间 Disk 3     : 20.86 GB / 28.89 GB [72.2%%] /dev/sdb1 - /usr/sbin/docker-init
+ 启动盘路径          : overlay
+ 系统                : ubuntu 24.04 [x86_64] 
+ 内核                : 6.8.0-1030-azure
+ 系统在线时间        : 0 days, 00 hours, 48 minutes
+ 时区                : UTC
+ 负载                : 1.48 / 1.30 / 1.08
+ 虚拟化架构          : Docker
+ NAT类型             : Port Restricted Cone
+ TCP加速方式         : cubic
+ IPV4 ASN            : AS8075 Microsoft Corporation
+ IPV4 Location       : Phoenix / Arizona / US
+ IPV4 Active IPs     : 1/256 (subnet /24) 171072/1048576 (prefix /12)
+--------------------------------CPU测试-通过sysbench测试--------------------------------
+1 线程测试(单核)得分: 3270.85
+2 线程测试(多核)得分: 3466.71
+当前检测到系统无root权限
+--------------------------------内存测试-通过sysbench测试---------------------------------
+内存复制速度(读+写) (MEMCPY)   :   18470.49 MB/s 
+内存复制速度(读+写) (DUMB)     :    9433.93 MB/s 
+内存复制速度(读+写) (MCBLOCK)  :   12226.22 MB/s 
+-----------------------------------硬盘测试-通过fio测试-----------------------------------
+测试路径         块大小       读测试(IOPS)            写测试(IOPS)            总和(IOPS)            
+/tmp              4k        18.36 MB/s(4590)        18.37 MB/s(4592)        36.73 MB/s(9182)       
+/tmp              64k       100.75 MB/s(1574)       101.28 MB/s(1582)       202.04 MB/s(3156)      
+/tmp              512k      98.43 MB/s(192)         103.66 MB/s(202)        202.10 MB/s(394)       
+/tmp              1m        98.01 MB/s(95)          104.54 MB/s(102)        202.55 MB/s(197)       
+-------------------------------------御三家流媒体解锁-------------------------------------
+----------------Netflix-----------------
+[IPV4]
+您的出口IP完整解锁Netflix，支持非自制剧的观看
+NF所识别的IP地域信息：美国
+[IPV6]
+您的网络可能没有正常配置IPv6，或者没有IPv6网络接入
+----------------Youtube-----------------
+[IPV4]
+连接方式: Youtube Video Server
+视频缓存节点地域: 美国  费尼克斯(PHX18S05)
+[IPV6]
+Youtube在您的出口IP所在的国家不提供服务
+---------------DisneyPlus---------------
+[IPV4]
+当前IPv4出口所在地区即将开通DisneyPlus
+[IPV6]
+DisneyPlus在您的出口IP所在的国家不提供服务
+--------------------------------------IP质量检测--------------------------------------
+以下为各数据库编号，输出结果后将自带数据库来源对应的编号
+ipinfo数据库  [0] | scamalytics数据库 [1] | virustotal数据库   [2] | abuseipdb数据库   [3] | ip2location数据库    [4]
+ip-api数据库  [5] | ipwhois数据库     [6] | ipregistry数据库   [7] | ipdata数据库      [8] | db-ip数据库          [9]
+ipapiis数据库 [A] | ipapicom数据库    [B] | bigdatacloud数据库 [C] | dkly数据库        [D] | ipqualityscore数据库 [E]
+IPV4:
+安全得分:
+声誉(越高越好): 0 [2] 
+信任得分(越高越好): 4 [8] 
+VPN得分(越低越好): 87 [8] 
+代理得分(越低越好): 100 [8] 
+社区投票-无害: 0 [2] 
+社区投票-恶意: 0 [2] 
+威胁得分(越低越好): 100 [8] 
+欺诈得分(越低越好): 7 [1] 0 [E]
+滥用得分(越低越好): 0 [3] 
+ASN滥用得分(越低越好): 0.0002 (Very Low) [A]
+公司滥用得分(越低越好): 0.001 (Low) [A] 
+黑名单记录统计:(有多少黑名单网站有记录):
+无害记录数: 0 [2]  恶意记录数: 0 [2]  可疑记录数: 0 [2]  无记录数: 94 [2] 
+安全信息:
+使用类型: unknown [C] business [8] hosting [0 7 A] DataCenter/WebHosting/Transit [3]
+公司类型: hosting [0 7 A] 
+是否云提供商: Yes [7 D] 
+是否数据中心: Yes [0 1 5 6 A] No [8 C]
+是否移动设备: Yes [E] No [5 A C]
+是否代理: No [0 1 4 5 6 7 8 A C D E] 
+是否VPN: Yes [A] No [0 1 6 7 C D E]
+是否Tor: No [0 1 3 6 7 8 A C D E] 
+是否Tor出口: No [1 7 D] 
+是否网络爬虫: No [A E] 
+是否匿名: No [1 6 7 8 D] 
+是否攻击者: No [7 8 D] 
+是否滥用者: No [7 8 A C D E] 
+是否威胁: No [7 8 C D] 
+是否中继: No [0 7 8 C D] 
+是否Bogon: No [7 8 A C D] 
+是否机器人: No [E] 
+DNS-黑名单: 315(Total_Check) 0(Clean) 7(Blacklisted) 5(Other) 
+--------------------------------------邮件端口检测--------------------------------------
+Platform  SMTP  SMTPS POP3  POP3S IMAP  IMAPS
+LocalPort ✘     ✘     ✘     ✘     ✘     ✘    
+QQ        ✔     ✔     ✔     ✘     ✔     ✘    
+163       ✔     ✔     ✔     ✘     ✔     ✘    
+Sohu      ✔     ✔     ✔     ✘     ✔     ✘    
+Yandex    ✔     ✔     ✔     ✘     ✔     ✘    
+Gmail     ✔     ✔     ✘     ✘     ✘     ✘    
+Outlook   ✔     ✘     ✔     ✘     ✔     ✘    
+Office365 ✔     ✘     ✔     ✘     ✔     ✘    
+Yahoo     ✔     ✔     ✘     ✘     ✘     ✘    
+MailCOM   ✔     ✔     ✔     ✘     ✔     ✘    
+MailRU    ✔     ✔     ✘     ✘     ✔     ✘    
+AOL       ✔     ✔     ✘     ✘     ✘     ✘    
+GMX       ✔     ✔     ✔     ✘     ✔     ✘    
+Sina      ✔     ✔     ✔     ✘     ✔     ✘    
+Apple     ✘     ✔     ✘     ✘     ✘     ✘    
+FastMail  ✘     ✔     ✘     ✘     ✘     ✘    
+ProtonMail✘     ✘     ✘     ✘     ✘     ✘    
+MXRoute   ✔     ✘     ✔     ✘     ✔     ✘    
+Namecrane ✔     ✔     ✔     ✘     ✔     ✘    
+XYAMail   ✘     ✘     ✘     ✘     ✘     ✘    
+ZohoMail  ✘     ✔     ✘     ✘     ✘     ✘    
+Inbox_eu  ✔     ✔     ✔     ✘     ✘     ✘    
+Free_fr   ✘     ✔     ✔     ✘     ✔     ✘    
+-------------------------------------三网回程路由检测-------------------------------------
+      AS174             AS1299            AS2914            AS3320            AS3356      
+      Cogent           Arelion             NTT               DTAG             Lumen       
+   Tier1 Global      Tier1 Global      Tier1 Global      Tier1 Global      Tier1 Global   
+      AS3491            AS5511            AS6453            AS6461            AS6762      
+       PCCW             Orange             Tata              Zayo            Sparkle      
+   Tier1 Global      Tier1 Global      Tier1 Global      Tier1 Global      Tier1 Global   
+      AS6830            AS7018           AS12956           AS38561      
+     Liberty             AT&T            Telxius      NTT Australia Solu
+   Tier1 Global      Tier1 Global      Tier1 Global         Direct      
+北京电信v4 219.141.140.10  检测不到回程路由节点的IP地址
+北京联通v4 202.106.195.68  检测不到回程路由节点的IP地址
+北京移动v4 221.179.155.161 检测不到回程路由节点的IP地址
+上海电信v4 202.96.209.133  检测不到回程路由节点的IP地址
+上海联通v4 210.22.97.1     检测不到回程路由节点的IP地址
+上海移动v4 211.136.112.200 检测不到回程路由节点的IP地址
+广州电信v4 58.60.188.222   检测不到回程路由节点的IP地址
+广州联通v4 210.21.196.6    检测不到回程路由节点的IP地址
+广州移动v4 120.196.165.24  检测不到回程路由节点的IP地址
+成都电信v4 61.139.2.69     检测不到回程路由节点的IP地址
+成都联通v4 119.6.6.6       检测不到回程路由节点的IP地址
+成都移动v4 211.137.96.205  检测不到回程路由节点的IP地址
+准确线路自行查看详细路由，本测试结果仅作参考
+同一目标地址多个线路时，检测可能已越过汇聚层，除第一个线路外，后续信息可能无效
+--------------------------------------就近节点测速--------------------------------------
+位置            上传速度        下载速度        延迟            丢包率          
+Speedtest.net   6055.91 Mbps    7818.00 Mbps    1.681117ms      0.00% (Sent: 402/Dup: 0/Max: 401)
+洛杉矶          4894.61 Mbps    5487.50 Mbps    9.737482ms      N/A             
+法兰克福        318.88 Mbps     771.78 Mbps     136.733082ms    N/A             
+联通上海5G      152.10 Mbps     0.09 Mbps       191.466132ms    N/A             
+电信Suzhou5G    322.77 Mbps     628.40 Mbps     193.44033ms     N/A             
+电信Zhenjiang5G 1.73 Mbps       442.39 Mbps     241.704896ms    N/A             
+移动Suzhou      151.14 Mbps     0.71 Mbps       203.451132ms    N/A             
+----------------------------------------------------------------------------------
+花费          : 8 分 3 秒
+时间          : Mon Aug 11 13:16:04 UTC 2025
+----------------------------------------------------------------------------------
