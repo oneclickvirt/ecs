@@ -24,6 +24,7 @@ import (
 	"github.com/oneclickvirt/ecs/cputest"
 	"github.com/oneclickvirt/ecs/disktest"
 	"github.com/oneclickvirt/ecs/memorytest"
+	"github.com/oneclickvirt/ecs/nexttrace"
 	"github.com/oneclickvirt/ecs/speedtest"
 	"github.com/oneclickvirt/ecs/unlocktest"
 	"github.com/oneclickvirt/ecs/upstreams"
@@ -31,7 +32,6 @@ import (
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
 	nt3model "github.com/oneclickvirt/nt3/model"
-	"github.com/oneclickvirt/nt3/nt"
 	ptmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
@@ -783,39 +783,7 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 	output = utils.PrintAndCapture(func() {
 		if nt3Status && !onlyChinaTest {
 			utils.PrintCenteredTitle("三网回程路由检测", width)
-			resultChan := make(chan nt.TraceResult, 100)
-			go nt.TraceRoute(language, nt3Location, nt3CheckType, resultChan)
-			for result := range resultChan {
-				if result.Index == -1 {
-					for index, res := range result.Output {
-						res = strings.TrimSpace(res)
-						if res != "" && index == 0 {
-							fmt.Println(res)
-						}
-					}
-					continue
-				}
-				if result.ISPName == "Error" {
-					for _, res := range result.Output {
-						res = strings.TrimSpace(res)
-						if res != "" {
-							fmt.Println(res)
-						}
-					}
-					return
-				}
-				for _, res := range result.Output {
-					res = strings.TrimSpace(res)
-					if res == "" {
-						continue
-					}
-					if strings.Contains(res, "ICMP") {
-						fmt.Print(res)
-					} else {
-						fmt.Println(res)
-					}
-				}
-			}
+			nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType)
 		}
 	}, tempOutput, output)
 	return utils.PrintAndCapture(func() {
