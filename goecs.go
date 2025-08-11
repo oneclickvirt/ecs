@@ -40,7 +40,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.78"
+	ecsVersion                                                        = "v0.1.79"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -582,7 +582,6 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 			go func() {
 				defer wg4.Done()
 				backtraceInfo = utils.PrintAndCapture(func() {
-					utils.PrintCenteredTitle("上游及回程线路检测", width)
 					upstreams.UpstreamsCheck()
 				}, "", "")
 			}()
@@ -592,7 +591,6 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 			go func() {
 				defer wg5.Done()
 				nt3Info = utils.PrintAndCapture(func() {
-					utils.PrintCenteredTitle("三网回程路由检测", width)
 					nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType)
 				}, "", "")
 			}()
@@ -819,20 +817,22 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput st
 func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo, nt3Info *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
-	if wg4 != nil {
-		wg4.Wait()
-	}
-	if wg5 != nil {
-		wg5.Wait()
-	}
 	return utils.PrintAndCapture(func() {
 		if backtraceStatus && !onlyChinaTest && *backtraceInfo != "" {
+			if wg4 != nil {
+				wg4.Wait()
+			}
+			utils.PrintCenteredTitle("上游及回程线路检测", width)
 			fmt.Print(*backtraceInfo)
 		}
 		if nt3Status && !onlyChinaTest && *nt3Info != "" {
+			if wg5 != nil {
+				wg5.Wait()
+			}
+			utils.PrintCenteredTitle("三网回程路由检测", width)
 			fmt.Print(*nt3Info)
 		}
-		if onlyChinaTest || pingTestStatus {
+		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
 			wg3.Wait()
 			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
 			fmt.Println(*ptInfo)
