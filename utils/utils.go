@@ -23,8 +23,9 @@ import (
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
-	"github.com/oneclickvirt/security/network"
+	"github.com/oneclickvirt/basics/network"
 )
+const token = "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"
 
 // 获取本程序本日及总执行的统计信息
 type StatsResponse struct {
@@ -250,7 +251,6 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 func UploadText(absPath string) (string, string, error) {
 	primaryURL := "http://hpaste.spiritlhl.net/api/UL/upload"
 	backupURL := "https://paste.spiritlhl.net/api/UL/upload"
-	token := network.SecurityUploadToken
 	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
 		SetRetryCount(2).
