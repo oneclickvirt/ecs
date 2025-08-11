@@ -546,7 +546,7 @@ func handleSignalInterrupt(sig chan os.Signal, startTime *time.Time, output *str
 	}
 }
 
-func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
 	*output = runBasicTests(preCheck, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = runCPUTest(*output, tempOutput, outputMutex)
 	*output = runMemoryTest(*output, tempOutput, outputMutex)
@@ -593,7 +593,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3, wg4, wg5 *syn
 		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = runNetworkTests(wg3, wg4, wg5, ptInfo, &backtraceInfo, *output, tempOutput, outputMutex)
+		*output = runNetworkTests(wg3, wg4, ptInfo, &backtraceInfo, *output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = runSpeedTests(*output, tempOutput, outputMutex)
@@ -805,7 +805,7 @@ func runEmailTests(wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput st
 	}, tempOutput, output)
 }
 
-func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func runNetworkTests(wg3, wg4 *sync.WaitGroup, ptInfo, backtraceInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -819,17 +819,13 @@ func runNetworkTests(wg3, wg4, wg5 *sync.WaitGroup, ptInfo, backtraceInfo *strin
 		if nt3Status && !onlyChinaTest {
 			var nt3Info string
 			if nt3Status && !onlyChinaTest {
-				wg5.Add(1)
-				go func() {
-					defer wg5.Done()
-					nt3Info = utils.PrintAndCapture(func() {
-						nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType)
-					}, "", "")
-				}()
-				wg5.Wait()
+				utils.PrintCenteredTitle("三网回程路由检测", width)
+				nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType) // 不可
+				nt3Info = utils.PrintAndCapture(func() {
+					fmt.Print(nt3Info)
+				}, "", "")
+				fmt.Print(nt3Info)
 			}
-			utils.PrintCenteredTitle("三网回程路由检测", width)
-			fmt.Print(nt3Info)
 		}
 		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
 			wg3.Wait()
@@ -928,7 +924,7 @@ func main() {
 		enabelUpload = false
 	}
 	var (
-		wg1, wg2, wg3, wg4, wg5                               sync.WaitGroup
+		wg1, wg2, wg3, wg4                                    sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
 		output, tempOutput                                    string
 		outputMutex                                           sync.Mutex
@@ -940,7 +936,7 @@ func main() {
 	go handleSignalInterrupt(sig, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch language {
 	case "zh":
-		runChineseTests(preCheck, &wg1, &wg2, &wg3, &wg4, &wg5, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
+		runChineseTests(preCheck, &wg1, &wg2, &wg3, &wg4, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
 	case "en":
 		runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &output, tempOutput, startTime, &outputMutex)
 	default:
