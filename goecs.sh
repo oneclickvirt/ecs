@@ -1,21 +1,38 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2025.06.29
+# 2025.08.23
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
 # curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
-cat <<"EOF"
-  ,ad8888ba,     ,ad8888ba,    88888888888  ,ad8888ba,   ad88888ba
- d8"'    `"8b   d8"'    `"8b   88          d8"'    `"8b d8"     "8b
-d8'            d8'        `8b  88         d8'           Y8a
-88             88          88  88aaaaa    88             `"Y8aaaaa,
-88      88888  88          88  88"""""    88               `"""""8b,
-Y8,        88  Y8,        ,8P  88         Y8,                    `8b
- Y8a.    .a88   Y8a.    .a8P   88          Y8a.    .a8P  Y8a     a8P
-  `"Y88888P"     `"Y8888Y"'    88888888888  `"Y8888Y"'    "Y88888P"
+if [ -z "$GOECS_HEADER_SHOWN" ]; then
+    export GOECS_HEADER_SHOWN=1
+    CYAN='\033[96m'
+    BLUE='\033[94m'
+    PURPLE='\033[95m'
+    GREEN='\033[92m'
+    YELLOW='\033[93m'
+    RED='\033[91m'
+    BOLD='\033[1m'
+    RESET='\033[0m'
+    echo -e "${CYAN}${BOLD}"
+    cat <<"EOF"
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║                                                                  ║
+    ║    ██████╗  ██████╗ ███████╗ ██████╗███████╗                     ║
+    ║   ██╔════╝ ██╔═══██╗██╔════╝██╔════╝██╔════╝                     ║
+    ║   ██║  ███╗██║   ██║█████╗  ██║     ███████╗                     ║
+    ║   ██║   ██║██║   ██║██╔══╝  ██║          ██║                     ║
+    ║   ╚██████╔╝╚██████╔╝███████╗╚██████╗███████║                     ║
+    ║    ╚═════╝  ╚═════╝ ╚══════╝ ╚═════╝╚══════╝                     ║
+    ║                                                                  ║
 EOF
+    echo -e "    ╚══════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "${CYAN}    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo ""
+fi
 cd /root >/dev/null 2>&1
 if [ ! -d "/usr/bin/" ]; then
     mkdir -p "/usr/bin/"
@@ -63,7 +80,6 @@ download_file() {
 check_china() {
     _yellow "正在检测IP所在区域......"
     if [[ -z "${CN}" ]]; then
-        # 首先尝试通过 ipapi.co 检测
         if curl -m 6 -s https://ipapi.co/json | grep -q 'China'; then
             _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
             if [ "$noninteractive" != "true" ]; then
@@ -367,68 +383,6 @@ InstallSysbench() {
     fi
 }
 
-Check_SysBench() {
-    if [ ! -f "/usr/bin/sysbench" ] && [ ! -f "/usr/local/bin/sysbench" ]; then
-        InstallSysbench
-    fi
-    # 尝试编译安装
-    if [ ! -f "/usr/bin/sysbench" ] && [ ! -f "/usr/local/bin/sysbench" ]; then
-        echo -e "${Msg_Warning}Sysbench Module install Failure, trying compile modules ..."
-        Check_Sysbench_InstantBuild
-    fi
-    source ~/.bashrc
-    # 最终检测
-    if [ "$(command -v sysbench)" ] || [ -f "/usr/bin/sysbench" ] || [ -f "/usr/local/bin/sysbench" ]; then
-        _yellow "Install sysbench successfully!"
-    else
-        _red "SysBench Moudle install Failure! Try Restart Bench or Manually install it! (/usr/bin/sysbench)"
-        _blue "Will try to test with geekbench5 instead later."
-    fi
-    sleep 3
-}
-
-Check_Sysbench_InstantBuild() {
-    if [ "${Var_OSRelease}" = "centos" ] || [ "${Var_OSRelease}" = "rhel" ] || [ "${Var_OSRelease}" = "almalinux" ] || [ "${Var_OSRelease}" = "ubuntu" ] || [ "${Var_OSRelease}" = "debian" ] || [ "${Var_OSRelease}" = "fedora" ] || [ "${Var_OSRelease}" = "arch" ] || [ "${Var_OSRelease}" = "astra" ]; then
-        local os_sysbench=${Var_OSRelease}
-        if [ "$os_sysbench" = "astra" ]; then
-            os_sysbench="debian"
-        fi
-        if [ "$os_sysbench" = "opencloudos" ]; then
-            os_sysbench="centos"
-        fi
-        echo -e "${Msg_Info}Release Detected: ${os_sysbench}"
-        echo -e "${Msg_Info}Preparing compile enviorment ..."
-        prepare_compile_env "${os_sysbench}"
-        echo -e "${Msg_Info}Downloading Source code (Version 1.0.20)..."
-        mkdir -p /tmp/sysbench_install/src/
-        mv /tmp/sysbench-1.0.20 /tmp/sysbench_install/src/
-        echo -e "${Msg_Info}Compiling Sysbench Module ..."
-        cd /tmp/sysbench_install/src/sysbench-1.0.20
-        ./autogen.sh && ./configure --without-mysql && make -j8 && make install
-        echo -e "${Msg_Info}Cleaning up ..."
-        cd /tmp && rm -rf /tmp/sysbench_install/src/sysbench*
-    else
-        echo -e "${Msg_Warning}Unsupported operating system: ${Var_OSRelease}"
-    fi
-}
-
-prepare_compile_env() {
-    local system="$1"
-    if [ "${system}" = "centos" ] || [ "${system}" = "rhel" ] || [ "${system}" = "almalinux" ]; then
-        yum install -y epel-release
-        yum install -y wget curl make gcc gcc-c++ make automake libtool pkgconfig libaio-devel
-    elif [ "${system}" = "ubuntu" ] || [ "${system}" = "debian" ]; then
-        ! apt-get update && apt-get --fix-broken install -y && apt-get update
-        ! apt-get -y install --no-install-recommends curl wget make automake libtool pkg-config libaio-dev unzip && apt-get --fix-broken install -y && apt-get -y install --no-install-recommends curl wget make automake libtool pkg-config libaio-dev unzip
-    elif [ "${system}" = "fedora" ]; then
-        dnf install -y wget curl gcc gcc-c++ make automake libtool pkgconfig libaio-devel
-    elif [ "${system}" = "arch" ]; then
-        pacman -S --needed --noconfirm wget curl gcc gcc make automake libtool pkgconfig libaio lib32-libaio
-    else
-        echo -e "${Msg_Warning}Unsupported operating system: ${system}"
-    fi
-}
-
 env_check() {
     REGEX=("debian|astra" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora" "arch" "freebsd" "alpine" "openbsd" "opencloudos")
     RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora" "Arch" "FreeBSD" "Alpine" "OpenBSD" "OpenCloudOS")
@@ -540,14 +494,8 @@ env_check() {
         _green "Installing sysbench"
         ${INSTALL_CMD} sysbench
         if [ $? -ne 0 ]; then
-            echo "Unable to download sysbench through package manager, attempting compilation..."
-            wget -O /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip" || curl -Lk -o /tmp/sysbench.zip "${cdn_success_url}https://github.com/akopytov/sysbench/archive/1.0.20.zip"
-            if [ ! -f /tmp/sysbench.zip ]; then
-                wget -q -O /tmp/sysbench.zip "https://hub.fgit.cf/akopytov/sysbench/archive/1.0.20.zip"
-            fi
-            chmod +x /tmp/sysbench.zip
-            unzip /tmp/sysbench.zip -d /tmp
-            Check_SysBench
+            _red "Unable to install sysbench through package manager"
+            _yellow "Sysbench installation skipped"
         fi
     fi
     if ! command -v geekbench >/dev/null 2>&1; then
