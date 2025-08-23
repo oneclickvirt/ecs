@@ -77,7 +77,7 @@ VM-x/AMD-V/Hyper-V: 是当前测试宿主机是否支持嵌套虚拟化的指标
 
 虚拟化架构: 显示宿主机来自什么虚拟化架构，一般来说推荐```Dedicated > KVM > Xen```虚拟化，其他虚拟化都会存在性能损耗，导致使用的时候存在性能共享/损耗，但这个也说不准，独立服务器才拥有完全独立的资源占用，其他虚拟化基本都会有资源共享，取决于宿主机的售卖者是否有良心，具体性能优劣还是得看后面的专项测试。
 
-NAT类型: 显示NAT类型，具体推荐```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```，测不出来时会显示```Inconclusive```，一般来说不拿来做特殊用途(有关于特殊的代理和实时通讯需求的)，都不用关注本指标。
+NAT类型: 显示NAT类型，具体推荐```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```，测不出来或者非正规协议的类型会显示```Inconclusive```，一般来说只有特殊用途，比如有特殊的代理、实时通讯、做FRP内穿端口等需求才需要特别关注，其他一般情况下都不用关注本指标。
 
 TCP加速方式：一般是```cubic/bbr```拥塞控制协议，一般来说做代理服务器用bbr可以改善网速，普通用途不必关注此指标。
 
@@ -117,13 +117,33 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 多说一句，```GeekBench```测的很多内容，实际在服务器使用过程中根本用不到，测试仅供参考。当然```Sysbench```非常不全面，但它基于最基础的计算性能可以大致比较CPU的性能。
 
-实际上CPU性能测试够用就行，除非是科学计算以及视频转码，一般不需要特别追求高性能CPU。
+实际上CPU性能测试够用就行，除非是科学计算以及视频转码，一般不需要特别追求高性能CPU。如果有性能需求，那么需要关注程序本身吃的是多核还是单核，对应看多核还是单核得分。
 
 ### **内存测试**
 
-一般来说，只需要判断IO速度是否低于```10240MB/s```，如果低于这个值那么证明内存性能不佳，极大概率存在超售超卖问题。
+一般来说，只需要判断 IO 速度是否低于 `10240 MB/s (≈10 GB/s)`，
+如果低于这个值，那么证明内存性能不佳，极大概率存在超售超卖问题。
 
-至于超开的原因可能是开了虚拟内存(硬盘当内存用)、可能是开了ZRAM(牺牲CPU性能)、可能是开了气球驱动、可能是开了KSM内存融合，原因多种多样。
+至于超开的原因可能是：
+
+* 开了虚拟内存 (硬盘当内存用)
+* 开了 ZRAM (牺牲 CPU 性能)
+* 开了气球驱动 (Balloon Driver)
+* 开了 KSM 内存融合
+
+原因多种多样。
+
+| 内存类型 | 典型频率 (MHz)   | 单通道带宽                                 | 双通道带宽                                   |
+| ---- | ------------ | ------------------------------------- | --------------------------------------- |
+| DDR3 | 1333 \~ 2133 | 10 \~ 17 GB/s (≈ 10240 \~ 17408 MB/s) | 20 \~ 34 GB/s (≈ 20480 \~ 34816 MB/s)   |
+| DDR4 | 2133 \~ 3200 | 17 \~ 25 GB/s (≈ 17408 \~ 25600 MB/s) | 34 \~ 50 GB/s (≈ 34816 \~ 51200 MB/s)   |
+| DDR5 | 4800 \~ 7200 | 38 \~ 57 GB/s (≈ 38912 \~ 58368 MB/s) | 76 \~ 114 GB/s (≈ 77824 \~ 116736 MB/s) |
+
+根据上表内容，本项目测试的粗略判断方法：
+
+* **< 20 GB/s (20480 MB/s)** → 可能是 DDR3（或 DDR4 单通道 / 低频）
+* **20 \~ 40 GB/s (20480 \~ 40960 MB/s)** → 大概率 DDR4
+* **≈ 50 GB/s (≈ 51200 MB/s)** → 基本就是 DDR5
 
 ### **硬盘测试**
 
@@ -279,7 +299,7 @@ Load: Displays system load.
 
 Virtualization Architecture: Shows what virtualization architecture the host machine uses. Generally speaking, the recommended order is `Dedicated > KVM > Xen` virtualization. Other virtualization will have performance losses, leading to shared/degraded performance during use. However, this is not definitive. Only dedicated servers have completely independent resource usage; other virtualization methods basically all have resource sharing, depending on whether the host machine seller has a conscience. The specific performance merits still depend on the specialized tests that follow.
 
-NAT Type: Displays NAT type. Specifically recommended in order: ```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```. When not detectable, it will show ```Inconclusive```. Generally speaking, if you're not using it for special purposes (related to special proxy and real-time communication needs), you don't need to pay attention to this metric.
+NAT Type: Displays the NAT type, with the following specific recommendations: ```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric``` . If the type cannot be determined or is an irregular protocol, it will display ```Inconclusive``` . Generally, this metric only requires special attention for specific purposes, such as using special proxies, real-time communication, or FRP port forwarding. In most other cases, this metric does not need to be monitored.
 
 TCP Acceleration Method: Generally this is the ```cubic/bbr``` congestion control protocol. Generally speaking, using bbr for proxy servers can improve network speed; for ordinary purposes, you don't need to pay attention to this indicator.
 
@@ -317,13 +337,33 @@ For ```GeekBench``` baselines, see the [official website](https://browser.geekbe
 
 As an additional note, many things tested by `GeekBench` are not actually used in server usage processes, so the test is for reference only. Of course, `Sysbench` is very incomplete, but it can roughly compare CPU performance based on the most basic computational performance.
 
-In practice, CPU performance just needs to be sufficient. Unless you're doing scientific computing or video transcoding, you generally don't need to pursue high-performance CPUs.
+In fact, CPU performance testing is sufficient as long as it meets basic requirements. Unless you are engaged in scientific computing or video transcoding, there is generally no need to pursue high-performance CPUs. If performance is a requirement, then you need to pay attention to whether the program itself is multi-core or single-core, and correspondingly look at the multi-core or single-core scores.
 
-### **Memory Testing**
+### **Memory Test**
 
-Generally speaking, you only need to determine whether the IO speed is below `10240MB/s`. If it's below this value, it proves that memory performance is poor, with an extremely high probability of overselling issues.
+Generally speaking, you only need to determine whether the IO speed is lower than `10240 MB/s (≈10 GB/s)`.
+If it is lower than this value, then it proves that the memory performance is poor, and there is a high probability of overselling.
 
-As for the reasons for oversubscription, it could be that virtual memory is enabled (using disk as memory), ZRAM might be enabled (sacrificing CPU performance), balloon drivers might be enabled, or KSM memory fusion might be enabled - there are various possible reasons.
+The reasons for overselling may be:
+
+* Virtual memory is enabled (using the hard drive as memory)
+* ZRAM enabled (sacrificing CPU performance)
+* Balloon Driver enabled
+* KSM memory fusion enabled
+
+There are various possible causes.
+
+| Memory Type | Typical Frequency (MHz)   | Single-Channel Bandwidth   | Dual-Channel Bandwidth                                   |
+| ---- | ----------- - | ------------------------------------- | -------------------------------------- - |
+| DDR3 | 1333 \~ 2133 | 10 \~ 17 GB/s (≈ 10240 \~ 17408 MB/s) | 20 \~ 34 GB/s (≈ 20480 \~ 34816 MB/s)   |
+| DDR4 | 2133–3200 | 17–25 GB/s (≈ 17408–25600 MB/s) | 34–50 GB/s (≈ 34816–51200 MB/s)   |
+| DDR5 | 4800–7200 | 38–57 GB/s (≈ 38912–58368 MB/s) | 76–114 GB/s (≈ 77824–116736 MB/s) |
+
+Based on the content of the above table, the rough judgment method for this project's testing is as follows:
+
+* **< 20 GB/s (20480 MB/s)** → May be DDR3 (or DDR4 single-channel / low-frequency)
+* **20–40 GB/s (20480–40960 MB/s)** → Likely DDR4
+* **≈ 50 GB/s (≈ 51200 MB/s)** → Essentially DDR5
 
 ### **Disk Testing**
 
@@ -427,7 +467,7 @@ OS: システム名とアーキテクチャを表示します
 
 仮想化アーキテクチャ: ホストマシンがどの仮想化アーキテクチャから来ているかを表示します。一般的に ```Dedicated > KVM > Xen``` 仮想化が推奨されます。他の仮想化はパフォーマンス低下を引き起こし、使用時にパフォーマンス共有/損失が発生しますが、これも確実ではありません。専用サーバーのみが完全に独立したリソース占有を持ち、他の仮想化はほとんどリソース共有があります。これはホストマシンの販売者が良心的かどうかによって異なります。具体的なパフォーマンスの優劣は、後の専門テストを見る必要があります。
 
-NAT種類: NAT種類を表示します。具体的には ```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric``` が推奨されます。検出できない場合は ```Inconclusive``` と表示されます。一般的に特別な用途（特殊なプロキシとリアルタイム通信の要件に関連する）に使用しない限り、この指標を気にする必要はありません。
+NATタイプ: NATタイプを表示します。具体的な推奨順序は```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```です。測定不能または非標準プロトコルのタイプの場合は```Inconclusive```と表示されます。通常は特別な用途、例えば特別なプロキシの使用、リアルタイム通信、FRPによるポート転送などが必要な場合を除き、この指標は特に注目する必要はありません。
 
 TCP加速方式：一般的に ```cubic/bbr``` 輻輳制御プロトコルです。一般的にプロキシサーバーとして使用する場合、bbrを使用するとネットワーク速度が改善されますが、通常の用途ではこの指標に注目する必要はありません。
 
@@ -464,13 +504,33 @@ Sysbenchのベンチマークは[CPU Performance Ladder For Sysbench](https://sy
 
 補足ですが、```GeekBench```がテストする多くの内容は、サーバー使用過程で実際には必要ないことが多いです。テストは参考程度にしてください。もちろん```Sysbench```は非常に包括的ではありませんが、基本的な計算性能に基づいてCPUのパフォーマンスを大まかに比較できます。
 
-実際にはCPUパフォーマンスは十分であれば良く、科学計算やビデオエンコード以外では、特に高性能CPUを追求する必要はありません。
+実際には、CPUの性能テストは十分な性能があれば十分です。科学計算や動画変換のような特殊な用途を除けば、一般的に高性能なCPUを特別に追求する必要はありません。もし性能要件がある場合、プログラム自体がマルチコアかシングルコアのどちらを主に利用しているかを確認し、それに応じてマルチコアかシングルコアのスコアを比較する必要があります。
 
 ### **メモリテスト**
 
-一般的に、IO速度が```10240MB/s```未満かどうかを判断するだけで十分です。この値を下回る場合、メモリパフォーマンスが良くなく、オーバーセリング/オーバーコミットの問題がある可能性が非常に高いです。
+一般的には、IO速度が`10240 MB/s (≈10 GB/s)`未満かどうかを判断するだけで十分です。
+この値を下回る場合、メモリ性能が不十分であり、ほぼ確実にオーバープロビジョニングの問題が存在します。
 
-オーバーコミットの原因は、仮想メモリの使用（ディスクをメモリとして使用）、ZRAM（CPUパフォーマンスを犠牲）、バルーンドライバの使用、KSMメモリマージの使用など、様々な可能性があります。
+オーバープロビジョニングの原因としては、以下の可能性が考えられます：
+
+* 仮想メモリを有効にしている（ハードディスクをメモリとして使用）
+* ZRAMを有効にしている（CPU性能を犠牲にしている）
+* バルーンドライバー（Balloon Driver）を有効にしている
+* KSMメモリ融合を有効にしている
+
+原因は多岐にわたります。
+
+| メモリタイプ | 典型的な周波数 (MHz)   | シングルチャネル帯域幅 | ダブルチャネル帯域幅                                   |
+| ---- | ----------- - | ------------------------------------- | -------------------------------------- - |
+| DDR3 | 1333 \~ 2133 | 10 \~ 17 GB/s (≈ 10240 \~ 17408 MB/s) | 20 \~ 34 GB/s (≈ 20480 \~ 34816 MB/s)   |
+| DDR4 | 2133 ～ 3200 | 17 ～ 25 GB/s (≈ 17408 ～ 25600 MB/s) | 34 ～ 50 GB/s (≈ 34816 ～ 51200 MB/s)   |
+| DDR5 | 4800 ～ 7200 | 38 ～ 57 GB/s (≈ 38912 ～ 58368 MB/s) | 76 ～ 114 GB/s (≈ 77824 ～ 116736 MB/s) |
+
+上記の表の内容に基づき、本プロジェクトのテストにおける粗略な判断方法：
+
+* **< 20 GB/s (20480 MB/s)** → 可能是 DDR3（または DDR4 シングルチャネル / 低周波数）
+* **20 ～ 40 GB/s (20480 ～ 40960 MB/s)** → ほぼ確実にDDR4
+* **≈ 50 GB/s (≈ 51200 MB/s)** → ほぼ確実にDDR5
 
 ### **ディスクテスト**
 
