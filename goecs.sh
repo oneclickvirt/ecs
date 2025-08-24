@@ -1,24 +1,21 @@
 #!/bin/bash
 # From https://github.com/oneclickvirt/ecs
-# 2025.08.23
+# 2025.08.24
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
 # curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh
 
-CYAN='\033[96m'
-BOLD='\033[1m'
-RESET='\033[0m'
-echo -e "${CYAN}${BOLD}"
 cat <<"EOF"
-██████╗  ██████╗ ███████╗ ██████╗███████╗
-██╔════╝ ██╔═══██╗██╔════╝██╔════╝██╔════╝
-██║  ███╗██║   ██║█████╗  ██║     ███████╗
-██║   ██║██║   ██║██╔══╝  ██║          ██║
-╚██████╔╝╚██████╔╝███████╗╚██████╗███████║
- ╚═════╝  ╚═════╝ ╚══════╝  ╚═════╝╚══════╝
+  ,ad8888ba,     ,ad8888ba,    88888888888  ,ad8888ba,   ad88888ba
+ d8"'    `"8b   d8"'    `"8b   88          d8"'    `"8b d8"     "8b
+d8'            d8'        `8b  88         d8'           Y8a
+88             88          88  88aaaaa    88             `"Y8aaaaa,
+88      88888  88          88  88"""""    88               `"""""8b,
+Y8,        88  Y8,        ,8P  88         Y8,                    `8b
+ Y8a.    .a88   Y8a.    .a8P   88          Y8a.    .a8P  Y8a     a8P
+  `"Y88888P"     `"Y8888Y"'    88888888888  `"Y8888Y"'    "Y88888P"
 EOF
-echo -e "${RESET}"
 cd /root >/dev/null 2>&1
 if [ ! -d "/usr/bin/" ]; then
     mkdir -p "/usr/bin/"
