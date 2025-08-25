@@ -45,6 +45,8 @@
 
 ### **系统基础信息**
 
+依赖项目：[https://github.com/oneclickvirt/basics](https://github.com/oneclickvirt/basics) [https://github.com/oneclickvirt/gostun](https://github.com/oneclickvirt/gostun)
+
 CPU型号: 一般来说，按CPU的发布时间，都是新款则AMD好于Intel，都是旧款则Intel好于AMD，而Apple的M系列芯片则是断层式领先。
 
 CPU数量: 会检测是物理核心还是逻辑核心，优先展示物理核心，查不到物理核心才去展示逻辑核心。在服务器实际使用过程中，程序一般是按逻辑核心分配执行的，非视频转码和科学计算，物理核心一般都是开超线程成逻辑核心用，横向比较的时候，对应类型的核心数量才有比较的意义。当然如果一个是物理核一个是虚拟核，在后面CPU测试得分类似的情况下，肯定是物理核更优，无需担忧CPU性能被共享的问题。
@@ -100,6 +102,8 @@ IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小
 
 ### **CPU测试**
 
+依赖项目：[https://github.com/oneclickvirt/cputest](https://github.com/oneclickvirt/cputest)
+
 支持通过命令行参数选择```GeekBench```和```Sysbench```进行测试：
 
 | 比较项             | sysbench | geekbench |
@@ -130,6 +134,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### **内存测试**
 
+依赖项目：[https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
+
 一般来说，只需要判断 IO 速度是否低于 `10240 MB/s (≈10 GB/s)`，
 如果低于这个值，那么证明内存性能不佳，极大概率存在超售超卖问题。
 
@@ -155,6 +161,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 * **≈ 50 GB/s (≈ 51200 MB/s)** → 基本就是 DDR5
 
 ### **硬盘测试**
+
+依赖项目：[https://github.com/oneclickvirt/disktest](https://github.com/oneclickvirt/disktest)
 
 ```dd```测试可能误差偏大但测试速度快无硬盘大小限制，```fio```测试真实一些但测试速度慢有硬盘以及内存大小的最低需求。
 
@@ -198,6 +206,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### **流媒体解锁**
 
+依赖项目：[https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
+
 默认只检测跨国流媒体解锁。
 
 一般来说，正常的情况下，一个IP多个流媒体的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被流媒体普通的数据库所识别修正地域。由于各平台的IP数据库识别速度不一致，所以有时候有的平台解锁区域正常，有的飘到路由上的某个位置，有的飘到IP未被你使用前所在的位置。
@@ -210,6 +220,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 所以测试过程中，如果宿主机当前使用的是官方主流的DNS，不会进行是否为原生解锁的判断。
 
 ### **IP质量检测**
+
+依赖项目：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
 检测14个数据库的IP相关信息，一般来说看使用类型和公司类型还有安全信息的其他判别足矣，安全得分真的图一乐。多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息。
 
@@ -226,6 +238,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### **邮件端口检测**
 
+依赖项目：[https://github.com/oneclickvirt/portchecker](https://github.com/oneclickvirt/portchecker)
+
 - **SMTP（25）**：用于邮件服务器之间传输邮件（发送邮件）。
 - **SMTPS（465）**：用于加密的 SMTP 发送邮件（SSL/TLS 方式）。
 - **SMTP（587）**：用于客户端向邮件服务器发送邮件，支持 STARTTLS 加密。
@@ -237,6 +251,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 具体当前宿主机不做邮局，不收发电子邮件，那么该项目指标不需要理会。
 
 ### **上游及回程线路检测**
+
+依赖项目：[https://github.com/oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 
 #### 上游类型与运营商等级说明
 
@@ -276,6 +292,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### **三网回程路由检测**
 
+依赖项目：[https://github.com/oneclickvirt/nt3](https://github.com/oneclickvirt/nt3)
+
 默认检测广州为目的地，实际可使用命令行参数指定目的地，见对应的参数说明。
 
 主要就是看是不是直连，是不是延迟低，是不是没有隐藏路由信息，有没有一些优质线路或IX链接。
@@ -285,6 +303,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 有时候路由信息完全藏起来了，只知道实际使用的延迟低，实际可能也是优质线路只是查不到信息，这就没办法直接识别了。
 
 ### **就近测速**
+
+依赖项目：[https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 
 先测的官方推荐的测速点，然后测有代表性的国际测速点，最后测国内三大运营商ping值最低的测速点。
 
@@ -299,6 +319,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 ## English
 
 ### Basic System Information
+
+Dependency project: [https://github.com/oneclickvirt/basics](https://github.com/oneclickvirt/basics) [https://github.com/oneclickvirt/gostun](https://github.com/oneclickvirt/gostun)
 
 **CPU Model**: Generally speaking, based on CPU release time, newer models favor AMD over Intel, while older models favor Intel over AMD. Apple's M-series chips are in a league of their own.
 
@@ -355,6 +377,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### CPU Testing
 
+Dependency project: [https://github.com/oneclickvirt/cputest](https://github.com/oneclickvirt/cputest)
+
 Supports command-line parameter selection between `GeekBench` and `Sysbench` for testing:
 
 | Comparison Item | sysbench | geekbench |
@@ -385,6 +409,8 @@ Actually, CPU performance testing should be sufficient. Unless for scientific co
 
 ### Memory Testing
 
+Dependency project: [https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
+
 Generally speaking, you only need to determine if IO speed is below `10240 MB/s (≈10 GB/s)`.
 If below this value, it proves poor memory performance with high probability of overselling issues.
 
@@ -410,6 +436,8 @@ Based on the above table, this project's rough judgment method:
 * **≈ 50 GB/s (≈ 51200 MB/s)** → Basically DDR5
 
 ### Disk Testing
+
+Dependency project: [https://github.com/oneclickvirt/disktest](https://github.com/oneclickvirt/disktest)
 
 `dd` testing may have larger errors but tests quickly with no disk size limitations. `fio` testing is more realistic but tests slowly with minimum disk and memory size requirements.
 
@@ -453,6 +481,8 @@ Note: This tests real IO, limited to this project. IO tests from other projects 
 
 ### Streaming Media Unlocking
 
+Dependency project: [https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
+
 Default only checks cross-border streaming media unlocking.
 
 Generally speaking, under normal circumstances, multiple streaming services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by streaming media common databases. Due to inconsistent IP database recognition speeds across platforms, sometimes some platforms unlock regions normally, some drift to certain router locations, and some drift to where the IP was before you used it.
@@ -465,6 +495,8 @@ Generally speaking, under normal circumstances, multiple streaming services for 
 So during testing, if the host currently uses official mainstream DNS, no judgment of whether it's native unlocking will be performed.
 
 ### IP Quality Detection
+
+Dependency project: [https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
 Detects IP-related information from 14 databases. Generally speaking, looking at usage type, company type, and security information's other discriminators is sufficient. Security scores are really just for fun. When multiple platforms show corresponding detection items all having corresponding values, it proves the current IP is indeed as such - don't trust information from just one database source.
 
@@ -481,6 +513,8 @@ Multi-platform comparison is more reliable. Different databases have different a
 
 ### Email Port Detection
 
+Dependency project: [https://github.com/oneclickvirt/portchecker](https://github.com/oneclickvirt/portchecker)
+
 - **SMTP (25)**: Used for mail transfer between mail servers (sending mail).
 - **SMTPS (465)**: Used for encrypted SMTP mail sending (SSL/TLS method).
 - **SMTP (587)**: Used for clients sending mail to mail servers, supports STARTTLS encryption.
@@ -493,6 +527,8 @@ If the current host doesn't function as a mail server and doesn't send/receive e
 
 ### Nearby Speed Testing
 
+Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
+
 First test the officially recommended speed test points, then test representative international speed test points.
 
 Official speed test points can represent the local bandwidth baseline of the host machine being tested.
@@ -504,6 +540,8 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 ## 日本語
 
 ### システム基本情報
+
+依存プロジェクト：[https://github.com/oneclickvirt/basics](https://github.com/oneclickvirt/basics) [https://github.com/oneclickvirt/gostun](https://github.com/oneclickvirt/gostun)
 
 **CPUモデル**: 一般的に、CPUのリリース時期に基づいて、新しいモデルではAMDがIntelより優れており、古いモデルではIntelがAMDより優れています。一方、AppleのMシリーズチップは圧倒的に優位に立っています。
 
@@ -560,6 +598,8 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 
 ### CPUテスト
 
+依存プロジェクト：[https://github.com/oneclickvirt/cputest](https://github.com/oneclickvirt/cputest)
+
 コマンドラインパラメータで`GeekBench`と`Sysbench`のテスト選択をサポートします：
 
 | 比較項目 | sysbench | geekbench |
@@ -590,6 +630,8 @@ AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシン�
 
 ### メモリテスト
 
+依存プロジェクト：[https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
+
 一般的に、IO速度が`10240 MB/s (≈10 GB/s)`を下回るかどうかを判断するだけで十分です。
 この値を下回る場合、メモリ性能が不良で、オーバーセリング問題が存在する可能性が極めて高いことを証明します。
 
@@ -615,6 +657,8 @@ AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシン�
 * **≈ 50 GB/s (≈ 51200 MB/s)** → 基本的にDDR5
 
 ### ディスクテスト
+
+依存プロジェクト：[https://github.com/oneclickvirt/disktest](https://github.com/oneclickvirt/disktest)
 
 `dd`テストは誤差が大きい可能性がありますが、テスト速度が速くディスクサイズ制限がありません。`fio`テストはより現実的ですが、テスト速度が遅く、ディスクおよびメモリサイズの最低要件があります。
 
@@ -658,6 +702,8 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 ### ストリーミングメディアロック解除
 
+依存プロジェクト：[https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/lmc999/RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck)
+
 デフォルトでは国境を越えるストリーミングメディアのロック解除のみをチェックします。
 
 一般的に、正常な状況下では、一つのIPの複数のストリーミングメディアのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、ストリーミングメディアの一般的なデータベースに認識修正されていない可能性が高いです。各プラットフォームのIPデータベース認識速度が一致しないため、時々あるプラットフォームではロック解除地域が正常、あるプラットフォームではルート上のある位置に飛ぶ、あるプラットフォームではIPがあなたによって使用される前にいた位置に飛ぶことがあります。
@@ -670,6 +716,8 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 そのため、テスト過程で、ホストが現在使用しているのが公式主流のDNSの場合、ネイティブロック解除かどうかの判断は行われません。
 
 ### IP品質検出
+
+依存プロジェクト：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
 14のデータベースのIP関連情報を検出します。一般的に、使用タイプと会社タイプ、そしてセキュリティ情報のその他識別を見れば十分で、セキュリティスコアは本当にお遊びです。複数のプラットフォームで対応する検出項目がすべて対応する値になっている場合、現在のIPが確実にそうであることを証明します。一つのデータベースソースの情報のみを信じてはいけません。
 
@@ -686,6 +734,8 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 ### メールポート検出
 
+依存プロジェクト：[https://github.com/oneclickvirt/portchecker](https://github.com/oneclickvirt/portchecker)
+
 - **SMTP (25)**: メールサーバー間でのメール転送（メール送信）に使用。
 - **SMTPS (465)**: 暗号化されたSMTPメール送信（SSL/TLS方式）に使用。
 - **SMTP (587)**: クライアントからメールサーバーへのメール送信、STARTTLS暗号化をサポート。
@@ -697,6 +747,8 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 現在のホストがメール局として機能せず、電子メールの送受信を行わない場合、この項目指標は無視して構いません。
 
 ### 近隣スピードテスト
+
+依存プロジェクト：[https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 
 まず公式推奨の測定ポイントをテストし、次に代表的な国際測定ポイントをテストします。
 
