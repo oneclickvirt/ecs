@@ -33,7 +33,7 @@ check_cdn() {
     local o_url="$1"
     local cdn_url
     for cdn_url in $cdn_urls; do
-        if curl -sL -k "$cdn_url$o_url" --max-time 6 | grep -q "success" >/dev/null 2>&1; then
+        if curl -4 -sL -k "$cdn_url$o_url" --max-time 6 | grep -q "success" >/dev/null 2>&1; then
             cdn_success_url="$cdn_url"
             return 0
         fi
