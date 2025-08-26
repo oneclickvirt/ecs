@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 # From https://github.com/oneclickvirt/ecs
-# 2025.08.24
+# 2025.08.26
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
@@ -20,22 +20,27 @@ cd /root >/dev/null 2>&1
 if [ ! -d "/usr/bin/" ]; then
     mkdir -p "/usr/bin/"
 fi
-_red() { echo -e "\033[31m\033[01m$@\033[0m"; }
-_green() { echo -e "\033[32m\033[01m$@\033[0m"; }
-_yellow() { echo -e "\033[33m\033[01m$@\033[0m"; }
-_blue() { echo -e "\033[36m\033[01m$@\033[0m"; }
-reading() { read -rp "$(_green "$1")" "$2"; }
+_red() { printf "\033[31m\033[01m%s\033[0m\n" "$*"; }
+_green() { printf "\033[32m\033[01m%s\033[0m\n" "$*"; }
+_yellow() { printf "\033[33m\033[01m%s\033[0m\n" "$*"; }
+_blue() { printf "\033[36m\033[01m%s\033[0m\n" "$*"; }
+reading() { 
+    printf "\033[32m\033[01m%s\033[0m" "$1"
+    read "$2"
+}
 
 check_cdn() {
-    local o_url=$1
-    for cdn_url in "${cdn_urls[@]}"; do
+    local o_url="$1"
+    local cdn_url
+    for cdn_url in $cdn_urls; do
         if curl -sL -k "$cdn_url$o_url" --max-time 6 | grep -q "success" >/dev/null 2>&1; then
-            export cdn_success_url="$cdn_url"
-            return
+            cdn_success_url="$cdn_url"
+            return 0
         fi
         sleep 0.5
     done
-    export cdn_success_url=""
+    cdn_success_url=""
+    return 1
 }
 
 check_cdn_file() {
@@ -50,9 +55,9 @@ check_cdn_file() {
 download_file() {
     local url="$1"
     local output="$2"
-    if ! wget -O "$output" "$url"; then
+    if ! wget -O "$output" "$url" 2>/dev/null; then
         _yellow "wget failed, trying curl..."
-        if ! curl -L -o "$output" "$url"; then
+        if ! curl -L -o "$output" "$url" 2>/dev/null; then
             _red "Both wget and curl failed. Unable to download the file."
             return 1
         fi
@@ -62,7 +67,7 @@ download_file() {
 
 check_china() {
     _yellow "正在检测IP所在区域......"
-    if [[ -z "${CN}" ]]; then
+    if [ -z "${CN}" ]; then
         if curl -m 6 -s https://ipapi.co/json | grep -q 'China'; then
             _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
             if [ "$noninteractive" != "true" ]; then
@@ -93,28 +98,33 @@ check_china() {
 
 get_memory_size() {
     if [ -f /proc/meminfo ]; then
-        local mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+        local mem_kb
+        mem_kb=$(grep MemTotal /proc/meminfo | awk '{print $2}')
         echo $((mem_kb / 1024)) # Convert to MB
-        return
+        return 0
     fi
     if command -v free >/dev/null 2>&1; then
-        local mem_kb=$(free -m | awk '/^Mem:/ {print $2}')
+        local mem_kb
+        mem_kb=$(free -m | awk '/^Mem:/ {print $2}')
         echo "$mem_kb" # Already in MB
-        return
+        return 0
     fi
     if command -v sysctl >/dev/null 2>&1; then
-        local mem_bytes=$(sysctl -n hw.memsize 2>/dev/null || sysctl -n hw.physmem 2>/dev/null)
+        local mem_bytes
+        mem_bytes=$(sysctl -n hw.memsize 2>/dev/null || sysctl -n hw.physmem 2>/dev/null)
         if [ -n "$mem_bytes" ]; then
             echo $((mem_bytes / 1024 / 1024)) # Convert to MB
-            return
+            return 0
         fi
     fi
+    echo 0
+    return 1
 }
 
 cleanup_epel() {
     _yellow "Cleaning up EPEL repositories..."
     rm -f /etc/yum.repos.d/*epel*
-    yum clean all
+    yum clean all >/dev/null 2>&1
 }
 
 goecs_check() {
@@ -159,18 +169,20 @@ goecs_check() {
     fi
     version_output=""
     for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do
-        if [ -x "$(command -v $cmd_path 2>/dev/null)" ]; then
+        if command -v "$cmd_path" >/dev/null 2>&1; then
             version_output=$($cmd_path -v command 2>/dev/null)
             break
         fi
     done
     if [ -n "$version_output" ]; then
-        extracted_version=${version_output//v/}
+        extracted_version=${version_output#*v}
+        extracted_version=${extracted_version#v}
         if [ -n "$extracted_version" ]; then
             ecs_version=$ECS_VERSION
-            if [[ "$(echo -e "$extracted_version\n$ecs_version" | sort -V | tail -n 1)" == "$extracted_version" ]]; then
+            # 使用 awk 进行版本比较，兼容性更好
+            if [ "$(printf '%s\n%s\n' "$extracted_version" "$ecs_version" | sort -V | tail -n 1)" = "$extracted_version" ]; then
                 _green "goecs version ($extracted_version) is up to date, no upgrade needed"
-                return
+                return 0
             else
                 _yellow "goecs version ($extracted_version) < $ecs_version, upgrade needed, starting in 5 seconds"
                 rm -rf /usr/bin/goecs /usr/local/bin/goecs ./goecs
@@ -180,11 +192,11 @@ goecs_check() {
         _green "goecs not found, installation needed, starting in 5 seconds"
     fi
     sleep 5
-    if [[ "$CN" == true ]]; then
+    if [ "$CN" = "true" ]; then
         _yellow "Using China mirror for download..."
         base_url="https://cnb.cool/oneclickvirt/ecs/-/git/raw/main"
     else
-        cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
+        cdn_urls="https://cdn0.spiritlhl.top/ http://cdn3.spiritlhl.net/ http://cdn1.spiritlhl.net/ http://cdn2.spiritlhl.net/"
         check_cdn_file
         if [ -n "$cdn_success_url" ]; then
             base_url="${cdn_success_url}https://github.com/oneclickvirt/ecs/releases/download/v${ECS_VERSION}"
@@ -300,107 +312,143 @@ InstallSysbench() {
     else
         Var_OSRelease="unknown" # 未知系统分支
     fi
-    local mem_size=$(get_memory_size)
+    local mem_size
+    mem_size=$(get_memory_size)
     if [ -z "$mem_size" ] || [ "$mem_size" -eq 0 ]; then
         echo "Error: Unable to determine memory size or memory size is zero."
-    elif [ $mem_size -lt 1024 ]; then
+    elif [ "$mem_size" -lt 1024 ]; then
         _red "Warning: Your system has less than 1GB RAM (${mem_size}MB)"
         if [ "$noninteractive" != "true" ]; then
             reading "Do you want to continue with EPEL installation? (y/N): " confirm
-            if [[ ! $confirm =~ ^[Yy]$ ]]; then
-                _yellow "Skipping EPEL installation"
-                return 1
-            fi
+            case "$confirm" in
+                [Yy]*)
+                    ;;
+                *)
+                    _yellow "Skipping EPEL installation"
+                    return 1
+                    ;;
+            esac
         fi
         case "$Var_OSRelease" in
         ubuntu | debian | astra)
-            ! apt-get install -y sysbench && apt-get --fix-broken install -y && apt-get install --no-install-recommends -y sysbench ;;
+            if ! apt-get install -y sysbench; then
+                apt-get --fix-broken install -y
+                apt-get install --no-install-recommends -y sysbench
+            fi
+            ;;
         centos | rhel | almalinux | redhat | opencloudos)
-            (yum -y install epel-release && yum -y install sysbench) || (dnf install epel-release -y && dnf install sysbench -y) ;;
+            if ! yum -y install epel-release || ! yum -y install sysbench; then
+                if command -v dnf >/dev/null 2>&1; then
+                    dnf install epel-release -y
+                    dnf install sysbench -y
+                fi
+            fi
+            ;;
         fedora)
             dnf -y install sysbench ;;
         arch)
-            pacman -S --needed --noconfirm sysbench && pacman -S --needed --noconfirm libaio && ldconfig ;;
+            pacman -S --needed --noconfirm sysbench
+            pacman -S --needed --noconfirm libaio
+            ldconfig
+            ;;
         freebsd)
             pkg install -y sysbench ;;
         alpinelinux)
             if [ "$noninteractive" != "true" ]; then
                 reading "Do you want to continue with sysbench installation? (y/N): " confirm
-                if [[ ! $confirm =~ ^[Yy]$ ]]; then
-                    _yellow "Skipping sysbench installation"
-                    return 1
-                fi
+                case "$confirm" in
+                    [Yy]*)
+                        ;;
+                    *)
+                        _yellow "Skipping sysbench installation"
+                        return 1
+                        ;;
+                esac
             fi
             ALPINE_VERSION=$(grep -o '^[0-9]\+\.[0-9]\+' /etc/alpine-release)
             COMMUNITY_REPO="http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/community"
-            if grep -q "^${COMMUNITY_REPO}" /etc/apk/repositories; then
-                echo "Community repository is already enabled."
-            else
+            if ! grep -q "^${COMMUNITY_REPO}" /etc/apk/repositories; then
                 echo "Enabling community repository..."
                 echo "${COMMUNITY_REPO}" >> /etc/apk/repositories
                 echo "Community repository has been added."
                 echo "Updating apk package index..."
                 apk update && echo "Package index updated successfully."
+            else
+                echo "Community repository is already enabled."
             fi
             if apk info sysbench >/dev/null 2>&1; then
-                echo -e "${Msg_Info}Sysbench already installed."
+                echo "Sysbench already installed."
             else
-                apk add --no-cache sysbench
-                if [ $? -ne 0 ]; then
-                    echo -e "${Msg_Warning}Sysbench Module not found, installing ..." && echo -e "${Msg_Warning}SysBench Current not support Alpine Linux, Skipping..." && Var_Skip_SysBench="1"
+                if ! apk add --no-cache sysbench; then
+                    echo "Sysbench Module not found, installing ..."
+                    echo "SysBench Current not support Alpine Linux, Skipping..."
+                    Var_Skip_SysBench="1"
                 else
-                    echo -e "${Msg_Success}Sysbench installed successfully."
+                    echo "Sysbench installed successfully."
                 fi
-            fi ;;
+            fi
+            ;;
         *)
             _red "Sysbench Install Error: Unknown OS release: $Var_OSRelease" ;;
         esac
-        if [[ $SYSTEM =~ ^(CentOS|RHEL|AlmaLinux)$ ]]; then
-        _yellow "Installing EPEL repository..."
-            if ! yum -y install epel-release; then
-                _red "EPEL installation failed!"
-                cleanup_epel
-                _yellow "Attempting to continue without EPEL..."
-            fi
-        fi
+        case "$SYSTEM" in
+            CentOS|RHEL|AlmaLinux)
+                _yellow "Installing EPEL repository..."
+                if ! yum -y install epel-release; then
+                    _red "EPEL installation failed!"
+                    cleanup_epel
+                    _yellow "Attempting to continue without EPEL..."
+                fi
+                ;;
+        esac
     fi
 }
 
 env_check() {
-    REGEX=("debian|astra" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora" "arch" "freebsd" "alpine" "openbsd" "opencloudos")
-    RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora" "Arch" "FreeBSD" "Alpine" "OpenBSD" "OpenCloudOS")
-    PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update" "pacman -Sy" "pkg update" "apk update" "pkg_add -qu" "yum -y update")
-    PACKAGE_INSTALL=("apt-get -y install" "apt-get -y install" "yum -y install" "yum -y install" "yum -y install" "pacman -Sy --noconfirm --needed" "pkg install -y" "apk add --no-cache" "pkg_add -I" "yum -y install")
-    PACKAGE_REMOVE=("apt-get -y remove" "apt-get -y remove" "yum -y remove" "yum -y remove" "yum -y remove" "pacman -Rsc --noconfirm" "pkg delete" "apk del" "pkg_delete -I" "yum -y remove")
-    PACKAGE_UNINSTALL=("apt-get -y autoremove" "apt-get -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "pacman -Rns --noconfirm" "pkg autoremove" "apk autoremove" "pkg_delete -a" "yum -y autoremove")
+    # 使用更兼容的方式定义数组（字符串形式）
+    REGEX_LIST="debian|astra ubuntu centos|red hat|kernel|oracle linux|alma|rocky amazon linux fedora arch freebsd alpine openbsd opencloudos"
+    RELEASE_LIST="Debian Ubuntu CentOS CentOS Fedora Arch FreeBSD Alpine OpenBSD OpenCloudOS"
+    PACKAGE_UPDATE_LIST="apt-get update apt-get update yum -y update yum -y update yum -y update pacman -Sy pkg update apk update pkg_add -qu yum -y update"
+    PACKAGE_INSTALL_LIST="apt-get -y install apt-get -y install yum -y install yum -y install yum -y install pacman -Sy --noconfirm --needed pkg install -y apk add --no-cache pkg_add -I yum -y install"
+    PACKAGE_REMOVE_LIST="apt-get -y remove apt-get -y remove yum -y remove yum -y remove yum -y remove pacman -Rsc --noconfirm pkg delete apk del pkg_delete -I yum -y remove"
+    PACKAGE_UNINSTALL_LIST="apt-get -y autoremove apt-get -y autoremove yum -y autoremove yum -y autoremove yum -y autoremove pacman -Rns --noconfirm pkg autoremove apk autoremove pkg_delete -a yum -y autoremove"
+    
     if [ -f /etc/opencloudos-release ]; then
         SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
         SYS="$(grep -i pretty_name /etc/os-release | cut -d \" -f2)"
-    elif [ -x "$(type -p hostnamectl)" ]; then
-        SYS="$(hostnamectl | grep -i system | cut -d : -f2 | xargs)"
-    elif [ -x "$(type -p lsb_release)" ]; then
+    elif command -v hostnamectl >/dev/null 2>&1; then
+        SYS="$(hostnamectl | grep -i system | cut -d : -f2 | sed 's/^ *//')"
+    elif command -v lsb_release >/dev/null 2>&1; then
         SYS="$(lsb_release -sd)"
     elif [ -s /etc/lsb-release ]; then
         SYS="$(grep -i description /etc/lsb-release | cut -d \" -f2)"
     elif [ -s /etc/redhat-release ]; then
-        SYS="$(grep . /etc/redhat-release)"
+        SYS="$(cat /etc/redhat-release)"
     elif [ -s /etc/issue ]; then
-        SYS="$(grep . /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
+        SYS="$(head -n1 /etc/issue | cut -d '\' -f1 | sed '/^[ ]*$/d')"
     else
         SYS="$(uname -s)"
     fi
+    
     SYSTEM=""
-    for ((int = 0; int < ${#REGEX[@]}; int++)); do
-        if [[ $(echo "$SYS" | tr '[:upper:]' '[:lower:]') =~ ${REGEX[int]} ]]; then
-            SYSTEM="${RELEASE[int]}"
-            UPDATE_CMD=${PACKAGE_UPDATE[int]}
-            INSTALL_CMD=${PACKAGE_INSTALL[int]}
-            REMOVE_CMD=${PACKAGE_REMOVE[int]}
-            UNINSTALL_CMD=${PACKAGE_UNINSTALL[int]}
+    int=0
+    for regex in $REGEX_LIST; do
+        int=$((int + 1))
+        if echo "$SYS" | tr '[:upper:]' '[:lower:]' | grep -E "$regex" >/dev/null 2>&1; then
+            SYSTEM=$(echo "$RELEASE_LIST" | cut -d' ' -f$int)
+            UPDATE_CMD=$(echo "$PACKAGE_UPDATE_LIST" | cut -d' ' -f$int-)
+            UPDATE_CMD=$(echo "$UPDATE_CMD" | cut -d' ' -f1-3)
+            INSTALL_CMD=$(echo "$PACKAGE_INSTALL_LIST" | cut -d' ' -f$int-)
+            INSTALL_CMD=$(echo "$INSTALL_CMD" | cut -d' ' -f1-4)
+            REMOVE_CMD=$(echo "$PACKAGE_REMOVE_LIST" | cut -d' ' -f$int-)
+            REMOVE_CMD=$(echo "$REMOVE_CMD" | cut -d' ' -f1-4)
+            UNINSTALL_CMD=$(echo "$PACKAGE_UNINSTALL_LIST" | cut -d' ' -f$int-)
+            UNINSTALL_CMD=$(echo "$UNINSTALL_CMD" | cut -d' ' -f1-4)
             break
         fi
     done
+    
     if [ -z "$SYSTEM" ]; then
         _yellow "Unable to recognize system, trying common package managers..."
         if command -v apt-get >/dev/null 2>&1; then
@@ -447,7 +495,7 @@ env_check() {
     _green "System information: $SYSTEM"
     _green "Update command: $UPDATE_CMD"
     _green "Install command: $INSTALL_CMD"
-    cdn_urls=("https://cdn0.spiritlhl.top/" "http://cdn3.spiritlhl.net/" "http://cdn1.spiritlhl.net/" "http://cdn2.spiritlhl.net/")
+    cdn_urls="https://cdn0.spiritlhl.top/ http://cdn3.spiritlhl.net/ http://cdn1.spiritlhl.net/ http://cdn2.spiritlhl.net/"
     check_cdn_file
     _yellow "Warning: System update will be performed"
     _yellow "This operation may:"
@@ -457,55 +505,64 @@ env_check() {
     _yellow "4. Affect subsequent system startups"
     if [ "$noninteractive" != "true" ]; then
         reading "Continue with system update? (y/N): " update_confirm
-        if [[ ! $update_confirm =~ ^[Yy]$ ]]; then
-            _yellow "Skipping system update"
-            _yellow "Note: Some packages may fail to install"
-        else
-            _green "Updating system package manager..."
-            if ! ${UPDATE_CMD} 2>/dev/null; then
-                _red "System update failed!"
-            fi
-        fi
+        case "$update_confirm" in
+            [Yy]*)
+                _green "Updating system package manager..."
+                if ! ${UPDATE_CMD} 2>/dev/null; then
+                    _red "System update failed!"
+                fi
+                ;;
+            *)
+                _yellow "Skipping system update"
+                _yellow "Note: Some packages may fail to install"
+                ;;
+        esac
     fi
+    
     for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${INSTALL_CMD} "$cmd"
         fi
     done
+    
     if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
-        ${INSTALL_CMD} sysbench
-        if [ $? -ne 0 ]; then
+        if ! ${INSTALL_CMD} sysbench; then
             _red "Unable to install sysbench through package manager"
             _yellow "Sysbench installation skipped"
         fi
     fi
+    
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
-        bash dgb.sh -v gb5
+        sh dgb.sh -v gb5
         rm -rf dgb.sh
     fi
+    
     if ! command -v speedtest >/dev/null 2>&1; then
         _green "Installing speedtest"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
-        bash dspt.sh
+        sh dspt.sh
         rm -rf dspt.sh
         rm -rf speedtest.tar.gz
     fi
+    
     if ! command -v ping >/dev/null 2>&1; then
         _green "Installing ping"
-        ${INSTALL_CMD} iputils-ping >/dev/null 2>&1
-        ${INSTALL_CMD} ping >/dev/null 2>&1
+        ${INSTALL_CMD} iputils-ping >/dev/null 2>&1 || ${INSTALL_CMD} ping >/dev/null 2>&1
     fi
+    
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS, installing sysbench iproute2mac..."
-        brew install --force sysbench iproute2mac
+        if command -v brew >/dev/null 2>&1; then
+            brew install --force sysbench iproute2mac
+        fi
     else
-        if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf; then
-            echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf
-            sysctl -p
+        if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf 2>/dev/null; then
+            echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf 2>/dev/null
+            sysctl -p >/dev/null 2>&1
         fi
     fi
     _green "Environment preparation complete."
