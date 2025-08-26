@@ -44,6 +44,30 @@ jobs:
         sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README.md
         sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
 
+    - name: Update Go version in README files
+      run: |
+        if [ -f "go.mod" ]; then
+          GO_VERSION=$(grep "^go " go.mod | head -n 1 | awk '{print $2}')
+          echo "提取到的 Go 版本: $GO_VERSION"
+          if [ -n "$GO_VERSION" ] && [[ "$GO_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "版本验证成功，开始替换..."
+            if [ -f "README.md" ]; then
+              sed -i "s/选择 go [0-9]\+\.[0-9]\+\.[0-9]\+ 的版本进行安装/选择 go $GO_VERSION 的版本进行安装/g" README.md
+              echo "已更新 README.md"
+            fi
+            if [ -f "README_EN.md" ]; then
+              sed -i "s/Select go [0-9]\+\.[0-9]\+\.[0-9]\+ version to install/Select go $GO_VERSION version to install/g" README_EN.md
+              echo "已更新 README_EN.md"
+            fi
+          else
+            echo "错误：未能提取到有效的 Go 版本号或版本号格式不正确"
+            exit 1
+          fi
+        else
+          echo "错误：未找到 go.mod 文件"
+          exit 1
+        fi
+
     - name: Build and Test
       run: |
         go build -o maintest
