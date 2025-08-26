@@ -1,12 +1,10 @@
 name: Public Build
-
 on:
   workflow_run:
     workflows: ["Build and Release"]
     types:
       - completed
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,17 +13,49 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.24.5'
         
-    - name: Create public branch
+    - name: Update Go version in master branch README files
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
-        git checkout -b public || git checkout public
+        
+        if [ -f "go.mod" ]; then
+          GO_VERSION=$(grep "^go " go.mod | head -n 1 | awk '{print $2}')
+          echo "提取到的 Go 版本: $GO_VERSION"
+          if [ -n "$GO_VERSION" ] && [[ "$GO_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "版本验证成功，开始替换master分支的README..."
+            if [ -f "README.md" ]; then
+              sed -i "s/选择 go [0-9]\+\.[0-9]\+\.[0-9]\+ 的版本进行安装/选择 go $GO_VERSION 的版本进行安装/g" README.md
+              sed -i 's|但二进制文件编译至 \[securityCheck\].*)|但已开源|g' README.md
+              sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README.md
+              echo "已更新 master 分支的 README.md"
+            fi
+            if [ -f "README_EN.md" ]; then
+              sed -i "s/Select go [0-9]\+\.[0-9]\+\.[0-9]\+ version to install/Select go $GO_VERSION version to install/g" README_EN.md
+              sed -i 's|but binary files compiled in \[securityCheck\].*)|but open sourced|g' README_EN.md
+              sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
+              echo "已更新 master 分支的 README_EN.md"
+            fi
+            
+            git add README.md README_EN.md
+            git commit -m "Auto update README files for public version" || echo "No changes to commit in master"
+            git push origin ${{ github.ref_name }}
+          else
+            echo "错误：未能提取到有效的 Go 版本号或版本号格式不正确"
+            exit 1
+          fi
+        else
+          echo "错误：未找到 go.mod 文件"
+          exit 1
+        fi
+        
+    - name: Switch to public branch
+      run: |
+        git checkout public
         git merge ${{ github.ref_name }} --no-edit || true
         
     - name: Remove security package references
@@ -39,42 +69,14 @@ jobs:
         sed -i 's|VPS融合怪测试|VPS融合怪测试(非官方编译)|g' utils/utils.go
         sed -i 's|VPS Fusion Monster Test|VPS Fusion Monster Test (Unofficial)|g' utils/utils.go
         go mod tidy
-        sed -i 's|但二进制文件编译至 \[securityCheck\].*)|但已开源|g' README.md
-        sed -i 's|but binary files compiled in \[securityCheck\].*)|but open sourced|g' README_EN.md
-        sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README.md
-        sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
-
-    - name: Update Go version in README files
-      run: |
-        if [ -f "go.mod" ]; then
-          GO_VERSION=$(grep "^go " go.mod | head -n 1 | awk '{print $2}')
-          echo "提取到的 Go 版本: $GO_VERSION"
-          if [ -n "$GO_VERSION" ] && [[ "$GO_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "版本验证成功，开始替换..."
-            if [ -f "README.md" ]; then
-              sed -i "s/选择 go [0-9]\+\.[0-9]\+\.[0-9]\+ 的版本进行安装/选择 go $GO_VERSION 的版本进行安装/g" README.md
-              echo "已更新 README.md"
-            fi
-            if [ -f "README_EN.md" ]; then
-              sed -i "s/Select go [0-9]\+\.[0-9]\+\.[0-9]\+ version to install/Select go $GO_VERSION version to install/g" README_EN.md
-              echo "已更新 README_EN.md"
-            fi
-          else
-            echo "错误：未能提取到有效的 Go 版本号或版本号格式不正确"
-            exit 1
-          fi
-        else
-          echo "错误：未找到 go.mod 文件"
-          exit 1
-        fi
-
+        
     - name: Build and Test
       run: |
         go build -o maintest
         ./maintest -menu=false -l en -security=false -upload=false || exit 1
         rm -rf maintest
         
-    - name: Commit and push changes
+    - name: Commit and push public branch changes
       run: |
         git add .
         git commit -m "Auto update public version (no security package)" || echo "No changes to commit"
