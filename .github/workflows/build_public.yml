@@ -76,7 +76,7 @@ jobs:
         ./maintest -menu=false -l en -security=false -upload=false || exit 1
         rm -rf maintest
         
-    - name: Commit and push public branch changes
+    - name: Commit and push changes
       run: |
         git add .
         git commit -m "Auto update public version (no security package)" || echo "No changes to commit"
