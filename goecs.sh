@@ -179,7 +179,6 @@ goecs_check() {
         extracted_version=${extracted_version#v}
         if [ -n "$extracted_version" ]; then
             ecs_version=$ECS_VERSION
-            # 使用 awk 进行版本比较，兼容性更好
             if [ "$(printf '%s\n%s\n' "$extracted_version" "$ecs_version" | sort -V | tail -n 1)" = "$extracted_version" ]; then
                 _green "goecs version ($extracted_version) is up to date, no upgrade needed"
                 return 0
@@ -405,14 +404,6 @@ InstallSysbench() {
 }
 
 env_check() {
-    # 使用更兼容的方式定义数组（字符串形式）
-    REGEX_LIST="debian|astra ubuntu centos|red hat|kernel|oracle linux|alma|rocky amazon linux fedora arch freebsd alpine openbsd opencloudos"
-    RELEASE_LIST="Debian Ubuntu CentOS CentOS Fedora Arch FreeBSD Alpine OpenBSD OpenCloudOS"
-    PACKAGE_UPDATE_LIST="apt-get update apt-get update yum -y update yum -y update yum -y update pacman -Sy pkg update apk update pkg_add -qu yum -y update"
-    PACKAGE_INSTALL_LIST="apt-get -y install apt-get -y install yum -y install yum -y install yum -y install pacman -Sy --noconfirm --needed pkg install -y apk add --no-cache pkg_add -I yum -y install"
-    PACKAGE_REMOVE_LIST="apt-get -y remove apt-get -y remove yum -y remove yum -y remove yum -y remove pacman -Rsc --noconfirm pkg delete apk del pkg_delete -I yum -y remove"
-    PACKAGE_UNINSTALL_LIST="apt-get -y autoremove apt-get -y autoremove yum -y autoremove yum -y autoremove yum -y autoremove pacman -Rns --noconfirm pkg autoremove apk autoremove pkg_delete -a yum -y autoremove"
-    
     if [ -f /etc/opencloudos-release ]; then
         SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
@@ -430,25 +421,69 @@ env_check() {
     else
         SYS="$(uname -s)"
     fi
-    
     SYSTEM=""
-    int=0
-    for regex in $REGEX_LIST; do
-        int=$((int + 1))
-        if echo "$SYS" | tr '[:upper:]' '[:lower:]' | grep -E "$regex" >/dev/null 2>&1; then
-            SYSTEM=$(echo "$RELEASE_LIST" | cut -d' ' -f$int)
-            UPDATE_CMD=$(echo "$PACKAGE_UPDATE_LIST" | cut -d' ' -f$int-)
-            UPDATE_CMD=$(echo "$UPDATE_CMD" | cut -d' ' -f1-3)
-            INSTALL_CMD=$(echo "$PACKAGE_INSTALL_LIST" | cut -d' ' -f$int-)
-            INSTALL_CMD=$(echo "$INSTALL_CMD" | cut -d' ' -f1-4)
-            REMOVE_CMD=$(echo "$PACKAGE_REMOVE_LIST" | cut -d' ' -f$int-)
-            REMOVE_CMD=$(echo "$REMOVE_CMD" | cut -d' ' -f1-4)
-            UNINSTALL_CMD=$(echo "$PACKAGE_UNINSTALL_LIST" | cut -d' ' -f$int-)
-            UNINSTALL_CMD=$(echo "$UNINSTALL_CMD" | cut -d' ' -f1-4)
-            break
-        fi
-    done
-    
+    sys_lower=$(echo "$SYS" | tr '[:upper:]' '[:lower:]')
+    if echo "$sys_lower" | grep -E "debian|astra" >/dev/null 2>&1; then
+        SYSTEM="Debian"
+        UPDATE_CMD="apt-get update"
+        INSTALL_CMD="apt-get -y install"
+        REMOVE_CMD="apt-get -y remove"
+        UNINSTALL_CMD="apt-get -y autoremove"
+    elif echo "$sys_lower" | grep -E "ubuntu" >/dev/null 2>&1; then
+        SYSTEM="Ubuntu"
+        UPDATE_CMD="apt-get update"
+        INSTALL_CMD="apt-get -y install"
+        REMOVE_CMD="apt-get -y remove"
+        UNINSTALL_CMD="apt-get -y autoremove"
+    elif echo "$sys_lower" | grep -E "centos|red hat|kernel|oracle linux|alma|rocky" >/dev/null 2>&1; then
+        SYSTEM="CentOS"
+        UPDATE_CMD="yum -y update"
+        INSTALL_CMD="yum -y install"
+        REMOVE_CMD="yum -y remove"
+        UNINSTALL_CMD="yum -y autoremove"
+    elif echo "$sys_lower" | grep -E "amazon linux" >/dev/null 2>&1; then
+        SYSTEM="CentOS"
+        UPDATE_CMD="yum -y update"
+        INSTALL_CMD="yum -y install"
+        REMOVE_CMD="yum -y remove"
+        UNINSTALL_CMD="yum -y autoremove"
+    elif echo "$sys_lower" | grep -E "fedora" >/dev/null 2>&1; then
+        SYSTEM="Fedora"
+        UPDATE_CMD="yum -y update"
+        INSTALL_CMD="yum -y install"
+        REMOVE_CMD="yum -y remove"
+        UNINSTALL_CMD="yum -y autoremove"
+    elif echo "$sys_lower" | grep -E "arch" >/dev/null 2>&1; then
+        SYSTEM="Arch"
+        UPDATE_CMD="pacman -Sy"
+        INSTALL_CMD="pacman -Sy --noconfirm --needed"
+        REMOVE_CMD="pacman -Rsc --noconfirm"
+        UNINSTALL_CMD="pacman -Rns --noconfirm"
+    elif echo "$sys_lower" | grep -E "freebsd" >/dev/null 2>&1; then
+        SYSTEM="FreeBSD"
+        UPDATE_CMD="pkg update"
+        INSTALL_CMD="pkg install -y"
+        REMOVE_CMD="pkg delete"
+        UNINSTALL_CMD="pkg autoremove"
+    elif echo "$sys_lower" | grep -E "alpine" >/dev/null 2>&1; then
+        SYSTEM="Alpine"
+        UPDATE_CMD="apk update"
+        INSTALL_CMD="apk add --no-cache"
+        REMOVE_CMD="apk del"
+        UNINSTALL_CMD="apk autoremove"
+    elif echo "$sys_lower" | grep -E "openbsd" >/dev/null 2>&1; then
+        SYSTEM="OpenBSD"
+        UPDATE_CMD="pkg_add -qu"
+        INSTALL_CMD="pkg_add -I"
+        REMOVE_CMD="pkg_delete -I"
+        UNINSTALL_CMD="pkg_delete -a"
+    elif echo "$sys_lower" | grep -E "opencloudos" >/dev/null 2>&1; then
+        SYSTEM="OpenCloudOS"
+        UPDATE_CMD="yum -y update"
+        INSTALL_CMD="yum -y install"
+        REMOVE_CMD="yum -y remove"
+        UNINSTALL_CMD="yum -y autoremove"
+    fi
     if [ -z "$SYSTEM" ]; then
         _yellow "Unable to recognize system, trying common package managers..."
         if command -v apt-get >/dev/null 2>&1; then
@@ -518,14 +553,12 @@ env_check() {
                 ;;
         esac
     fi
-    
     for cmd in sudo wget tar unzip iproute2 systemd-detect-virt dd fio; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             _green "Installing $cmd"
             ${INSTALL_CMD} "$cmd"
         fi
     done
-    
     if ! command -v sysbench >/dev/null 2>&1; then
         _green "Installing sysbench"
         if ! ${INSTALL_CMD} sysbench; then
@@ -533,14 +566,12 @@ env_check() {
             _yellow "Sysbench installation skipped"
         fi
     fi
-    
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
         sh dgb.sh -v gb5
         rm -rf dgb.sh
     fi
-    
     if ! command -v speedtest >/dev/null 2>&1; then
         _green "Installing speedtest"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
@@ -548,12 +579,10 @@ env_check() {
         rm -rf dspt.sh
         rm -rf speedtest.tar.gz
     fi
-    
     if ! command -v ping >/dev/null 2>&1; then
         _green "Installing ping"
         ${INSTALL_CMD} iputils-ping >/dev/null 2>&1 || ${INSTALL_CMD} ping >/dev/null 2>&1
     fi
-    
     if [ "$(uname -s)" = "Darwin" ]; then
         echo "Detected MacOS, installing sysbench iproute2mac..."
         if command -v brew >/dev/null 2>&1; then
