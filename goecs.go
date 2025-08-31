@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.85"
+	ecsVersion                                                        = "v0.1.86"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -857,8 +857,10 @@ func handleUploadResults(output string) {
 	if httpURL != "" || httpsURL != "" {
 		if language == "en" {
 			fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+			fmt.Println("Each Test Benchmark: https://bash.spiritlhl.net/ecsguide")
 		} else {
 			fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+			fmt.Println("每项测试基准见: https://bash.spiritlhl.net/ecsguide")
 		}
 	}
 }
