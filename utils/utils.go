@@ -56,13 +56,13 @@ func PrintHead(language string, width int, ecsVersion string) {
 	if language == "zh" {
 		PrintCenteredTitle("VPS融合怪测试", width)
 		fmt.Printf("版本：%s\n", ecsVersion)
-		fmt.Println("测评频道: https://t.me/vps_reviews\n" +
+		fmt.Println("测评频道: https://t.me/+UHVoo2U4VyA5NTQ1\n" +
 			"Go项目地址：https://github.com/oneclickvirt/ecs\n" +
 			"Shell项目地址：https://github.com/spiritLHLS/ecs")
 	} else {
 		PrintCenteredTitle("VPS Fusion Monster Test", width)
 		fmt.Printf("Version: %s\n", ecsVersion)
-		fmt.Println("Review Channel: https://t.me/vps_reviews\n" +
+		fmt.Println("Review Channel: https://t.me/+UHVoo2U4VyA5NTQ1\n" +
 			"Go Project: https://github.com/oneclickvirt/ecs\n" +
 			"Shell Project: https://github.com/spiritLHLS/ecs")
 	}
