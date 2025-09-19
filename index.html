@@ -120,6 +120,28 @@
             color: white;
             border-color: #e91e63;
         }
+        .view-toggle {
+            display: flex;
+            background: white;
+            border: 1px solid #e9e9e7;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .view-toggle button {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .view-toggle button.active {
+            background: #0066cc;
+            color: white;
+        }
+        .view-toggle button:hover:not(.active) {
+            background: #f7f7f5;
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -198,28 +220,33 @@
             padding: 6px 12px;
             font-size: 12px;
         }
-        .cpu-list {
+        .cpu-groups {
             display: grid;
-            gap: 16px;
+            gap: 24px;
         }
-        .cpu-card {
+        .cpu-group {
             background: white;
             border-radius: 12px;
             border: 1px solid #e9e9e7;
-            padding: 24px;
+            overflow: hidden;
             transition: all 0.2s ease;
         }
-        .cpu-card:hover {
+        .cpu-group:hover {
             box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
         }
-        .cpu-header {
+        .group-header {
+            padding: 20px 24px;
+            background: #f7f7f5;
+            border-bottom: 1px solid #e9e9e7;
+            cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
         }
-        .cpu-title-section {
+        .group-header:hover {
+            background: #f0f0ef;
+        }
+        .group-title-section {
             display: flex;
             align-items: center;
             gap: 16px;
@@ -234,35 +261,65 @@
             min-width: 40px;
             text-align: center;
         }
-        .cpu-model {
+        .group-title {
             font-size: 18px;
             font-weight: 600;
             color: #2d2d2d;
         }
-        .cpu-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-item-value {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        .stat-item-label {
-            font-size: 12px;
+        .group-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
             color: #6b6b6b;
+        }
+        .expand-icon {
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }
+        .cpu-group.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+        .group-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .cpu-group.expanded .group-content {
+            max-height: 2000px;
+        }
+        .cpu-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cpu-table th,
+        .cpu-table td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0ef;
+        }
+        .cpu-table th {
+            font-weight: 600;
+            color: #6b6b6b;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            background: #fafafa;
         }
-        .score-single { color: #0066cc; }
-        .score-multi { color: #e91e63; }
-        .score-avg { color: #4caf50; }
-        .score-samples { color: #ff9800; }
+        .cpu-table td {
+            font-size: 14px;
+        }
+        .cpu-table tbody tr:hover {
+            background: #fafafa;
+        }
+        .score-cell {
+            font-weight: 600;
+        }
+        .score-single {
+            color: #0066cc;
+        }
+        .score-multi {
+            color: #e91e63;
+        }
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -279,8 +336,12 @@
             margin-bottom: 16px;
         }
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
         .no-data {
             text-align: center;
@@ -360,14 +421,21 @@
             .stat-value {
                 font-size: 20px;
             }
-            .cpu-title-section {
+            .group-stats {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .group-title-section {
                 flex-direction: column;
                 gap: 8px;
                 align-items: flex-start;
             }
-            .cpu-stats {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
+            .cpu-table {
+                font-size: 12px;
+            }
+            .cpu-table th,
+            .cpu-table td {
+                padding: 12px 16px;
             }
             .pagination {
                 flex-wrap: wrap;
@@ -398,10 +466,22 @@
                     <button id="clearBtn" class="search-btn clear" data-zh="清除" data-en="Clear">清除</button>
                 </div>
             </div>
+            <div class="view-toggle">
+                <button id="compactView" class="active" data-zh="紧凑视图" data-en="Compact View">紧凑视图</button>
+                <button id="detailView" data-zh="详细视图" data-en="Detail View">详细视图</button>
+            </div>
         </div>
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
                 <div class="stat-value" id="totalCpus">-</div>
+                <div class="stat-label" data-zh="CPU型号总数" data-en="Total CPU Models">CPU型号总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalTests">-</div>
+                <div class="stat-label" data-zh="测试样本数" data-en="Test Samples">测试样本数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="topSingle">-</div>
                 <div class="stat-label" data-zh="最高单核分数" data-en="Highest Single Score">最高单核分数</div>
             </div>
             <div class="stat-card">
@@ -424,10 +504,10 @@
             </div>
             <button id="nextPage" data-zh="下一页" data-en="Next">下一页</button>
         </div>
-        <div id="cpuList" class="cpu-list" style="display: none;"></div>
+        <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
         <div id="noData" class="no-data" style="display: none;">
             <div data-zh="📄 未找到CPU数据文件" data-en="📄 CPU data file not found">📄 未找到CPU数据文件</div>
-            <p data-zh="请确保 cpu_statistics.json 文件存在于当前目录" data-en="Please ensure cpu_statistics.json file exists in current directory">请确保 cpu_statistics.json 文件存在于当前目录</p>
+            <p data-zh="请确保 all_cpu_results.json 文件存在于当前目录" data-en="Please ensure all_cpu_results.json file exists in current directory">请确保 all_cpu_results.json 文件存在于当前目录</p>
         </div>
         <div class="footer">
             <div class="footer-content">
@@ -448,28 +528,29 @@
     <script>
         class CPUDashboard {
             constructor() {
-                this.data = {};
-                this.filteredCpus = [];
-                this.allCpus = [];
+                this.data = [];
+                this.groupedData = {};
+                this.filteredGroups = {};
+                this.sortedPrefixes = [];
+                this.allSortedPrefixes = [];
+                this.prefixRanks = {};
+                this.isDetailView = false;
                 this.searchTerm = '';
                 this.currentPage = 1;
-                this.itemsPerPage = 20;
+                this.itemsPerPage = 10;
                 this.currentLang = 'zh';
                 this.initializeEventListeners();
                 this.loadData();
             }
-            
             initializeEventListeners() {
                 const searchInput = document.getElementById('searchInput');
                 const searchBtn = document.getElementById('searchBtn');
                 const clearBtn = document.getElementById('clearBtn');
-                
                 const performSearch = () => {
                     this.searchTerm = searchInput.value.toLowerCase();
                     this.currentPage = 1;
                     this.filterAndRender();
                 };
-                
                 searchInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') performSearch();
                 });
@@ -480,45 +561,44 @@
                     this.currentPage = 1;
                     this.filterAndRender();
                 });
-                
+                document.getElementById('compactView').addEventListener('click', () => {
+                    this.setViewMode(false);
+                });
+                document.getElementById('detailView').addEventListener('click', () => {
+                    this.setViewMode(true);
+                });
                 document.getElementById('prevPage').addEventListener('click', () => {
                     if (this.currentPage > 1) {
                         this.currentPage--;
-                        this.renderCpus();
+                        this.renderGroups();
                     }
                 });
-                
                 document.getElementById('nextPage').addEventListener('click', () => {
-                    const totalPages = Math.ceil(this.filteredCpus.length / this.itemsPerPage);
+                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
                     if (this.currentPage < totalPages) {
                         this.currentPage++;
-                        this.renderCpus();
+                        this.renderGroups();
                     }
                 });
-                
                 document.getElementById('jumpBtn').addEventListener('click', () => {
                     const page = parseInt(document.getElementById('pageInput').value);
-                    const totalPages = Math.ceil(this.filteredCpus.length / this.itemsPerPage);
+                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
                     if (page >= 1 && page <= totalPages) {
                         this.currentPage = page;
-                        this.renderCpus();
+                        this.renderGroups();
                     }
                 });
-                
                 document.getElementById('langZh').addEventListener('click', () => {
                     this.setLanguage('zh');
                 });
-                
                 document.getElementById('langEn').addEventListener('click', () => {
                     this.setLanguage('en');
                 });
             }
-            
             setLanguage(lang) {
                 this.currentLang = lang;
                 document.getElementById('langZh').classList.toggle('active', lang === 'zh');
                 document.getElementById('langEn').classList.toggle('active', lang === 'en');
-                
                 document.querySelectorAll('[data-zh]').forEach(el => {
                     if (el.tagName === 'INPUT') {
                         el.placeholder = el.getAttribute(`data-placeholder-${lang}`);
@@ -526,131 +606,182 @@
                         el.textContent = el.getAttribute(`data-${lang}`);
                     }
                 });
-                
                 this.updatePagination();
-                this.renderCpus();
+                this.renderGroups();
             }
-            
             async loadData() {
                 try {
-                    const response = await fetch('cpu_statistics.json');
+                    const response = await fetch('all_cpu_results.json');
                     if (!response.ok) throw new Error('数据文件不存在');
-                    
                     this.data = await response.json();
-                    this.allCpus = this.data.cpu_statistics;
+                    this.processData();
                     this.updateStats();
                     this.filterAndRender();
-                    
                     document.getElementById('loadingIndicator').style.display = 'none';
                     document.getElementById('pagination').style.display = 'flex';
-                    document.getElementById('cpuList').style.display = 'block';
+                    document.getElementById('cpuGroups').style.display = 'block';
                 } catch (error) {
                     console.error('加载数据失败:', error);
                     document.getElementById('loadingIndicator').style.display = 'none';
                     document.getElementById('noData').style.display = 'block';
                 }
             }
-            
-            updateStats() {
-                document.getElementById('totalCpus').textContent = this.data.total_cpu_models.toLocaleString();
-                document.getElementById('totalTests').textContent = this.data.total_samples.toLocaleString();
-                document.getElementById('topSingle').textContent = this.data.global_max_single.toLocaleString();
-                document.getElementById('topMulti').textContent = this.data.global_max_multi.toLocaleString();
+            processData() {
+                this.groupedData = {};
+                this.data.forEach(cpu => {
+                    const prefix = cpu.cpu_prefix;
+                    if (!this.groupedData[prefix]) {
+                        this.groupedData[prefix] = [];
+                    }
+                    this.groupedData[prefix].push(cpu);
+                });
+                Object.keys(this.groupedData).forEach(prefix => {
+                    this.groupedData[prefix].sort((a, b) => b.single_score - a.single_score);
+                });
+                this.allSortedPrefixes = Object.keys(this.groupedData).sort((a, b) => {
+                    const maxSingleA = Math.max(...this.groupedData[a].map(cpu => cpu.single_score));
+                    const maxSingleB = Math.max(...this.groupedData[b].map(cpu => cpu.single_score));
+                    return maxSingleB - maxSingleA;
+                });
+                this.allSortedPrefixes.forEach((prefix, index) => {
+                    this.prefixRanks[prefix] = index + 1;
+                });
+                this.sortedPrefixes = [...this.allSortedPrefixes];
             }
-            
+            updateStats() {
+                const totalCpus = Object.keys(this.groupedData).length;
+                const totalTests = this.data.length;
+                const topSingle = Math.max(...this.data.map(cpu => cpu.single_score));
+                const topMulti = Math.max(...this.data.map(cpu => cpu.multi_score));
+                document.getElementById('totalCpus').textContent = totalCpus.toLocaleString();
+                document.getElementById('totalTests').textContent = totalTests.toLocaleString();
+                document.getElementById('topSingle').textContent = topSingle.toLocaleString();
+                document.getElementById('topMulti').textContent = topMulti.toLocaleString();
+            }
             filterAndRender() {
                 if (this.searchTerm) {
-                    this.filteredCpus = this.allCpus.filter(cpu => 
-                        cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
-                        cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
-                    );
+                    this.filteredGroups = {};
+                    const filteredPrefixes = [];
+                    this.allSortedPrefixes.forEach(prefix => {
+                        const filteredCpus = this.groupedData[prefix].filter(cpu => 
+                            cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
+                            cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
+                        );
+                        if (filteredCpus.length > 0) {
+                            this.filteredGroups[prefix] = filteredCpus;
+                            filteredPrefixes.push(prefix);
+                        }
+                    });
+                    this.sortedPrefixes = filteredPrefixes;
                 } else {
-                    this.filteredCpus = [...this.allCpus];
+                    this.filteredGroups = this.groupedData;
+                    this.sortedPrefixes = [...this.allSortedPrefixes];
                 }
-                this.renderCpus();
+                this.renderGroups();
             }
-            
-            renderCpus() {
-                const container = document.getElementById('cpuList');
+            renderGroups() {
+                const container = document.getElementById('cpuGroups');
                 const startIndex = (this.currentPage - 1) * this.itemsPerPage;
                 const endIndex = startIndex + this.itemsPerPage;
-                const currentPageCpus = this.filteredCpus.slice(startIndex, endIndex);
-                
-                const labels = this.currentLang === 'zh' ? {
-                    samples: '样本数',
-                    maxSingle: '最高单核',
-                    maxMulti: '最高多核',
-                    avgSingle: '平均单核',
-                    avgMulti: '平均多核',
-                    cores: '核心数'
-                } : {
-                    samples: 'Samples',
-                    maxSingle: 'Max Single',
-                    maxMulti: 'Max Multi',
-                    avgSingle: 'Avg Single',
-                    avgMulti: 'Avg Multi',
-                    cores: 'Cores'
-                };
-                
-                container.innerHTML = currentPageCpus.map(cpu => `
-                    <div class="cpu-card">
-                        <div class="cpu-header">
-                            <div class="cpu-title-section">
-                                <div class="rank-badge">#${cpu.rank}</div>
-                                <div class="cpu-model">${cpu.cpu_model}</div>
+                const currentPagePrefixes = this.sortedPrefixes.slice(startIndex, endIndex);
+                container.innerHTML = currentPagePrefixes.map(prefix => {
+                    const cpus = this.filteredGroups[prefix];
+                    const topCpu = cpus[0];
+                    const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
+                    const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
+                    const rank = this.prefixRanks[prefix];
+                    const sampleText = this.currentLang === 'zh' ? '样本' : 'Samples';
+                    const singleText = this.currentLang === 'zh' ? '单核最高' : 'Max Single';
+                    const multiText = this.currentLang === 'zh' ? '多核最高' : 'Max Multi';
+                    return `
+                        <div class="cpu-group" data-prefix="${prefix}">
+                            <div class="group-header">
+                                <div class="group-title-section">
+                                    <div class="rank-badge">#${rank}</div>
+                                    <div class="group-title">${topCpu.cpu_model}</div>
+                                </div>
+                                <div class="group-stats">
+                                    <span>${sampleText}: ${cpus.length}</span>
+                                    <span>${singleText}: ${maxSingle.toLocaleString()}</span>
+                                    <span>${multiText}: ${maxMulti.toLocaleString()}</span>
+                                </div>
+                                <div class="expand-icon">▼</div>
+                            </div>
+                            <div class="group-content">
+                                ${this.renderTable(cpus)}
                             </div>
                         </div>
-                        <div class="cpu-stats">
-                            <div class="stat-item">
-                                <div class="stat-item-value score-samples">${cpu.sample_count}</div>
-                                <div class="stat-item-label">${labels.samples}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-item-value score-single">${cpu.max_single_score.toLocaleString()}</div>
-                                <div class="stat-item-label">${labels.maxSingle}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-item-value score-multi">${cpu.max_multi_score.toLocaleString()}</div>
-                                <div class="stat-item-label">${labels.maxMulti}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-item-value score-avg">${cpu.avg_single_score.toLocaleString()}</div>
-                                <div class="stat-item-label">${labels.avgSingle}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-item-value score-avg">${cpu.avg_multi_score.toLocaleString()}</div>
-                                <div class="stat-item-label">${labels.avgMulti}</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-item-value">${cpu.typical_cores}</div>
-                                <div class="stat-item-label">${labels.cores}</div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
+                    `;
+                }).join('');
+                container.querySelectorAll('.group-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const group = header.parentElement;
+                        group.classList.toggle('expanded');
+                    });
+                });
                 this.updatePagination();
             }
-            
             updatePagination() {
-                const totalPages = Math.ceil(this.filteredCpus.length / this.itemsPerPage);
+                const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
                 const pageInfo = document.getElementById('pageInfo');
                 const pageText = this.currentLang === 'zh' 
                     ? `第 ${this.currentPage} 页，共 ${totalPages} 页`
                     : `Page ${this.currentPage} of ${totalPages}`;  
                 pageInfo.textContent = pageText;
-                
                 const pageInput = document.getElementById('pageInput');
                 pageInput.max = totalPages;
                 pageInput.value = this.currentPage;
-                
                 const prevBtn = document.getElementById('prevPage');
                 const nextBtn = document.getElementById('nextPage');
                 prevBtn.disabled = this.currentPage === 1;
                 nextBtn.disabled = this.currentPage === totalPages;
             }
+            renderTable(cpus) {
+                const headers = this.isDetailView 
+                    ? (this.currentLang === 'zh' 
+                        ? ['CPU型号', '核心数', '单核分数', '多核分数', '多核线程']
+                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score', 'Multi Threads'])
+                    : (this.currentLang === 'zh'
+                        ? ['CPU型号', '核心数', '单核分数', '多核分数']
+                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score']);
+                const rows = cpus.slice(0, this.isDetailView ? cpus.length : 10).map(cpu => {
+                    const cells = this.isDetailView
+                        ? [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
+                           cpu.multi_score.toLocaleString(), cpu.multi_threads]
+                        : [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
+                           cpu.multi_score.toLocaleString()];
+                    return `
+                        <tr>
+                            ${cells.map((cell, index) => {
+                                let className = '';
+                                if (index === 2) className = 'score-cell score-single';
+                                else if (index === 3) className = 'score-cell score-multi';
+                                return `<td class="${className}">${cell}</td>`;
+                            }).join('')}
+                        </tr>
+                    `;
+                }).join('');
+                return `
+                    <table class="cpu-table">
+                        <thead>
+                            <tr>
+                                ${headers.map(header => `<th>${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows}
+                        </tbody>
+                    </table>
+                `;
+            }
+            setViewMode(isDetail) {
+                this.isDetailView = isDetail;
+                document.getElementById('compactView').classList.toggle('active', !isDetail);
+                document.getElementById('detailView').classList.toggle('active', isDetail);
+                this.renderGroups();
+            }
         }
-        
         new CPUDashboard();
     </script>
 </body>
+</html>
