@@ -507,7 +507,7 @@
         <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
         <div id="noData" class="no-data" style="display: none;">
             <div data-zh="📄 未找到CPU数据文件" data-en="📄 CPU data file not found">📄 未找到CPU数据文件</div>
-            <p data-zh="请确保 cpu_statistics.json 文件存在于当前目录" data-en="Please ensure cpu_statistics.json file exists in current directory">请确保 cpu_statistics.json 文件存在于当前目录</p>
+            <p data-zh="请确保 all_cpu_results.json 文件存在于当前目录" data-en="Please ensure all_cpu_results.json file exists in current directory">请确保 all_cpu_results.json 文件存在于当前目录</p>
         </div>
         <div class="footer">
             <div class="footer-content">
@@ -610,60 +610,21 @@
                 this.renderGroups();
             }
             async loadData() {
-                const cdnUrls = [
-                    "http://cdn1.spiritlhl.net/",
-                    "http://cdn2.spiritlhl.net/", 
-                    "http://cdn3.spiritlhl.net/",
-                    "http://cdn4.spiritlhl.net/"
-                ];
-                
-                const urls = [
-                    'cpu_statistics.json',
-                    ...cdnUrls.map(cdn => `${cdn}https://raw.githubusercontent.com/oneclickvirt/ecs/refs/heads/ranks/cpu_statistics.json`)
-                ];
-                
-                for (let url of urls) {
-                    try {
-                        console.log(`尝试加载: ${url}`);
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error('请求失败');
-                        
-                        const data = await response.json();
-                        
-                        // 转换数据格式以匹配HTML期望的结构
-                        if (data.cpu_statistics) {
-                            // 转换统计数据为单个CPU记录
-                            this.data = data.cpu_statistics.map(stat => ({
-                                cpu_prefix: stat.cpu_prefix,
-                                cpu_model: stat.cpu_model,
-                                cpu_cores: stat.typical_cores,
-                                single_score: stat.max_single_score,
-                                multi_score: stat.max_multi_score,
-                                multi_threads: stat.typical_threads
-                            }));
-                        } else {
-                            // 如果是其他格式，假设是数组
-                            this.data = Array.isArray(data) ? data : [];
-                        }
-                        
-                        console.log(`成功加载数据，共 ${this.data.length} 条记录`);
-                        this.processData();
-                        this.updateStats();
-                        this.filterAndRender();
-                        document.getElementById('loadingIndicator').style.display = 'none';
-                        document.getElementById('pagination').style.display = 'flex';
-                        document.getElementById('cpuGroups').style.display = 'block';
-                        return;
-                    } catch (error) {
-                        console.error(`加载失败 ${url}:`, error);
-                        continue;
-                    }
+                try {
+                    const response = await fetch('all_cpu_results.json');
+                    if (!response.ok) throw new Error('数据文件不存在');
+                    this.data = await response.json();
+                    this.processData();
+                    this.updateStats();
+                    this.filterAndRender();
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('pagination').style.display = 'flex';
+                    document.getElementById('cpuGroups').style.display = 'block';
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('noData').style.display = 'block';
                 }
-                
-                // 所有URL都失败了
-                console.error('所有数据源都无法加载');
-                document.getElementById('loadingIndicator').style.display = 'none';
-                document.getElementById('noData').style.display = 'block';
             }
             processData() {
                 this.groupedData = {};
