@@ -539,6 +539,7 @@
                 this.currentPage = 1;
                 this.itemsPerPage = 10;
                 this.currentLang = 'zh';
+                this.total_samples = 0;
                 this.initializeEventListeners();
                 this.loadData();
             }
@@ -616,23 +617,16 @@
                     "http://cdn3.spiritlhl.net/",
                     "http://cdn4.spiritlhl.net/"
                 ];
-                
                 const urls = [
                     'cpu_statistics.json',
                     ...cdnUrls.map(cdn => `${cdn}https://raw.githubusercontent.com/oneclickvirt/ecs/refs/heads/ranks/cpu_statistics.json`)
                 ];
-                
                 for (let url of urls) {
                     try {
-                        console.log(`尝试加载: ${url}`);
                         const response = await fetch(url);
                         if (!response.ok) throw new Error('请求失败');
-                        
                         const data = await response.json();
-                        
-                        // 转换数据格式以匹配HTML期望的结构
                         if (data.cpu_statistics) {
-                            // 转换统计数据为单个CPU记录
                             this.data = data.cpu_statistics.map(stat => ({
                                 cpu_prefix: stat.cpu_prefix,
                                 cpu_model: stat.cpu_model,
@@ -641,12 +635,12 @@
                                 multi_score: stat.max_multi_score,
                                 multi_threads: stat.typical_threads
                             }));
+                            if (data.total_samples) {
+                                this.total_samples = data.total_samples;
+                            }
                         } else {
-                            // 如果是其他格式，假设是数组
                             this.data = Array.isArray(data) ? data : [];
                         }
-                        
-                        console.log(`成功加载数据，共 ${this.data.length} 条记录`);
                         this.processData();
                         this.updateStats();
                         this.filterAndRender();
@@ -655,13 +649,9 @@
                         document.getElementById('cpuGroups').style.display = 'block';
                         return;
                     } catch (error) {
-                        console.error(`加载失败 ${url}:`, error);
                         continue;
                     }
                 }
-                
-                // 所有URL都失败了
-                console.error('所有数据源都无法加载');
                 document.getElementById('loadingIndicator').style.display = 'none';
                 document.getElementById('noData').style.display = 'block';
             }
@@ -689,7 +679,7 @@
             }
             updateStats() {
                 const totalCpus = Object.keys(this.groupedData).length;
-                const totalTests = this.data.length;
+                const totalTests = this.total_samples;
                 const topSingle = Math.max(...this.data.map(cpu => cpu.single_score));
                 const topMulti = Math.max(...this.data.map(cpu => cpu.multi_score));
                 document.getElementById('totalCpus').textContent = totalCpus.toLocaleString();
