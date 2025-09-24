@@ -47,8 +47,6 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 |--------|-------------------------------------------------------------------------------------------------|
 | Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems    |
 | OpenBSD/NetBSD | Some of Goalng's official libraries do not support this system (especially net-related items) |
-| Windows(Virtual Machines) | Inaccurate mbw test performance without Admin rights (memory tests) | 
-| Windows(Physical Machines)(not under Admin) | Inaccurate mbw test performance without Admin rights (memory tests) |
 
 ---
 
@@ -56,7 +54,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 - System basic information query and concurrent IP basic information query: Self-developed [basics](https://github.com/oneclickvirt/basics), [gostun](https://github.com/oneclickvirt/gostun)
 - CPU test: Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat
-- Memory test: Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd
+- Memory test: Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd, winsat, mbw, stream
 - Disk test: Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat
 - Streaming media unlock information concurrent query: Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify) and more to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)
 - Common streaming media tests concurrent query: Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others

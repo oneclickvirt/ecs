@@ -47,15 +47,14 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 |----------------|---------------------------|
 | Android(arm64) | 存在权限问题未修复，非安卓系统的ARM架构无问题      |
 | OpenBSD/NetBSD | 部分Goalng的官方库未支持本系统(尤其是net相关项目)  |
-| Windows虚拟机   | 无Admin权限的mbw测试性能不准确(内存测试) |
-| Windows物理机(非Admin下)   | 无Admin权限的mbw测试性能不准确(内存测试) |
+
 ---
 
 ## **功能**
 
 - 系统基础信息查询，IP基础信息并发查询：[basics](https://github.com/oneclickvirt/basics)、[gostun](https://github.com/oneclickvirt/gostun)
 - CPU 测试：[cputest](https://github.com/oneclickvirt/cputest)，支持 sysbench(lua/golang版本)、geekbench、winsat
-- 内存测试：[memorytest](https://github.com/oneclickvirt/memorytest)，支持 sysbench、dd
+- 内存测试：[memorytest](https://github.com/oneclickvirt/memorytest)，支持 sysbench、dd、winsat、mbw、stream
 - 硬盘测试：[disktest](https://github.com/oneclickvirt/disktest)，支持 dd、fio、winsat
 - 流媒体解锁信息并发查询：[netflix-verify](https://github.com/sjlleo/netflix-verify) 等逻辑，开发至 [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)
 - 常见流媒体测试并发查询：[UnlockTests](https://github.com/oneclickvirt/UnlockTests)，逻辑借鉴 [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) 等

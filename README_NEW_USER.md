@@ -136,7 +136,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 依赖项目：[https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
 
-一般来说，只需要判断 IO 速度是否低于 `10240 MB/s (≈10 GB/s)`，
+一般来说，只需要判断 IO 速度是否低于 `10240 MB/s (≈10 GB/s)`
+
 如果低于这个值，那么证明内存性能不佳，极大概率存在超售超卖问题。
 
 至于超开的原因可能是：
@@ -159,6 +160,16 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 * **< 20 GB/s (20480 MB/s)** → 可能是 DDR3（或 DDR4 单通道 / 低频）
 * **20 \~ 40 GB/s (20480 \~ 40960 MB/s)** → 大概率 DDR4
 * **≈ 50 GB/s (≈ 51200 MB/s)** → 基本就是 DDR5
+
+对于各种测试参数对应方法的比较：
+
+| 参数方法    | 测试准确性 | 测试速度 | 适应架构 | 依赖情况 |
+|------------|------------|----------|----------|----------|----------|
+| **stream** | 高 —— 结果稳定，更符合实际情况 | 快速 | 跨平台（Linux/Windows/Unix） | 自带依赖无需额外安装 |
+| **sysbench** | 高 —— 可测试 CPU、内存、IO、线程等，结果较可靠 | 中等 | 跨平台（Linux、Windows 部分支持） | 需环境额外安装 |
+| **winsat** | 中等偏高 —— Windows 内置工具，结果和环境相关 | 中等 | 仅限 Windows | 物理机器上自带，虚拟机不可用 |
+| **mbw**    | 中等 —— 结果可能受缓存/调度影响 | 非常快 | 跨平台（几乎所有类 Unix 系统） | 自带依赖无需额外安装 |
+| **dd**     | 低 —— 结果受缓存影响 | 快速 | 跨平台（几乎所有类 Unix 系统） | 需环境额外安装 |
 
 ### **硬盘测试**
 
@@ -412,6 +423,7 @@ Actually, CPU performance testing should be sufficient. Unless for scientific co
 Dependency project: [https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
 
 Generally speaking, you only need to determine if IO speed is below `10240 MB/s (≈10 GB/s)`.
+
 If below this value, it proves poor memory performance with high probability of overselling issues.
 
 Possible reasons for overselling:
@@ -434,6 +446,14 @@ Based on the above table, this project's rough judgment method:
 * **< 20 GB/s (20480 MB/s)** → Possibly DDR3 (or DDR4 single channel / low frequency)
 * **20 ~ 40 GB/s (20480 ~ 40960 MB/s)** → Most likely DDR4
 * **≈ 50 GB/s (≈ 51200 MB/s)** → Basically DDR5
+
+| Parameter Method | Test Accuracy | Test Speed | Architecture Compatibility | Dependency Requirements |
+|------------------|---------------|------------|---------------------------|------------------------|
+| **stream** | High — Stable results, more realistic | Fast | Cross-platform (Linux/Windows/Unix) | Built-in dependencies, no additional installation required |
+| **sysbench** | High — Can test CPU, memory, IO, threads, etc., reliable results | Medium | Cross-platform (Linux, partial Windows support) | Requires additional environment installation |
+| **winsat** | Medium-High — Windows built-in tool, results environment-dependent | Medium | Windows only | Built-in on physical machines, unavailable on virtual machines |
+| **mbw** | Medium — Results may be affected by cache/scheduling | Very Fast | Cross-platform (almost all Unix-like systems) | Built-in dependencies, no additional installation required |
+| **dd** | Low — Results affected by cache | Fast | Cross-platform (almost all Unix-like systems) | Requires additional environment installation |
 
 ### Disk Testing
 
@@ -633,6 +653,7 @@ AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシン�
 依存プロジェクト：[https://github.com/oneclickvirt/memorytest](https://github.com/oneclickvirt/memorytest)
 
 一般的に、IO速度が`10240 MB/s (≈10 GB/s)`を下回るかどうかを判断するだけで十分です。
+
 この値を下回る場合、メモリ性能が不良で、オーバーセリング問題が存在する可能性が極めて高いことを証明します。
 
 オーバーセリングの原因は以下が考えられます：
@@ -655,6 +676,14 @@ AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシン�
 * **< 20 GB/s (20480 MB/s)** → DDR3の可能性（またはDDR4シングルチャネル/低周波数）
 * **20 ~ 40 GB/s (20480 ~ 40960 MB/s)** → 高確率でDDR4
 * **≈ 50 GB/s (≈ 51200 MB/s)** → 基本的にDDR5
+
+| パラメータ方法 | テスト精度 | テスト速度 | アーキテクチャ対応 | 依存関係 |
+|------------|------------|----------|----------|----------|
+| **stream** | 高 — 結果が安定し、実際の状況により適合 | 高速 | クロスプラットフォーム（Linux/Windows/Unix） | 内蔵依存関係、追加インストール不要 |
+| **sysbench** | 高 — CPU、メモリ、IO、スレッドなどをテスト可能、結果が信頼性高い | 中程度 | クロスプラットフォーム（Linux、Windows部分対応） | 環境への追加インストールが必要 |
+| **winsat** | 中程度やや高 — Windows内蔵ツール、結果は環境に依存 | 中程度 | Windows限定 | 物理マシンに内蔵、仮想マシンでは利用不可 |
+| **mbw** | 中程度 — 結果がキャッシュ/スケジューリングの影響を受ける可能性 | 非常に高速 | クロスプラットフォーム（ほぼ全てのUnix系システム） | 内蔵依存関係、追加インストール不要 |
+| **dd** | 低 — 結果がキャッシュの影響を受ける | 高速 | クロスプラットフォーム（ほぼ全てのUnix系システム） | 環境への追加インストールが必要 |
 
 ### ディスクテスト
 
