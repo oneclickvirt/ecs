@@ -116,8 +116,8 @@ github.com/oneclickvirt/gostun v0.0.5-20250727155022 h1:/e3gSUrOp1tg/1NTRx+P8B51
 github.com/oneclickvirt/gostun v0.0.5-20250727155022/go.mod h1:pfp7MFZJK9n/KTLAVqqFcCAns4xqMykmjI+1UeF/vdE=
 github.com/oneclickvirt/mbw v0.0.1-20250808061222 h1:WGXOe6QvHiDRhPVMI0VcctjzW08kGvJf50yq5YeZCtw=
 github.com/oneclickvirt/mbw v0.0.1-20250808061222/go.mod h1:0Vq6NRpyLmGUdfHfL3uDcFsuZhi7KlG+OCs5ky2757Y=
-github.com/oneclickvirt/memorytest v0.0.9-20250808065154 h1:mjYOvpFz2mpDU9MNjj66oIDcc2r6+zoW8veP616/+4Q=
-github.com/oneclickvirt/memorytest v0.0.9-20250808065154/go.mod h1:DBxiVZX7mWCe0Fy+qu57ENheLo00sLfjKzvxiICrUtU=
+github.com/oneclickvirt/memorytest v0.0.10-20250924154648 h1:trk6oZ7xs1eVtr+6oIv5IX8LDVtEMG+E6GVzQ810BtU=
+github.com/oneclickvirt/memorytest v0.0.10-20250924154648/go.mod h1:4kiHsEWkW9r3/1ZcV5xIweU0smiKP0IRfQj74AUIiVI=
 github.com/oneclickvirt/nt3 v0.0.8-20250811123903 h1:ubSPLh/DSrXj+tOgmRABgi2vrVmbmjjSne+NrVFNmNc=
 github.com/oneclickvirt/nt3 v0.0.8-20250811123903/go.mod h1:F1v+6xInBKnbUa8gV1M40R1HOzxg+obtduNhx3CTnmA=
 github.com/oneclickvirt/pingtest v0.0.8-20250728015259 h1:egoxZRZBOWN3JqBwqEsULDyRo2/dpGMeWcmV3U87zig=
@@ -128,6 +128,8 @@ github.com/oneclickvirt/security v0.0.6-20250823030124 h1:3RjpJNfKV7anN6GJs0ky2B
 github.com/oneclickvirt/security v0.0.6-20250823030124/go.mod h1:RSMooIlb4H/kLrGWNvUyOgdzQKgYKVv+LzWGlsPsLW4=
 github.com/oneclickvirt/speedtest v0.0.10-20250728015734 h1:HKO7/JQ74ueXA8Wo8NIvcK9DphbEG/YTfAAVz/akSiY=
 github.com/oneclickvirt/speedtest v0.0.10-20250728015734/go.mod h1:0W8vnMbA3iucXLXFdGfe9Ia6RPS0izRO7jvu/SnH1P8=
+github.com/oneclickvirt/stream v0.0.2-20250924154001 h1:GuJWdiPkoK84+y/+oHKr2Ghl3c/MzS9Z5m1nM+lMmy4=
+github.com/oneclickvirt/stream v0.0.2-20250924154001/go.mod h1:oWaizaHTC2VQciBC9RfaLbAOf8qeR6n20/gY7QxriDE=
 github.com/oschwald/maxminddb-golang v1.13.1 h1:G3wwjdN9JmIK2o/ermkHM+98oX5fS+k5MbwsmL4MRQE=
 github.com/oschwald/maxminddb-golang v1.13.1/go.mod h1:K4pgV9N/GcK694KSTmVSDTODk4IsCNThNdTmnaBZ/F8=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=

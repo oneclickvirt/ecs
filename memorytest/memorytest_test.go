@@ -6,6 +6,6 @@ import (
 )
 
 func Test(t *testing.T) {
-	_, res := MemoryTest("zh", "sysbench")
+	_, res := MemoryTest("zh", "stream")
 	fmt.Print(res)
 }

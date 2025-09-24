@@ -12,7 +12,7 @@ require (
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.10-20250924030424
 	github.com/oneclickvirt/gostun v0.0.5-20250727155022
-	github.com/oneclickvirt/memorytest v0.0.9-20250808065154
+	github.com/oneclickvirt/memorytest v0.0.10-20250924154648
 	github.com/oneclickvirt/nt3 v0.0.8-20250811123903
 	github.com/oneclickvirt/pingtest v0.0.8-20250728015259
 	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
@@ -61,6 +61,7 @@ require (
 	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
 	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect
+	github.com/oneclickvirt/stream v0.0.2-20250924154001 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect
