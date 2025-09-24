@@ -169,7 +169,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | sysbench | 高, 结果较可靠 | 中等 | 跨平台（Linux、Windows 部分支持） | 需环境额外安装 |
 | winsat | 中等偏高, Windows 内置工具 | 中等 | 仅限 Windows | 物理机器上自带，虚拟机不可用 |
 | mbw | 中等, 结果可能受缓存/调度影响 | 快速 | 跨平台（几乎所有类 Unix 系统） | 自带依赖无需额外安装 |
-| dd | 低, 结果受缓存影响 | 快速 | 跨平台（几乎所有类 Unix 系统） | 需环境额外安装 |
+| dd | 低, 结果受缓存影响 | 快速 | 跨平台（几乎所有类 Unix 系统） | 自带依赖无需额外安装 |
 
 ### **硬盘测试**
 
@@ -453,7 +453,7 @@ Based on the above table, this project's rough judgment method:
 | sysbench | High — Reliable results | Medium | Cross-platform (Linux, partial Windows support) | Requires additional environment installation |
 | winsat | Medium-High — Windows built-in tool | Medium | Windows only | Built-in on physical machines, unavailable on virtual machines |
 | mbw | Medium — Results may be affected by cache/scheduling | Very Fast | Cross-platform (almost all Unix-like systems) | Built-in dependencies, no additional installation required |
-| dd | Low — Results affected by cache | Fast | Cross-platform (almost all Unix-like systems) | Requires additional environment installation |
+| dd | Low — Results affected by cache | Fast | Cross-platform (almost all Unix-like systems) | Built-in dependencies, no additional installation required |
 
 ### Disk Testing
 
@@ -683,7 +683,7 @@ AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシン�
 | sysbench | 高 — 結果が信頼性高い | 中程度 | クロスプラットフォーム（Linux、Windows部分対応） | 環境への追加インストールが必要 |
 | winsat | 中程度やや高 — Windows内蔵ツール | 中程度 | Windows限定 | 物理マシンに内蔵、仮想マシンでは利用不可 |
 | mbw | 中程度 — 結果がキャッシュ/スケジューリングの影響を受ける可能性 | 非常に高速 | クロスプラットフォーム（ほぼ全てのUnix系システム） | 内蔵依存関係、追加インストール不要 |
-| dd | 低 — 結果がキャッシュの影響を受ける | 高速 | クロスプラットフォーム（ほぼ全てのUnix系システム） | 環境への追加インストールが必要 |
+| dd | 低 — 結果がキャッシュの影響を受ける | 高速 | クロスプラットフォーム（ほぼ全てのUnix系システム） | 内蔵依存関係、追加インストール不要 |
 
 ### ディスクテスト
 
