@@ -225,27 +225,94 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 | DNS 类型       | 解锁方式判断是否必要 | DNS 对解锁影响 | 说明                                      |
 | ------------ | ---------- | --------- | --------------------------------------- |
-| 官方主流 DNS     | 否          | 小         | 流媒体解锁主要依赖节点 IP，DNS 解析基本不会干扰解锁。          |
-| 非主流 / 自建 DNS | 是          | 大         | 流媒体解锁结果受 DNS 解析影响较大，需要判断是原生解锁还是 DNS 解锁。 |
+| 官方主流 DNS     | 否          | 小         | 流媒体解锁主要依赖测试节点的 IP，DNS 解析基本不会干扰解锁。       |
+| 非主流 / 自建 DNS | 是          | 大         | 流媒体解锁结果受 DNS 解析影响较大，需要判断是原生解锁还是 DNS 解锁。|
 
-所以测试过程中，如果宿主机当前使用的是官方主流的DNS，不会进行是否为原生解锁的判断。
+所以测试过程中，如果宿主机当前使用的是官方主流的DNS，不会进行是否为原生解锁的判断，解锁类型大部分受后面查询的IP质量的使用类型和公司类型的影响。
 
 ### **IP质量检测**
 
 依赖项目：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-检测14个数据库的IP相关信息，一般来说看使用类型和公司类型还有安全信息的其他判别足矣，安全得分真的图一乐。多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息。
+检测14个数据库的IP相关信息，多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息。
 
-* **使用类型 & 公司类型**：显示IP归属和使用场景，例如是否属于家庭用户、企业办公、托管服务或云/数据中心。
-* **云提供商 / 数据中心 / 移动设备**：判断IP是否来自云服务、数据中心或移动网络，帮助识别共享或高风险IP。
-* **代理 / VPN / Tor / Tor出口**：检测IP是否用于隐藏真实身份或位置，可能涉及匿名访问或滥用行为。
-* **网络爬虫 / 机器人**：识别自动化访问或采集程序，对安全风险评估有参考价值。
-* **匿名 / 滥用者 / 威胁 / 中继 / Bogon**：显示IP历史行为特征和是否属于保留/未分配IP，辅助判断IP可信度。
-* **安全得分、声誉、信任得分、威胁得分、欺诈得分、滥用得分**：各数据库对IP的量化安全评价，仅供参考。
-* **社区投票 & 黑名单记录**：展示用户反馈及公共黑名单信息，可快速识别潜在风险。
-* **Google搜索可行性**：检测IP访问Google搜索服务的可行性，间接反映网络限制或屏蔽情况。
+以下为每个字段的对应的含义
 
-多平台对比更可靠，不同数据库算法和更新频率不同，单一来源可能存在误判。多个数据库显示相似结果，说明这个结果更可靠。
+| 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
+|---------|---------|---------|---------|---------|
+| 安全得分 | 声誉(Reputation) | IP地址在安全社区中的信誉评分 | 0-100的数值 | 越高越好 |
+| | 信任得分(Trust Score) | IP地址的可信任程度评分 | 0-100的数值 | 越高越好 |
+| | VPN得分(VPN Score) | IP被识别为VPN的可能性评分 | 0-100的数值 | 越低越好 |
+| | 代理得分(Proxy Score) | IP被识别为代理的可能性评分 | 0-100的数值 | 越低越好 |
+| | 社区投票-无害 | 社区成员投票认为该IP无害的分数 | 非负整数 | 越高越好 |
+| | 社区投票-恶意 | 社区成员投票认为该IP恶意的分数 | 非负整数 | 越低越好 |
+| | 威胁得分(Threat Score) | IP地址的整体威胁程度评分 | 0-100的数值 | 越低越好 |
+| | 欺诈得分(Fraud Score) | IP地址涉及欺诈活动的可能性评分 | 0-100的数值 | 越低越好 |
+| | 滥用得分(Abuse Score) | IP地址被报告滥用行为的评分 | 0-100的数值 | 越低越好 |
+| | ASN滥用得分 | 该IP所属ASN(自治系统)的滥用评分 | 0-1的小数，可能带有风险等级标注(Low/Medium/High) | 越低越好 |
+| | 公司滥用得分 | 该IP所属公司的滥用评分 | 0-1的小数，可能带有风险等级标注(Low/Medium/High) | 越低越好 |
+| | 威胁级别(Threat Level) | IP地址的威胁等级分类 | low/medium/high/critical等文本描述 | low为最佳 |
+| 黑名单记录 | 无害记录数(Harmless) | 在各黑名单数据库中被标记为无害的次数 | 非负整数 | 数值本身无好坏 |
+| | 恶意记录数(Malicious) | 在各黑名单数据库中被标记为恶意的次数 | 非负整数 | 越低越好 |
+| | 可疑记录数(Suspicious) | 在各黑名单数据库中被标记为可疑的次数 | 非负整数 | 越低越好 |
+| | 无记录数(Undetected) | 在各黑名单数据库中无任何记录的次数 | 非负整数 | 数值本身无好坏 |
+| | DNS黑名单-总检查数 | 检查的DNS黑名单数据库总数量 | 正整数 | 数值本身无好坏 |
+| | DNS黑名单-干净 | 在DNS黑名单中显示为干净(未列入)的数量 | 非负整数 | 越高越好 |
+| | DNS黑名单-已列入 | 在DNS黑名单中已被列入的数量 | 非负整数 | 越低越好 |
+| | DNS黑名单-其他 | 在DNS黑名单检查中返回其他状态的数量 | 非负整数 | 数值本身无好坏 |
+
+一般来说看下面的使用类型公司类型还有安全信息的判别足矣，上面的安全得分只有多个数据库确认一致才可信，不看也没啥问题。
+
+| 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
+|---------|---------|---------|---------|---------|
+| 使用类型 | 使用类型(Usage Type) | IP地址的主要使用用途分类 | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDN等 | 无好坏之分，仅分类 |
+| 公司类型 | 公司类型(Company Type) | IP所属公司的业务类型 | business/hosting/FixedLineISP/education/government等 | 无好坏之分，仅分类 |
+| 云提供商 | 是否云提供商(Cloud Provider) | 该IP是否属于云服务提供商 | Yes/No | 无好坏之分，仅标识 |
+| 数据中心 | 是否数据中心(Data Center) | 该IP是否位于数据中心 | Yes/No | 如果关注解锁No为最佳 |
+| 移动设备 | 是否移动设备(Mobile) | 该IP是否来自移动设备网络 | Yes/No | 如果关注解锁Yes为最佳 |
+| 代理 | 是否代理(Proxy) | 该IP是否为代理服务器 | Yes/No | No为佳 |
+| VPN | 是否VPN | 该IP是否为VPN服务节点 | Yes/No | No为佳 |
+| Tor出口 | 是否TorExit(Tor Exit Node) | 该IP是否为Tor网络的出口节点 | Yes/No | No为佳 |
+| 网络爬虫 | 是否网络爬虫(Crawler) | 该IP是否被识别为网络爬虫 | Yes/No | No为佳 |
+| 匿名 | 是否匿名(Anonymous) | 该IP是否提供匿名服务(如VPN/Proxy/Tor) | Yes/No | No为佳 |
+| 攻击者 | 是否攻击者(Attacker) | 该IP是否被识别为攻击来源(如DDOS) | Yes/No | No为佳 |
+| 滥用者 | 是否滥用者(Abuser) | 该IP是否有主动滥用行为记录 | Yes/No | No为佳 |
+| 威胁 | 是否威胁(Threat) | 该IP是否被标记为威胁来源 | Yes/No | No为佳 |
+| 中继 | 是否中继(Relay) | 该IP是否为中继节点 | Yes/No | No为佳 |
+| Bogon | 是否Bogon(Bogon IP) | 该IP是否为伪造/未分配的IP地址 | Yes/No | No为佳 |
+| 机器人 | 是否机器人(Bot) | 该IP是否被识别为机器人流量 | Yes/No | No为佳 |
+| 搜索引擎 | Google搜索可行性 | 该IP能否正常使用Google搜索服务 | YES/NO | YES为正常 |
+
+多平台对比更可靠，不同数据库算法和更新频率不同，单一来源可能存在误判，多个数据库显示相似结果，说明这个结果更可靠。
+
+Abuser 或 Abuse 得分会直接影响机器的正常使用（中国境内运营商一般默认不处理，如果你的机器是中国IP无需理睬）。
+
+如果 Abuse 记录存在且得分高，说明该 IP 过去可能存在以下行为：  
+- 被用于 DDoS 攻击  
+- 发起大规模洪流攻击  
+- 进行端口扫描或全网扫描  
+
+这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 得分还可能影响平台对该 IP 的信誉评分。本地流媒体受影响较小，但风险依然存在。
+
+对于家宽流媒体解锁需求的用户，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。大部分 IP 识别数据库按月更新。更新后，IP 属性可能被修改，出现由 ISP → Hosting 或少见的 Hosting → ISP 的情况。
+
+对于 IP 类型分类有必要仔细说说
+
+家宽 IP  
+- 归属地与广播地一致，广播主体为当地电信运营商的 AS  
+- 必须通过国际带宽线路广播，才能被识别为家宽属性  
+
+原生 IP  
+- 归属地与持有人一致，但广播主体并非本地电信运营商
+- 常见于数据中心使用自有 AS 号进行广播，即便采购到家宽 IP，属性也会在一段时间后变更为原生
+
+广播 IP  
+- 由 A 地的 AS 将 IP 广播到 B 地使用
+- 广播传播需要时间，通常 1 周至 1 个月  
+- 各大运营商的归属地数据库更新可能需 1 至数月  
+- 若本地机房进行广播，家宽 IP 可能会被更正为原生或广播属性  
+
+说到这里，就必须说明凡是真家宽，那它访问目标站点的时候，肯定不会绕行回中国再到目标站点。真实的境外家庭宽带一定是就近出国、就近落地。
 
 ### **邮件端口检测**
 
@@ -275,12 +342,12 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 | 等级 | 描述 |
 |------|------|
-| **Tier 1 Global** | 全球顶级运营商（如 AT&T、Verizon、NTT、Telia 等），之间免费互联（Settlement-Free Peering），不依赖他人即可访问全球任意网络。 |
-| **Tier 1 Regional** | 区域性顶级运营商，在特定区域具有一级能力，但在全球范围互联性稍弱。 |
-| **Tier 1 Indirect** | 间接连接的 Tier 1（非直接购买），通过中间上游间接接入 Tier 1 网络。 |
-| **Tier 2** | 需要向 Tier 1 付费购买上网能力的二级运营商，通常是各国主流电信商或 ISP。 |
-| **CDN Provider** | 内容分发网络提供商，如 Cloudflare、Akamai、Fastly 等，主要用于内容加速而非传统上游。 |
-| **Direct/Indirect Others** | 其他类型的直接或间接连接，如 IX（Internet Exchange）成员、私有对等互联等。 |
+| **Tier 1 Global** | 全球顶级运营商（如 AT&T、Verizon、NTT、Telia 等），之间免费互联（Settlement-Free Peering），不依赖他人即可访问全球任意网络。|
+| **Tier 1 Regional** | 区域性顶级运营商，在特定区域具有一级能力，但在全球范围互联性稍弱。|
+| **Tier 1 Indirect** | 间接连接的 Tier 1（非直接购买），通过中间上游间接接入 Tier 1 网络。|
+| **Tier 2** | 需要向 Tier 1 付费购买上网能力的二级运营商，通常是各国主流电信商或 ISP。|
+| **CDN Provider** | 内容分发网络提供商，如 Cloudflare、Akamai、Fastly 等，主要用于内容加速而非传统上游。|
+| **Direct/Indirect Others** | 其他类型的直接或间接连接，如 IX（Internet Exchange）成员、私有对等互联等。|
 
 上游质量判断：直接接入的高等级上游（特别是 Tier 1 Global）越多，通常网络连通性越好。但实际网络质量也受到以下因素影响：
 
@@ -518,18 +585,65 @@ So during testing, if the host currently uses official mainstream DNS, no judgme
 
 Dependency project: [https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-Detects IP-related information from 14 databases. Generally speaking, looking at usage type, company type, and security information's other discriminators is sufficient. Security scores are really just for fun. When multiple platforms show corresponding detection items all having corresponding values, it proves the current IP is indeed as such - don't trust information from just one database source.
+Detect IP-related information from 14 databases. Multiple platforms comparing corresponding detection items all show corresponding values, proving that the current IP is indeed as such. Do not only trust information from a single database source.
 
-* **Usage Type & Company Type**: Shows IP attribution and usage scenarios, such as whether it belongs to home users, enterprise office, hosting services, or cloud/data centers.
-* **Cloud Provider / Data Center / Mobile Device**: Determines if IP comes from cloud services, data centers, or mobile networks, helping identify shared or high-risk IPs.
-* **Proxy / VPN / Tor / Tor Exit**: Detects if IP is used to hide real identity or location, possibly involving anonymous access or abuse behavior.
-* **Web Crawler / Bot**: Identifies automated access or collection programs, with reference value for security risk assessment.
-* **Anonymous / Abuser / Threat / Relay / Bogon**: Shows IP historical behavior characteristics and whether it belongs to reserved/unallocated IPs, assisting in judging IP credibility.
-* **Security Score, Reputation, Trust Score, Threat Score, Fraud Score, Abuse Score**: Various databases' quantified security evaluations of IPs, for reference only.
-* **Community Voting & Blacklist Records**: Shows user feedback and public blacklist information, can quickly identify potential risks.
-* **Google Search Feasibility**: Tests IP's feasibility for accessing Google search services, indirectly reflecting network restrictions or blocking situations.
+The following are the meanings corresponding to each field
 
-Multi-platform comparison is more reliable. Different databases have different algorithms and update frequencies; single sources may misjudge. Similar results from multiple databases indicate higher reliability.
+| Field Category | Field Name | Field Description | Possible Values | Scoring Rules |
+|---------|---------|---------|---------|---------|
+| Security Score | Reputation | Reputation score of IP address in the security community | Numerical value from 0-100 | Higher is better |
+| | Trust Score | Trustworthiness score of IP address | Numerical value from 0-100 | Higher is better |
+| | VPN Score | Likelihood score of IP being identified as VPN | Numerical value from 0-100 | Lower is better |
+| | Proxy Score | Likelihood score of IP being identified as proxy | Numerical value from 0-100 | Lower is better |
+| | Community Votes-Harmless | Score of community members voting the IP as harmless | Non-negative integer | Higher is better |
+| | Community Votes-Malicious | Score of community members voting the IP as malicious | Non-negative integer | Lower is better |
+| | Threat Score | Overall threat level score of IP address | Numerical value from 0-100 | Lower is better |
+| | Fraud Score | Likelihood score of IP address being involved in fraudulent activities | Numerical value from 0-100 | Lower is better |
+| | Abuse Score | Score of IP address being reported for abusive behavior | Numerical value from 0-100 | Lower is better |
+| | ASN Abuse Score | Abuse score of the ASN (Autonomous System) to which this IP belongs | Decimal from 0-1, may include risk level notation (Low/Medium/High) | Lower is better |
+| | Company Abuse Score | Abuse score of the company to which this IP belongs | Decimal from 0-1, may include risk level notation (Low/Medium/High) | Lower is better |
+| | Threat Level | Threat level classification of IP address | Text descriptions such as low/medium/high/critical | low is best |
+| Blacklist Records | Harmless Count | Number of times marked as harmless in various blacklist databases | Non-negative integer | Value itself has no good or bad |
+| | Malicious Count | Number of times marked as malicious in various blacklist databases | Non-negative integer | Lower is better |
+| | Suspicious Count | Number of times marked as suspicious in various blacklist databases | Non-negative integer | Lower is better |
+| | Undetected Count | Number of times with no records in various blacklist databases | Non-negative integer | Value itself has no good or bad |
+| | DNS Blacklist-Total Checks | Total number of DNS blacklist databases checked | Positive integer | Value itself has no good or bad |
+| | DNS Blacklist-Clean | Number showing as clean (not listed) in DNS blacklists | Non-negative integer | Higher is better |
+| | DNS Blacklist-Listed | Number already listed in DNS blacklists | Non-negative integer | Lower is better |
+| | DNS Blacklist-Other | Number returning other statuses in DNS blacklist checks | Non-negative integer | Value itself has no good or bad |
+
+Generally speaking, looking at the usage type, company type, and security information judgment below is sufficient. The security scores above are only credible when confirmed consistently by multiple databases; not looking at them is not a problem.
+
+| Field Category | Field Name | Field Description | Possible Values | Scoring Rules |
+|---------|---------|---------|---------|---------|
+| Usage Type | Usage Type | Primary usage classification of IP address | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDN, etc. | No good or bad, classification only |
+| Company Type | Company Type | Business type of the company to which the IP belongs | business/hosting/FixedLineISP/education/government, etc. | No good or bad, classification only |
+| Cloud Provider | Is Cloud Provider | Whether this IP belongs to a cloud service provider | Yes/No | No good or bad, identification only |
+| Data Center | Is Data Center | Whether this IP is located in a data center | Yes/No | If concerned about unblocking, No is best |
+| Mobile | Is Mobile | Whether this IP comes from a mobile device network | Yes/No | If concerned about unblocking, Yes is best |
+| Proxy | Is Proxy | Whether this IP is a proxy server | Yes/No | No is better |
+| VPN | Is VPN | Whether this IP is a VPN service node | Yes/No | No is better |
+| Tor Exit | Is TorExit (Tor Exit Node) | Whether this IP is an exit node of the Tor network | Yes/No | No is better |
+| Crawler | Is Crawler | Whether this IP is identified as a web crawler | Yes/No | No is better |
+| Anonymous | Is Anonymous | Whether this IP provides anonymity services (such as VPN/Proxy/Tor) | Yes/No | No is better |
+| Attacker | Is Attacker | Whether this IP is identified as an attack source (such as DDOS) | Yes/No | No is better |
+| Abuser | Is Abuser | Whether this IP has records of active abusive behavior | Yes/No | No is better |
+| Threat | Is Threat | Whether this IP is marked as a threat source | Yes/No | No is better |
+| Relay | Is Relay | Whether this IP is a relay node | Yes/No | No is better |
+| Bogon | Is Bogon (Bogon IP) | Whether this IP is a forged/unallocated IP address | Yes/No | No is better |
+| Bot | Is Bot | Whether this IP is identified as bot traffic | Yes/No | No is better |
+| Search Engine | Google Search Viability | Whether this IP can normally use Google search services | YES/NO | YES is normal |
+
+Multi-platform comparison is more reliable. Different databases have different algorithms and update frequencies; a single source may have misjudgments. When multiple databases show similar results, it indicates that the result is more reliable.
+
+Abuser or Abuse score will directly affect the normal use of the machine
+
+If Abuse records exist and the score is high, it indicates that the IP may have had the following behaviors in the past:  
+- Used for DDoS attacks  
+- Initiated large-scale flood attacks  
+- Conducted port scanning or network-wide scanning  
+
+Such historical records will be reported and recorded in the Abuse database. If the IP you take over has just been abused by others, there may still be delayed Abuse warning emails sent to the service provider. The service provider may misjudge that you yourself are engaging in malicious behavior, and then terminate the machine, and in most cases cannot refund. For cross-border streaming services, Abuse scores may also affect the platform's reputation scoring of that IP. Local streaming is less affected, but risks still exist.
 
 ### Email Port Detection
 
@@ -748,18 +862,67 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 依存プロジェクト：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-14のデータベースのIP関連情報を検出します。一般的に、使用タイプと会社タイプ、そしてセキュリティ情報のその他識別を見れば十分で、セキュリティスコアは本当にお遊びです。複数のプラットフォームで対応する検出項目がすべて対応する値になっている場合、現在のIPが確実にそうであることを証明します。一つのデータベースソースの情報のみを信じてはいけません。
+14個のデータベースのIP関連情報を検出し、複数のプラットフォームで対応する検出項目がすべて対応する値である場合、現在のIPが確かにそうであることを証明します。1つのデータベースソースの情報のみを信じないでください。
 
-* **使用タイプ & 会社タイプ**: IP帰属と使用シナリオを表示し、例えば家庭ユーザー、企業オフィス、ホスティングサービス、またはクラウド/データセンターに属するかどうか。
-* **クラウドプロバイダー / データセンター / モバイルデバイス**: IPがクラウドサービス、データセンター、またはモバイルネットワークから来ているかを判断し、共有または高リスクIPの識別に役立つ。
-* **プロキシ / VPN / Tor / Tor出口**: IPが真の身元や位置を隠すために使用されているかを検出し、匿名アクセスや悪用行為に関与している可能性がある。
-* **ネットワーククローラー / ロボット**: 自動化されたアクセスまたは収集プログラムを識別し、セキュリティリスク評価に参考価値がある。
-* **匿名 / 悪用者 / 脅威 / 中継 / Bogon**: IP履歴行動特徴と予約/未割り当てIPに属するかどうかを表示し、IP信頼度判断を補助。
-* **セキュリティスコア、評判、信頼スコア、脅威スコア、詐欺スコア、悪用スコア**: 各データベースのIPに対する定量化されたセキュリティ評価、参考のみ。
-* **コミュニティ投票 & ブラックリスト記録**: ユーザーフィードバックと公共ブラックリスト情報を展示し、潜在的リスクを迅速に識別可能。
-* **Google検索実行可能性**: IPがGoogle検索サービスにアクセスする実行可能性を検出し、ネットワーク制限やブロック状況を間接的に反映。
+以下は各フィールドの対応する意味です
 
-マルチプラットフォーム比較がより信頼性が高く、異なるデータベースのアルゴリズムと更新頻度が異なるため、単一ソースは誤判断の可能性があります。複数のデータベースが類似の結果を示す場合、その結果はより信頼性が高いことを説明します。
+| フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | スコアリングルール |
+|---------|---------|---------|---------|---------|
+| セキュリティスコア | レピュテーション(Reputation) | セキュリティコミュニティにおけるIPアドレスの評判スコア | 0-100の数値 | 高いほど良い |
+| | トラストスコア(Trust Score) | IPアドレスの信頼度スコア | 0-100の数値 | 高いほど良い |
+| | VPNスコア(VPN Score) | IPがVPNとして識別される可能性のスコア | 0-100の数値 | 低いほど良い |
+| | プロキシスコア(Proxy Score) | IPがプロキシとして識別される可能性のスコア | 0-100の数値 | 低いほど良い |
+| | コミュニティ投票-無害 | コミュニティメンバーがこのIPを無害と投票したスコア | 非負整数 | 高いほど良い |
+| | コミュニティ投票-悪意 | コミュニティメンバーがこのIPを悪意があると投票したスコア | 非負整数 | 低いほど良い |
+| | 脅威スコア(Threat Score) | IPアドレスの全体的な脅威レベルスコア | 0-100の数値 | 低いほど良い |
+| | 詐欺スコア(Fraud Score) | IPアドレスが詐欺行為に関与する可能性のスコア | 0-100の数値 | 低いほど良い |
+| | 不正使用スコア(Abuse Score) | IPアドレスの不正使用行為が報告されたスコア | 0-100の数値 | 低いほど良い |
+| | ASN不正使用スコア | このIPが属するASN(自律システム)の不正使用スコア | 0-1の小数、リスクレベル表記付き(Low/Medium/High)の場合あり | 低いほど良い |
+| | 企業不正使用スコア | このIPが属する企業の不正使用スコア | 0-1の小数、リスクレベル表記付き(Low/Medium/High)の場合あり | 低いほど良い |
+| | 脅威レベル(Threat Level) | IPアドレスの脅威レベル分類 | low/medium/high/criticalなどのテキスト記述 | lowが最良 |
+| ブラックリスト記録 | 無害記録数(Harmless) | 各ブラックリストデータベースで無害とマークされた回数 | 非負整数 | 数値自体に良し悪しなし |
+| | 悪意記録数(Malicious) | 各ブラックリストデータベースで悪意があるとマークされた回数 | 非負整数 | 低いほど良い |
+| | 疑わしい記録数(Suspicious) | 各ブラックリストデータベースで疑わしいとマークされた回数 | 非負整数 | 低いほど良い |
+| | 未検出数(Undetected) | 各ブラックリストデータベースで記録がない回数 | 非負整数 | 数値自体に良し悪しなし |
+| | DNSブラックリスト-総チェック数 | チェックしたDNSブラックリストデータベースの総数 | 正整数 | 数値自体に良し悪しなし |
+| | DNSブラックリスト-クリーン | DNSブラックリストでクリーン(未掲載)として表示された数 | 非負整数 | 高いほど良い |
+| | DNSブラックリスト-掲載済み | DNSブラックリストに既に掲載されている数 | 非負整数 | 低いほど良い |
+| | DNSブラックリスト-その他 | DNSブラックリストチェックで他のステータスを返した数 | 非負整数 | 数値自体に良し悪しなし |
+
+一般的に、以下の使用タイプ、企業タイプ、およびセキュリティ情報の判別を見れば十分です。上記のセキュリティスコアは複数のデータベースが一致して確認された場合のみ信頼できます。見なくても特に問題ありません。
+
+| フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | スコアリングルール |
+|---------|---------|---------|---------|---------|
+| 使用タイプ | 使用タイプ(Usage Type) | IPアドレスの主な使用用途分類 | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDNなど | 良し悪しなし、分類のみ |
+| 企業タイプ | 企業タイプ(Company Type) | IPが属する企業のビジネスタイプ | business/hosting/FixedLineISP/education/governmentなど | 良し悪しなし、分類のみ |
+| クラウドプロバイダー | クラウドプロバイダーか(Cloud Provider) | このIPがクラウドサービスプロバイダーに属するか | Yes/No | 良し悪しなし、識別のみ |
+| データセンター | データセンターか(Data Center) | このIPがデータセンターに位置するか | Yes/No | アンブロックを重視する場合Noが最良 |
+| モバイルデバイス | モバイルデバイスか(Mobile) | このIPがモバイルデバイスネットワークからのものか | Yes/No | アンブロックを重視する場合Yesが最良 |
+| プロキシ | プロキシか(Proxy) | このIPがプロキシサーバーか | Yes/No | Noが良い |
+| VPN | VPNか | このIPがVPNサービスノードか | Yes/No | Noが良い |
+| Tor出口 | TorExit(Tor Exit Node)か | このIPがTorネットワークの出口ノードか | Yes/No | Noが良い |
+| ウェブクローラー | ウェブクローラーか(Crawler) | このIPがウェブクローラーとして識別されるか | Yes/No | Noが良い |
+| 匿名 | 匿名か(Anonymous) | このIPが匿名サービス(VPN/Proxy/Torなど)を提供するか | Yes/No | Noが良い |
+| 攻撃者 | 攻撃者か(Attacker) | このIPが攻撃元として識別されるか(DDoSなど) | Yes/No | Noが良い |
+| 不正使用者 | 不正使用者か(Abuser) | このIPに積極的な不正使用行為の記録があるか | Yes/No | Noが良い |
+| 脅威 | 脅威か(Threat) | このIPが脅威ソースとしてマークされているか | Yes/No | Noが良い |
+| リレー | リレーか(Relay) | このIPがリレーノードか | Yes/No | Noが良い |
+| Bogon | Bogon(Bogon IP)か | このIPが偽造/未割り当てのIPアドレスか | Yes/No | Noが良い |
+| ボット | ボットか(Bot) | このIPがボットトラフィックとして識別されるか | Yes/No | Noが良い |
+| 検索エンジン | Google検索実行可能性 | このIPでGoogle検索サービスを正常に使用できるか | YES/NO | YESが正常 |
+
+複数プラットフォームの比較がより信頼できます。異なるデータベースはアルゴリズムと更新頻度が異なり、単一ソースでは誤判定の可能性があります。複数のデータベースで類似した結果が表示される場合、その結果はより信頼できます。
+
+AbuserまたはAbuseスコアはマシンの正常な使用に直接影響します
+
+Abuse記録が存在しスコアが高い場合、そのIPが過去に以下の行為を行った可能性があります:  
+- DDoS攻撃に使用された  
+- 大規模なフラッド攻撃を開始  
+- ポートスキャンまたは全ネットワークスキャンを実行  
+
+このような履歴は報告されAbuseデータベースに記録されます。引き継いだIPが他人によって悪用されたばかりの場合、遅延したAbuse警告メールがサービスプロバイダーに送信される可能性があります。サービスプロバイダーはあなた自身が悪意のある行為を行っていると誤判断し、マシンを退出させる可能性があり、ほとんどの場合返金できません。国際的なストリーミングサービスにとって、AbuseスコアはプラットフォームがそのIPの信頼性スコアに影響を与える可能性があります。ローカルストリーミングメディアへの影響は小さいですが、リスクは依然として存在します。
+
+家庭用ブロードバンドストリーミングアンブロックニーズのユーザーは、「使用タイプ」と「企業タイプ」が同時にISPとして識別されるかどうかに注意する必要があります。単一ISPまたは非ISPとして識別された場合、その後のデータベース更新後、IPタイプがHostingに修正される可能性が高く、アンブロック効果に影響します。ほとんどのIP識別データベースは月次で更新されます。更新後、IP属性が変更される可能性があり、ISP → Hostingまたはまれなケースとして Hosting → ISPの状況が発生します。
 
 ### メールポート検出
 
