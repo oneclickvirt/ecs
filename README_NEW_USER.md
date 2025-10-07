@@ -292,9 +292,11 @@ Abuser 或 Abuse 得分会直接影响机器的正常使用（中国境内运营
 - 发起大规模洪流攻击  
 - 进行端口扫描或全网扫描  
 
-这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 得分还可能影响平台对该 IP 的信誉评分。本地流媒体受影响较小，但风险依然存在。
+这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 得分还可能影响平台对该 IP 的信誉评分。
 
-对于家宽流媒体解锁需求的用户，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。大部分 IP 识别数据库按月更新。更新后，IP 属性可能被修改，出现由 ISP → Hosting 或少见的 Hosting → ISP 的情况。
+对于需要家宽进行流媒体解锁需求的用户(如电商需求)，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。
+
+大部分 IP 识别数据库按月更新。更新后，IP 属性可能被修改，出现由 ISP → Hosting 的情况。对于一些敏感的平台，比如某些特定国家的流媒体(如 Netflix，Spotify)，某些区别对待不同国家的流媒体(如 TikTok)，非家宽解锁的可能性较低但不是没有，如果你需要稳定解锁且追求其特殊功能解锁，才需要追求家宽流媒体解锁。如果仅仅是浏览观看，很多时候没必要追求家宽，
 
 对于 IP 类型分类有必要仔细说说
 
@@ -634,16 +636,38 @@ Generally speaking, looking at the usage type, company type, and security inform
 | Bot | Is Bot | Whether this IP is identified as bot traffic | Yes/No | No is better |
 | Search Engine | Google Search Viability | Whether this IP can normally use Google search services | YES/NO | YES is normal |
 
-Multi-platform comparison is more reliable. Different databases have different algorithms and update frequencies; a single source may have misjudgments. When multiple databases show similar results, it indicates that the result is more reliable.
+Multi-platform comparison is more reliable. Different databases have different algorithms and update frequencies. A single source may have misjudgments. If multiple databases show similar results, it indicates the result is more reliable.
 
-Abuser or Abuse score will directly affect the normal use of the machine
+Abuser or Abuse scores directly affect the normal use of machines (ISPs in mainland China generally do not handle this by default, so if your machine has a Chinese IP, you can ignore it).
 
-If Abuse records exist and the score is high, it indicates that the IP may have had the following behaviors in the past:  
-- Used for DDoS attacks  
-- Initiated large-scale flood attacks  
-- Conducted port scanning or network-wide scanning  
+If Abuse records exist and the score is high, it indicates that the IP may have been involved in the following behaviors in the past:
+- Used for DDoS attacks
+- Launched large-scale flood attacks
+- Conducted port scanning or network-wide scanning
 
-Such historical records will be reported and recorded in the Abuse database. If the IP you take over has just been abused by others, there may still be delayed Abuse warning emails sent to the service provider. The service provider may misjudge that you yourself are engaging in malicious behavior, and then terminate the machine, and in most cases cannot refund. For cross-border streaming services, Abuse scores may also affect the platform's reputation scoring of that IP. Local streaming is less affected, but risks still exist.
+Such historical records will be reported and entered into the Abuse database. If the IP you take over has just been abused by others, delayed Abuse warning emails may still be sent to the service provider. The service provider may misjudge you as the person engaging in malicious behavior, and then terminate the machine, and in most cases, no refund will be given. For cross-border streaming services, Abuse scores may also affect the platform's reputation rating for that IP.
+
+For users who need residential broadband for streaming unlock requirements (such as e-commerce needs), attention should be paid to whether "Usage Type" and "Company Type" are both identified as ISP. If it is only single ISP or identified as non-ISP, after subsequent database updates, the IP type is likely to be corrected to Hosting, thereby affecting unlock effectiveness.
+
+Most IP identification databases are updated monthly. After updates, IP attributes may be modified, resulting in situations where ISP → Hosting occurs. For some sensitive platforms, such as streaming services in certain specific countries (like Netflix, Spotify), or streaming services that treat different countries differently (like TikTok), the possibility of non-residential unlock is low but not impossible. If you need stable unlock and pursue its special function unlock, you only need to pursue residential broadband streaming unlock. If you're just browsing and watching, there's often no need to pursue residential broadband.
+
+It is necessary to elaborate on IP type classification
+
+Residential Broadband IP
+- The attribution location is consistent with the broadcast location, and the broadcast entity is the local telecom operator's AS
+- Must be broadcast through international bandwidth lines to be recognized as residential broadband attributes
+
+Native IP
+- The attribution location is consistent with the holder, but the broadcast entity is not a local telecom operator
+- Common in data centers using their own AS numbers for broadcasting. Even if residential broadband IPs are acquired, the attributes will change to native after a period of time
+
+Broadcast IP
+- IP broadcast from location A's AS to location B for use
+- Broadcast propagation takes time, usually 1 week to 1 month
+- Major operators' attribution location database updates may take 1 to several months
+- If local machine rooms conduct broadcasting, residential broadband IPs may be corrected to native or broadcast attributes
+
+Speaking of this, it must be stated that any true residential broadband, when accessing target sites, will definitely not route back to your country and then to the target site. Real overseas home broadband must exit nearby and land nearby.
 
 ### Email Port Detection
 
@@ -911,18 +935,38 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 | ボット | ボットか(Bot) | このIPがボットトラフィックとして識別されるか | Yes/No | Noが良い |
 | 検索エンジン | Google検索実行可能性 | このIPでGoogle検索サービスを正常に使用できるか | YES/NO | YESが正常 |
 
-複数プラットフォームの比較がより信頼できます。異なるデータベースはアルゴリズムと更新頻度が異なり、単一ソースでは誤判定の可能性があります。複数のデータベースで類似した結果が表示される場合、その結果はより信頼できます。
+マルチプラットフォーム比較の方が信頼性が高い。異なるデータベースはアルゴリズムと更新頻度が異なるため、単一のソースには誤判定が存在する可能性がある。複数のデータベースが類似した結果を示す場合、その結果はより信頼性が高いことを示している。
 
-AbuserまたはAbuseスコアはマシンの正常な使用に直接影響します
+AbuserまたはAbuseスコアは、マシンの正常な使用に直接影響する(中国国内の通信事業者は一般的にデフォルトでは対応しないため、マシンが中国のIPである場合は無視して構わない)。
 
-Abuse記録が存在しスコアが高い場合、そのIPが過去に以下の行為を行った可能性があります:  
-- DDoS攻撃に使用された  
-- 大規模なフラッド攻撃を開始  
-- ポートスキャンまたは全ネットワークスキャンを実行  
+Abuse記録が存在し、スコアが高い場合、そのIPが過去に以下の行為に関与していた可能性があることを示している:
+- DDoS攻撃に使用された
+- 大規模なフラッド攻撃を開始した
+- ポートスキャンまたはネットワーク全体のスキャンを実施した
 
-このような履歴は報告されAbuseデータベースに記録されます。引き継いだIPが他人によって悪用されたばかりの場合、遅延したAbuse警告メールがサービスプロバイダーに送信される可能性があります。サービスプロバイダーはあなた自身が悪意のある行為を行っていると誤判断し、マシンを退出させる可能性があり、ほとんどの場合返金できません。国際的なストリーミングサービスにとって、AbuseスコアはプラットフォームがそのIPの信頼性スコアに影響を与える可能性があります。ローカルストリーミングメディアへの影響は小さいですが、リスクは依然として存在します。
+このような履歴記録は報告され、Abuseデータベースに登録される。引き継いだIPが他人によって悪用されたばかりの場合、遅延したAbuse警告メールがサービスプロバイダに送信される可能性がある。サービスプロバイダは、あなた本人が悪意のある行為を行っていると誤判定し、マシンを解約する可能性があり、ほとんどの場合、返金は行われない。国境を越えたストリーミングサービスの場合、AbuseスコアはそのIPに対するプラットフォームの信頼評価にも影響を与える可能性がある。
 
-家庭用ブロードバンドストリーミングアンブロックニーズのユーザーは、「使用タイプ」と「企業タイプ」が同時にISPとして識別されるかどうかに注意する必要があります。単一ISPまたは非ISPとして識別された場合、その後のデータベース更新後、IPタイプがHostingに修正される可能性が高く、アンブロック効果に影響します。ほとんどのIP識別データベースは月次で更新されます。更新後、IP属性が変更される可能性があり、ISP → Hostingまたはまれなケースとして Hosting → ISPの状況が発生します。
+ストリーミング解除要件のために住宅ブロードバンドが必要なユーザー(Eコマース需要など)は、「使用タイプ」と「会社タイプ」の両方がISPとして識別されているかどうかに注意を払う必要がある。単一ISPのみ、または非ISPとして識別されている場合、その後のデータベース更新後、IPタイプがHostingに修正される可能性が高く、解除効果に影響を与える。
+
+ほとんどのIP識別データベースは月次で更新される。更新後、IP属性が変更され、ISP → Hostingという状況が発生する可能性がある。特定の国のストリーミングサービス(NetflixやSpotifyなど)や、異なる国を区別して扱うストリーミングサービス(TikTokなど)など、一部の敏感なプラットフォームでは、非住宅での解除の可能性は低いが、不可能ではない。安定した解除が必要で、その特別な機能解除を追求する場合にのみ、住宅ブロードバンドストリーミング解除を追求する必要がある。単にブラウジングや視聴するだけであれば、多くの場合、住宅ブロードバンドを追求する必要はない。
+
+IPタイプの分類について詳しく説明する必要がある
+
+住宅ブロードバンドIP
+- 帰属地と放送地が一致し、放送主体は地元の通信事業者のAS
+- 国際帯域回線を通じて放送される必要があり、住宅ブロードバンド属性として認識される
+
+ネイティブIP
+- 帰属地と保有者が一致しているが、放送主体は地元の通信事業者ではない
+- データセンターが独自のAS番号を使用して放送することが一般的。住宅ブロードバンドIPを取得しても、一定期間後に属性はネイティブに変更される
+
+放送IP
+- 場所AのASからIPを場所Bに放送して使用
+- 放送の伝播には時間がかかり、通常1週間から1ヶ月
+- 主要な通信事業者の帰属地データベースの更新には1ヶ月から数ヶ月かかる場合がある
+- 地元のマシンルームが放送を行う場合、住宅ブロードバンドIPはネイティブまたは放送属性に修正される可能性がある
+
+ここまで述べたので、真の住宅ブロードバンドである場合、ターゲットサイトにアクセスする際、必ず日本に迂回してからターゲットサイトに到達することはないことを明記する必要がある。真の海外家庭用ブロードバンドは、必ず近隣で出国し、近隣で着地する。
 
 ### メールポート検出
 
