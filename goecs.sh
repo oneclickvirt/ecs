@@ -1,6 +1,6 @@
 #!/bin/sh
 # From https://github.com/oneclickvirt/ecs
-# 2025.08.26
+# 2025.10.08
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
@@ -404,6 +404,15 @@ InstallSysbench() {
 }
 
 env_check() {
+    # 检测是否为 macOS 系统
+    if [ "$(uname -s)" = "Darwin" ]; then
+        _green "Detected macOS system"
+        _green "macOS has built-in tools, skipping dependency installation"
+        _green "Environment preparation complete."
+        _green "Next command is: ./goecs.sh install"
+        return 0
+    fi
+    
     if [ -f /etc/opencloudos-release ]; then
         SYS="opencloudos"
     elif [ -s /etc/os-release ]; then
@@ -583,16 +592,9 @@ env_check() {
         _green "Installing ping"
         ${INSTALL_CMD} iputils-ping >/dev/null 2>&1 || ${INSTALL_CMD} ping >/dev/null 2>&1
     fi
-    if [ "$(uname -s)" = "Darwin" ]; then
-        echo "Detected MacOS, installing sysbench iproute2mac..."
-        if command -v brew >/dev/null 2>&1; then
-            brew install --force sysbench iproute2mac
-        fi
-    else
-        if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf 2>/dev/null; then
-            echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf 2>/dev/null
-            sysctl -p >/dev/null 2>&1
-        fi
+    if ! grep -q "^net.ipv4.ping_group_range = 0 2147483647$" /etc/sysctl.conf 2>/dev/null; then
+        echo "net.ipv4.ping_group_range = 0 2147483647" >> /etc/sysctl.conf 2>/dev/null
+        sysctl -p >/dev/null 2>&1
     fi
     _green "Environment preparation complete."
     _green "Next command is: ./goecs.sh install"
@@ -609,6 +611,7 @@ show_help() {
 可用命令：
 
 ./goecs.sh env            检查并安装依赖包
+                          注意: macOS系统会自动跳过依赖安装
                           警告: 此命令会执行系统更新(可选择)，可能:
                           1. 耗时较长
                           2. 导致网络短暂中断
@@ -636,6 +639,7 @@ show_help() {
 Available commands:
 
 ./goecs.sh env             Check and Install dependencies
+                           Note: macOS systems will skip dependency installation
                            Warning: This command performs system update(optional), which may:
                            1. Take considerable time
                            2. Cause temporary network interruptions
