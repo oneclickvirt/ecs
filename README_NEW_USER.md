@@ -86,7 +86,7 @@ VM-x/AMD-V/Hyper-V: 是当前测试宿主机是否支持嵌套虚拟化的指标
 
 负载: 显示系统负载
 
-虚拟化架构: 显示宿主机来自什么虚拟化架构，一般来说推荐```Dedicated > KVM > Xen```虚拟化，其他虚拟化都会存在性能损耗，导致使用的时候存在性能共享/损耗，但这个也说不准，独立服务器才拥有完全独立的资源占用，其他虚拟化基本都会有资源共享，取决于宿主机的持有者对这个虚拟机是否有良心，具体性能优劣还是得看后面的专项性能测试。
+虚拟化架构: 显示宿主机来自什么虚拟化架构，一般来说推荐```Dedicated > KVM >= Xen```虚拟化，其他虚拟化都会存在性能损耗，导致使用的时候存在性能共享/损耗，但这个也说不准，独立服务器才拥有完全独立的资源占用，其他虚拟化基本都会有资源共享，取决于宿主机的持有者对这个虚拟机是否有良心，具体性能优劣还是得看后面的专项性能测试。
 
 NAT类型: 显示NAT类型，具体推荐```Full Cone > Restricted Cone > Port Restricted Cone > Symmetric```，测不出来或者非正规协议的类型会显示```Inconclusive```，一般来说只有特殊用途，比如有特殊的代理、实时通讯、做FRP内穿端口等需求才需要特别关注，其他一般情况下都不用关注本指标。
 
@@ -96,9 +96,9 @@ IPV4/IPV6 ASN: 显示宿主机IP所属的ASN组织ID和名字，同一个IDC可�
 
 IPV4/IPV6 Location: 显示对应协议的IP在数据库中的地理位置。
 
-IPV4 Active IPs: 根据 bgp.tools 信息查询当前CIDR分块中 活跃邻居数量/总邻居数量 由于是非实时的，可能存在延迟。
+IPV4 Active IPs: 根据 bgp.tools 信息查询当前CIDR分块中 活跃邻居数量/总邻居数量 刷新间隔大概是15~20分钟，还是有一定参考性的。(这个总数和比值不是可Ping通的IP数量，是监控到有来自这个IP的请求到全球监控网内的记录，比可ping通更能代表当前活跃的邻居数)
 
-IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小
+IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小，如果你需要在本机进行独立的IPV6分配，应该持有至少/80大小的子网才足够进行分配使用。数值计算为2的倍数，数值越小越靠近2则可分配使用的IPV6子网范围越大。
 
 ### **CPU测试**
 
@@ -116,15 +116,13 @@ IPV6 子网掩码：根据宿主机信息查询的本机IPV6子网大小
 | 适用场景         | 适合快速测试，仅测试计算性能 | 适合综合全面的测试 |
 | 排行榜         | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
-默认使用```Sysbench```进行测试，基准大致如下：
+```Sysbench```的基准可见 [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) 天梯图，具体得分不取决于测试的sysbench的版本。默认使用```Sysbench```进行测试，基准说明大致如下：
 
-CPU测试单核```Sysbench```得分在5000以上的可以算第一梯队，4000到5000分算第二梯队，每1000分大致算一档。
+CPU测试单核```Sysbench```得分在5000以上的可以算第一梯队称得上高性能，每1000分大致算一档。
 
 AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能得分5700左右，Intel普通的CPU(E5之类的)在1000~800左右，低于500的单核CPU可以说是性能比较差的了。
 
 有时候多核得分和单核得分一样，证明商家在限制程序并发使用CPU，典型例子腾讯云。
-
-```Sysbench```的基准可见 [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) 天梯图，具体得分不分测试的sysbench的版本。
 
 ```GeekBench```的基准可见 [官方网站](https://browser.geekbench.com/processor-benchmarks/) 天梯图，具体得分每个```GeekBench```版本都不一样，注意使用时测试的```GeekBench```版本是什么。
 
@@ -221,7 +219,9 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 默认只检测跨国流媒体解锁。
 
-一般来说，正常的情况下，一个IP多个流媒体的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被流媒体普通的数据库所识别修正地域。由于各平台的IP数据库识别速度不一致，所以有时候有的平台解锁区域正常，有的飘到路由上的某个位置，有的飘到IP未被你使用前所在的位置。
+一般来说，正常的情况下，一个IP多个流媒体的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被流媒体普通的数据库所识别修正地域。
+
+由于各平台的IP数据库识别速度不一致，所以有时候有的平台解锁区域正常，有的飘到路由上的某个位置，有的飘到IP未被你使用前所在的位置。
 
 | DNS 类型       | 解锁方式判断是否必要 | DNS 对解锁影响 | 说明                                      |
 | ------------ | ---------- | --------- | --------------------------------------- |
@@ -229,6 +229,8 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | 非主流 / 自建 DNS | 是          | 大         | 流媒体解锁结果受 DNS 解析影响较大，需要判断是原生解锁还是 DNS 解锁。|
 
 所以测试过程中，如果宿主机当前使用的是官方主流的DNS，不会进行是否为原生解锁的判断，解锁类型大部分受后面查询的IP质量的使用类型和公司类型的影响。
+
+对于IP质量解锁比较敏感的实际上是各大AI平台和本地流媒体，以及reddit和spotify，其他的跨国平台一般不易受IP质量影响解锁。
 
 ### **IP质量检测**
 
@@ -261,12 +263,35 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | | DNS黑名单-已列入 | 在DNS黑名单中已被列入的数量 | 非负整数 | 越低越好 |
 | | DNS黑名单-其他 | 在DNS黑名单检查中返回其他状态的数量 | 非负整数 | 数值本身无好坏 |
 
-一般来说看下面的使用类型公司类型还有安全信息的判别足矣，上面的安全得分只有多个数据库确认一致才可信，不看也没啥问题。
+一般来说看下面的使用类型公司类型还有安全信息的判别足矣，上面的安全得分只有多个数据库确认一致才可信，不看也没啥问题。(IDC: 一般买服务器识别成这个的多，就是正常的在数据中心机房广播使用的类型)
+
+| 使用类型        | 说明         |
+| ----------- | ---------- |
+| hosting     | 主机/服务器用途(IDC)    |
+| residential | 家庭/住宅网络(家宽)    |
+| FixedLineISP，ISP | 固定线路互联网服务提供商(家宽) |
+| business    | 企业办公网络(商宽)      |
+| cellular    | 移动运营商网络(家宽)    |
+| education   | 教育机构网络(教育网)     |
+| government  | 政府机构网络(政府网)     |
+| military    | 军事网络(政府网)       |
+| DataCenter  | 数据中心网络(IDC)      |
+| WebHosting  | 网站托管服务(IDC)      |
+| Transit     | 互联网中继/传输网络(IDC)  |
+| CDN         | 内容分发网络(IDC)      |
+
+| 公司类型         | 说明           |
+| ------------ | ------------ |
+| business     | 企业公司(商宽)         |
+| hosting      | 主机/数据中心公司(IDC)    |
+| FixedLineISP，ISP | 固定线路互联网服务提供商(家宽) |
+| education    | 教育机构(教育网)         |
+| government   | 政府机构(政府网)         |
+
+其他安全信息字段：
 
 | 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
 |---------|---------|---------|---------|---------|
-| 使用类型 | 使用类型(Usage Type) | IP地址的主要使用用途分类 | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDN等 | 无好坏之分，仅分类 |
-| 公司类型 | 公司类型(Company Type) | IP所属公司的业务类型 | business/hosting/FixedLineISP/education/government等 | 无好坏之分，仅分类 |
 | 云提供商 | 是否云提供商(Cloud Provider) | 该IP是否属于云服务提供商 | Yes/No | 无好坏之分，仅标识 |
 | 数据中心 | 是否数据中心(Data Center) | 该IP是否位于数据中心 | Yes/No | 如果关注解锁No为最佳 |
 | 移动设备 | 是否移动设备(Mobile) | 该IP是否来自移动设备网络 | Yes/No | 如果关注解锁Yes为最佳 |
@@ -441,7 +466,7 @@ Dependency project: [https://github.com/oneclickvirt/basics](https://github.com/
 
 **Load**: Shows system load
 
-**Virtualization Architecture**: Shows what virtualization architecture the host comes from. Generally recommended: `Dedicated > KVM > Xen` virtualization. Other virtualization types have performance losses, causing performance sharing/loss during use. However, this isn't definitive - only dedicated servers have completely independent resource usage. Other virtualization basically involves resource sharing, depending on whether the host holder is conscientious about this virtual machine. Actual performance superiority still depends on subsequent specialized performance tests.
+**Virtualization Architecture**: Shows what virtualization architecture the host comes from. Generally recommended: `Dedicated > KVM >= Xen` virtualization. Other virtualization types have performance losses, causing performance sharing/loss during use. However, this isn't definitive - only dedicated servers have completely independent resource usage. Other virtualization basically involves resource sharing, depending on whether the host holder is conscientious about this virtual machine. Actual performance superiority still depends on subsequent specialized performance tests.
 
 **NAT Type**: Shows NAT type. Specifically recommended: `Full Cone > Restricted Cone > Port Restricted Cone > Symmetric`. Undetectable or non-standard protocol types show as `Inconclusive`. Generally, only special purposes like specific proxies, real-time communication, or FRP port forwarding need special attention to this indicator; other general situations don't need to focus on this metric.
 
@@ -451,9 +476,9 @@ Dependency project: [https://github.com/oneclickvirt/basics](https://github.com/
 
 **IPV4/IPV6 Location**: Shows the geographic location of the corresponding protocol's IP in the database.
 
-**IPV4 Active IPs**: Based on bgp.tools information, queries active neighbor count/total neighbor count in the current CIDR block. Since this is non-real-time, there may be delays.
+**IPV4 Active IPs:** According to bgp.tools data, the refresh interval for the number of active neighbors/total neighbors within the current CIDR block is approximately 15–20 minutes, which is fairly reliable. (This total and ratio do not represent the number of pingable IPs, but rather the number of IPs observed sending requests to the global monitoring network, which more accurately reflects the number of currently active neighbors.)
 
-**IPV6 Subnet Mask**: Queries the local IPV6 subnet size based on host information.
+**IPV6 Subnet Mask:** The local IPv6 subnet size is determined based on the host machine’s configuration. If you intend to allocate independent IPv6 addresses locally, you should possess at least a /80 subnet to ensure sufficient address space. The value is calculated as a power of 2 — the smaller the number, the closer it is to 2, and the larger the available IPv6 subnet range.
 
 ### CPU Testing
 
@@ -471,15 +496,13 @@ Supports command-line parameter selection between `GeekBench` and `Sysbench` for
 | Use Case | Suitable for quick testing, only tests computational performance | Suitable for comprehensive testing |
 | Leaderboard | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
-Default uses `Sysbench` for testing, with rough benchmarks as follows:
+`Sysbench` benchmarks can be seen in the [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) tier chart. The specific score does not depend on the version of Sysbench used for the test. Default uses `Sysbench` for testing, with rough benchmarks as follows:
 
-CPU test single-core `Sysbench` scores above 5000 can be considered first-tier, 4000-5000 points second-tier, roughly one tier per 1000 points.
+A single-core CPU score of over 5000 in **Sysbench** can be considered first-tier and classified as high performance, with roughly one tier for every 1000 points.
 
 AMD 7950x single-core full performance scores around 6500, AMD 5950x single-core full performance scores around 5700, Intel regular CPUs (E5 series) around 1000-800, single-core CPUs below 500 can be considered poor performance.
 
 Sometimes multi-core and single-core scores are identical, proving the merchant is limiting program concurrent CPU usage, typical example being Tencent Cloud.
-
-`Sysbench` benchmarks can be seen in the [CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/) tier chart. Specific scores depend on the sysbench version tested.
 
 `GeekBench` benchmarks can be seen in the [official website](https://browser.geekbench.com/processor-benchmarks/) tier chart. Specific scores differ for each `GeekBench` version, pay attention to which `GeekBench` version was used during testing.
 
@@ -574,7 +597,9 @@ Dependency project: [https://github.com/oneclickvirt/CommonMediaTests](https://g
 
 Default only checks cross-border streaming media unlocking.
 
-Generally speaking, under normal circumstances, multiple streaming services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by streaming media common databases. Due to inconsistent IP database recognition speeds across platforms, sometimes some platforms unlock regions normally, some drift to certain router locations, and some drift to where the IP was before you used it.
+Generally speaking, under normal circumstances, multiple streaming services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by streaming media common databases. 
+
+Due to inconsistent IP database recognition speeds across platforms, sometimes some platforms unlock regions normally, some drift to certain router locations, and some drift to where the IP was before you used it.
 
 | DNS Type | Unlock Method Judgment Necessary | DNS Impact on Unlocking | Description |
 | -------- | ------------------------------- | ----------------------- | ----------- |
@@ -582,6 +607,8 @@ Generally speaking, under normal circumstances, multiple streaming services for 
 | Non-mainstream / Self-built DNS | Yes | Large | Streaming unlock results greatly affected by DNS resolution, need to judge if it's native unlock or DNS unlock |
 
 So during testing, if the host currently uses official mainstream DNS, no judgment of whether it's native unlocking will be performed.
+
+Platforms that are particularly sensitive to IP quality for unlocking include major AI platforms, local streaming services, Reddit, and Spotify. Other multinational platforms are generally less affected by IP quality when it comes to unlocking.
 
 ### IP Quality Detection
 
@@ -614,31 +641,54 @@ The following are the meanings corresponding to each field
 | | DNS Blacklist-Listed | Number already listed in DNS blacklists | Non-negative integer | Lower is better |
 | | DNS Blacklist-Other | Number returning other statuses in DNS blacklist checks | Non-negative integer | Value itself has no good or bad |
 
-Generally speaking, looking at the usage type, company type, and security information judgment below is sufficient. The security scores above are only credible when confirmed consistently by multiple databases; not looking at them is not a problem.
+Generally speaking, checking the usage type, company type, and security information below is sufficient. The security score above is only reliable when confirmed by multiple databases, so it's not a problem to skip it. (IDC: generally buy vps identified as this much, is normal in the data center room broadcasting the type of use)
+
+| Usage Type        | Description         |
+| ----------- | ---------- |
+| hosting     | Host/Server usage (IDC)    |
+| residential | Home/Residential network (Home broadband)    |
+| FixedLineISP, ISP | Fixed-line Internet Service Provider (Home broadband) |
+| business    | Enterprise office network (Business broadband)      |
+| cellular    | Mobile carrier network (Home broadband)    |
+| education   | Educational institution network (Education network)     |
+| government  | Government institution network (Government network)     |
+| military    | Military network (Government network)       |
+| DataCenter  | Data center network (IDC)      |
+| WebHosting  | Web hosting service (IDC)      |
+| Transit     | Internet transit/transport network (IDC)  |
+| CDN         | Content Delivery Network (IDC)      |
+
+| Company Type         | Description           |
+| ------------ | ------------ |
+| business     | Business company (Business broadband)         |
+| hosting      | Hosting/Data center company (IDC)    |
+| FixedLineISP, ISP | Fixed-line Internet Service Provider (Home broadband) |
+| education    | Educational institution (Education network)         |
+| government   | Government institution (Government network)         |
+
+Other security information fields:
 
 | Field Category | Field Name | Field Description | Possible Values | Scoring Rules |
 |---------|---------|---------|---------|---------|
-| Usage Type | Usage Type | Primary usage classification of IP address | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDN, etc. | No good or bad, classification only |
-| Company Type | Company Type | Business type of the company to which the IP belongs | business/hosting/FixedLineISP/education/government, etc. | No good or bad, classification only |
 | Cloud Provider | Is Cloud Provider | Whether this IP belongs to a cloud service provider | Yes/No | No good or bad, identification only |
-| Data Center | Is Data Center | Whether this IP is located in a data center | Yes/No | If concerned about unblocking, No is best |
-| Mobile | Is Mobile | Whether this IP comes from a mobile device network | Yes/No | If concerned about unblocking, Yes is best |
+| Data Center | Is Data Center | Whether this IP is located in a data center | Yes/No | No is best if concerned about unblocking |
+| Mobile | Is Mobile | Whether this IP is from a mobile device network | Yes/No | Yes is best if concerned about unblocking |
 | Proxy | Is Proxy | Whether this IP is a proxy server | Yes/No | No is better |
 | VPN | Is VPN | Whether this IP is a VPN service node | Yes/No | No is better |
-| Tor Exit | Is TorExit (Tor Exit Node) | Whether this IP is an exit node of the Tor network | Yes/No | No is better |
+| Tor Exit | Is TorExit (Tor Exit Node) | Whether this IP is a Tor network exit node | Yes/No | No is better |
 | Crawler | Is Crawler | Whether this IP is identified as a web crawler | Yes/No | No is better |
 | Anonymous | Is Anonymous | Whether this IP provides anonymity services (such as VPN/Proxy/Tor) | Yes/No | No is better |
 | Attacker | Is Attacker | Whether this IP is identified as an attack source (such as DDOS) | Yes/No | No is better |
-| Abuser | Is Abuser | Whether this IP has records of active abusive behavior | Yes/No | No is better |
+| Abuser | Is Abuser | Whether this IP has records of active abuse behavior | Yes/No | No is better |
 | Threat | Is Threat | Whether this IP is marked as a threat source | Yes/No | No is better |
 | Relay | Is Relay | Whether this IP is a relay node | Yes/No | No is better |
 | Bogon | Is Bogon (Bogon IP) | Whether this IP is a forged/unallocated IP address | Yes/No | No is better |
 | Bot | Is Bot | Whether this IP is identified as bot traffic | Yes/No | No is better |
-| Search Engine | Google Search Viability | Whether this IP can normally use Google search services | YES/NO | YES is normal |
+| Search Engine | Google Search Feasibility | Whether this IP can use Google search service normally | YES/NO | YES is normal |
 
 Multi-platform comparison is more reliable. Different databases have different algorithms and update frequencies. A single source may have misjudgments. If multiple databases show similar results, it indicates the result is more reliable.
 
-Abuser or Abuse scores directly affect the normal use of machines (ISPs in mainland China generally do not handle this by default, so if your machine has a Chinese IP, you can ignore it).
+Abuser or Abuse scores directly affect the normal use of machines.
 
 If Abuse records exist and the score is high, it indicates that the IP may have been involved in the following behaviors in the past:
 - Used for DDoS attacks
@@ -740,7 +790,7 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 
 **負荷**: システム負荷を表示します
 
-**仮想化アーキテクチャ**: ホストがどの仮想化アーキテクチャから来ているかを表示します。一般的に推奨順序：`Dedicated > KVM > Xen`仮想化。その他の仮想化は性能損失があり、使用時に性能共有/損失が発生しますが、これは断定的ではありません。専用サーバーのみが完全に独立したリソース占有を持ちます。その他の仮想化は基本的にリソース共有があり、ホスト保有者がこの仮想マシンに対して良心的かどうかに依存します。実際の性能優劣は後続の専門性能テストを見る必要があります。
+**仮想化アーキテクチャ**: ホストがどの仮想化アーキテクチャから来ているかを表示します。一般的に推奨順序：`Dedicated > KVM >= Xen`仮想化。その他の仮想化は性能損失があり、使用時に性能共有/損失が発生しますが、これは断定的ではありません。専用サーバーのみが完全に独立したリソース占有を持ちます。その他の仮想化は基本的にリソース共有があり、ホスト保有者がこの仮想マシンに対して良心的かどうかに依存します。実際の性能優劣は後続の専門性能テストを見る必要があります。
 
 **NATタイプ**: NATタイプを表示します。具体的な推奨順序：`Full Cone > Restricted Cone > Port Restricted Cone > Symmetric`。検出不可能または非標準プロトコルタイプは`Inconclusive`と表示されます。一般的に、特殊な用途、例えば特殊なプロキシ、リアルタイム通信、FRPポート転送などの需要がある場合のみ特別に注意が必要で、その他の一般状況では本指標に注意する必要はありません。
 
@@ -750,9 +800,9 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 
 **IPV4/IPV6 Location**: 対応プロトコルのIPのデータベース内地理位置を表示します。
 
-**IPV4 Active IPs**: bgp.tools情報に基づき、現在のCIDRブロック内のアクティブ近隣数/総近隣数を照会します。非リアルタイムのため遅延がある可能性があります。
+**IPV4アクティブIP数**：bgp.toolsの情報によると、現在のCIDRブロック内のアクティブな隣接数/総隣接数の更新間隔はおおよそ15〜20分程度で、一定の参考価値があります。（この総数と比率はPing応答のあるIP数ではなく、このIPからグローバル監視ネットワークへのリクエストが観測された記録に基づくもので、Ping応答よりも現在アクティブな隣接数をより正確に表しています）
 
-**IPV6 サブネットマスク**: ホスト情報に基づいてローカルIPV6サブネットサイズを照会します。
+**IPV6サブネットマスク**：ホストマシンの情報に基づいてローカルのIPV6サブネットサイズを確認します。ローカルで独自にIPV6アドレスを割り当てたい場合、少なくとも/80サイズのサブネットを保有している必要があります。数値は2の倍数で計算され、値が小さいほど割り当て可能なIPV6サブネット範囲が広くなります。
 
 ### CPUテスト
 
@@ -770,15 +820,13 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 | 適用シナリオ | 迅速テストに適し、計算性能のみテスト | 総合的で全面的なテストに適用 |
 | ランキング | [sysbench.spiritlhl.net](https://sysbench.spiritlhl.net/) | [browser.geekbench.com](https://browser.geekbench.com/) |
 
-デフォルトで`Sysbench`でテストを行い、基準は大まかに以下の通りです：
+`Sysbench`の基準は[CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/)階層図で確認可能、具体的なスコアは、テストに使用する Sysbench のバージョンに依存しません。デフォルトで`Sysbench`でテストを行い、基準は大まかに以下の通りです：
 
-CPUテストシングルコア`Sysbench`スコア5000以上は第一階層、4000-5000点は第二階層、1000点毎に大体一階層と考えられます。
+CPUテストのシングルコア「Sysbench」スコアが5000以上の場合、第一ランクに属し高性能と見なされます。おおよそ1000ポイントごとに一段階と考えられます。
 
 AMD 7950xシングルコアフル性能スコアは6500前後、AMD 5950xシングルコアフル性能スコアは5700前後、Intel普通のCPU（E5系など）は1000~800前後、500以下のシングルコアCPUは性能が比較的劣ると言えます。
 
 時々マルチコアスコアとシングルコアスコアが同じになることがあり、これは業者がプログラムの並行CPU使用を制限していることを証明します。典型例はTencent Cloudです。
-
-`Sysbench`の基準は[CPU Performance Ladder For Sysbench](https://sysbench.spiritlhl.net/)階層図で確認可能、具体的なスコアはテストしたsysbenchのバージョンに依存しません。
 
 `GeekBench`の基準は[公式サイト](https://browser.geekbench.com/processor-benchmarks/)階層図で確認可能、具体的なスコアは各`GeekBench`バージョンで異なり、使用時にテストした`GeekBench`バージョンに注意してください。
 
@@ -873,7 +921,9 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 デフォルトでは国境を越えるストリーミングメディアのロック解除のみをチェックします。
 
-一般的に、正常な状況下では、一つのIPの複数のストリーミングメディアのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、ストリーミングメディアの一般的なデータベースに認識修正されていない可能性が高いです。各プラットフォームのIPデータベース認識速度が一致しないため、時々あるプラットフォームではロック解除地域が正常、あるプラットフォームではルート上のある位置に飛ぶ、あるプラットフォームではIPがあなたによって使用される前にいた位置に飛ぶことがあります。
+一般的に、正常な状況下では、一つのIPの複数のストリーミングメディアのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、ストリーミングメディアの一般的なデータベースに認識修正されていない可能性が高いです。
+
+各プラットフォームのIPデータベース認識速度が一致しないため、時々あるプラットフォームではロック解除地域が正常、あるプラットフォームではルート上のある位置に飛ぶ、あるプラットフォームではIPがあなたによって使用される前にいた位置に飛ぶことがあります。
 
 | DNS タイプ | ロック解除方式判断の必要性 | DNSのロック解除への影響 | 説明 |
 | --------- | ------------------------- | ---------------------- | ---- |
@@ -881,6 +931,8 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 | 非主流/自建DNS | 必要 | 大 | ストリーミングメディアのロック解除結果はDNS解析の影響を大きく受け、ネイティブロック解除かDNSロック解除かを判断する必要がある |
 
 そのため、テスト過程で、ホストが現在使用しているのが公式主流のDNSの場合、ネイティブロック解除かどうかの判断は行われません。
+
+IP品質によるアクセス制限に敏感なのは、実際には主要なAIプラットフォームやローカルストリーミングサービス、redditやspotifyなどであり、その他の多国籍プラットフォームは一般的にIP品質の影響を受けにくい。
 
 ### IP品質検出
 
@@ -913,31 +965,54 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 | | DNSブラックリスト-掲載済み | DNSブラックリストに既に掲載されている数 | 非負整数 | 低いほど良い |
 | | DNSブラックリスト-その他 | DNSブラックリストチェックで他のステータスを返した数 | 非負整数 | 数値自体に良し悪しなし |
 
-一般的に、以下の使用タイプ、企業タイプ、およびセキュリティ情報の判別を見れば十分です。上記のセキュリティスコアは複数のデータベースが一致して確認された場合のみ信頼できます。見なくても特に問題ありません。
+一般的に以下の使用タイプ、会社タイプ、そしてセキュリティ情報の判別で十分です。上記のセキュリティスコアは複数のデータベースで一致が確認された場合のみ信頼できるため、見なくても特に問題ありません。(IDC: サーバーを購入する際、一般的にこの識別されることが多い。データセンターのサーバールームでブロードキャストに使用される通常のタイプである)
 
-| フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | スコアリングルール |
+| 使用タイプ        | 説明         |
+| ----------- | ---------- |
+| hosting     | ホスト/サーバー用途(IDC)    |
+| residential | 家庭/住宅ネットワーク(家庭用回線)    |
+| FixedLineISP、ISP | 固定回線インターネットサービスプロバイダー(家庭用回線) |
+| business    | 企業オフィスネットワーク(ビジネス回線)      |
+| cellular    | モバイル通信事業者ネットワーク(家庭用回線)    |
+| education   | 教育機関ネットワーク(教育ネットワーク)     |
+| government  | 政府機関ネットワーク(政府ネットワーク)     |
+| military    | 軍事ネットワーク(政府ネットワーク)       |
+| DataCenter  | データセンターネットワーク(IDC)      |
+| WebHosting  | Webホスティングサービス(IDC)      |
+| Transit     | インターネット中継/転送ネットワーク(IDC)  |
+| CDN         | コンテンツ配信ネットワーク(IDC)      |
+
+| 会社タイプ         | 説明           |
+| ------------ | ------------ |
+| business     | 企業会社(ビジネス回線)         |
+| hosting      | ホスト/データセンター会社(IDC)    |
+| FixedLineISP、ISP | 固定回線インターネットサービスプロバイダー(家庭用回線) |
+| education    | 教育機関(教育ネットワーク)         |
+| government   | 政府機関(政府ネットワーク)         |
+
+その他のセキュリティ情報フィールド:
+
+| フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | 評価ルール |
 |---------|---------|---------|---------|---------|
-| 使用タイプ | 使用タイプ(Usage Type) | IPアドレスの主な使用用途分類 | hosting/residential/business/cellular/education/government/military/DataCenter/WebHosting/Transit/CDNなど | 良し悪しなし、分類のみ |
-| 企業タイプ | 企業タイプ(Company Type) | IPが属する企業のビジネスタイプ | business/hosting/FixedLineISP/education/governmentなど | 良し悪しなし、分類のみ |
-| クラウドプロバイダー | クラウドプロバイダーか(Cloud Provider) | このIPがクラウドサービスプロバイダーに属するか | Yes/No | 良し悪しなし、識別のみ |
-| データセンター | データセンターか(Data Center) | このIPがデータセンターに位置するか | Yes/No | アンブロックを重視する場合Noが最良 |
-| モバイルデバイス | モバイルデバイスか(Mobile) | このIPがモバイルデバイスネットワークからのものか | Yes/No | アンブロックを重視する場合Yesが最良 |
-| プロキシ | プロキシか(Proxy) | このIPがプロキシサーバーか | Yes/No | Noが良い |
-| VPN | VPNか | このIPがVPNサービスノードか | Yes/No | Noが良い |
-| Tor出口 | TorExit(Tor Exit Node)か | このIPがTorネットワークの出口ノードか | Yes/No | Noが良い |
-| ウェブクローラー | ウェブクローラーか(Crawler) | このIPがウェブクローラーとして識別されるか | Yes/No | Noが良い |
-| 匿名 | 匿名か(Anonymous) | このIPが匿名サービス(VPN/Proxy/Torなど)を提供するか | Yes/No | Noが良い |
-| 攻撃者 | 攻撃者か(Attacker) | このIPが攻撃元として識別されるか(DDoSなど) | Yes/No | Noが良い |
-| 不正使用者 | 不正使用者か(Abuser) | このIPに積極的な不正使用行為の記録があるか | Yes/No | Noが良い |
-| 脅威 | 脅威か(Threat) | このIPが脅威ソースとしてマークされているか | Yes/No | Noが良い |
-| リレー | リレーか(Relay) | このIPがリレーノードか | Yes/No | Noが良い |
-| Bogon | Bogon(Bogon IP)か | このIPが偽造/未割り当てのIPアドレスか | Yes/No | Noが良い |
-| ボット | ボットか(Bot) | このIPがボットトラフィックとして識別されるか | Yes/No | Noが良い |
-| 検索エンジン | Google検索実行可能性 | このIPでGoogle検索サービスを正常に使用できるか | YES/NO | YESが正常 |
+| クラウドプロバイダー | クラウドプロバイダーかどうか(Cloud Provider) | このIPがクラウドサービスプロバイダーに属しているか | Yes/No | 良し悪しはなく、識別のみ |
+| データセンター | データセンターかどうか(Data Center) | このIPがデータセンターに位置しているか | Yes/No | アンブロックを重視する場合はNoが最適 |
+| モバイルデバイス | モバイルデバイスかどうか(Mobile) | このIPがモバイルデバイスネットワークからのものか | Yes/No | アンブロックを重視する場合はYesが最適 |
+| プロキシ | プロキシかどうか(Proxy) | このIPがプロキシサーバーか | Yes/No | Noが望ましい |
+| VPN | VPNかどうか | このIPがVPNサービスノードか | Yes/No | Noが望ましい |
+| Tor出口 | TorExitかどうか(Tor Exit Node) | このIPがTorネットワークの出口ノードか | Yes/No | Noが望ましい |
+| Webクローラー | Webクローラーかどうか(Crawler) | このIPがWebクローラーとして識別されているか | Yes/No | Noが望ましい |
+| 匿名 | 匿名かどうか(Anonymous) | このIPが匿名サービス(VPN/Proxy/Torなど)を提供しているか | Yes/No | Noが望ましい |
+| 攻撃者 | 攻撃者かどうか(Attacker) | このIPが攻撃元(DDOSなど)として識別されているか | Yes/No | Noが望ましい |
+| 悪用者 | 悪用者かどうか(Abuser) | このIPに能動的な悪用行為の記録があるか | Yes/No | Noが望ましい |
+| 脅威 | 脅威かどうか(Threat) | このIPが脅威元としてマークされているか | Yes/No | Noが望ましい |
+| 中継 | 中継かどうか(Relay) | このIPが中継ノードか | Yes/No | Noが望ましい |
+| Bogon | Bogonかどうか(Bogon IP) | このIPが偽造/未割り当てのIPアドレスか | Yes/No | Noが望ましい |
+| ボット | ボットかどうか(Bot) | このIPがボットトラフィックとして識別されているか | Yes/No | Noが望ましい |
+| 検索エンジン | Google検索の実行可能性 | このIPでGoogle検索サービスが正常に使用できるか | YES/NO | YESが正常 |
 
 マルチプラットフォーム比較の方が信頼性が高い。異なるデータベースはアルゴリズムと更新頻度が異なるため、単一のソースには誤判定が存在する可能性がある。複数のデータベースが類似した結果を示す場合、その結果はより信頼性が高いことを示している。
 
-AbuserまたはAbuseスコアは、マシンの正常な使用に直接影響する(中国国内の通信事業者は一般的にデフォルトでは対応しないため、マシンが中国のIPである場合は無視して構わない)。
+AbuserまたはAbuseスコアは、マシンの正常な使用に直接影響する。
 
 Abuse記録が存在し、スコアが高い場合、そのIPが過去に以下の行為に関与していた可能性があることを示している:
 - DDoS攻撃に使用された
