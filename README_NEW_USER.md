@@ -236,7 +236,9 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 依赖项目：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-检测14个数据库的IP相关信息，多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息。
+检测18个数据库的IP相关信息，多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息:
+
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
 
 以下为每个字段的对应的含义
 
@@ -310,14 +312,14 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 多平台对比更可靠，不同数据库算法和更新频率不同，单一来源可能存在误判，多个数据库显示相似结果，说明这个结果更可靠。
 
-Abuser 或 Abuse 得分会直接影响机器的正常使用（中国境内运营商一般默认不处理，如果你的机器是中国IP无需理睬）。
+Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境内运营商一般默认不处理，如果你的机器是中国IP无需理睬）。
 
-如果 Abuse 记录存在且得分高，说明该 IP 过去可能存在以下行为：  
+如果 Abuse 记录存在且滥用得分高，说明该 IP 过去可能存在以下行为：  
 - 被用于 DDoS 攻击  
 - 发起大规模洪流攻击  
 - 进行端口扫描或全网扫描  
 
-这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 得分还可能影响平台对该 IP 的信誉评分。
+这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 滥用得分还可能影响平台对该 IP 的信誉评分。
 
 对于需要家宽进行流媒体解锁需求的用户(如电商需求)，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。
 
@@ -614,7 +616,9 @@ Platforms that are particularly sensitive to IP quality for unlocking include ma
 
 Dependency project: [https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-Detect IP-related information from 14 databases. Multiple platforms comparing corresponding detection items all show corresponding values, proving that the current IP is indeed as such. Do not only trust information from a single database source.
+Detect IP-related information from 18 databases. Multiple platforms comparing corresponding detection items all show corresponding values, proving that the current IP is indeed as such. Do not only trust information from a single database source:
+
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
 
 The following are the meanings corresponding to each field
 
@@ -938,7 +942,9 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 
 依存プロジェクト：[https://github.com/oneclickvirt/securityCheck](https://github.com/oneclickvirt/securityCheck)
 
-14個のデータベースのIP関連情報を検出し、複数のプラットフォームで対応する検出項目がすべて対応する値である場合、現在のIPが確かにそうであることを証明します。1つのデータベースソースの情報のみを信じないでください。
+18個のデータベースのIP関連情報を検出し、複数のプラットフォームで対応する検出項目がすべて対応する値である場合、現在のIPが確かにそうであることを証明します。1つのデータベースソースの情報のみを信じないでください:
+
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
 
 以下は各フィールドの対応する意味です
 
