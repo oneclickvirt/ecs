@@ -269,7 +269,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 | 使用类型        | 说明         |
 | ----------- | ---------- |
-| hosting     | 主机/服务器用途(IDC)    |
+| hosting     | 数据中心网络(IDC)    |
 | residential | 家庭/住宅网络(家宽)    |
 | FixedLineISP，ISP | 固定线路互联网服务提供商(家宽) |
 | business    | 企业办公网络(商宽)      |
@@ -277,9 +277,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | education   | 教育机构网络(教育网)     |
 | government  | 政府机构网络(政府网)     |
 | military    | 军事网络(政府网)       |
-| DataCenter  | 数据中心网络(IDC)      |
-| WebHosting  | 网站托管服务(IDC)      |
-| Transit     | 互联网中继/传输网络(IDC)  |
+| DataCenter/WebHosting/Transit  | 数据中心网络(IDC)      |
 | CDN         | 内容分发网络(IDC)      |
 
 | 公司类型         | 说明           |
@@ -290,7 +288,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | education    | 教育机构(教育网)         |
 | government   | 政府机构(政府网)         |
 
-其他安全信息字段：
+以上类型说明为原始查询信息的类型，实际显示的时候已自动分流去重合并类型为统一含义，其他安全信息字段：
 
 | 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
 |---------|---------|---------|---------|---------|
@@ -649,7 +647,7 @@ Generally speaking, checking the usage type, company type, and security informat
 
 | Usage Type        | Description         |
 | ----------- | ---------- |
-| hosting     | Host/Server usage (IDC)    |
+| hosting     | Data center network (IDC)      |
 | residential | Home/Residential network (Home broadband)    |
 | FixedLineISP, ISP | Fixed-line Internet Service Provider (Home broadband) |
 | business    | Enterprise office network (Business broadband)      |
@@ -657,9 +655,7 @@ Generally speaking, checking the usage type, company type, and security informat
 | education   | Educational institution network (Education network)     |
 | government  | Government institution network (Government network)     |
 | military    | Military network (Government network)       |
-| DataCenter  | Data center network (IDC)      |
-| WebHosting  | Web hosting service (IDC)      |
-| Transit     | Internet transit/transport network (IDC)  |
+| DataCenter/WebHosting/Transit  | Data center network (IDC)      |
 | CDN         | Content Delivery Network (IDC)      |
 
 | Company Type         | Description           |
@@ -670,7 +666,7 @@ Generally speaking, checking the usage type, company type, and security informat
 | education    | Educational institution (Education network)         |
 | government   | Government institution (Government network)         |
 
-Other security information fields:
+The above type descriptions represent the original query information types. During actual display, they have been automatically filtered, deduplicated, and merged into types with consistent meanings. Other security information fields:
 
 | Field Category | Field Name | Field Description | Possible Values | Scoring Rules |
 |---------|---------|---------|---------|---------|
@@ -975,7 +971,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 
 | 使用タイプ        | 説明         |
 | ----------- | ---------- |
-| hosting     | ホスト/サーバー用途(IDC)    |
+| hosting     | データセンターネットワーク(IDC)   |
 | residential | 家庭/住宅ネットワーク(家庭用回線)    |
 | FixedLineISP、ISP | 固定回線インターネットサービスプロバイダー(家庭用回線) |
 | business    | 企業オフィスネットワーク(ビジネス回線)      |
@@ -983,9 +979,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | education   | 教育機関ネットワーク(教育ネットワーク)     |
 | government  | 政府機関ネットワーク(政府ネットワーク)     |
 | military    | 軍事ネットワーク(政府ネットワーク)       |
-| DataCenter  | データセンターネットワーク(IDC)      |
-| WebHosting  | Webホスティングサービス(IDC)      |
-| Transit     | インターネット中継/転送ネットワーク(IDC)  |
+| DataCenter/WebHosting/Transit  | データセンターネットワーク(IDC)      |
 | CDN         | コンテンツ配信ネットワーク(IDC)      |
 
 | 会社タイプ         | 説明           |
@@ -996,7 +990,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | education    | 教育機関(教育ネットワーク)         |
 | government   | 政府機関(政府ネットワーク)         |
 
-その他のセキュリティ情報フィールド:
+上記のタイプ説明は元のクエリ情報のタイプであり、実際の表示時には自動的に重複排除・統合され、タイプは統一された意味にまとめられています。その他のセキュリティ情報フィールド：
 
 | フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | 評価ルール |
 |---------|---------|---------|---------|---------|
