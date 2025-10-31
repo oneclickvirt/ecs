@@ -304,7 +304,7 @@ cd ecs
 
 2. 安装 Go 环境（如已安装可跳过）
 
-选择 go 1.24.5 的版本进行安装
+选择 go 1.25.3 的版本进行安装
 
 ```bash
 curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/one-click-installation-script/main/install_scripts/go.sh -o go.sh && chmod +x go.sh && bash go.sh 
