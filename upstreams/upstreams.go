@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oneclickvirt/UnlockTests/uts"
+	"github.com/oneclickvirt/UnlockTests/executor"
 	bgptools "github.com/oneclickvirt/backtrace/bgptools"
 	backtrace "github.com/oneclickvirt/backtrace/bk"
 	. "github.com/oneclickvirt/defaultset"

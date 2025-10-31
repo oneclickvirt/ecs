@@ -18,7 +18,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/imroc/req/v3"
-	"github.com/oneclickvirt/UnlockTests/uts"
+	"github.com/oneclickvirt/UnlockTests/executor"
 	bnetwork "github.com/oneclickvirt/basics/network"
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
