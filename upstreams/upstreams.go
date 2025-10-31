@@ -51,7 +51,7 @@ func UpstreamsCheck() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		result := backtrace.BackTrace(uts.IPV6)
+		result := backtrace.BackTrace(executor.IPV6)
 		results.backtraceResult = result
 	}()
 	wg.Wait()

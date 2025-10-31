@@ -124,14 +124,14 @@ func OnlyBasicsIpInfo(language string) (string, string, string) {
 	}
 	basicInfo := ipInfo
 	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") && ipv4 != "" && ipv6 != "" {
-		uts.IPV4 = true
-		uts.IPV6 = true
+		executor.IPV4 = true
+		executor.IPV6 = true
 	} else if strings.Contains(ipInfo, "IPV4") && ipv4 != "" {
-		uts.IPV4 = true
-		uts.IPV6 = false
+		executor.IPV4 = true
+		executor.IPV6 = false
 	} else if strings.Contains(ipInfo, "IPV6") && ipv6 != "" {
-		uts.IPV6 = true
-		uts.IPV4 = false
+		executor.IPV6 = true
+		executor.IPV4 = false
 	}
 	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
 	return ipv4, ipv6, basicInfo
@@ -157,20 +157,20 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 	wgt.Wait()
 	basicInfo := systemInfo + ipInfo
 	if strings.Contains(ipInfo, "IPV4") && strings.Contains(ipInfo, "IPV6") && ipv4 != "" && ipv6 != "" {
-		uts.IPV4 = true
-		uts.IPV6 = true
+		executor.IPV4 = true
+		executor.IPV6 = true
 		if nt3CheckType == "" {
 			nt3CheckType = "ipv4"
 		}
 	} else if strings.Contains(ipInfo, "IPV4") && ipv4 != "" {
-		uts.IPV4 = true
-		uts.IPV6 = false
+		executor.IPV4 = true
+		executor.IPV6 = false
 		if nt3CheckType == "" {
 			nt3CheckType = "ipv4"
 		}
 	} else if strings.Contains(ipInfo, "IPV6") && ipv6 != "" {
-		uts.IPV6 = true
-		uts.IPV4 = false
+		executor.IPV6 = true
+		executor.IPV4 = false
 		if nt3CheckType == "" {
 			nt3CheckType = "ipv6"
 		}
