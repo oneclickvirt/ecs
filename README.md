@@ -225,6 +225,8 @@ Usage: goecs [options]
         Enable/Disable security test (default true)
   -speed
         Enable/Disable speed test (default true)
+  -ping
+        Enable/Disable ping test (default false)
   -spnum int
         Set the number of servers per operator for speed test (default 2)
   -upload

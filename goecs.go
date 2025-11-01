@@ -137,6 +137,7 @@ func parseFlags() {
 	goecsFlag.BoolVar(&backtraceStatus, "backtrace", true, "Enable/Disable backtrace test (in 'en' language or on windows it always false)")
 	goecsFlag.BoolVar(&nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on windows it always false)")
 	goecsFlag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
+	goecsFlag.BoolVar(&pingTestStatus, "ping", false, "Enable/Disable ping test")
 	goecsFlag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
 	goecsFlag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
 	goecsFlag.StringVar(&memoryTestMethod, "memorym", "stream", "Set memory test method (supported: stream, sysbench, dd, winsat, auto)")
