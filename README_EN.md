@@ -204,6 +204,8 @@ Usage: goecs [options]
   -email
         Enable/Disable email port test (default true)
   -h    Show help information
+  -help
+        Show help information
   -l string
         Set language (supported: en, zh) (default "zh")
   -log
@@ -211,28 +213,34 @@ Usage: goecs [options]
   -memory
         Enable/Disable memory test (default true)
   -memorym string
-        Set memory test method (supported: sysbench, dd, winsat) (default "sysbench")
+        Set memory test method (supported: stream, sysbench, dd, winsat, auto) (default "stream")
   -menu
         Enable/Disable menu mode, disable example: -menu=false (default true)
   -nt3
         Enable/Disable NT3 test (in 'en' language or on windows it always false) (default true)
   -nt3loc string
-        Specify NT3 test location (supported: GZ, SH, BJ, CD for Guangzhou, Shanghai, Beijing, Chengdu) (default "GZ")
+        Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all) (default "GZ")
   -nt3t string
         Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
+  -ping
+        Enable/Disable ping test
   -security
         Enable/Disable security test (default true)
   -speed
         Enable/Disable speed test (default true)
-  -ping
-        Enable/Disable ping test (default false)
   -spnum int
         Set the number of servers per operator for speed test (default 2)
+  -tgdc
+        Enable/Disable Telegram DC test
   -upload
         Enable/Disable upload the result (default true)
   -ut
         Enable/Disable unlock media test (default true)
   -v    Display version information
+  -version
+        Display version information
+  -web
+        Enable/Disable popular websites test
 ```
 </details>
 
