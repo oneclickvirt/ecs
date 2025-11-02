@@ -63,6 +63,8 @@ var (
 	onlyIpInfoCheckStatus, help                                       bool
 	goecsFlag                                                         = flag.NewFlagSet("goecs", flag.ContinueOnError)
 	finish                                                            bool
+	// 用于跟踪哪些参数是用户显式设置的
+	userSetFlags = make(map[string]bool)
 )
 
 func getMenuChoice(language string) string {
@@ -153,6 +155,11 @@ func parseFlags() {
 	goecsFlag.BoolVar(&enableLogger, "log", false, "Enable/Disable logging in the current path")
 	goecsFlag.BoolVar(&enabelUpload, "upload", true, "Enable/Disable upload the result")
 	goecsFlag.Parse(os.Args[1:])
+
+	// 记录用户显式设置的参数
+	goecsFlag.Visit(func(f *flag.Flag) {
+		userSetFlags[f.Name] = true
+	})
 }
 
 func handleHelpAndVersion() bool {
@@ -184,7 +191,253 @@ func initLogger() {
 	}
 }
 
+// saveUserSetParams 保存用户通过命令行显式设置的参数值
+func saveUserSetParams() map[string]interface{} {
+	saved := make(map[string]interface{})
+
+	if userSetFlags["basic"] {
+		saved["basic"] = basicStatus
+	}
+	if userSetFlags["cpu"] {
+		saved["cpu"] = cpuTestStatus
+	}
+	if userSetFlags["memory"] {
+		saved["memory"] = memoryTestStatus
+	}
+	if userSetFlags["disk"] {
+		saved["disk"] = diskTestStatus
+	}
+	if userSetFlags["comm"] {
+		saved["comm"] = commTestStatus
+	}
+	if userSetFlags["ut"] {
+		saved["ut"] = utTestStatus
+	}
+	if userSetFlags["security"] {
+		saved["security"] = securityTestStatus
+	}
+	if userSetFlags["email"] {
+		saved["email"] = emailTestStatus
+	}
+	if userSetFlags["backtrace"] {
+		saved["backtrace"] = backtraceStatus
+	}
+	if userSetFlags["nt3"] {
+		saved["nt3"] = nt3Status
+	}
+	if userSetFlags["speed"] {
+		saved["speed"] = speedTestStatus
+	}
+	if userSetFlags["ping"] {
+		saved["ping"] = pingTestStatus
+	}
+	if userSetFlags["tgdc"] {
+		saved["tgdc"] = tgdcTestStatus
+	}
+	if userSetFlags["web"] {
+		saved["web"] = webTestStatus
+	}
+	if userSetFlags["cpum"] {
+		saved["cpum"] = cpuTestMethod
+	}
+	if userSetFlags["cput"] {
+		saved["cput"] = cpuTestThreadMode
+	}
+	if userSetFlags["memorym"] {
+		saved["memorym"] = memoryTestMethod
+	}
+	if userSetFlags["diskm"] {
+		saved["diskm"] = diskTestMethod
+	}
+	if userSetFlags["diskp"] {
+		saved["diskp"] = diskTestPath
+	}
+	if userSetFlags["diskmc"] {
+		saved["diskmc"] = diskMultiCheck
+	}
+	if userSetFlags["nt3loc"] {
+		saved["nt3loc"] = nt3Location
+	}
+	if userSetFlags["nt3t"] {
+		saved["nt3t"] = nt3CheckType
+	}
+	if userSetFlags["spnum"] {
+		saved["spnum"] = spNum
+	}
+
+	return saved
+}
+
+// restoreUserSetParams 恢复用户通过命令行显式设置的参数值，覆盖菜单的默认值
+func restoreUserSetParams(saved map[string]interface{}) {
+	if val, ok := saved["basic"]; ok {
+		basicStatus = val.(bool)
+	}
+	if val, ok := saved["cpu"]; ok {
+		cpuTestStatus = val.(bool)
+	}
+	if val, ok := saved["memory"]; ok {
+		memoryTestStatus = val.(bool)
+	}
+	if val, ok := saved["disk"]; ok {
+		diskTestStatus = val.(bool)
+	}
+	if val, ok := saved["comm"]; ok {
+		commTestStatus = val.(bool)
+	}
+	if val, ok := saved["ut"]; ok {
+		utTestStatus = val.(bool)
+	}
+	if val, ok := saved["security"]; ok {
+		securityTestStatus = val.(bool)
+	}
+	if val, ok := saved["email"]; ok {
+		emailTestStatus = val.(bool)
+	}
+	if val, ok := saved["backtrace"]; ok {
+		backtraceStatus = val.(bool)
+	}
+	if val, ok := saved["nt3"]; ok {
+		nt3Status = val.(bool)
+	}
+	if val, ok := saved["speed"]; ok {
+		speedTestStatus = val.(bool)
+	}
+	if val, ok := saved["ping"]; ok {
+		pingTestStatus = val.(bool)
+	}
+	if val, ok := saved["tgdc"]; ok {
+		tgdcTestStatus = val.(bool)
+	}
+	if val, ok := saved["web"]; ok {
+		webTestStatus = val.(bool)
+	}
+	if val, ok := saved["cpum"]; ok {
+		cpuTestMethod = val.(string)
+	}
+	if val, ok := saved["cput"]; ok {
+		cpuTestThreadMode = val.(string)
+	}
+	if val, ok := saved["memorym"]; ok {
+		memoryTestMethod = val.(string)
+	}
+	if val, ok := saved["diskm"]; ok {
+		diskTestMethod = val.(string)
+	}
+	if val, ok := saved["diskp"]; ok {
+		diskTestPath = val.(string)
+	}
+	if val, ok := saved["diskmc"]; ok {
+		diskMultiCheck = val.(bool)
+	}
+	if val, ok := saved["nt3loc"]; ok {
+		// 如果用户没有在菜单中选择选项10，才恢复用户设置的nt3Location
+		// 选项10会强制设置 nt3Location = "ALL"
+		if choice != "10" {
+			nt3Location = val.(string)
+		}
+	}
+	if val, ok := saved["nt3t"]; ok {
+		nt3CheckType = val.(string)
+	}
+	if val, ok := saved["spnum"]; ok {
+		spNum = val.(int)
+	}
+
+	// 验证参数的有效性
+	validateParams()
+}
+
+// validateParams 验证参数的有效性，如果无效则使用默认值
+func validateParams() {
+	// 验证 cpuTestMethod
+	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}
+	if !validCpuMethods[cpuTestMethod] {
+		if language == "zh" {
+			fmt.Printf("警告: CPU测试方法 '%s' 无效，使用默认值 'sysbench'\n", cpuTestMethod)
+		} else {
+			fmt.Printf("Warning: Invalid CPU test method '%s', using default 'sysbench'\n", cpuTestMethod)
+		}
+		cpuTestMethod = "sysbench"
+	}
+
+	// 验证 cpuTestThreadMode
+	validThreadModes := map[string]bool{"single": true, "multi": true}
+	if !validThreadModes[cpuTestThreadMode] {
+		if language == "zh" {
+			fmt.Printf("警告: CPU线程模式 '%s' 无效，使用默认值 'multi'\n", cpuTestThreadMode)
+		} else {
+			fmt.Printf("Warning: Invalid CPU thread mode '%s', using default 'multi'\n", cpuTestThreadMode)
+		}
+		cpuTestThreadMode = "multi"
+	}
+
+	// 验证 memoryTestMethod
+	validMemoryMethods := map[string]bool{"stream": true, "sysbench": true, "dd": true, "winsat": true, "auto": true}
+	if !validMemoryMethods[memoryTestMethod] {
+		if language == "zh" {
+			fmt.Printf("警告: 内存测试方法 '%s' 无效，使用默认值 'stream'\n", memoryTestMethod)
+		} else {
+			fmt.Printf("Warning: Invalid memory test method '%s', using default 'stream'\n", memoryTestMethod)
+		}
+		memoryTestMethod = "stream"
+	}
+
+	// 验证 diskTestMethod
+	validDiskMethods := map[string]bool{"fio": true, "dd": true, "winsat": true}
+	if !validDiskMethods[diskTestMethod] {
+		if language == "zh" {
+			fmt.Printf("警告: 磁盘测试方法 '%s' 无效，使用默认值 'fio'\n", diskTestMethod)
+		} else {
+			fmt.Printf("Warning: Invalid disk test method '%s', using default 'fio'\n", diskTestMethod)
+		}
+		diskTestMethod = "fio"
+	}
+
+	// 验证 nt3Location
+	validNt3Locations := map[string]bool{"GZ": true, "SH": true, "BJ": true, "CD": true, "ALL": true}
+	if !validNt3Locations[nt3Location] {
+		if language == "zh" {
+			fmt.Printf("警告: NT3测试位置 '%s' 无效，使用默认值 'GZ'\n", nt3Location)
+		} else {
+			fmt.Printf("Warning: Invalid NT3 location '%s', using default 'GZ'\n", nt3Location)
+		}
+		nt3Location = "GZ"
+	}
+
+	// 验证 nt3CheckType
+	validNt3Types := map[string]bool{"both": true, "ipv4": true, "ipv6": true}
+	if !validNt3Types[nt3CheckType] {
+		if language == "zh" {
+			fmt.Printf("警告: NT3测试类型 '%s' 无效，使用默认值 'ipv4'\n", nt3CheckType)
+		} else {
+			fmt.Printf("Warning: Invalid NT3 check type '%s', using default 'ipv4'\n", nt3CheckType)
+		}
+		nt3CheckType = "ipv4"
+	}
+
+	// 验证 spNum (应该是正数)
+	if spNum < 0 {
+		if language == "zh" {
+			fmt.Printf("警告: 测速节点数量 '%d' 无效，使用默认值 2\n", spNum)
+		} else {
+			fmt.Printf("Warning: Invalid speed test node count '%d', using default 2\n", spNum)
+		}
+		spNum = 2
+	}
+
+	// 验证 language
+	validLanguages := map[string]bool{"zh": true, "en": true}
+	if !validLanguages[language] {
+		fmt.Printf("Warning: Invalid language '%s', using default 'zh'\n", language)
+		language = "zh"
+	}
+}
+
 func handleMenuMode(preCheck utils.NetCheckResult) {
+	// 保存用户显式设置的参数值
+	savedParams := saveUserSetParams()
+
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
 	backtraceStatus, nt3Status, speedTestStatus = false, false, false
@@ -249,6 +502,9 @@ Loop:
 			printInvalidChoice()
 		}
 	}
+
+	// 恢复用户显式设置的参数，覆盖菜单的默认值
+	restoreUserSetParams(savedParams)
 }
 
 func printMenuOptions(preCheck utils.NetCheckResult) {
@@ -606,13 +862,7 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 				*emailInfo = email.EmailCheck()
 			}()
 		}
-		if pingTestStatus {
-			wg3.Add(1)
-			go func() {
-				defer wg3.Done()
-				*ptInfo = pt.PingTest()
-			}()
-		}
+		// 英文模式不进行三网PING测试,所以不启动 pt.PingTest()
 		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
 		*output = runSecurityTests(*securityInfo, *output, tempOutput, outputMutex)
 		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
@@ -864,22 +1114,15 @@ func runEnglishNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOut
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
-		if pingTestStatus && *ptInfo != "" {
-			wg3.Wait()
+		// 英文模式只测试 TGDC 和主流网站，不测试三网PING
+		if tgdcTestStatus || webTestStatus {
 			utils.PrintCenteredTitle("PING-Test", width)
-			fmt.Println(*ptInfo)
-		}
-		if tgdcTestStatus {
-			if !pingTestStatus || *ptInfo == "" {
-				utils.PrintCenteredTitle("PING-Test", width)
+			if tgdcTestStatus {
+				fmt.Println(pt.TelegramDCTest())
 			}
-			fmt.Println(pt.TelegramDCTest())
-		}
-		if webTestStatus {
-			if !pingTestStatus && !tgdcTestStatus {
-				utils.PrintCenteredTitle("PING-Test", width)
+			if webTestStatus {
+				fmt.Println(pt.WebsiteTest())
 			}
-			fmt.Println(pt.WebsiteTest())
 		}
 	}, tempOutput, output)
 }

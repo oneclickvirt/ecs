@@ -17,6 +17,7 @@
 - [邮件端口检测](#邮件端口检测)
 - [上游及回程线路检测](#上游及回程线路检测)
 - [三网回程路由检测](#三网回程路由检测)
+- [PING值测试](#PING值测试)
 - [就近测速](#就近测速)
 
 ## English
@@ -27,6 +28,7 @@
 - [Streaming Media Unlocking](#Streaming-Media-Unlocking)
 - [IP Quality Detection](#IP-Quality-Detection)
 - [Email Port Detection](#Email-Port-Detection)
+- [PING Testing](#PING-Testing)
 - [Nearby Speed Testing](#Nearby-Speed-Testing)
 
 ## 日本語
@@ -37,11 +39,14 @@
 - [ストリーミングメディアロック解除](#ストリーミングメディアロック解除)
 - [IP品質検出](#IP品質検出)
 - [メールポート検出](#メールポート検出)
+- [PING検出](#PING検出)
 - [近隣スピードテスト](#近隣スピードテスト)
 
 ---
 
 ## 中文
+
+menu模式默认启用，执行时显示菜单可选择选项测试，在menu模式启用的情况下，默认额外提供的CI参数设置优先级高于选项本身的预设值，方便用户随时针对某个选项自行修改某些单项测试的参数设置。
 
 ### **系统基础信息**
 
@@ -407,6 +412,18 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 
 有时候路由信息完全藏起来了，只知道实际使用的延迟低，实际可能也是优质线路只是查不到信息，这就没办法直接识别了。
 
+### **PING值测试**
+
+依赖项目：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
+
+对于选项1：如果启用中国模式，将仅检测三网全国各省份的PING值延迟，从小到大排序。如果不启用中国模式，默认将不检测三网全国各省份的PING值延迟，仅检测TGDC和主流网站的延迟。
+
+对于选项6和选项10：默认都进行测试。
+
+对于中国境内的测试，测试TGDC和主流跨国网站的延迟无意义，所以默认不测试。
+
+对于参数指定的状态，优先级会高于选项中默认的参数设置。
+
 ### **就近测速**
 
 依赖项目：[https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
@@ -422,6 +439,8 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 ---
 
 ## English
+
+Menu mode is enabled by default, the menu is displayed to select the option test, in the case of menu mode enabled, the default additional CI parameter setting priority is higher than the preset value of the option itself, which is convenient for the user to modify the parameter settings of some single test for a certain option at any time by themselves.
 
 ### Basic System Information
 
@@ -733,6 +752,12 @@ Dependency project: [https://github.com/oneclickvirt/portchecker](https://github
 
 If the current host doesn't function as a mail server and doesn't send/receive emails, this project indicator can be ignored.
 
+### PING Testing 
+
+Dependency project: [https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
+
+Measure the latency from the current IP address to each TG data center and major websites.
+
 ### Nearby Speed Testing
 
 Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
@@ -746,6 +771,8 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 ---
 
 ## 日本語
+
+メニューモードはデフォルトで有効化されており、実行時にメニューを表示してオプションテストを選択できます。メニューモードが有効な場合、デフォルトで追加提供されるCIパラメータ設定はオプション自体のプリセット値よりも優先度が高く、ユーザーが特定のオプションに対して随時個別のテストパラメータ設定を変更できるようにします。
 
 ### システム基本情報
 
@@ -1056,6 +1083,12 @@ IPタイプの分類について詳しく説明する必要がある
 - **IMAPS (993)**: 暗号化されたIMAP、安全にメール管理（SSL/TLS方式）に使用。
 
 現在のホストがメール局として機能せず、電子メールの送受信を行わない場合、この項目指標は無視して構いません。
+
+### PING検出
+
+依存プロジェクト：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
+
+現在のIPアドレスからTGの各データセンターおよび主要ウェブサイトまでの遅延を測定します。
 
 ### 近隣スピードテスト
 
