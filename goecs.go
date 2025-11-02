@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.94"
+	ecsVersion                                                        = "v0.1.95"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -312,11 +312,11 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
 		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
 		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
-		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站+测速节点11个)")
+		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站延迟+测速节点11个)")
 		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
-		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)+TGDC+网站测试")
+		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+全国延迟+TGDC+网站延迟")
 		fmt.Println("0. 退出程序")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", ecsVersion)
@@ -353,6 +353,8 @@ func setFullTestStatus(preCheck utils.NetCheckResult) {
 		backtraceStatus = true
 		nt3Status = true
 		speedTestStatus = true
+		tgdcTestStatus = true
+		webTestStatus = true
 	}
 }
 
@@ -581,7 +583,7 @@ func runChineseTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGrou
 	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
 }
 
-func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
 	*output = runBasicTests(preCheck, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = runCPUTest(*output, tempOutput, outputMutex)
 	*output = runMemoryTest(*output, tempOutput, outputMutex)
@@ -604,10 +606,17 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 				*emailInfo = email.EmailCheck()
 			}()
 		}
+		if pingTestStatus {
+			wg3.Add(1)
+			go func() {
+				defer wg3.Done()
+				*ptInfo = pt.PingTest()
+			}()
+		}
 		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
 		*output = runSecurityTests(*securityInfo, *output, tempOutput, outputMutex)
 		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
-		*output = runEnglishNetworkTests(*output, tempOutput, outputMutex)
+		*output = runEnglishNetworkTests(wg3, ptInfo, *output, tempOutput, outputMutex)
 		*output = runEnglishSpeedTests(*output, tempOutput, outputMutex)
 	}
 	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
@@ -798,10 +807,27 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 			utils.PrintCenteredTitle("三网回程路由检测", width)
 			nexttrace.NextTrace3Check(language, nt3Location, nt3CheckType) // 不能在重定向的同时外部并发，此处仅可以顺序执行
 		}
-		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
+		// 中国模式：显示三网 PING 测试
+		if onlyChinaTest && *ptInfo != "" {
 			wg3.Wait()
 			utils.PrintCenteredTitle("PING值检测", width)
 			fmt.Println(*ptInfo)
+		}
+		// 选项 6/10：显示三网 PING + TGDC + 网站
+		if pingTestStatus && *ptInfo != "" {
+			wg3.Wait()
+			utils.PrintCenteredTitle("PING值检测", width)
+			fmt.Println(*ptInfo)
+			if tgdcTestStatus {
+				fmt.Println(pt.TelegramDCTest())
+			}
+			if webTestStatus {
+				fmt.Println(pt.WebsiteTest())
+			}
+		}
+		// 非中国模式且非 pingTestStatus：只显示 TGDC + 网站（选项 1 的情况）
+		if !onlyChinaTest && !pingTestStatus && (tgdcTestStatus || webTestStatus) {
+			utils.PrintCenteredTitle("PING值检测", width)
 			if tgdcTestStatus {
 				fmt.Println(pt.TelegramDCTest())
 			}
@@ -834,15 +860,25 @@ func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 	}, tempOutput, output)
 }
 
-func runEnglishNetworkTests(output, tempOutput string, outputMutex *sync.Mutex) string {
+func runEnglishNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
-		utils.PrintCenteredTitle("PING-Test", width)
+		if pingTestStatus && *ptInfo != "" {
+			wg3.Wait()
+			utils.PrintCenteredTitle("PING-Test", width)
+			fmt.Println(*ptInfo)
+		}
 		if tgdcTestStatus {
+			if !pingTestStatus || *ptInfo == "" {
+				utils.PrintCenteredTitle("PING-Test", width)
+			}
 			fmt.Println(pt.TelegramDCTest())
 		}
 		if webTestStatus {
+			if !pingTestStatus && !tgdcTestStatus {
+				utils.PrintCenteredTitle("PING-Test", width)
+			}
 			fmt.Println(pt.WebsiteTest())
 		}
 	}, tempOutput, output)
@@ -931,7 +967,7 @@ func main() {
 	case "zh":
 		runChineseTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
 	case "en":
-		runEnglishTests(preCheck, &wg1, &wg2, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &output, tempOutput, startTime, &outputMutex)
+		runEnglishTests(preCheck, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
 	default:
 		fmt.Println("Unsupported language")
 	}
