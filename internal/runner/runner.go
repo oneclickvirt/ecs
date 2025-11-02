@@ -10,14 +10,8 @@ import (
 	"time"
 
 	"github.com/oneclickvirt/CommonMediaTests/commediatests"
-	"github.com/oneclickvirt/ecs/cputest"
-	"github.com/oneclickvirt/ecs/disktest"
 	"github.com/oneclickvirt/ecs/internal/params"
-	"github.com/oneclickvirt/ecs/memorytest"
-	"github.com/oneclickvirt/ecs/nexttrace"
-	"github.com/oneclickvirt/ecs/speedtest"
-	"github.com/oneclickvirt/ecs/unlocktest"
-	"github.com/oneclickvirt/ecs/upstreams"
+	"github.com/oneclickvirt/ecs/internal/tests"
 	"github.com/oneclickvirt/ecs/utils"
 	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
@@ -36,7 +30,7 @@ func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
-			*mediaInfo = unlocktest.MediaTest(config.Language)
+			*mediaInfo = tests.MediaTest(config.Language)
 		}()
 	}
 	if config.EmailTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
@@ -81,7 +75,7 @@ func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 			wg1.Add(1)
 			go func() {
 				defer wg1.Done()
-				*mediaInfo = unlocktest.MediaTest(config.Language)
+				*mediaInfo = tests.MediaTest(config.Language)
 			}()
 		}
 		if config.EmailTestStatus {
@@ -106,7 +100,7 @@ func RunIpInfoCheck(config *params.Config, output, tempOutput string, outputMute
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		var ipinfo string
-		upstreams.IPV4, upstreams.IPV6, ipinfo = utils.OnlyBasicsIpInfo(config.Language)
+		tests.IPV4, tests.IPV6, ipinfo = utils.OnlyBasicsIpInfo(config.Language)
 		if ipinfo != "" {
 			if config.Language == "zh" {
 				utils.PrintCenteredTitle("IP信息", config.Width)
@@ -133,13 +127,13 @@ func RunBasicTests(preCheck utils.NetCheckResult, config *params.Config, basicIn
 				}
 			}
 			if preCheck.Connected && preCheck.StackType == "DualStack" {
-				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, config.Nt3CheckType, config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, config.Nt3CheckType, config.SecurityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv4" {
-				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv4", config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv4", config.SecurityTestStatus)
 			} else if preCheck.Connected && preCheck.StackType == "IPv6" {
-				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv6", config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv6", config.SecurityTestStatus)
 			} else {
-				upstreams.IPV4, upstreams.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "", false)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "", false)
 				config.SecurityTestStatus = false
 			}
 			if config.BasicStatus {
@@ -163,7 +157,7 @@ func RunCPUTest(config *params.Config, output, tempOutput string, outputMutex *s
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if config.CpuTestStatus {
-			realTestMethod, res := cputest.CpuTest(config.Language, config.CpuTestMethod, config.CpuTestThreadMode)
+			realTestMethod, res := tests.CpuTest(config.Language, config.CpuTestMethod, config.CpuTestThreadMode)
 			if config.Language == "zh" {
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU测试-通过%s测试", realTestMethod), config.Width)
 			} else {
@@ -180,7 +174,7 @@ func RunMemoryTest(config *params.Config, output, tempOutput string, outputMutex
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if config.MemoryTestStatus {
-			realTestMethod, res := memorytest.MemoryTest(config.Language, config.MemoryTestMethod)
+			realTestMethod, res := tests.MemoryTest(config.Language, config.MemoryTestMethod)
 			if config.Language == "zh" {
 				utils.PrintCenteredTitle(fmt.Sprintf("内存测试-通过%s测试", realTestMethod), config.Width)
 			} else {
@@ -197,7 +191,7 @@ func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		if config.DiskTestStatus && config.AutoChangeDiskMethod {
-			realTestMethod, res := disktest.DiskTest(config.Language, config.DiskTestMethod, config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
+			realTestMethod, res := tests.DiskTest(config.Language, config.DiskTestMethod, config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
 			if config.Language == "zh" {
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", realTestMethod), config.Width)
 			} else {
@@ -207,17 +201,17 @@ func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *
 		} else if config.DiskTestStatus && !config.AutoChangeDiskMethod {
 			if config.Language == "zh" {
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), config.Width)
-				_, res := disktest.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
+				_, res := tests.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
 				fmt.Print(res)
 				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), config.Width)
-				_, res = disktest.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
+				_, res = tests.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
 				fmt.Print(res)
 			} else {
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "dd"), config.Width)
-				_, res := disktest.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
+				_, res := tests.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
 				fmt.Print(res)
 				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "fio"), config.Width)
-				_, res = disktest.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
+				_, res = tests.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
 				fmt.Print(res)
 			}
 		}
@@ -287,11 +281,11 @@ func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string,
 	return utils.PrintAndCapture(func() {
 		if config.BacktraceStatus && !config.OnlyChinaTest {
 			utils.PrintCenteredTitle("上游及回程线路检测", config.Width)
-			upstreams.UpstreamsCheck()
+			tests.UpstreamsCheck()
 		}
 		if config.Nt3Status && !config.OnlyChinaTest {
 			utils.PrintCenteredTitle("三网回程路由检测", config.Width)
-			nexttrace.NextTrace3Check(config.Language, config.Nt3Location, config.Nt3CheckType)
+			tests.NextTrace3Check(config.Language, config.Nt3Location, config.Nt3CheckType)
 		}
 		if config.OnlyChinaTest && *ptInfo != "" {
 			wg3.Wait()
@@ -328,17 +322,17 @@ func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex
 	return utils.PrintAndCapture(func() {
 		if config.SpeedTestStatus {
 			utils.PrintCenteredTitle("就近节点测速", config.Width)
-			speedtest.ShowHead(config.Language)
+			tests.ShowHead(config.Language)
 			if config.Choice == "1" || !config.MenuMode {
-				speedtest.NearbySP()
-				speedtest.CustomSP("net", "global", 2, config.Language)
-				speedtest.CustomSP("net", "cu", config.SpNum, config.Language)
-				speedtest.CustomSP("net", "ct", config.SpNum, config.Language)
-				speedtest.CustomSP("net", "cmcc", config.SpNum, config.Language)
+				tests.NearbySP()
+				tests.CustomSP("net", "global", 2, config.Language)
+				tests.CustomSP("net", "cu", config.SpNum, config.Language)
+				tests.CustomSP("net", "ct", config.SpNum, config.Language)
+				tests.CustomSP("net", "cmcc", config.SpNum, config.Language)
 			} else if config.Choice == "2" || config.Choice == "3" || config.Choice == "4" || config.Choice == "5" {
-				speedtest.CustomSP("net", "global", 4, config.Language)
+				tests.CustomSP("net", "global", 4, config.Language)
 			} else if config.Choice == "6" {
-				speedtest.CustomSP("net", "global", 11, config.Language)
+				tests.CustomSP("net", "global", 11, config.Language)
 			}
 		}
 	}, tempOutput, output)
@@ -368,9 +362,9 @@ func RunEnglishSpeedTests(config *params.Config, output, tempOutput string, outp
 	return utils.PrintAndCapture(func() {
 		if config.SpeedTestStatus {
 			utils.PrintCenteredTitle("Speed-Test", config.Width)
-			speedtest.ShowHead(config.Language)
-			speedtest.NearbySP()
-			speedtest.CustomSP("net", "global", -1, config.Language)
+			tests.ShowHead(config.Language)
+			tests.NearbySP()
+			tests.CustomSP("net", "global", -1, config.Language)
 		}
 	}, tempOutput, output)
 }

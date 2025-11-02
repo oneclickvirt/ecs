@@ -1,4 +1,4 @@
-package disktest
+package tests
 
 import (
 	"runtime"

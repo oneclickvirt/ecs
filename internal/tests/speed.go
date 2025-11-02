@@ -1,10 +1,11 @@
-package speedtest
+package tests
 
 import (
-	"github.com/oneclickvirt/speedtest/model"
-	"github.com/oneclickvirt/speedtest/sp"
 	"runtime"
 	"strings"
+
+	"github.com/oneclickvirt/speedtest/model"
+	"github.com/oneclickvirt/speedtest/sp"
 )
 
 func ShowHead(language string) {

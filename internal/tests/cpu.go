@@ -1,4 +1,4 @@
-package cputest
+package tests
 
 import (
 	"runtime"

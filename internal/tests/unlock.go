@@ -1,8 +1,8 @@
-package unlocktest
+package tests
 
 import (
-	"github.com/oneclickvirt/UnlockTests/utils"
 	"github.com/oneclickvirt/UnlockTests/executor"
+	"github.com/oneclickvirt/UnlockTests/utils"
 	"github.com/oneclickvirt/defaultset"
 )
 

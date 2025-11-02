@@ -1,4 +1,4 @@
-package nexttrace
+package tests
 
 import (
 	"fmt"

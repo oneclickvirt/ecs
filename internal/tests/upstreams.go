@@ -1,4 +1,4 @@
-package upstreams
+package tests
 
 import (
 	"fmt"
