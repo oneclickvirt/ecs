@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	ecsVersion                                                        = "v0.1.93"
+	ecsVersion                                                        = "v0.1.94"
 	menuMode                                                          bool
 	onlyChinaTest                                                     bool
 	input, choice                                                     string
@@ -56,6 +56,7 @@ var (
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus      bool
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus bool
 	backtraceStatus, nt3Status, speedTestStatus, pingTestStatus       bool
+	tgdcTestStatus, webTestStatus                                     bool
 	autoChangeDiskTestMethod                                          = true
 	filePath                                                          = "goecs.txt"
 	enabelUpload                                                      = true
@@ -138,6 +139,8 @@ func parseFlags() {
 	goecsFlag.BoolVar(&nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on windows it always false)")
 	goecsFlag.BoolVar(&speedTestStatus, "speed", true, "Enable/Disable speed test")
 	goecsFlag.BoolVar(&pingTestStatus, "ping", false, "Enable/Disable ping test")
+	goecsFlag.BoolVar(&tgdcTestStatus, "tgdc", false, "Enable/Disable Telegram DC test")
+	goecsFlag.BoolVar(&webTestStatus, "web", false, "Enable/Disable popular websites test")
 	goecsFlag.StringVar(&cpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
 	goecsFlag.StringVar(&cpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
 	goecsFlag.StringVar(&memoryTestMethod, "memorym", "stream", "Set memory test method (supported: stream, sysbench, dd, winsat, auto)")
@@ -185,6 +188,7 @@ func handleMenuMode(preCheck utils.NetCheckResult) {
 	basicStatus, cpuTestStatus, memoryTestStatus, diskTestStatus = false, false, false, false
 	commTestStatus, utTestStatus, securityTestStatus, emailTestStatus = false, false, false, false
 	backtraceStatus, nt3Status, speedTestStatus = false, false, false
+	tgdcTestStatus, webTestStatus = false, false
 	autoChangeDiskTestMethod = true
 	printMenuOptions(preCheck)
 Loop:
@@ -308,11 +312,11 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+常用流媒体+路由+测速节点5个)")
 		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
 		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+御三家+常用流媒体+测速节点5个)")
-		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+测速节点11个)")
+		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站+测速节点11个)")
 		fmt.Println("7. 解锁单项(御三家解锁+常用流媒体解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
-		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)")
+		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+三网延迟测试(全国)+TGDC+网站测试")
 		fmt.Println("0. 退出程序")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", ecsVersion)
@@ -328,7 +332,7 @@ func printMenuOptions(preCheck utils.NetCheckResult) {
 		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + Basic Unlock Tests + 5 Speed Test Nodes)")
 		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
 		fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + Basic Unlock Tests + Common Streaming Services + 5 Speed Test Nodes)")
-		fmt.Println("6. Network-Only Test (IP Quality Test + 5 Speed Test Nodes)")
+		fmt.Println("6. Network-Only Test (IP Quality Test + TGDC + Websites + 11 Speed Test Nodes)")
 		fmt.Println("7. Unlock-Only Test (Basic Unlock Tests + Common Streaming Services Unlock)")
 		fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
 		fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
@@ -405,6 +409,8 @@ func setNetworkOnlyTestStatus() {
 	backtraceStatus = true
 	nt3Status = true
 	pingTestStatus = true
+	tgdcTestStatus = true
+	webTestStatus = true
 }
 
 func setUnlockOnlyTestStatus() {
@@ -434,6 +440,8 @@ func setRouteTestStatus() {
 	backtraceStatus = true
 	nt3Status = true
 	pingTestStatus = true
+	tgdcTestStatus = true
+	webTestStatus = true
 }
 
 func printInvalidChoice() {
@@ -599,6 +607,7 @@ func runEnglishTests(preCheck utils.NetCheckResult, wg1, wg2 *sync.WaitGroup, ba
 		*output = runStreamingTests(wg1, mediaInfo, *output, tempOutput, outputMutex)
 		*output = runSecurityTests(*securityInfo, *output, tempOutput, outputMutex)
 		*output = runEmailTests(wg2, emailInfo, *output, tempOutput, outputMutex)
+		*output = runEnglishNetworkTests(*output, tempOutput, outputMutex)
 		*output = runEnglishSpeedTests(*output, tempOutput, outputMutex)
 	}
 	*output = appendTimeInfo(*output, tempOutput, startTime, outputMutex)
@@ -791,8 +800,16 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 		}
 		if (onlyChinaTest || pingTestStatus) && *ptInfo != "" {
 			wg3.Wait()
-			utils.PrintCenteredTitle("三网ICMP的PING值检测", width)
+			utils.PrintCenteredTitle("PING值检测", width)
 			fmt.Println(*ptInfo)
+		}
+		if tgdcTestStatus {
+			utils.PrintCenteredTitle("Telegram数据中心检测", width)
+			fmt.Println(pt.TelegramDCTest())
+		}
+		if webTestStatus {
+			utils.PrintCenteredTitle("主流网站连通性检测", width)
+			fmt.Println(pt.WebsiteTest())
 		}
 	}, tempOutput, output)
 }
@@ -815,6 +832,21 @@ func runSpeedTests(output, tempOutput string, outputMutex *sync.Mutex) string {
 			} else if choice == "6" {
 				speedtest.CustomSP("net", "global", 11, language)
 			}
+		}
+	}, tempOutput, output)
+}
+
+func runEnglishNetworkTests(output, tempOutput string, outputMutex *sync.Mutex) string {
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
+	return utils.PrintAndCapture(func() {
+		if tgdcTestStatus {
+			utils.PrintCenteredTitle("Telegram-Data-Center-Test", width)
+			fmt.Println(pt.TelegramDCTest())
+		}
+		if webTestStatus {
+			utils.PrintCenteredTitle("Popular-Websites-Test", width)
+			fmt.Println(pt.WebsiteTest())
 		}
 	}, tempOutput, output)
 }
