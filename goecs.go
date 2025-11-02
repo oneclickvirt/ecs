@@ -802,14 +802,12 @@ func runNetworkTests(wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput str
 			wg3.Wait()
 			utils.PrintCenteredTitle("PING值检测", width)
 			fmt.Println(*ptInfo)
-		}
-		if tgdcTestStatus {
-			utils.PrintCenteredTitle("Telegram数据中心检测", width)
-			fmt.Println(pt.TelegramDCTest())
-		}
-		if webTestStatus {
-			utils.PrintCenteredTitle("主流网站连通性检测", width)
-			fmt.Println(pt.WebsiteTest())
+			if tgdcTestStatus {
+				fmt.Println(pt.TelegramDCTest())
+			}
+			if webTestStatus {
+				fmt.Println(pt.WebsiteTest())
+			}
 		}
 	}, tempOutput, output)
 }
@@ -840,12 +838,11 @@ func runEnglishNetworkTests(output, tempOutput string, outputMutex *sync.Mutex) 
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
+		utils.PrintCenteredTitle("PING-Test", width)
 		if tgdcTestStatus {
-			utils.PrintCenteredTitle("Telegram-Data-Center-Test", width)
 			fmt.Println(pt.TelegramDCTest())
 		}
 		if webTestStatus {
-			utils.PrintCenteredTitle("Popular-Websites-Test", width)
 			fmt.Println(pt.WebsiteTest())
 		}
 	}, tempOutput, output)
