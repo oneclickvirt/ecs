@@ -54,8 +54,10 @@ jobs:
         
     - name: Create public branch
       run: |
-        git checkout -b public || git checkout public
-        git merge ${{ github.ref_name }} --no-edit || true
+        # 删除本地 public 分支（如果存在）
+        git branch -D public 2>/dev/null || true
+        # 基于当前分支创建新的 public 分支（完全覆盖）
+        git checkout -b public
         
     - name: Remove security package references
       run: |
