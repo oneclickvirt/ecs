@@ -45,7 +45,6 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 | OS     | Notes                                                                                           |
 |--------|-------------------------------------------------------------------------------------------------|
-| Android(arm64) | Permission issues that are not fixed, no problems with ARM architecture for non-Android systems    |
 | OpenBSD/NetBSD | Some of Goalng's official libraries do not support this system (especially net-related items) |
 
 ---

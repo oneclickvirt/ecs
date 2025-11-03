@@ -45,7 +45,6 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 | 系统           | 说明                       |
 |----------------|---------------------------|
-| Android(arm64) | 存在权限问题未修复，非安卓系统的ARM架构无问题      |
 | OpenBSD/NetBSD | 部分Goalng的官方库未支持本系统(尤其是net相关项目)  |
 
 ---
