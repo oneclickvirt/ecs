@@ -412,6 +412,8 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 
 有时候路由信息完全藏起来了，只知道实际使用的延迟低，实际可能也是优质线路只是查不到信息，这就没办法直接识别了。
 
+所有测不出来失败的地址以及延迟大于等于999ms的，延迟都设为了999，延迟超过这个也证明目标延迟过大影响使用，此时认为目标不可用就行。
+
 ### **PING值测试**
 
 依赖项目：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
@@ -758,6 +760,8 @@ Dependency project: [https://github.com/oneclickvirt/pingtest](https://github.co
 
 Measure the latency from the current IP address to each TG data center and major websites.
 
+All addresses that cannot be tested for failure, as well as those with latency greater than or equal to 999ms, have their latency set to 999. Latency exceeding this threshold also indicates excessive target latency that impairs usability. At this point, the target should be considered unavailable.
+
 ### Nearby Speed Testing
 
 Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
@@ -1089,6 +1093,8 @@ IPタイプの分類について詳しく説明する必要がある
 依存プロジェクト：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
 
 現在のIPアドレスからTGの各データセンターおよび主要ウェブサイトまでの遅延を測定します。
+
+検出不能な失敗アドレスおよび遅延が999ms以上のものは、遅延を999に設定する。この値を超える遅延は対象の遅延が過大で利用に影響することを示すため、この時点で対象は利用不可と判断すればよい。
 
 ### 近隣スピードテスト
 
