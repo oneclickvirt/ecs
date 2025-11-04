@@ -27,7 +27,7 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 					fmt.Println(res)
 				}
 			}
-			return
+			continue
 		}
 		for _, res := range result.Output {
 			res = strings.TrimSpace(res)
