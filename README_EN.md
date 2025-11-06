@@ -251,6 +251,7 @@ Usage: goecs [options]
 2. After unzipping, right-click and run as administrator.
 
 PS: If it's a VM environment, it's OK not to run it in administrator mode, because VMs have no native testing tools and will automatically enable alternative methods for testing.
+PPS: Please refrain from downloading executable files labelled with a GUI for the time being, as they have not been fully adapted. The compressed packages for the CI version are unaffected.
 
 ---
 
