@@ -399,7 +399,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 | 中国电信 | 163             | ChinaNet (原163骨干网)               | 普通国际出口，延迟高易绕路   | 一般   |
 | 中国电信 | CN2 GT          | ChinaNet Next Carrying Network (GT) | 较优于163，偶有拥堵     | 良好   |
 | 中国电信 | CN2 GIA         | Global Internet Access(GT)        | 直连国际POP，低延迟低丢包  | 优质(最好)   |
-| 中国联通 | 169             | China169骨干网                        | 老主干网，常经港美出口     | 一般，但有高级套餐也算优质(很少见)   |
+| 中国联通 | 169             | China169骨干网                        | 老主干网，常经港美出口   | 一般(少部分优质)  |
 | 中国联通 | 4837            | Unicom International (AS4837)       | 常见国际出口，覆盖广      | 良好   |
 | 中国联通 | 9929            | Unicom Premium / CU-IX             | 精品网，直连主要IXP，延迟低 | 优质   |
 | 中国移动 | CMI (AS58453)   | China Mobile International         | 节点多，对两广(广东广西)优化好      | 两广良好，其他一般   |
@@ -429,7 +429,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 | 中国电信 | CN2 BGP | CN2混合BGP(GIA+GT) | 混合路由，性能略低于纯GIA | 良好至优质 |
 | 中国电信 | CUII | ChinaNet United International Internet | 面向直连美国的专线 | 优质 |
 | 中国电信 | 163+CUII混线 | 163国内段+国际专线出口 | 价格低，性能一般 | 一般 |
-| 中国联通 | 169 | China169骨干网 | 老主干网，常经港美出口 | 一般(部分套餐优质但很少) |
+| 中国联通 | 169 | China169骨干网 | 老主干网，常经港美出口 | 一般(少部分优质) |
 | 中国联通 | 4837 | Unicom International (AS4837) | 常见国际出口，覆盖广 | 良好 |
 | 中国联通 | 9929 | Unicom Premium / CU-IX | 精品网，直连IXP，低延迟 | 优质 |
 | 中国联通 | 9929+4837混BGP | 混合出口(IDC常见优化) | 性能平衡 | 良好 |
@@ -448,7 +448,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 | 其他 | 国际BGP | HE、NTT、Telia等Tier1 Global | 稳定性取决地区 | 国际互联良好 |
 | 其他 | 地区IX | HKIX、SGIX、JPIX、Equinix IX | 地区IX，低延迟限区域 | 区域优质 |
 | 其他 | SoftBank（AS17676） | 日本软银骨干 | 日本方向优化，沿海延迟低 | 沿海优质 |
-| 其他 | NTT（AS2914） | 日本/全球NTT Communications | 亚洲优化，但有时候不稳定 | 亚洲优质(时不时炸，好的时候好，坏的时候真坏) |
+| 其他 | NTT（AS2914） | 日本/全球NTT Communications | 亚洲优化，但有时候不稳定 | 亚洲优质(时不时炸) |
 | 其他 | PCCW（AS3491） | 香港电讯盈科(Pacnet) | 港区机房常用，对南部优 | 良好至优质(南方) |
 | 其他 | Singtel（AS7473） | 新加坡电信 | 东南亚方向极优，CN2常中转此线 | 良好至优质(东南亚) |
 | 其他 | KT（AS4766） | 韩国电信 | 韩国至中国延迟低(但有时候也炸) | 良好(北方) |
