@@ -29,7 +29,6 @@ type Config struct {
 	CpuTestStatus        bool
 	MemoryTestStatus     bool
 	DiskTestStatus       bool
-	CommTestStatus       bool
 	UtTestStatus         bool
 	SecurityTestStatus   bool
 	EmailTestStatus      bool
@@ -65,7 +64,6 @@ func NewConfig(version string) *Config {
 		CpuTestStatus:        true,
 		MemoryTestStatus:     true,
 		DiskTestStatus:       true,
-		CommTestStatus:       true,
 		UtTestStatus:         true,
 		SecurityTestStatus:   true,
 		EmailTestStatus:      true,
@@ -94,7 +92,6 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.CpuTestStatus, "cpu", true, "Enable/Disable CPU test")
 	c.GoecsFlag.BoolVar(&c.MemoryTestStatus, "memory", true, "Enable/Disable memory test")
 	c.GoecsFlag.BoolVar(&c.DiskTestStatus, "disk", true, "Enable/Disable disk test")
-	c.GoecsFlag.BoolVar(&c.CommTestStatus, "comm", true, "Enable/Disable common media test")
 	c.GoecsFlag.BoolVar(&c.UtTestStatus, "ut", true, "Enable/Disable unlock media test")
 	c.GoecsFlag.BoolVar(&c.SecurityTestStatus, "security", true, "Enable/Disable security test")
 	c.GoecsFlag.BoolVar(&c.EmailTestStatus, "email", true, "Enable/Disable email port test")
@@ -151,9 +148,6 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["disk"] {
 		saved["disk"] = c.DiskTestStatus
-	}
-	if c.UserSetFlags["comm"] {
-		saved["comm"] = c.CommTestStatus
 	}
 	if c.UserSetFlags["ut"] {
 		saved["ut"] = c.UtTestStatus
@@ -226,9 +220,6 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 	}
 	if val, ok := saved["disk"]; ok {
 		c.DiskTestStatus = val.(bool)
-	}
-	if val, ok := saved["comm"]; ok {
-		c.CommTestStatus = val.(bool)
 	}
 	if val, ok := saved["ut"]; ok {
 		c.UtTestStatus = val.(bool)

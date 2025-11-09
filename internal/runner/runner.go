@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/tests"
 	"github.com/oneclickvirt/ecs/utils"
@@ -223,12 +222,6 @@ func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *st
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
-		if config.Language == "zh" {
-			if config.CommTestStatus && !config.OnlyChinaTest {
-				utils.PrintCenteredTitle("御三家流媒体解锁", config.Width)
-				fmt.Printf("%s", commediatests.MediaTests(config.Language))
-			}
-		}
 		if config.UtTestStatus && (config.Language == "zh" && !config.OnlyChinaTest || config.Language == "en") {
 			wg1.Wait()
 			if config.Language == "zh" {

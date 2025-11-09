@@ -220,7 +220,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 ### **流媒体解锁**
 
-依赖项目：[https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
+依赖项目：[https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
 默认只检测跨国流媒体解锁。
 
@@ -660,7 +660,7 @@ Note: This tests real IO, limited to this project. IO tests from other projects 
 
 ### Streaming Media Unlocking
 
-Dependency project: [https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
+Dependency project: [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
 Default only checks cross-border streaming media unlocking.
 
@@ -994,7 +994,7 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 ### ストリーミングメディアロック解除
 
-依存プロジェクト：[https://github.com/oneclickvirt/CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests) [https://github.com/lmc999/RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck)
+依存プロジェクト：[https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
 デフォルトでは国境を越えるストリーミングメディアのロック解除のみをチェックします。
 

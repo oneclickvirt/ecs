@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/oneclickvirt/CommonMediaTests/commediatests"
 	unlocktestmodel "github.com/oneclickvirt/UnlockTests/model"
 	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
@@ -40,7 +39,6 @@ func initLogger() {
 		cputestmodel.EnableLoger = true
 		memorytestmodel.EnableLoger = true
 		disktestmodel.EnableLoger = true
-		commediatests.EnableLoger = true
 		unlocktestmodel.EnableLoger = true
 		ptmodel.EnableLoger = true
 		backtracemodel.EnableLoger = true

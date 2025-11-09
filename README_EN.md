@@ -55,7 +55,6 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - CPU test: Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat
 - Memory test: Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd, winsat, mbw, stream
 - Disk test: Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat
-- Streaming media unlock information concurrent query: Modified from [netflix-verify](https://github.com/sjlleo/netflix-verify) and more to [CommonMediaTests](https://github.com/oneclickvirt/CommonMediaTests)
 - Common streaming media tests concurrent query: Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others
 - IP quality/security information concurrent query: Self-developed, binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)
 - Email port test: Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)

@@ -167,7 +167,6 @@ func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 	config.CpuTestStatus = false
 	config.MemoryTestStatus = false
 	config.DiskTestStatus = false
-	config.CommTestStatus = false
 	config.UtTestStatus = false
 	config.SecurityTestStatus = false
 	config.EmailTestStatus = false
@@ -246,7 +245,6 @@ func SetFullTestStatus(preCheck utils.NetCheckResult, config *params.Config) {
 	config.MemoryTestStatus = true
 	config.DiskTestStatus = true
 	if preCheck.Connected {
-		config.CommTestStatus = true
 		config.UtTestStatus = true
 		config.SecurityTestStatus = true
 		config.EmailTestStatus = true
@@ -302,7 +300,6 @@ func SetUnlockFocusedTestStatus(preCheck utils.NetCheckResult, config *params.Co
 	config.MemoryTestStatus = true
 	config.DiskTestStatus = true
 	if preCheck.Connected {
-		config.CommTestStatus = true
 		config.UtTestStatus = true
 		config.SpeedTestStatus = true
 	}
@@ -323,7 +320,6 @@ func SetNetworkOnlyTestStatus(config *params.Config) {
 // SetUnlockOnlyTestStatus sets unlock-only test configuration
 func SetUnlockOnlyTestStatus(config *params.Config) {
 	config.OnlyIpInfoCheck = true
-	config.CommTestStatus = true
 	config.UtTestStatus = true
 }
 
