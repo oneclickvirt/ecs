@@ -276,20 +276,19 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | ----------- | ---------- |
 | hosting     | 数据中心网络(IDC)    |
 | residential | 家庭/住宅网络(家宽)    |
-| FixedLineISP，ISP | 固定线路互联网服务提供商(家宽) |
+| isp         | 固定线路互联网服务提供商(家宽) |
 | business    | 企业办公网络(商宽)      |
 | cellular    | 移动运营商网络(家宽)    |
 | education   | 教育机构网络(教育网)     |
 | government  | 政府机构网络(政府网)     |
 | military    | 军事网络(政府网)       |
-| DataCenter/WebHosting/Transit  | 数据中心网络(IDC)      |
 | CDN         | 内容分发网络(IDC)      |
 
 | 公司类型         | 说明           |
 | ------------ | ------------ |
-| business     | 企业公司(商宽)         |
 | hosting      | 主机/数据中心公司(IDC)    |
-| FixedLineISP，ISP | 固定线路互联网服务提供商(家宽) |
+| business     | 企业公司(商宽)         |
+| isp          | 固定线路互联网服务提供商(家宽) |
 | education    | 教育机构(教育网)         |
 | government   | 政府机构(政府网)         |
 
@@ -399,8 +398,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 | 中国电信 | 163             | ChinaNet (原163骨干网)               | 普通国际出口，延迟高易绕路   | 一般   |
 | 中国电信 | CN2 GT          | ChinaNet Next Carrying Network (GT) | 较优于163，偶有拥堵     | 良好   |
 | 中国电信 | CN2 GIA         | Global Internet Access(GT)        | 直连国际POP，低延迟低丢包  | 优质(最好)   |
-| 中国联通 | 169             | China169骨干网                        | 老主干网，常经港美出口   | 一般(少部分优质)  |
-| 中国联通 | 4837            | Unicom International (AS4837)       | 常见国际出口，覆盖广      | 良好   |
+| 中国联通 | 4837            | Unicom International (AS4837)       | 常见国际出口，覆盖广      | 一般到良好   |
 | 中国联通 | 9929            | Unicom Premium / CU-IX             | 精品网，直连主要IXP，延迟低 | 优质   |
 | 中国移动 | CMI (AS58453)   | China Mobile International         | 节点多，对两广(广东广西)优化好      | 两广良好，其他一般   |
 | 中国移动 | CMIN2 (AS58807) | China Mobile International N2      | 高质量专线，低延迟低丢包，对标CN2    | 优质   |
@@ -429,7 +427,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 | 中国电信 | CN2 BGP | CN2混合BGP(GIA+GT) | 混合路由，性能略低于纯GIA | 良好至优质 |
 | 中国电信 | CUII | ChinaNet United International Internet | 面向直连美国的专线 | 优质 |
 | 中国电信 | 163+CUII混线 | 163国内段+国际专线出口 | 价格低，性能一般 | 一般 |
-| 中国联通 | 169 | China169骨干网 | 老主干网，常经港美出口 | 一般(少部分优质) |
+| 中国联通 | 169 | China169骨干网 | 老主干网，一般对接4837 | 一般(少部分优质) |
 | 中国联通 | 4837 | Unicom International (AS4837) | 常见国际出口，覆盖广 | 良好 |
 | 中国联通 | 9929 | Unicom Premium / CU-IX | 精品网，直连IXP，低延迟 | 优质 |
 | 中国联通 | 9929+4837混BGP | 混合出口(IDC常见优化) | 性能平衡 | 良好 |
@@ -716,20 +714,19 @@ Generally speaking, checking the usage type, company type, and security informat
 | ----------- | ---------- |
 | hosting     | Data center network (IDC)      |
 | residential | Home/Residential network (Home broadband)    |
-| FixedLineISP, ISP | Fixed-line Internet Service Provider (Home broadband) |
+| isp | Fixed-line Internet Service Provider (Home broadband) |
 | business    | Enterprise office network (Business broadband)      |
 | cellular    | Mobile carrier network (Home broadband)    |
 | education   | Educational institution network (Education network)     |
 | government  | Government institution network (Government network)     |
 | military    | Military network (Government network)       |
-| DataCenter/WebHosting/Transit  | Data center network (IDC)      |
 | CDN         | Content Delivery Network (IDC)      |
 
 | Company Type         | Description           |
 | ------------ | ------------ |
-| business     | Business company (Business broadband)         |
 | hosting      | Hosting/Data center company (IDC)    |
-| FixedLineISP, ISP | Fixed-line Internet Service Provider (Home broadband) |
+| business     | Business company (Business broadband)         |
+| isp | Fixed-line Internet Service Provider (Home broadband) |
 | education    | Educational institution (Education network)         |
 | government   | Government institution (Government network)         |
 
@@ -1050,20 +1047,19 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | ----------- | ---------- |
 | hosting     | データセンターネットワーク(IDC)   |
 | residential | 家庭/住宅ネットワーク(家庭用回線)    |
-| FixedLineISP、ISP | 固定回線インターネットサービスプロバイダー(家庭用回線) |
+| isp | 固定回線インターネットサービスプロバイダー(家庭用回線) |
 | business    | 企業オフィスネットワーク(ビジネス回線)      |
 | cellular    | モバイル通信事業者ネットワーク(家庭用回線)    |
 | education   | 教育機関ネットワーク(教育ネットワーク)     |
 | government  | 政府機関ネットワーク(政府ネットワーク)     |
 | military    | 軍事ネットワーク(政府ネットワーク)       |
-| DataCenter/WebHosting/Transit  | データセンターネットワーク(IDC)      |
 | CDN         | コンテンツ配信ネットワーク(IDC)      |
 
 | 会社タイプ         | 説明           |
 | ------------ | ------------ |
-| business     | 企業会社(ビジネス回線)         |
 | hosting      | ホスト/データセンター会社(IDC)    |
-| FixedLineISP、ISP | 固定回線インターネットサービスプロバイダー(家庭用回線) |
+| business     | 企業会社(ビジネス回線)         |
+| isp | 固定回線インターネットサービスプロバイダー(家庭用回線) |
 | education    | 教育機関(教育ネットワーク)         |
 | government   | 政府機関(政府ネットワーク)         |
 
