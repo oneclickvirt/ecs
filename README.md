@@ -55,7 +55,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - CPU 测试：[cputest](https://github.com/oneclickvirt/cputest)，支持 sysbench(lua/golang版本)、geekbench、winsat
 - 内存测试：[memorytest](https://github.com/oneclickvirt/memorytest)，支持 sysbench、dd、winsat、mbw、stream
 - 硬盘测试：[disktest](https://github.com/oneclickvirt/disktest)，支持 dd、fio、winsat
-- 常见平台解锁测试并发查询：[UnlockTests](https://github.com/oneclickvirt/UnlockTests)，逻辑借鉴 [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) 等
+- 流媒体平台解锁测试并发查询：[UnlockTests](https://github.com/oneclickvirt/UnlockTests)，逻辑借鉴 [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) 等
 - IP 质量/安全信息并发查询：二进制文件编译至 [securityCheck](https://github.com/oneclickvirt/securityCheck)
 - 邮件端口测试：[portchecker](https://github.com/oneclickvirt/portchecker)
 - 上游及回程路由线路检测：借鉴 [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)，二次开发至 [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
@@ -184,8 +184,8 @@ Usage: goecs [options]
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
   -basic
         Enable/Disable basic test (default true)
-  -comm
-        Enable/Disable common media test (default true)
+  -ut
+        Enable/Disable unlock media test (default true)
   -cpu
         Enable/Disable CPU test (default true)
   -cpum string

@@ -55,7 +55,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - CPU test: Self-developed [cputest](https://github.com/oneclickvirt/cputest) supporting sysbench(lua/golang version), geekbench, winsat
 - Memory test: Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd, winsat, mbw, stream
 - Disk test: Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat
-- Common platform unlock tests concurrent query: Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others
+- Streaming platform unlock tests concurrent query: Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others
 - IP quality/security information concurrent query: Self-developed, binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)
 - Email port test: Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)
 - Three-network return path test: Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
@@ -183,8 +183,8 @@ Usage: goecs [options]
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
   -basic
         Enable/Disable basic test (default true)
-  -comm
-        Enable/Disable common platform unlock test (default true)
+  -ut
+        Enable/Disable unlock media test (default true)
   -cpu
         Enable/Disable CPU test (default true)
   -cpum string
