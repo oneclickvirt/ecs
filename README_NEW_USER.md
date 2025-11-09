@@ -12,7 +12,7 @@
 - [CPU测试](#CPU测试)
 - [内存测试](#内存测试)
 - [硬盘测试](#硬盘测试)
-- [流媒体解锁](#流媒体解锁)
+- [平台解锁检测](#平台解锁检测)
 - [IP质量检测](#IP质量检测)
 - [邮件端口检测](#邮件端口检测)
 - [上游及回程线路检测](#上游及回程线路检测)
@@ -25,7 +25,7 @@
 - [CPU Testing](#CPU-Testing)
 - [Memory Testing](#Memory-Testing)
 - [Disk Testing](#Disk-Testing)
-- [Streaming Media Unlocking](#Streaming-Media-Unlocking)
+- [Platform Unlock Testing](#Platform-Unlock-Testing)
 - [IP Quality Detection](#IP-Quality-Detection)
 - [Email Port Detection](#Email-Port-Detection)
 - [PING Testing](#PING-Testing)
@@ -36,7 +36,7 @@
 - [CPUテスト](#CPUテスト)
 - [メモリテスト](#メモリテスト)
 - [ディスクテスト](#ディスクテスト)
-- [ストリーミングメディアロック解除](#ストリーミングメディアロック解除)
+- [プラットフォームロック解除検出](#プラットフォームロック解除検出)
 - [IP品質検出](#IP品質検出)
 - [メールポート検出](#メールポート検出)
 - [PING検出](#PING検出)
@@ -218,24 +218,24 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 注意，这里测试的是真实的IO，仅限本项目，非本项目测试的IO不保证基准通用，因为他们测试的时候可能用的不是同样的参数，可能未设置IO直接读写，可能设置IO引擎不一致，可能设置测试时间不一致，都会导致基准有偏差。
 
-### **流媒体解锁**
+### **平台解锁检测**
 
 依赖项目：[https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
-默认只检测跨国流媒体解锁。
+默认只检测跨国平台解锁。
 
-一般来说，正常的情况下，一个IP多个流媒体的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被流媒体普通的数据库所识别修正地域。
+一般来说，正常的情况下，一个IP多个平台的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被平台普通的数据库所识别修正地域。
 
 由于各平台的IP数据库识别速度不一致，所以有时候有的平台解锁区域正常，有的飘到路由上的某个位置，有的飘到IP未被你使用前所在的位置。
 
 | DNS 类型       | 解锁方式判断是否必要 | DNS 对解锁影响 | 说明                                      |
 | ------------ | ---------- | --------- | --------------------------------------- |
-| 官方主流 DNS     | 否          | 小         | 流媒体解锁主要依赖测试节点的 IP，DNS 解析基本不会干扰解锁。       |
-| 非主流 / 自建 DNS | 是          | 大         | 流媒体解锁结果受 DNS 解析影响较大，需要判断是原生解锁还是 DNS 解锁。|
+| 官方主流 DNS     | 否          | 小         | 平台解锁主要依赖测试节点的 IP，DNS 解析基本不会干扰解锁。       |
+| 非主流 / 自建 DNS | 是          | 大         | 平台解锁结果受 DNS 解析影响较大，需要判断是原生解锁还是 DNS 解锁。|
 
 所以测试过程中，如果宿主机当前使用的是官方主流的DNS，不会进行是否为原生解锁的判断，解锁类型大部分受后面查询的IP质量的使用类型和公司类型的影响。
 
-对于IP质量解锁比较敏感的实际上是各大AI平台和本地流媒体，以及reddit和spotify，其他的跨国平台一般不易受IP质量影响解锁。
+对于IP质量解锁比较敏感的实际上是各大AI平台和本地平台解锁，以及reddit和spotify，其他的跨国平台一般不易受IP质量影响解锁。
 
 ### **IP质量检测**
 
@@ -322,11 +322,11 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 - 发起大规模洪流攻击  
 - 进行端口扫描或全网扫描  
 
-这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国流媒体服务而言，Abuse 滥用得分还可能影响平台对该 IP 的信誉评分。
+这类历史记录会被举报并录入 Abuse 数据库。如果你接手的 IP 刚被他人滥用过，可能仍会有延迟的 Abuse 警告邮件发送至服务商。服务商可能会误判为你本人从事恶意行为，进而清退机器，且大多数情况下无法退款。对跨国平台服务而言，Abuse 滥用得分还可能影响平台对该 IP 的信誉评分。
 
-对于需要家宽进行流媒体解锁需求的用户(如电商需求)，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。
+对于需要家宽进行平台解锁需求的用户(如电商需求)，应关注「使用类型」与「公司类型」是否同时识别为 ISP。如果仅为单 ISP 或识别为非 ISP，则后续数据库更新后，IP 类型很可能被更正为 Hosting，从而影响解锁效果。
 
-大部分 IP 识别数据库按月更新。更新后，IP 属性可能被修改，出现由 ISP → Hosting 的情况。对于一些敏感的平台，比如某些特定国家的流媒体(如 Netflix，Spotify)，某些区别对待不同国家的流媒体(如 TikTok)，非家宽解锁的可能性较低但不是没有，如果你需要稳定解锁且追求其特殊功能解锁，才需要追求家宽流媒体解锁。如果仅仅是浏览观看，很多时候没必要追求家宽，
+大部分 IP 识别数据库按月更新。更新后，IP 属性可能被修改，出现由 ISP → Hosting 的情况。对于一些敏感的平台，比如某些特定国家的平台(如 Netflix，Spotify)，某些区别对待不同国家的平台(如 TikTok)，非家宽解锁的可能性较低但不是没有，如果你需要稳定解锁且追求其特殊功能解锁，才需要追求家宽平台解锁。如果仅仅是浏览观看，很多时候没必要追求家宽，
 
 对于 IP 类型分类有必要仔细说说
 
@@ -658,24 +658,24 @@ If NVMe SSD's 1M (IOPS) value < 1GB/s indicates serious resource overselling.
 
 Note: This tests real IO, limited to this project. IO tests from other projects don't guarantee universal benchmarks because they may use different parameters, may not set direct IO read/write, may have inconsistent IO engines, or inconsistent test times, all causing benchmark deviations.
 
-### Streaming Media Unlocking
+### Platform Unlock Testing
 
 Dependency project: [https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
-Default only checks cross-border streaming media unlocking.
+Default only checks cross-border platform unlocking.
 
-Generally speaking, under normal circumstances, multiple streaming services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by streaming media common databases. 
+Generally speaking, under normal circumstances, multiple platform services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by platform common databases. 
 
 Due to inconsistent IP database recognition speeds across platforms, sometimes some platforms unlock regions normally, some drift to certain router locations, and some drift to where the IP was before you used it.
 
 | DNS Type | Unlock Method Judgment Necessary | DNS Impact on Unlocking | Description |
 | -------- | ------------------------------- | ----------------------- | ----------- |
-| Official Mainstream DNS | No | Small | Streaming unlock mainly relies on node IP, DNS resolution basically doesn't interfere with unlocking |
-| Non-mainstream / Self-built DNS | Yes | Large | Streaming unlock results greatly affected by DNS resolution, need to judge if it's native unlock or DNS unlock |
+| Official Mainstream DNS | No | Small | Platform unlock mainly relies on node IP, DNS resolution basically doesn't interfere with unlocking |
+| Non-mainstream / Self-built DNS | Yes | Large | Platform unlock results greatly affected by DNS resolution, need to judge if it's native unlock or DNS unlock |
 
 So during testing, if the host currently uses official mainstream DNS, no judgment of whether it's native unlocking will be performed.
 
-Platforms that are particularly sensitive to IP quality for unlocking include major AI platforms, local streaming services, Reddit, and Spotify. Other multinational platforms are generally less affected by IP quality when it comes to unlocking.
+Platforms that are particularly sensitive to IP quality for unlocking include major AI platforms, local platform unlocking, Reddit, and Spotify. Other multinational platforms are generally less affected by IP quality when it comes to unlocking.
 
 ### IP Quality Detection
 
@@ -762,11 +762,11 @@ If Abuse records exist and the score is high, it indicates that the IP may have 
 - Launched large-scale flood attacks
 - Conducted port scanning or network-wide scanning
 
-Such historical records will be reported and entered into the Abuse database. If the IP you take over has just been abused by others, delayed Abuse warning emails may still be sent to the service provider. The service provider may misjudge you as the person engaging in malicious behavior, and then terminate the machine, and in most cases, no refund will be given. For cross-border streaming services, Abuse scores may also affect the platform's reputation rating for that IP.
+Such historical records will be reported and entered into the Abuse database. If the IP you take over has just been abused by others, delayed Abuse warning emails may still be sent to the service provider. The service provider may misjudge you as the person engaging in malicious behavior, and then terminate the machine, and in most cases, no refund will be given. For cross-border platform services, Abuse scores may also affect the platform's reputation rating for that IP.
 
-For users who need residential broadband for streaming unlock requirements (such as e-commerce needs), attention should be paid to whether "Usage Type" and "Company Type" are both identified as ISP. If it is only single ISP or identified as non-ISP, after subsequent database updates, the IP type is likely to be corrected to Hosting, thereby affecting unlock effectiveness.
+For users who need residential broadband for platform unlock requirements (such as e-commerce needs), attention should be paid to whether "Usage Type" and "Company Type" are both identified as ISP. If it is only single ISP or identified as non-ISP, after subsequent database updates, the IP type is likely to be corrected to Hosting, thereby affecting unlock effectiveness.
 
-Most IP identification databases are updated monthly. After updates, IP attributes may be modified, resulting in situations where ISP → Hosting occurs. For some sensitive platforms, such as streaming services in certain specific countries (like Netflix, Spotify), or streaming services that treat different countries differently (like TikTok), the possibility of non-residential unlock is low but not impossible. If you need stable unlock and pursue its special function unlock, you only need to pursue residential broadband streaming unlock. If you're just browsing and watching, there's often no need to pursue residential broadband.
+Most IP identification databases are updated monthly. After updates, IP attributes may be modified, resulting in situations where ISP → Hosting occurs. For some sensitive platforms, such as platform services in certain specific countries (like Netflix, Spotify), or platform services that treat different countries differently (like TikTok), the possibility of non-residential unlock is low but not impossible. If you need stable unlock and pursue its special function unlock, you only need to pursue residential broadband platform unlock. If you're just browsing and watching, there's often no need to pursue residential broadband.
 
 It is necessary to elaborate on IP type classification
 
@@ -992,24 +992,24 @@ NVMe SSDの1M (IOPS)値 < 1GB/s の場合、深刻なリソースオーバーセ
 
 注意：ここでテストするのは真のIOで、本プロジェクト限定です。本プロジェクト以外でテストしたIOは基準の汎用性を保証しません。彼らがテスト時に同じパラメータを使用していない可能性、IO直接読み書きを設定していない可能性、IOエンジン設定が一致しない可能性、テスト時間設定が一致しない可能性があり、すべて基準の偏差を引き起こします。
 
-### ストリーミングメディアロック解除
+### プラットフォームロック解除検出
 
 依存プロジェクト：[https://github.com/oneclickvirt/UnlockTests](https://github.com/oneclickvirt/UnlockTests)
 
-デフォルトでは国境を越えるストリーミングメディアのロック解除のみをチェックします。
+デフォルトでは国境を越えるプラットフォームのロック解除のみをチェックします。
 
-一般的に、正常な状況下では、一つのIPの複数のストリーミングメディアのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、ストリーミングメディアの一般的なデータベースに認識修正されていない可能性が高いです。
+一般的に、正常な状況下では、一つのIPの複数のプラットフォームのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、プラットフォームの一般的なデータベースに認識修正されていない可能性が高いです。
 
 各プラットフォームのIPデータベース認識速度が一致しないため、時々あるプラットフォームではロック解除地域が正常、あるプラットフォームではルート上のある位置に飛ぶ、あるプラットフォームではIPがあなたによって使用される前にいた位置に飛ぶことがあります。
 
 | DNS タイプ | ロック解除方式判断の必要性 | DNSのロック解除への影響 | 説明 |
 | --------- | ------------------------- | ---------------------- | ---- |
-| 公式主流DNS | 不要 | 小 | ストリーミングメディアのロック解除は主にノードIPに依存し、DNS解析は基本的にロック解除を干渉しない |
-| 非主流/自建DNS | 必要 | 大 | ストリーミングメディアのロック解除結果はDNS解析の影響を大きく受け、ネイティブロック解除かDNSロック解除かを判断する必要がある |
+| 公式主流DNS | 不要 | 小 | プラットフォームロック解除は主にノードIPに依存し、DNS解析は基本的にロック解除を干渉しない |
+| 非主流/自建DNS | 必要 | 大 | プラットフォームロック解除結果はDNS解析の影響を大きく受け、ネイティブロック解除かDNSロック解除かを判断する必要がある |
 
 そのため、テスト過程で、ホストが現在使用しているのが公式主流のDNSの場合、ネイティブロック解除かどうかの判断は行われません。
 
-IP品質によるアクセス制限に敏感なのは、実際には主要なAIプラットフォームやローカルストリーミングサービス、redditやspotifyなどであり、その他の多国籍プラットフォームは一般的にIP品質の影響を受けにくい。
+IP品質によるアクセス制限に敏感なのは、実際には主要なAIプラットフォームやローカルプラットフォームロック解除、redditやspotifyなどであり、その他の多国籍プラットフォームは一般的にIP品質の影響を受けにくい。
 
 ### IP品質検出
 
@@ -1096,11 +1096,11 @@ Abuse記録が存在し、スコアが高い場合、そのIPが過去に以下�
 - 大規模なフラッド攻撃を開始した
 - ポートスキャンまたはネットワーク全体のスキャンを実施した
 
-このような履歴記録は報告され、Abuseデータベースに登録される。引き継いだIPが他人によって悪用されたばかりの場合、遅延したAbuse警告メールがサービスプロバイダに送信される可能性がある。サービスプロバイダは、あなた本人が悪意のある行為を行っていると誤判定し、マシンを解約する可能性があり、ほとんどの場合、返金は行われない。国境を越えたストリーミングサービスの場合、AbuseスコアはそのIPに対するプラットフォームの信頼評価にも影響を与える可能性がある。
+このような履歴記録は報告され、Abuseデータベースに登録される。引き継いだIPが他人によって悪用されたばかりの場合、遅延したAbuse警告メールがサービスプロバイダに送信される可能性がある。サービスプロバイダは、あなた本人が悪意のある行為を行っていると誤判定し、マシンを解約する可能性があり、ほとんどの場合、返金は行われない。国境を越えたプラットフォームサービスの場合、AbuseスコアはそのIPに対するプラットフォームの信頼評価にも影響を与える可能性がある。
 
-ストリーミング解除要件のために住宅ブロードバンドが必要なユーザー(Eコマース需要など)は、「使用タイプ」と「会社タイプ」の両方がISPとして識別されているかどうかに注意を払う必要がある。単一ISPのみ、または非ISPとして識別されている場合、その後のデータベース更新後、IPタイプがHostingに修正される可能性が高く、解除効果に影響を与える。
+プラットフォームロック解除要件のために住宅ブロードバンドが必要なユーザー(Eコマース需要など)は、「使用タイプ」と「会社タイプ」の両方がISPとして識別されているかどうかに注意を払う必要がある。単一ISPのみ、または非ISPとして識別されている場合、その後のデータベース更新後、IPタイプがHostingに修正される可能性が高く、解除効果に影響を与える。
 
-ほとんどのIP識別データベースは月次で更新される。更新後、IP属性が変更され、ISP → Hostingという状況が発生する可能性がある。特定の国のストリーミングサービス(NetflixやSpotifyなど)や、異なる国を区別して扱うストリーミングサービス(TikTokなど)など、一部の敏感なプラットフォームでは、非住宅での解除の可能性は低いが、不可能ではない。安定した解除が必要で、その特別な機能解除を追求する場合にのみ、住宅ブロードバンドストリーミング解除を追求する必要がある。単にブラウジングや視聴するだけであれば、多くの場合、住宅ブロードバンドを追求する必要はない。
+ほとんどのIP識別データベースは月次で更新される。更新後、IP属性が変更され、ISP → Hostingという状況が発生する可能性がある。特定の国のプラットフォームサービス(NetflixやSpotifyなど)や、異なる国を区別して扱うプラットフォームサービス(TikTokなど)など、一部の敏感なプラットフォームでは、非住宅での解除の可能性は低いが、不可能ではない。安定した解除が必要で、その特別な機能解除を追求する場合にのみ、住宅ブロードバンドプラットフォームロック解除を追求する必要がある。単にブラウジングや視聴するだけであれば、多くの場合、住宅ブロードバンドを追求する必要はない。
 
 IPタイプの分類について詳しく説明する必要がある
 

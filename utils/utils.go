@@ -100,7 +100,7 @@ func CheckChina(enableLogger bool) bool {
 	if isInChina {
 		fmt.Println("根据 ipapi.co 提供的信息，当前IP可能在中国")
 		var input string
-		fmt.Print("是否选用中国专项测试(无流媒体测试，有三网Ping值测试)? ([y]/n) ")
+		fmt.Print("是否选用中国专项测试(无平台解锁测试，有三网Ping值测试)? ([y]/n) ")
 		fmt.Scanln(&input)
 		switch strings.ToLower(input) {
 		case "yes", "y":

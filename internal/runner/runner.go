@@ -217,7 +217,7 @@ func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *
 	}, tempOutput, output)
 }
 
-// RunStreamingTests runs streaming media tests
+// RunStreamingTests runs platform unlock tests
 func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
@@ -225,9 +225,9 @@ func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *st
 		if config.UtTestStatus && (config.Language == "zh" && !config.OnlyChinaTest || config.Language == "en") {
 			wg1.Wait()
 			if config.Language == "zh" {
-				utils.PrintCenteredTitle("跨国流媒体解锁", config.Width)
+				utils.PrintCenteredTitle("跨国平台解锁", config.Width)
 			} else {
-				utils.PrintCenteredTitle("Cross-Border-Streaming-Media-Unlock", config.Width)
+				utils.PrintCenteredTitle("Cross-Border-Platform-Unlock", config.Width)
 			}
 			fmt.Printf("%s", *mediaInfo)
 		}
