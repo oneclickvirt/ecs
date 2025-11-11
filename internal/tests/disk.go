@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
@@ -8,6 +10,14 @@ import (
 )
 
 func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChange bool) (realTestMethod, res string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] DiskTest panic: %v\n", r)
+			res = fmt.Sprintf("\nDisk test failed: %v\n", r)
+			realTestMethod = "error"
+		}
+	}()
+	
 	switch testMethod {
 	case "fio":
 		res = disk.FioTest(language, isMultiCheck, testPath)

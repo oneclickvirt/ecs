@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	ecsVersion   = "v0.1.102"               // 融合怪版本号
+	ecsVersion   = "v0.1.103"               // 融合怪版本号
 	configs      = params.NewConfig(ecsVersion) // 全局配置实例
 	userSetFlags = make(map[string]bool)        // 用于跟踪哪些参数是用户显式设置的
 )
@@ -83,6 +83,7 @@ func main() {
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
 		output, tempOutput                                    string
 		outputMutex                                           sync.Mutex
+		infoMutex                                             sync.Mutex // 保护并发字符串写入
 	)
 	startTime := time.Now()
 	uploadDone := make(chan bool, 1)
@@ -91,9 +92,9 @@ func main() {
 	go runner.HandleSignalInterrupt(sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch configs.Language {
 	case "zh":
-		runner.RunChineseTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
+		runner.RunChineseTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
 	case "en":
-		runner.RunEnglishTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex)
+		runner.RunEnglishTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
 	default:
 		fmt.Println("Unsupported language")
 	}

@@ -21,7 +21,7 @@ func GetMenuChoice(language string) string {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
-	inputChan := make(chan string, 1)
+	
 	go func() {
 		select {
 		case <-sigChan:
@@ -31,43 +31,33 @@ func GetMenuChoice(language string) string {
 			return
 		}
 	}()
+	
 	for {
-		go func() {
-			var input string
-			fmt.Print("请输入选项 / Please enter your choice: ")
-			fmt.Scanln(&input)
-			input = strings.TrimSpace(input)
-			input = strings.TrimRight(input, "\n")
-			select {
-			case inputChan <- input:
-			case <-ctx.Done():
-				return
-			}
-		}()
-		select {
-		case input := <-inputChan:
-			re := regexp.MustCompile(`^\d+$`)
-			if re.MatchString(input) {
-				inChoice := input
-				switch inChoice {
-				case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
-					return inChoice
-				default:
-					if language == "zh" {
-						fmt.Println("无效的选项")
-					} else {
-						fmt.Println("Invalid choice")
-					}
-				}
-			} else {
+		var input string
+		fmt.Print("请输入选项 / Please enter your choice: ")
+		fmt.Scanln(&input)
+		input = strings.TrimSpace(input)
+		input = strings.TrimRight(input, "\n")
+		
+		re := regexp.MustCompile(`^\d+$`)
+		if re.MatchString(input) {
+			inChoice := input
+			switch inChoice {
+			case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10":
+				return inChoice
+			default:
 				if language == "zh" {
-					fmt.Println("输入错误，请输入一个纯数字")
+					fmt.Println("无效的选项")
 				} else {
-					fmt.Println("Invalid input, please enter a number")
+					fmt.Println("Invalid choice")
 				}
 			}
-		case <-ctx.Done():
-			return ""
+		} else {
+			if language == "zh" {
+				fmt.Println("输入错误，请输入一个纯数字")
+			} else {
+				fmt.Println("Invalid input, please enter a number")
+			}
 		}
 	}
 }

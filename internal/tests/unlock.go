@@ -1,12 +1,21 @@
 package tests
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/oneclickvirt/UnlockTests/executor"
 	"github.com/oneclickvirt/UnlockTests/utils"
 	"github.com/oneclickvirt/defaultset"
 )
 
 func MediaTest(language string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] MediaTest panic: %v\n", r)
+		}
+	}()
+	
 	var res string
 	readStatus := executor.ReadSelect(language, "0")
 	if !readStatus {

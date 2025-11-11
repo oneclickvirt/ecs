@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -17,7 +18,7 @@ import (
 )
 
 // RunChineseTests runs all tests in Chinese mode
-func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(config, *output, tempOutput, outputMutex)
@@ -29,30 +30,39 @@ func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
-			*mediaInfo = tests.MediaTest(config.Language)
+			result := tests.MediaTest(config.Language)
+			infoMutex.Lock()
+			*mediaInfo = result
+			infoMutex.Unlock()
 		}()
 	}
 	if config.EmailTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg2.Add(1)
 		go func() {
 			defer wg2.Done()
-			*emailInfo = email.EmailCheck()
+			result := email.EmailCheck()
+			infoMutex.Lock()
+			*emailInfo = result
+			infoMutex.Unlock()
 		}()
 	}
 	if (config.OnlyChinaTest || config.PingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		wg3.Add(1)
 		go func() {
 			defer wg3.Done()
-			*ptInfo = pt.PingTest()
+			result := pt.PingTest()
+			infoMutex.Lock()
+			*ptInfo = result
+			infoMutex.Unlock()
 		}()
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex)
+		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunSecurityTests(config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex)
+		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunNetworkTests(config, wg3, ptInfo, *output, tempOutput, outputMutex)
+		*output = RunNetworkTests(config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = RunSpeedTests(config, *output, tempOutput, outputMutex)
@@ -61,7 +71,7 @@ func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 }
 
 // RunEnglishTests runs all tests in English mode
-func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex) {
+func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(config, *output, tempOutput, outputMutex)
@@ -74,19 +84,25 @@ func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 			wg1.Add(1)
 			go func() {
 				defer wg1.Done()
-				*mediaInfo = tests.MediaTest(config.Language)
+				result := tests.MediaTest(config.Language)
+				infoMutex.Lock()
+				*mediaInfo = result
+				infoMutex.Unlock()
 			}()
 		}
 		if config.EmailTestStatus {
 			wg2.Add(1)
 			go func() {
 				defer wg2.Done()
-				*emailInfo = email.EmailCheck()
+				result := email.EmailCheck()
+				infoMutex.Lock()
+				*emailInfo = result
+				infoMutex.Unlock()
 			}()
 		}
-		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex)
+		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunSecurityTests(config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex)
+		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunEnglishNetworkTests(config, wg3, ptInfo, *output, tempOutput, outputMutex)
 		*output = RunEnglishSpeedTests(config, *output, tempOutput, outputMutex)
 	}
@@ -218,7 +234,7 @@ func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *
 }
 
 // RunStreamingTests runs platform unlock tests
-func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -229,7 +245,10 @@ func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *st
 			} else {
 				utils.PrintCenteredTitle("Cross-Border-Platform-Unlock", config.Width)
 			}
-			fmt.Printf("%s", *mediaInfo)
+			infoMutex.Lock()
+			info := *mediaInfo
+			infoMutex.Unlock()
+			fmt.Printf("%s", info)
 		}
 	}, tempOutput, output)
 }
@@ -251,7 +270,7 @@ func RunSecurityTests(config *params.Config, securityInfo, output, tempOutput st
 }
 
 // RunEmailTests runs email port tests
-func RunEmailTests(config *params.Config, wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunEmailTests(config *params.Config, wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -262,13 +281,16 @@ func RunEmailTests(config *params.Config, wg2 *sync.WaitGroup, emailInfo *string
 			} else {
 				utils.PrintCenteredTitle("Email-Port-Check", config.Width)
 			}
-			fmt.Println(*emailInfo)
+			infoMutex.Lock()
+			info := *emailInfo
+			infoMutex.Unlock()
+			fmt.Println(info)
 		}
 	}, tempOutput, output)
 }
 
 // RunNetworkTests runs network tests (Chinese mode)
-func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -280,15 +302,18 @@ func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string,
 			utils.PrintCenteredTitle("三网回程路由检测", config.Width)
 			tests.NextTrace3Check(config.Language, config.Nt3Location, config.Nt3CheckType)
 		}
-		if config.OnlyChinaTest && *ptInfo != "" {
+		infoMutex.Lock()
+		info := *ptInfo
+		infoMutex.Unlock()
+		if config.OnlyChinaTest && info != "" {
 			wg3.Wait()
 			utils.PrintCenteredTitle("PING值检测", config.Width)
-			fmt.Println(*ptInfo)
+			fmt.Println(info)
 		}
-		if config.PingTestStatus && *ptInfo != "" {
+		if config.PingTestStatus && info != "" {
 			wg3.Wait()
 			utils.PrintCenteredTitle("PING值检测", config.Width)
-			fmt.Println(*ptInfo)
+			fmt.Println(info)
 			if config.TgdcTestStatus {
 				fmt.Println(pt.TelegramDCTest())
 			}
@@ -414,16 +439,26 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 				httpsURL string
 			}, 1)
 			if config.EnableUpload {
+				// 使用context来控制上传goroutine
+				uploadCtx, uploadCancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer uploadCancel()
+				
 				go func() {
 					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload)
-					resultChan <- struct {
+					select {
+					case resultChan <- struct {
 						httpURL  string
 						httpsURL string
-					}{httpURL, httpsURL}
-					uploadDone <- true
+					}{httpURL, httpsURL}:
+					case <-uploadCtx.Done():
+						// 上传被取消或超时，直接返回
+						return
+					}
 				}()
+				
 				select {
 				case result := <-resultChan:
+					uploadCancel() // 成功完成，取消context
 					if result.httpURL != "" || result.httpsURL != "" {
 						if config.Language == "en" {
 							fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
@@ -437,7 +472,7 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 						fmt.Scanln()
 					}
 					os.Exit(0)
-				case <-time.After(30 * time.Second):
+				case <-uploadCtx.Done():
 					if config.Language == "en" {
 						fmt.Println("Upload timeout, program exit")
 					} else {

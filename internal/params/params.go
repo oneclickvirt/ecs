@@ -210,72 +210,116 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 // RestoreUserSetParams restores user-set parameters
 func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 	if val, ok := saved["basic"]; ok {
-		c.BasicStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.BasicStatus = boolVal
+		}
 	}
 	if val, ok := saved["cpu"]; ok {
-		c.CpuTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.CpuTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["memory"]; ok {
-		c.MemoryTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.MemoryTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["disk"]; ok {
-		c.DiskTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.DiskTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["ut"]; ok {
-		c.UtTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.UtTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["security"]; ok {
-		c.SecurityTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.SecurityTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["email"]; ok {
-		c.EmailTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.EmailTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["backtrace"]; ok {
-		c.BacktraceStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.BacktraceStatus = boolVal
+		}
 	}
 	if val, ok := saved["nt3"]; ok {
-		c.Nt3Status = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.Nt3Status = boolVal
+		}
 	}
 	if val, ok := saved["speed"]; ok {
-		c.SpeedTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.SpeedTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["ping"]; ok {
-		c.PingTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.PingTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["tgdc"]; ok {
-		c.TgdcTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.TgdcTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["web"]; ok {
-		c.WebTestStatus = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.WebTestStatus = boolVal
+		}
 	}
 	if val, ok := saved["cpum"]; ok {
-		c.CpuTestMethod = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.CpuTestMethod = strVal
+		}
 	}
 	if val, ok := saved["cput"]; ok {
-		c.CpuTestThreadMode = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.CpuTestThreadMode = strVal
+		}
 	}
 	if val, ok := saved["memorym"]; ok {
-		c.MemoryTestMethod = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.MemoryTestMethod = strVal
+		}
 	}
 	if val, ok := saved["diskm"]; ok {
-		c.DiskTestMethod = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.DiskTestMethod = strVal
+		}
 	}
 	if val, ok := saved["diskp"]; ok {
-		c.DiskTestPath = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.DiskTestPath = strVal
+		}
 	}
 	if val, ok := saved["diskmc"]; ok {
-		c.DiskMultiCheck = val.(bool)
+		if boolVal, ok := val.(bool); ok {
+			c.DiskMultiCheck = boolVal
+		}
 	}
 	if val, ok := saved["nt3loc"]; ok {
 		if c.Choice != "10" {
-			c.Nt3Location = val.(string)
+			if strVal, ok := val.(string); ok {
+				c.Nt3Location = strVal
+			}
 		}
 	}
 	if val, ok := saved["nt3t"]; ok {
-		c.Nt3CheckType = val.(string)
+		if strVal, ok := val.(string); ok {
+			c.Nt3CheckType = strVal
+		}
 	}
 	if val, ok := saved["spnum"]; ok {
-		c.SpNum = val.(int)
+		if intVal, ok := val.(int); ok {
+			c.SpNum = intVal
+		}
 	}
 
 	c.ValidateParams()

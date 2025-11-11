@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -29,12 +30,25 @@ type ConcurrentResults struct {
 var IPV4, IPV6 string
 
 func UpstreamsCheck() {
+	// 添加panic恢复机制
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("\n上游检测出现错误，已跳过")
+			fmt.Fprintf(os.Stderr, "[WARN] Upstream check panic: %v\n", r)
+		}
+	}()
+	
 	results := ConcurrentResults{}
 	var wg sync.WaitGroup
 	if IPV4 != "" {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Fprintf(os.Stderr, "[WARN] BGP info panic: %v\n", r)
+				}
+			}()
 			for i := 0; i < 2; i++ {
 				result, err := bgptools.GetPoPInfo(IPV4)
 				results.bgpError = err
@@ -51,6 +65,11 @@ func UpstreamsCheck() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Fprintf(os.Stderr, "[WARN] Backtrace panic: %v\n", r)
+			}
+		}()
 		result := backtrace.BackTrace(executor.IPV6)
 		results.backtraceResult = result
 	}()

@@ -203,19 +203,10 @@ func CaptureOutput(f func()) string {
 	// 替换标准输出和标准错误输出为管道写入端
 	os.Stdout = stdoutPipeW
 	os.Stderr = stderrPipeW
-	// 恢复标准输出和标准错误输出
-	defer func() {
-		os.Stdout = oldStdout
-		os.Stderr = oldStderr
-		stdoutPipeW.Close()
-		stderrPipeW.Close()
-		stdoutPipeR.Close()
-		stderrPipeR.Close()
-	}()
 	// 缓冲区
 	var stdoutBuf, stderrBuf bytes.Buffer
 	// 并发读取 stdout 和 stderr
-	done := make(chan struct{})
+	done := make(chan struct{}, 2)
 	go func() {
 		multiWriter := io.MultiWriter(&stdoutBuf, oldStdout)
 		io.Copy(multiWriter, stdoutPipeR)
@@ -234,6 +225,11 @@ func CaptureOutput(f func()) string {
 	// 等待两个 goroutine 完成
 	<-done
 	<-done
+	// 恢复标准输出和标准错误输出，并关闭管道读取端
+	os.Stdout = oldStdout
+	os.Stderr = oldStderr
+	stdoutPipeR.Close()
+	stderrPipeR.Close()
 	// 返回捕获的输出字符串
 	// stderrBuf.String()
 	return stdoutBuf.String()
@@ -317,7 +313,9 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) (string
 	// 使用 defer 来处理 panic
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("处理上传时发生错误: %v\n", r)
+			fmt.Fprintf(os.Stderr, "[ERROR] 处理上传时发生严重错误: %v\n", r)
+			// 可以选择打印堆栈信息以便调试
+			// debug.PrintStack()
 		}
 	}()
 	// 检查文件是否存在
@@ -425,6 +423,8 @@ func CheckPublicAccess(timeout time.Duration) NetCheckResult {
 			defer wg.Done()
 			defer func() {
 				if r := recover(); r != nil {
+					// 记录panic但不影响其他检查，输出到stderr避免污染主输出
+					fmt.Fprintf(os.Stderr, "[WARN] Panic in network check for %s (%s): %v\n", tag, addr, r)
 				}
 			}()
 			switch kind {

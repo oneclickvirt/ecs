@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
@@ -9,10 +11,20 @@ import (
 )
 
 func ShowHead(language string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] ShowHead panic: %v\n", r)
+		}
+	}()
 	sp.ShowHead(language)
 }
 
 func NearbySP() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] NearbySP panic: %v\n", r)
+		}
+	}()
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
 		sp.NearbySpeedTest()
 	} else {
@@ -21,6 +33,11 @@ func NearbySP() {
 }
 
 func CustomSP(platform, operator string, num int, language string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] CustomSP panic: %v\n", r)
+		}
+	}()
 	var url, parseType string
 	if strings.ToLower(platform) == "cn" {
 		if strings.ToLower(operator) == "cmcc" {
