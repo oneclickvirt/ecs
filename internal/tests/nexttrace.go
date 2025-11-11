@@ -2,6 +2,7 @@ package tests
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strings"
 
@@ -9,25 +10,37 @@ import (
 )
 
 func NextTrace3Check(language, nt3Location, nt3CheckType string) {
-	// 添加panic恢复机制，防止因权限问题导致程序崩溃
+	// 先检查 ICMP 权限
+	conn, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
+	if err != nil {
+		// 没有权限，显示友好提示并跳过
+		if language == "zh" {
+			fmt.Println("路由追踪测试需要 root 权限或 CAP_NET_RAW 能力，已跳过")
+			fmt.Fprintf(os.Stderr, "[WARN] ICMP权限不足: %v\n", err)
+		} else {
+			fmt.Println("Route tracing test requires root privileges or CAP_NET_RAW capability, skipped")
+			fmt.Fprintf(os.Stderr, "[WARN] Insufficient ICMP permission: %v\n", err)
+		}
+		return
+	}
+	conn.Close()
 	defer func() {
 		if r := recover(); r != nil {
 			if language == "zh" {
-				fmt.Println("\n路由追踪测试出现错误（可能因为权限不足），已跳过")
+				fmt.Println("路由追踪测试出现错误，已跳过")
 				fmt.Fprintf(os.Stderr, "[WARN] 路由追踪panic: %v\n", r)
 			} else {
-				fmt.Println("\nRoute tracing test failed (possibly due to insufficient permissions), skipped")
+				fmt.Println("Route tracing test failed, skipped")
 				fmt.Fprintf(os.Stderr, "[WARN] Route tracing panic: %v\n", r)
 			}
 		}
 	}()
-	
 	resultChan := make(chan nt.TraceResult, 100)
+	errorOccurred := false
 	go func() {
-		// 在goroutine中也添加错误恢复
 		defer func() {
 			if r := recover(); r != nil {
-				// 发送错误结果并关闭channel
+				errorOccurred = true
 				resultChan <- nt.TraceResult{
 					Index:   -1,
 					ISPName: "Error",
@@ -38,7 +51,6 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 		}()
 		nt.TraceRoute(language, nt3Location, nt3CheckType, resultChan)
 	}()
-	
 	for result := range resultChan {
 		if result.Index == -1 {
 			for index, res := range result.Output {
@@ -50,12 +62,18 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 			continue
 		}
 		if result.ISPName == "Error" {
+			if language == "zh" {
+				fmt.Println("路由追踪测试失败（可能因为权限不足），已跳过")
+			} else {
+				fmt.Println("Route tracing test failed (possibly due to insufficient permissions), skipped")
+			}
 			for _, res := range result.Output {
 				res = strings.TrimSpace(res)
 				if res != "" {
-					fmt.Println(res)
+					fmt.Fprintf(os.Stderr, "[WARN] %s\n", res)
 				}
 			}
+			errorOccurred = true
 			continue
 		}
 		for _, res := range result.Output {
@@ -68,6 +86,13 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 			} else {
 				fmt.Println(res)
 			}
+		}
+	}
+	if errorOccurred {
+		if language == "zh" {
+			fmt.Println("提示: 路由追踪需要 root 权限或 CAP_NET_RAW 能力")
+		} else {
+			fmt.Println("Hint: Route tracing requires root privileges or CAP_NET_RAW capability")
 		}
 	}
 }
