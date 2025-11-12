@@ -271,7 +271,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 | | DNS黑名单-已列入 | 在DNS黑名单中已被列入的数量 | 非负整数 | 越低越好 |
 | | DNS黑名单-其他 | 在DNS黑名单检查中返回其他状态的数量 | 非负整数 | 数值本身无好坏 |
 
-当本机的IP所在的ASN拥有的IP数量比较少时，流量占比可以给你提供网络邻居中有多少是真实流量的占比，目前全球的互联网流量的占比约是70%真人30%机器人，如果需要比较你就按这个基准对比就行了，就知道是不是当前IP的ASN在本国的使用达到了互联网平均水平。如果需要具体国家的基准查询，可使用 https://trafficbenchmark.spiritlhl.net/ 自行搜索查找对比。
+当本机的IP所在的ASN拥有的IP数量比较少时，流量占比可以给你提供网络邻居中有多少是真实流量的占比，目前全球的互联网流量的占比约是70%真人30%机器人(IPV4)，如果需要比较你就按这个基准对比就行了，就知道是不是当前IP的ASN在本国的使用达到了互联网平均水平。如果需要具体国家的基准查询，可使用 https://trafficbenchmark.spiritlhl.net/ 自行搜索查找对比。
 
 一般来说看下面的使用类型公司类型还有安全信息的判别足矣，上面的安全得分只有多个数据库确认一致才可信，不看也没啥问题。(IDC: 一般买服务器识别成这个的多，就是正常的在数据中心机房广播使用的类型)
 
@@ -715,7 +715,7 @@ The following are the meanings corresponding to each field
 | | DNS Blacklist-Listed | Number already listed in DNS blacklists | Non-negative integer | Lower is better |
 | | DNS Blacklist-Other | Number returning other statuses in DNS blacklist checks | Non-negative integer | Value itself has no good or bad |
 
-When the ASN to which this device's IP belongs has a relatively small number of IP addresses, the traffic proportion can indicate what percentage of your network neighbors constitute genuine traffic. Currently, global internet traffic is roughly 70% human and 30% bot. If you need a comparison, use this benchmark to determine whether the ASN of your current IP has reached the internet average usage level within your country. For country-specific benchmark inquiries, you may use https://trafficbenchmark.spiritlhl.net/ to conduct your own searches and comparisons.
+When the ASN to which this device's IP belongs has a relatively small number of IP addresses, the traffic proportion can indicate what percentage of your network neighbors constitute genuine traffic. Currently, global internet traffic is roughly 70% human and 30% bot (IPV4). If you need a comparison, use this benchmark to determine whether the ASN of your current IP has reached the internet average usage level within your country. For country-specific benchmark inquiries, you may use https://trafficbenchmark.spiritlhl.net/ to conduct your own searches and comparisons.
 
 Generally speaking, checking the usage type, company type, and security information below is sufficient. The security score above is only reliable when confirmed by multiple databases, so it's not a problem to skip it. (IDC: generally buy vps identified as this much, is normal in the data center room broadcasting the type of use)
 
@@ -1054,7 +1054,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | | DNSブラックリスト-掲載済み | DNSブラックリストに既に掲載されている数 | 非負整数 | 低いほど良い |
 | | DNSブラックリスト-その他 | DNSブラックリストチェックで他のステータスを返した数 | 非負整数 | 数値自体に良し悪しなし |
 
-本機のIPが属するASNが保有するIP数が少ない場合、トラフィック比率からネットワーク内の実際のトラフィック割合を把握できます。現在の全世界インターネットトラフィックの割合は約70%が人間、30%がボットです。比較が必要な場合はこの基準値を基に照らし合わせれば、当該IPのASNが自国内でインターネット平均水準に達しているか判断できます。 特定の国の基準を照会する必要がある場合は、https://trafficbenchmark.spiritlhl.net/ で自ら検索し比較することができます。
+本機のIPが属するASNが保有するIP数が少ない場合、トラフィック比率からネットワーク内の実際のトラフィック割合を把握できます。現在の全世界インターネットトラフィックの割合は約70%が人間、30%がボットです(IPV4)。比較が必要な場合はこの基準値を基に照らし合わせれば、当該IPのASNが自国内でインターネット平均水準に達しているか判断できます。 特定の国の基準を照会する必要がある場合は、https://trafficbenchmark.spiritlhl.net/ で自ら検索し比較することができます。
 
 一般的に以下の使用タイプ、会社タイプ、そしてセキュリティ情報の判別で十分です。上記のセキュリティスコアは複数のデータベースで一致が確認された場合のみ信頼できるため、見なくても特に問題ありません。(IDC: サーバーを購入する際、一般的にこの識別されることが多い。データセンターのサーバールームでブロードキャストに使用される通常のタイプである)
 
