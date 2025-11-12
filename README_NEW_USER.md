@@ -243,32 +243,35 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 检测18个数据库的IP相关信息，多个平台比较对应检测项目都为对应值，证明当前IP确实如此，不要仅相信一个数据库源的信息:
 
-[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com) [cloudflare.com](https://www.cloudflare.com/)
 
 以下为每个字段的对应的含义
 
 | 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
 |---------|---------|---------|---------|---------|
-| 安全得分 | 声誉(Reputation) | IP地址在安全社区中的信誉评分 | 0-100的数值 | 越高越好 |
-| | 信任得分(Trust Score) | IP地址的可信任程度评分 | 0-100的数值 | 越高越好 |
-| | VPN得分(VPN Score) | IP被识别为VPN的可能性评分 | 0-100的数值 | 越低越好 |
-| | 代理得分(Proxy Score) | IP被识别为代理的可能性评分 | 0-100的数值 | 越低越好 |
+| 安全得分 | 声誉 | IP地址在安全社区中的信誉评分 | 0-100的数值 | 越高越好 |
+| | 信任得分 | IP地址的可信任程度评分 | 0-100的数值 | 越高越好 |
+| | VPN得分 | IP被识别为VPN的可能性评分 | 0-100的数值 | 越低越好 |
+| | 代理得分 | IP被识别为代理的可能性评分 | 0-100的数值 | 越低越好 |
 | | 社区投票-无害 | 社区成员投票认为该IP无害的分数 | 非负整数 | 越高越好 |
 | | 社区投票-恶意 | 社区成员投票认为该IP恶意的分数 | 非负整数 | 越低越好 |
-| | 威胁得分(Threat Score) | IP地址的整体威胁程度评分 | 0-100的数值 | 越低越好 |
-| | 欺诈得分(Fraud Score) | IP地址涉及欺诈活动的可能性评分 | 0-100的数值 | 越低越好 |
-| | 滥用得分(Abuse Score) | IP地址被报告滥用行为的评分 | 0-100的数值 | 越低越好 |
+| | 威胁得分 | IP地址的整体威胁程度评分 | 0-100的数值 | 越低越好 |
+| | 欺诈得分 | IP地址涉及欺诈活动的可能性评分 | 0-100的数值 | 越低越好 |
+| | 滥用得分 | IP地址被报告滥用行为的评分 | 0-100的数值 | 越低越好 |
 | | ASN滥用得分 | 该IP所属ASN(自治系统)的滥用评分 | 0-1的小数，可能带有风险等级标注(Low/Medium/High) | 越低越好 |
 | | 公司滥用得分 | 该IP所属公司的滥用评分 | 0-1的小数，可能带有风险等级标注(Low/Medium/High) | 越低越好 |
-| | 威胁级别(Threat Level) | IP地址的威胁等级分类 | low/medium/high/critical等文本描述 | low为最佳 |
-| 黑名单记录 | 无害记录数(Harmless) | 在各黑名单数据库中被标记为无害的次数 | 非负整数 | 数值本身无好坏 |
-| | 恶意记录数(Malicious) | 在各黑名单数据库中被标记为恶意的次数 | 非负整数 | 越低越好 |
-| | 可疑记录数(Suspicious) | 在各黑名单数据库中被标记为可疑的次数 | 非负整数 | 越低越好 |
-| | 无记录数(Undetected) | 在各黑名单数据库中无任何记录的次数 | 非负整数 | 数值本身无好坏 |
+| | 威胁级别 | IP地址的威胁等级分类 | low/medium/high/critical等文本描述 | low为最佳 |
+| | 流量占比 | 真人和机器人在本机IP的ASN所在国家的占比 | 百分数 | 真人比越高越好 |
+| 黑名单记录 | 无害记录数 | 在各黑名单数据库中被标记为无害的次数 | 非负整数 | 数值本身无好坏 |
+| | 恶意记录数 | 在各黑名单数据库中被标记为恶意的次数 | 非负整数 | 越低越好 |
+| | 可疑记录数 | 在各黑名单数据库中被标记为可疑的次数 | 非负整数 | 越低越好 |
+| | 无记录数 | 在各黑名单数据库中无任何记录的次数 | 非负整数 | 数值本身无好坏 |
 | | DNS黑名单-总检查数 | 检查的DNS黑名单数据库总数量 | 正整数 | 数值本身无好坏 |
 | | DNS黑名单-干净 | 在DNS黑名单中显示为干净(未列入)的数量 | 非负整数 | 越高越好 |
 | | DNS黑名单-已列入 | 在DNS黑名单中已被列入的数量 | 非负整数 | 越低越好 |
 | | DNS黑名单-其他 | 在DNS黑名单检查中返回其他状态的数量 | 非负整数 | 数值本身无好坏 |
+
+当本机的IP所在的ASN拥有的IP数量比较少时，流量占比可以给你提供网络邻居中有多少是真实流量的占比，目前全球的互联网流量的占比约是70%真人30%机器人，如果需要比较你就按这个基准对比就行了，就知道是不是当前IP的ASN在本国的使用达到了互联网平均水平。
 
 一般来说看下面的使用类型公司类型还有安全信息的判别足矣，上面的安全得分只有多个数据库确认一致才可信，不看也没啥问题。(IDC: 一般买服务器识别成这个的多，就是正常的在数据中心机房广播使用的类型)
 
@@ -296,6 +299,9 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 | 字段类别 | 字段名称 | 字段说明 | 可能的值 | 评分规则 |
 |---------|---------|---------|---------|---------|
+| 浏览器类型 | 是否为主流浏览器 | 本机IP的ASN所在国家的占比 | 百分比 | 主流的越多越好 |
+| 设备类型 | 是否为桌面移动设备 | 本机IP的ASN所在国家的占比 | 百分比 | 桌面移动设备占比越多越好 |
+| 操作系统类型 | 是否为主流操作系统 | 本机IP的ASN所在国家的占比 | 百分比 | 主流的越多越好 |
 | 云提供商 | 是否云提供商(Cloud Provider) | 该IP是否属于云服务提供商 | Yes/No | 无好坏之分，仅标识 |
 | 数据中心 | 是否数据中心(Data Center) | 该IP是否位于数据中心 | Yes/No | 如果关注解锁No为最佳 |
 | 移动设备 | 是否移动设备(Mobile) | 该IP是否来自移动设备网络 | Yes/No | 如果关注解锁Yes为最佳 |
@@ -681,7 +687,7 @@ Dependency project: [https://github.com/oneclickvirt/securityCheck](https://gith
 
 Detect IP-related information from 18 databases. Multiple platforms comparing corresponding detection items all show corresponding values, proving that the current IP is indeed as such. Do not only trust information from a single database source:
 
-[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com) [cloudflare.com](https://www.cloudflare.com/)
 
 The following are the meanings corresponding to each field
 
@@ -699,6 +705,7 @@ The following are the meanings corresponding to each field
 | | ASN Abuse Score | Abuse score of the ASN (Autonomous System) to which this IP belongs | Decimal from 0-1, may include risk level notation (Low/Medium/High) | Lower is better |
 | | Company Abuse Score | Abuse score of the company to which this IP belongs | Decimal from 0-1, may include risk level notation (Low/Medium/High) | Lower is better |
 | | Threat Level | Threat level classification of IP address | Text descriptions such as low/medium/high/critical | low is best |
+| | Traffic Proportion | Proportion of humans versus bots within the ASN country of the local IP address | Percentage | Higher human proportion is preferable |
 | Blacklist Records | Harmless Count | Number of times marked as harmless in various blacklist databases | Non-negative integer | Value itself has no good or bad |
 | | Malicious Count | Number of times marked as malicious in various blacklist databases | Non-negative integer | Lower is better |
 | | Suspicious Count | Number of times marked as suspicious in various blacklist databases | Non-negative integer | Lower is better |
@@ -707,6 +714,8 @@ The following are the meanings corresponding to each field
 | | DNS Blacklist-Clean | Number showing as clean (not listed) in DNS blacklists | Non-negative integer | Higher is better |
 | | DNS Blacklist-Listed | Number already listed in DNS blacklists | Non-negative integer | Lower is better |
 | | DNS Blacklist-Other | Number returning other statuses in DNS blacklist checks | Non-negative integer | Value itself has no good or bad |
+
+When the ASN to which this device's IP belongs has a relatively small number of IP addresses, the traffic proportion can indicate what percentage of your network neighbors constitute genuine traffic. Currently, global internet traffic is roughly 70% human and 30% bot. If you need a comparison, use this benchmark to determine whether the ASN of your current IP has reached the internet average usage level within your country.
 
 Generally speaking, checking the usage type, company type, and security information below is sufficient. The security score above is only reliable when confirmed by multiple databases, so it's not a problem to skip it. (IDC: generally buy vps identified as this much, is normal in the data center room broadcasting the type of use)
 
@@ -734,6 +743,9 @@ The above type descriptions represent the original query information types. Duri
 
 | Field Category | Field Name | Field Description | Possible Values | Scoring Rules |
 |---------|---------|---------|---------|---------|
+| BrowserType | Mainstream Browser | Proportion of ASN Country for Local IP | Percentage | Higher mainstream proportion preferable |
+| DeviceType | Desktop or Mobile Device | Percentage of ASN Country for Local IP | Percentage | Higher proportion of desktop/mobile devices is preferable |
+| OSType | Mainstream Operating System | Percentage of ASN Country for Local IP | Percentage | Higher proportion of mainstream systems is preferable |
 | Cloud Provider | Is Cloud Provider | Whether this IP belongs to a cloud service provider | Yes/No | No good or bad, identification only |
 | Data Center | Is Data Center | Whether this IP is located in a data center | Yes/No | No is best if concerned about unblocking |
 | Mobile | Is Mobile | Whether this IP is from a mobile device network | Yes/No | Yes is best if concerned about unblocking |
@@ -1014,7 +1026,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 
 18個のデータベースのIP関連情報を検出し、複数のプラットフォームで対応する検出項目がすべて対応する値である場合、現在のIPが確かにそうであることを証明します。1つのデータベースソースの情報のみを信じないでください:
 
-[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com)
+[ipinfo.io](https://ipinfo.io) [scamalytics.com](https://scamalytics.com) [abuseipdb.com](https://www.abuseipdb.com/) [ip2location.com](https://ip2location.com/) [ip-api.com](https://ip-api.com) [ipregistry.co](https://ipregistry.co/) [ipdata.co](https://ipdata.co/) [ipgeolocation.io](https://ipgeolocation.io) [ipwhois.io](https://ipwhois.io) [ipapi.com](https://ipapi.com/) [ipapi.is](https://ipapi.is/) [ipqualityscore.com](https://www.ipqualityscore.com/) [bigdatacloud.com](https://www.bigdatacloud.com/) [dkly.net](https://data.dkly.net) [virustotal.com](https://www.virustotal.com/) [ipfighter.com](https://ipfighter.com/) [getipintel.net](http://check.getipintel.net/) [fraudlogix.com](https://fraudlogix.com) [cloudflare.com](https://www.cloudflare.com/)
 
 以下は各フィールドの対応する意味です
 
@@ -1032,6 +1044,7 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | | ASN不正使用スコア | このIPが属するASN(自律システム)の不正使用スコア | 0-1の小数、リスクレベル表記付き(Low/Medium/High)の場合あり | 低いほど良い |
 | | 企業不正使用スコア | このIPが属する企業の不正使用スコア | 0-1の小数、リスクレベル表記付き(Low/Medium/High)の場合あり | 低いほど良い |
 | | 脅威レベル(Threat Level) | IPアドレスの脅威レベル分類 | low/medium/high/criticalなどのテキスト記述 | lowが最良 |
+| | トラフィック比率 | 本機IPのASN所在国における人間とボットの比率 | パーセンテージ | 人間比率が高いほど良い |
 | ブラックリスト記録 | 無害記録数(Harmless) | 各ブラックリストデータベースで無害とマークされた回数 | 非負整数 | 数値自体に良し悪しなし |
 | | 悪意記録数(Malicious) | 各ブラックリストデータベースで悪意があるとマークされた回数 | 非負整数 | 低いほど良い |
 | | 疑わしい記録数(Suspicious) | 各ブラックリストデータベースで疑わしいとマークされた回数 | 非負整数 | 低いほど良い |
@@ -1040,6 +1053,8 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 | | DNSブラックリスト-クリーン | DNSブラックリストでクリーン(未掲載)として表示された数 | 非負整数 | 高いほど良い |
 | | DNSブラックリスト-掲載済み | DNSブラックリストに既に掲載されている数 | 非負整数 | 低いほど良い |
 | | DNSブラックリスト-その他 | DNSブラックリストチェックで他のステータスを返した数 | 非負整数 | 数値自体に良し悪しなし |
+
+本機のIPが属するASNが保有するIP数が少ない場合、トラフィック比率からネットワーク内の実際のトラフィック割合を把握できます。現在の全世界インターネットトラフィックの割合は約70%が人間、30%がボットです。比較が必要な場合はこの基準値を基に照らし合わせれば、当該IPのASNが自国内でインターネット平均水準に達しているか判断できます。
 
 一般的に以下の使用タイプ、会社タイプ、そしてセキュリティ情報の判別で十分です。上記のセキュリティスコアは複数のデータベースで一致が確認された場合のみ信頼できるため、見なくても特に問題ありません。(IDC: サーバーを購入する際、一般的にこの識別されることが多い。データセンターのサーバールームでブロードキャストに使用される通常のタイプである)
 
@@ -1067,6 +1082,9 @@ IP品質によるアクセス制限に敏感なのは、実際には主要なAI�
 
 | フィールドカテゴリ | フィールド名 | フィールド説明 | 可能な値 | 評価ルール |
 |---------|---------|---------|---------|---------|
+| ブラウザタイプ | 主流ブラウザかどうか | 本機IPのASN所在国の割合 | パーセンテージ | 主流であるほど良い |
+| デバイスタイプ | デスクトップ/モバイルデバイスか | 本機IPのASN所在国の割合 | パーセンテージ | デスクトップとモバイルデバイスの割合が高いほど良い |
+| オペレーティングシステムタイプ | 主流OSか | 本機IPのASN所在国の割合 | パーセンテージ | 主流OSが多いほど良い |
 | クラウドプロバイダー | クラウドプロバイダーかどうか(Cloud Provider) | このIPがクラウドサービスプロバイダーに属しているか | Yes/No | 良し悪しはなく、識別のみ |
 | データセンター | データセンターかどうか(Data Center) | このIPがデータセンターに位置しているか | Yes/No | アンブロックを重視する場合はNoが最適 |
 | モバイルデバイス | モバイルデバイスかどうか(Mobile) | このIPがモバイルデバイスネットワークからのものか | Yes/No | アンブロックを重視する場合はYesが最適 |
