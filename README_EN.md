@@ -189,11 +189,17 @@ Usage: goecs [options]
         Enable/Disable CPU test (default true)
   -cpum string
         Set CPU test method (supported: sysbench, geekbench, winsat) (default "sysbench")
+  -cpu-method string
+        Set CPU test method (supported: sysbench, geekbench, winsat) (default "sysbench")
   -cput string
+        Set CPU test thread mode (supported: single, multi) (default "multi")
+  -cpu-thread string
         Set CPU test thread mode (supported: single, multi) (default "multi")
   -disk
         Enable/Disable disk test (default true)
   -diskm string
+        Set disk test method (supported: fio, dd, winsat) (default "fio")
+  -disk-method string
         Set disk test method (supported: fio, dd, winsat) (default "fio")
   -diskmc
         Enable/Disable multiple disk checks, e.g., -diskmc=false
@@ -206,11 +212,15 @@ Usage: goecs [options]
         Show help information
   -l string
         Set language (supported: en, zh) (default "zh")
+  -lang string
+        Set language (supported: en, zh) (default "zh")
   -log
         Enable/Disable logging in the current path
   -memory
         Enable/Disable memory test (default true)
   -memorym string
+        Set memory test method (supported: stream, sysbench, dd, winsat, auto) (default "stream")
+  -memory-method string
         Set memory test method (supported: stream, sysbench, dd, winsat, auto) (default "stream")
   -menu
         Enable/Disable menu mode, disable example: -menu=false (default true)
@@ -218,7 +228,11 @@ Usage: goecs [options]
         Enable/Disable NT3 test (in 'en' language or on windows it always false) (default true)
   -nt3loc string
         Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all) (default "GZ")
+  -nt3-location string
+        Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all) (default "GZ")
   -nt3t string
+        Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
+  -nt3-type string
         Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
   -ping
         Enable/Disable ping test
@@ -232,8 +246,6 @@ Usage: goecs [options]
         Enable/Disable Telegram DC test
   -upload
         Enable/Disable upload the result (default true)
-  -ut
-        Enable/Disable unlock media test (default true)
   -v    Display version information
   -version
         Display version information

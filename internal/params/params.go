@@ -53,11 +53,19 @@ func NewConfig(version string) *Config {
 	return &Config{
 		EcsVersion:           version,
 		MenuMode:             true,
+		OnlyChinaTest:        false,
+		Input:                "",
+		Choice:               "",
+		ShowVersion:          false,
+		EnableLogger:         false,
 		Language:             "zh",
 		CpuTestMethod:        "sysbench",
 		CpuTestThreadMode:    "multi",
 		MemoryTestMethod:     "stream",
 		DiskTestMethod:       "fio",
+		DiskTestPath:         "",
+		DiskMultiCheck:      false,
+		Nt3CheckType:         "ipv4",
 		SpNum:                2,
 		Width:                82,
 		BasicStatus:          true,
@@ -70,11 +78,15 @@ func NewConfig(version string) *Config {
 		BacktraceStatus:      true,
 		Nt3Status:            true,
 		SpeedTestStatus:      true,
-		Nt3Location:          "GZ",
-		Nt3CheckType:         "ipv4",
+		PingTestStatus:       false,
+		TgdcTestStatus:       false,
+		WebTestStatus:        false,
 		AutoChangeDiskMethod: true,
 		FilePath:             "goecs.txt",
 		EnableUpload:         true,
+		OnlyIpInfoCheck:      false,
+		Help:                 false,
+		Finish:               false,
 		UserSetFlags:         make(map[string]bool),
 		GoecsFlag:            flag.NewFlagSet("goecs", flag.ContinueOnError),
 	}
@@ -87,6 +99,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.ShowVersion, "v", false, "Display version information")
 	c.GoecsFlag.BoolVar(&c.ShowVersion, "version", false, "Display version information")
 	c.GoecsFlag.BoolVar(&c.MenuMode, "menu", true, "Enable/Disable menu mode, disable example: -menu=false")
+	c.GoecsFlag.StringVar(&c.Language, "lang", "zh", "Set language (supported: en, zh)")
 	c.GoecsFlag.StringVar(&c.Language, "l", "zh", "Set language (supported: en, zh)")
 	c.GoecsFlag.BoolVar(&c.BasicStatus, "basic", true, "Enable/Disable basic test")
 	c.GoecsFlag.BoolVar(&c.CpuTestStatus, "cpu", true, "Enable/Disable CPU test")
@@ -102,13 +115,19 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.TgdcTestStatus, "tgdc", false, "Enable/Disable Telegram DC test")
 	c.GoecsFlag.BoolVar(&c.WebTestStatus, "web", false, "Enable/Disable popular websites test")
 	c.GoecsFlag.StringVar(&c.CpuTestMethod, "cpum", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
+	c.GoecsFlag.StringVar(&c.CpuTestMethod, "cpu-method", "sysbench", "Set CPU test method (supported: sysbench, geekbench, winsat)")
 	c.GoecsFlag.StringVar(&c.CpuTestThreadMode, "cput", "multi", "Set CPU test thread mode (supported: single, multi)")
+	c.GoecsFlag.StringVar(&c.CpuTestThreadMode, "cpu-thread", "multi", "Set CPU test thread mode (supported: single, multi)")
 	c.GoecsFlag.StringVar(&c.MemoryTestMethod, "memorym", "stream", "Set memory test method (supported: stream, sysbench, dd, winsat, auto)")
+	c.GoecsFlag.StringVar(&c.MemoryTestMethod, "memory-method", "stream", "Set memory test method (supported: stream, sysbench, dd, winsat, auto)")
 	c.GoecsFlag.StringVar(&c.DiskTestMethod, "diskm", "fio", "Set disk test method (supported: fio, dd, winsat)")
+	c.GoecsFlag.StringVar(&c.DiskTestMethod, "disk-method", "fio", "Set disk test method (supported: fio, dd, winsat)")
 	c.GoecsFlag.StringVar(&c.DiskTestPath, "diskp", "", "Set disk test path, e.g., -diskp /root")
 	c.GoecsFlag.BoolVar(&c.DiskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
 	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
+	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3-location", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")
@@ -176,16 +195,16 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	if c.UserSetFlags["web"] {
 		saved["web"] = c.WebTestStatus
 	}
-	if c.UserSetFlags["cpum"] {
+	if c.UserSetFlags["cpum"] || c.UserSetFlags["cpu-method"] {
 		saved["cpum"] = c.CpuTestMethod
 	}
-	if c.UserSetFlags["cput"] {
+	if c.UserSetFlags["cput"] || c.UserSetFlags["cpu-thread"] {
 		saved["cput"] = c.CpuTestThreadMode
 	}
-	if c.UserSetFlags["memorym"] {
+	if c.UserSetFlags["memorym"] || c.UserSetFlags["memory-method"] {
 		saved["memorym"] = c.MemoryTestMethod
 	}
-	if c.UserSetFlags["diskm"] {
+	if c.UserSetFlags["diskm"] || c.UserSetFlags["disk-method"] {
 		saved["diskm"] = c.DiskTestMethod
 	}
 	if c.UserSetFlags["diskp"] {
@@ -194,10 +213,10 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	if c.UserSetFlags["diskmc"] {
 		saved["diskmc"] = c.DiskMultiCheck
 	}
-	if c.UserSetFlags["nt3loc"] {
+	if c.UserSetFlags["nt3loc"] || c.UserSetFlags["nt3-location"] {
 		saved["nt3loc"] = c.Nt3Location
 	}
-	if c.UserSetFlags["nt3t"] {
+	if c.UserSetFlags["nt3t"] || c.UserSetFlags["nt3-type"] {
 		saved["nt3t"] = c.Nt3CheckType
 	}
 	if c.UserSetFlags["spnum"] {
