@@ -23,8 +23,9 @@ import (
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
-	"github.com/oneclickvirt/security/network"
+	"github.com/oneclickvirt/basics/network"
 )
+const token = "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"
 
 // 获取本程序本日及总执行的统计信息
 type StatsResponse struct {
@@ -54,13 +55,13 @@ func PrintCenteredTitle(title string, width int) {
 // PrintHead 根据语言打印头部信息
 func PrintHead(language string, width int, ecsVersion string) {
 	if language == "zh" {
-		PrintCenteredTitle("VPS融合怪测试", width)
+		PrintCenteredTitle("VPS融合怪测试(非官方编译)", width)
 		fmt.Printf("版本：%s\n", ecsVersion)
 		fmt.Println("测评频道: https://t.me/+UHVoo2U4VyA5NTQ1\n" +
 			"Go项目地址：https://github.com/oneclickvirt/ecs\n" +
 			"Shell项目地址：https://github.com/spiritLHLS/ecs")
 	} else {
-		PrintCenteredTitle("VPS Fusion Monster Test", width)
+		PrintCenteredTitle("VPS Fusion Monster Test (Unofficial)", width)
 		fmt.Printf("Version: %s\n", ecsVersion)
 		fmt.Println("Review Channel: https://t.me/+UHVoo2U4VyA5NTQ1\n" +
 			"Go Project: https://github.com/oneclickvirt/ecs\n" +
@@ -246,7 +247,6 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 func UploadText(absPath string) (string, string, error) {
 	primaryURL := "http://hpaste.spiritlhl.net/api/UL/upload"
 	backupURL := "https://paste.spiritlhl.net/api/UL/upload"
-	token := network.SecurityUploadToken
 	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
 		SetRetryCount(2).
