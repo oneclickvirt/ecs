@@ -74,35 +74,43 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 #### **One-click command**
 
-**One-Click Command** will **Install Dependencies by Default**, **Update Package Manager by Default**, **Default Non-Interactive Mode***
+**One-Click Command** will **Not install Dependencies** by Default, **Not update Package Manager** by Default, **Non-Interactive Mode** by Default.
 
 - **International users without acceleration:**
 
   ```bash
-  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **International/domestic users with CDN acceleration:**
 
   ```bash
-  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **Domestic users with CNB acceleration:**
 
   ```bash
-  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **Short Link:**
 
   ```bash
-  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && bash goecs.sh env && bash goecs.sh install && goecs
-  ``
+  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && bash goecs.sh install && goecs
+  ```
+  
+  OR
+
+  ```bash
+  export noninteractive=true && curl -L https://ba.sh/JrVa -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
+  ```
+
+**For more accurate testing, please follow the detailed instructions below to install and add non-essential dependencies**
 
 #### **Detailed instructions**
 
-**Detailed description** of the commands in **Command **Controls whether to install dependencies**, **Whether to update the package manager**, **Default interaction mode can be selected***
+The following commands control whether dependencies are installed, whether the package manager is updated, and whether interactive or non-interactive mode is used.
 
 <details>
 <summary>Expand to view detailed instructions</summary>

@@ -74,35 +74,43 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 #### **一键命令**
 
-**一键命令**将**默认安装依赖**，**默认更新包管理器**，**默认非互动模式**
+**一键命令**将默认**不安装依赖**，默认**不更新包管理器**，默认**非互动模式**
 
 - **国际用户无加速：**
 
   ```bash
-  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **国际/国内使用 CDN 加速：**
 
   ```bash
-  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **国内用户使用 CNB 加速：**
 
   ```bash
-  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://cnb.cool/oneclickvirt/ecs/-/git/raw/main/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 - **短链接：**
 
   ```bash
-  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && ./goecs.sh env && ./goecs.sh install && goecs
+  export noninteractive=true && curl -L https://bash.spiritlhl.net/goecs -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
+
+  或
+
+  ```bash
+  export noninteractive=true && curl -L https://ba.sh/JrVa -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
+  ```
+
+**如果需要测试更准确，请按照下面的详细说明进行安装，添加非必需的依赖**
 
 #### **详细说明**
 
-**详细说明**中的命令**可控制是否安装依赖**，**是否更新包管理器**，**默认互动模式可进行选择**
+以下命令可控制**是否安装依赖**，**是否更新包管理器**，**互动模式和非交互模式**
 
 <details>
 <summary>展开查看详细说明</summary>
