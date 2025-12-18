@@ -25,51 +25,132 @@ func MemoryTest(language, testMethod string) (realTestMethod, res string) {
 	if runtime.GOOS == "windows" {
 		switch testMethod {
 		case "stream":
-			res = memory.WinsatTest(language)
-			realTestMethod = "winsat"
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.WindowsDDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "winsat"
+				}
+			} else {
+				realTestMethod = "stream"
+			}
 		case "dd":
 			res = memory.WindowsDDTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
-				res += memory.WinsatTest(language)
-				realTestMethod = "winsat"
+				res = memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.StreamTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "stream"
+					}
+				} else {
+					realTestMethod = "winsat"
+				}
 			} else {
 				realTestMethod = "dd"
 			}
 		case "sysbench":
+			// Windows下不支持sysbench，使用stream → winsat → dd
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.WindowsDDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "winsat"
+				}
+			} else {
+				realTestMethod = "stream"
+			}
+		case "auto":
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.WindowsDDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "winsat"
+				}
+			} else {
+				realTestMethod = "stream"
+			}
+		case "winsat":
 			res = memory.WinsatTest(language)
-			realTestMethod = "winsat"
-		case "auto", "winsat":
-			res = memory.WinsatTest(language)
-			realTestMethod = "winsat"
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.StreamTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.WindowsDDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "stream"
+				}
+			} else {
+				realTestMethod = "winsat"
+			}
 		default:
-			res = memory.WinsatTest(language)
-			realTestMethod = "winsat"
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.WindowsDDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "winsat"
+				}
+			} else {
+				realTestMethod = "stream"
+			}
 		}
 	} else {
 		switch testMethod {
 		case "stream":
 			res = memory.StreamTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
-				res += memory.DDTest(language)
-				realTestMethod = "dd"
+				res = memory.SysBenchTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.DDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "sysbench"
+				}
 			} else {
 				realTestMethod = "stream"
 			}
 		case "dd":
 			res = memory.DDTest(language)
-			realTestMethod = "dd"
-		case "sysbench":
-			res = memory.SysBenchTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
-				res += memory.DDTest(language)
-				realTestMethod = "dd"
-			} else {
-				realTestMethod = "sysbench"
-			}
-		case "auto":
-			res = memory.StreamTest(language)
-			if res == "" || strings.TrimSpace(res) == "" {
-				res = memory.DDTest(language)
+				res = memory.StreamTest(language)
 				if res == "" || strings.TrimSpace(res) == "" {
 					res = memory.SysBenchTest(language)
 					if res == "" || strings.TrimSpace(res) == "" {
@@ -78,15 +159,68 @@ func MemoryTest(language, testMethod string) (realTestMethod, res string) {
 						realTestMethod = "sysbench"
 					}
 				} else {
-					realTestMethod = "dd"
+					realTestMethod = "stream"
+				}
+			} else {
+				realTestMethod = "dd"
+			}
+		case "sysbench":
+			res = memory.SysBenchTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.StreamTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.SysBenchTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						res = memory.DDTest(language)
+						if res == "" || strings.TrimSpace(res) == "" {
+							realTestMethod = ""
+						} else {
+							realTestMethod = "dd"
+						}
+					} else {
+						realTestMethod = "sysbench"
+					}
+				} else {
+					realTestMethod = "stream"
+				}
+			} else {
+				realTestMethod = "sysbench"
+			}
+		case "auto":
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.SysBenchTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.DDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "sysbench"
 				}
 			} else {
 				realTestMethod = "stream"
 			}
 		case "winsat":
-			// winsat 仅 Windows 支持，非 Windows fallback 到 dd
-			res = memory.DDTest(language)
-			realTestMethod = "dd"
+			// winsat 仅 Windows 支持，非 Windows fallback 到 stream → sysbench → dd
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				res = memory.SysBenchTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					res = memory.DDTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						realTestMethod = ""
+					} else {
+						realTestMethod = "dd"
+					}
+				} else {
+					realTestMethod = "sysbench"
+				}
+			} else {
+				realTestMethod = "stream"
+			}
 		default:
 			res = "Unsupported test method"
 			realTestMethod = ""
