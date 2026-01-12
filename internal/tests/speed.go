@@ -85,6 +85,10 @@ func privateSpeedTest(num int, operator string) error {
 			fmt.Fprintf(os.Stderr, "[WARN] privateSpeedTest panic: %v\n", r)
 		}
 	}()
+	*pst.NoProgress = true
+    *pst.Quiet = true
+    *pst.NoHeader = true
+    *pst.NoProjectURL = true
 	// 加载服务器列表
 	serverList, err := pst.LoadServerList()
 	if err != nil {
