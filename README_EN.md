@@ -330,7 +330,7 @@ cd ecs
 
 2. Install Go environment (skip if already installed)
 
-Select go 1.25.3 version to install 
+Select go 1.25.4 version to install 
 
 ```bash
 curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/one-click-installation-script/main/install_scripts/go.sh -o go.sh && chmod +x go.sh && bash go.sh 
