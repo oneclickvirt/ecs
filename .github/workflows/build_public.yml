@@ -62,6 +62,9 @@ jobs:
     - name: Remove security package references
       run: |
         python3 .back/create_public_branch.py
+        rm -f go.sum
+        go clean -modcache
+        go clean -cache -testcache -fuzzcache
         go mod tidy
     - name: Update Go version in README files
       run: |
