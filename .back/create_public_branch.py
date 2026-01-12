@@ -44,16 +44,10 @@ def modify_speed_go(filepath):
     )
 
     content = re.sub(
-        r'''
-        \n\s*// 对于三网测速（cmcc、cu、ct），优先使用 privatespeedtest 进行私有测速
-        \s*\n
-        \s*opLower\s*:=\s*strings\.ToLower\(operator\)
-        [\s\S]*?
-        \n\s*}\s*
-        ''',
+        r'^[ \t]*// 对于三网测速（cmcc、cu、ct），优先使用 privatespeedtest 进行私有测速[\s\S]*?\n\s*\n',
         '\n',
         content,
-        flags=re.MULTILINE | re.VERBOSE
+        flags=re.MULTILINE
     )
 
     write_file(filepath, content)

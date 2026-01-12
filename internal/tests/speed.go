@@ -189,6 +189,7 @@ func CustomSP(platform, operator string, num int, language string) {
 			return
 		}
 	}
+
 	var url, parseType string
 	if strings.ToLower(platform) == "cn" {
 		if strings.ToLower(operator) == "cmcc" {
