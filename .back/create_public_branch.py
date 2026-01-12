@@ -24,108 +24,34 @@ def write_file(filepath, content):
 
 def modify_speed_go(filepath):
     """
-    Modify internal/tests/speed.go to comment out privatespeedtest import and usage.
-    This ensures the file remains syntactically correct.
+    Brutally remove privatespeedtest-related code from speed.go
+    by deleting known blocks from upstream source.
     """
     content = read_file(filepath)
-    
-    # Comment out the privatespeedtest import
-    content = re.sub(
-        r'(\t)"github\.com/oneclickvirt/privatespeedtest/pst"',
-        r'\1// "github.com/oneclickvirt/privatespeedtest/pst"',
-        content
-    )
-    
-    # Process line by line for precise control
-    lines = content.split('\n')
-    new_lines = []
-    in_private_func = False
-    in_private_call_block = False
-    func_brace_count = 0
-    i = 0
-    
-    while i < len(lines):
-        line = lines[i]
-        
-        # Detect start of privateSpeedTest function
-        if 'func privateSpeedTest(num int, operator string) error {' in line:
-            in_private_func = True
-            func_brace_count = 1
-            new_lines.append('// ' + line)
-            i += 1
-            continue
-        
-        # If we're inside the privateSpeedTest function, comment out everything
-        if in_private_func:
-            # Count braces
-            func_brace_count += line.count('{') - line.count('}')
-            
-            # Comment out the line
-            if line.strip():
-                if not line.strip().startswith('//'):
-                    # Preserve indentation
-                    indent = len(line) - len(line.lstrip())
-                    new_lines.append(' ' * indent + '// ' + line.lstrip())
-                else:
-                    new_lines.append(line)
-            else:
-                new_lines.append(line)
-            
-            # Check if function ends
-            if func_brace_count == 0:
-                in_private_func = False
-            i += 1
-            continue
-        
-        # Detect the call to privateSpeedTest in CustomSP
-        if '\terr := privateSpeedTest(num, opLower)' in line:
-            in_private_call_block = True
-            new_lines.append('\t\t// err := privateSpeedTest(num, opLower)')
-            i += 1
-            continue
-        
-        # Handle the if-else block after the call
-        if in_private_call_block:
-            stripped = line.strip()
-            
-            # Comment out these lines
-            if stripped.startswith('if err != nil'):
-                new_lines.append('\t\t// if err != nil {')
-                i += 1
-                continue
-            elif 'fmt.Fprintf(os.Stderr, "[WARN] privatespeedtest failed' in line:
-                new_lines.append('\t\t\t// fmt.Fprintf(os.Stderr, "[WARN] privatespeedtest failed\\n")')
-                i += 1
-                continue
-            elif stripped == '// 继续使用原有的兜底方案':
-                new_lines.append('\t\t\t// // 继续使用原有的兜底方案')
-                i += 1
-                continue
-            elif stripped == '} else {':
-                new_lines.append('\t\t// } else {')
-                i += 1
-                continue
-            elif stripped == '// 测速成功，直接返回':
-                new_lines.append('\t\t\t// // 测速成功，直接返回')
-                i += 1
-                continue
-            elif stripped == 'return':
-                new_lines.append('\t\t\t// return')
-                i += 1
-                # Next should be the closing brace
-                if i < len(lines) and lines[i].strip() == '}':
-                    new_lines.append('\t\t// }')
-                    i += 1
-                in_private_call_block = False
-                continue
-        
-        new_lines.append(line)
-        i += 1
-    
-    content = '\n'.join(new_lines)
-    write_file(filepath, content)
-    print(f"✓ Modified {filepath}")
 
+    content = re.sub(
+        r'\n\s*"github\.com/oneclickvirt/privatespeedtest/pst"\s*\n',
+        '\n',
+        content,
+        flags=re.MULTILINE
+    )
+
+    content = re.sub(
+        r'// formatString 格式化字符串到指定宽度[\s\S]*?return nil\n}\n',
+        '',
+        content,
+        flags=re.MULTILINE
+    )
+
+    content = re.sub(
+        r'\n\s*// 对于三网测速（cmcc、cu、ct），优先使用 privatespeedtest 进行私有测速[\s\S]*?\n\s*}\n',
+        '\n',
+        content,
+        flags=re.MULTILINE
+    )
+
+    write_file(filepath, content)
+    print(f"✓ Cleanly removed privatespeedtest from {filepath}")
 
 def modify_utils_go(filepath):
     """
