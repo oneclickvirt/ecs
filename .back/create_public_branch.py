@@ -55,6 +55,13 @@ def modify_speed_go(filepath):
     content = read_file(filepath)
 
     content = re.sub(
+        r'\n\s*"time"\s*\n',
+        '\n',
+        content,
+        flags=re.MULTILINE
+    )
+
+    content = re.sub(
         r'\n\s*"github\.com/oneclickvirt/privatespeedtest/pst"\s*\n',
         '\n',
         content,
