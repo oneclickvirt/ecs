@@ -21,6 +21,31 @@ def write_file(filepath, content):
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(content)
 
+def modify_go_mod(filepath):
+    """
+    Modify go.mod to remove privatespeedtest (and optional security) dependencies.
+    Automatically matches module names regardless of version or indirect comment.
+    """
+    content = read_file(filepath)
+
+    # Modules to remove
+    remove_modules = [
+        r'github\.com/oneclickvirt/privatespeedtest',
+        r'github\.com/oneclickvirt/security',
+    ]
+
+    for mod in remove_modules:
+        # Remove full require line (with or without // indirect)
+        content = re.sub(
+            rf'^[ \t]*{mod}[ \t]+v[^\s]+(?:[ \t]+// indirect)?[ \t]*\n',
+            '',
+            content,
+            flags=re.MULTILINE
+        )
+
+    write_file(filepath, content)
+    print(f"✓ Removed privatespeedtest/security from {filepath}")
+
 
 def modify_speed_go(filepath):
     """
@@ -114,31 +139,6 @@ def modify_params_go(filepath):
     write_file(filepath, content)
     print(f"✓ Modified {filepath}")
 
-
-# def modify_go_mod(filepath):
-#     """
-#     Modify go.mod to remove security and privatespeedtest dependencies.
-#     """
-#     content = read_file(filepath)
-    
-#     # Remove security dependency from require section
-#     content = re.sub(
-#         r'\s+github\.com/oneclickvirt/security v[^\n]+\n',
-#         '',
-#         content
-#     )
-    
-#     # Remove privatespeedtest dependency from require section (including indirect)
-#     content = re.sub(
-#         r'\s+github\.com/oneclickvirt/privatespeedtest v[^\n]+\n',
-#         '',
-#         content
-#     )
-    
-#     write_file(filepath, content)
-#     print(f"✓ Modified {filepath}")
-
-
 def modify_readme(filepath, is_english=False):
     """
     Modify README files to update Go version and security status.
@@ -220,10 +220,10 @@ def main():
     print()
     
     # Modify go.mod
-    # print("Modifying go.mod...")
-    # modify_go_mod('go.mod')
-    # print()
-    
+    print("Modifying go.mod...")
+    modify_go_mod('go.mod')
+    print()
+        
     # Modify README files
     print("Modifying README files...")
     modify_readme('README.md', is_english=False)
