@@ -60,6 +60,7 @@ require (
 	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
 	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect
+	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218 // indirect
 	github.com/oneclickvirt/stream v0.0.2-20250924154001 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
@@ -77,7 +78,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rodaine/table v1.3.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/schollz/progressbar/v3 v3.14.4 // indirect
+	github.com/schollz/progressbar/v3 v3.17.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
 	github.com/showwin/speedtest-go v1.7.10 // indirect

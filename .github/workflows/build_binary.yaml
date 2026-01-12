@@ -40,7 +40,7 @@ jobs:
           args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-          GOPRIVATE: github.com/oneclickvirt/security
+          GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
       - name: Update goecs.sh with new version
         run: |

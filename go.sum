@@ -122,6 +122,10 @@ github.com/oneclickvirt/pingtest v0.0.9-20251104112920 h1:j3Fjhy0YHT/VF7iuAVVELa
 github.com/oneclickvirt/pingtest v0.0.9-20251104112920/go.mod h1:gxwsxxwitNQiGq2OI0ZogYoOLwc8DtuOdSRe6/EvRqs=
 github.com/oneclickvirt/portchecker v0.0.3-20250728015900 h1:AomzdppSOFB70AJESQhlp0IPbsHTTJGimAWDk2TzCWM=
 github.com/oneclickvirt/portchecker v0.0.3-20250728015900/go.mod h1:9sjMDPCd4Z40wkYB0S9gQPGH8YPtnNE1ZJthVIuHUzA=
+github.com/oneclickvirt/privatespeedtest v0.0.1-20260112095218 h1:VcglFz85LVPo8wE8AkBhgXHHUUVI2Ae9ng6+hY6ewx4=
+github.com/oneclickvirt/privatespeedtest v0.0.1-20260112095218/go.mod h1:IXOlKKX4DUNqxOaW/K9bcdrBiWxo0jGSLXeBeo7NrTo=
+github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218 h1:h2k2fHtrsIIP/x/apEWkQGlTKuIumz8GrUR/df41YhE=
+github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218/go.mod h1:IXOlKKX4DUNqxOaW/K9bcdrBiWxo0jGSLXeBeo7NrTo=
 github.com/oneclickvirt/security v0.0.8-20251112080734 h1:WpwdGbwpiBP2YA1lNsymati5uvBbWFlN9CXHYgd3/fE=
 github.com/oneclickvirt/security v0.0.8-20251112080734/go.mod h1:aPMIwqsz7wiUH1cqvtRr9+QcQRkKzlUWecDM6SGVddc=
 github.com/oneclickvirt/speedtest v0.0.11-20251102151740 h1:1NUrNt5ay6/xVNC5x62UrQjPqK8jgbKtyjBml/3boZg=
@@ -168,6 +172,8 @@ github.com/sagikazarmark/locafero v0.11.0 h1:1iurJgmM9G3PA/I+wWYIOw/5SyBtxapeHDc
 github.com/sagikazarmark/locafero v0.11.0/go.mod h1:nVIGvgyzw595SUSUE6tvCp3YYTeHs15MvlmU87WwIik=
 github.com/schollz/progressbar/v3 v3.14.4 h1:W9ZrDSJk7eqmQhd3uxFNNcTr0QL+xuGNI9dEMrw0r74=
 github.com/schollz/progressbar/v3 v3.14.4/go.mod h1:aT3UQ7yGm+2ZjeXPqsjTenwL3ddUiuZ0kfQ/2tHlyNI=
+github.com/schollz/progressbar/v3 v3.17.1 h1:bI1MTaoQO+v5kzklBjYNRQLoVpe0zbyRZNK6DFkVC5U=
+github.com/schollz/progressbar/v3 v3.17.1/go.mod h1:RzqpnsPQNjUyIgdglUjRLgD7sVnxN1wpmBMV+UiEbL4=
 github.com/shirou/gopsutil v3.21.11+incompatible h1:+1+c1VGhc88SSonWP6foOcLhvnKlUeu/erjjvaPEYiI=
 github.com/shirou/gopsutil v3.21.11+incompatible/go.mod h1:5b4v6he4MtMOwMlS0TUMTu2PcXUg8+E1lC7eC3UO/RA=
 github.com/shirou/gopsutil/v4 v4.25.6 h1:kLysI2JsKorfaFPcYmcJqbzROzsBWEOAtw6A7dIfqXs=

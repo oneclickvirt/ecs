@@ -65,8 +65,12 @@ jobs:
         sed -i '/SecurityUploadToken/d' utils/utils.go
         sed -i 's|"github.com/oneclickvirt/security/network"|"github.com/oneclickvirt/basics/network"|g' utils/utils.go
         sed -i '/^import/,/^)/{/^)/a\'$'\n''const token = "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"'$'\n''}' utils/utils.go
-        sed -i '/github.com\/oneclickvirt\/security/d' go.mod
+        sed -i '/github.com\/oneclickvirt\/security/d' go.mod        
+        sed -i '/github.com\/oneclickvirt\/privatespeedtest/d' go.mod        
         sed -i 's|var securityFlag = flag.Bool("security", true,|var securityFlag = flag.Bool("security", false,|g' goecs.go
+        sed -i 's|"github.com/oneclickvirt/privatespeedtest/pst"|// "github.com/oneclickvirt/privatespeedtest/pst"|g' internal/tests/speed.go
+        sed -i '/^\/\/ privateSpeedTest.*使用 privatespeedtest/,/^func [A-Z]/{/^func [A-Z]/!s/^/\/\/ /}' internal/tests/speed.go
+        sed -i '/err := privateSpeedTest(num, opLower)/,/return/{/return/!s/^/\/\/ /; s/return$/\/\/ return/}' internal/tests/speed.go
         sed -i 's|VPS融合怪测试|VPS融合怪测试(非官方编译)|g' utils/utils.go
         sed -i 's|VPS Fusion Monster Test|VPS Fusion Monster Test (Unofficial)|g' utils/utils.go
         go mod tidy
