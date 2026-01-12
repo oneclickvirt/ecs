@@ -189,28 +189,28 @@ def modify_params_go(filepath):
     print(f"✓ Modified {filepath}")
 
 
-def modify_go_mod(filepath):
-    """
-    Modify go.mod to remove security and privatespeedtest dependencies.
-    """
-    content = read_file(filepath)
+# def modify_go_mod(filepath):
+#     """
+#     Modify go.mod to remove security and privatespeedtest dependencies.
+#     """
+#     content = read_file(filepath)
     
-    # Remove security dependency from require section
-    content = re.sub(
-        r'\s+github\.com/oneclickvirt/security v[^\n]+\n',
-        '',
-        content
-    )
+#     # Remove security dependency from require section
+#     content = re.sub(
+#         r'\s+github\.com/oneclickvirt/security v[^\n]+\n',
+#         '',
+#         content
+#     )
     
-    # Remove privatespeedtest dependency from require section (including indirect)
-    content = re.sub(
-        r'\s+github\.com/oneclickvirt/privatespeedtest v[^\n]+\n',
-        '',
-        content
-    )
+#     # Remove privatespeedtest dependency from require section (including indirect)
+#     content = re.sub(
+#         r'\s+github\.com/oneclickvirt/privatespeedtest v[^\n]+\n',
+#         '',
+#         content
+#     )
     
-    write_file(filepath, content)
-    print(f"✓ Modified {filepath}")
+#     write_file(filepath, content)
+#     print(f"✓ Modified {filepath}")
 
 
 def modify_readme(filepath, is_english=False):
@@ -294,9 +294,9 @@ def main():
     print()
     
     # Modify go.mod
-    print("Modifying go.mod...")
-    modify_go_mod('go.mod')
-    print()
+    # print("Modifying go.mod...")
+    # modify_go_mod('go.mod')
+    # print()
     
     # Modify README files
     print("Modifying README files...")
