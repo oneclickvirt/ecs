@@ -56,8 +56,8 @@ func printTableRow(result pst.SpeedTestResult) {
 		}
 		location = fmt.Sprintf("%s%s", carrier, result.City)
 	}
-	if len(location) > 14 {
-		location = location[:14] + "..."
+	if len(location) > 15 {
+		location = location[:15]
 	}
 	upload := "N/A"
 	if result.UploadMbps > 0 {
