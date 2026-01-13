@@ -47,43 +47,104 @@ def modify_go_mod(filepath):
     print(f"✓ Removed privatespeedtest/security from {filepath}")
 
 
+def remove_code_block(lines, start_marker, end_condition='empty_line'):
+    """
+    Remove code block from lines starting with start_marker.
+    
+    Args:
+        lines: List of file lines
+        start_marker: String or list of strings to identify block start
+        end_condition: 'empty_line' (default) or 'closing_brace' or custom function
+    
+    Returns:
+        Modified lines with the block removed
+    """
+    if isinstance(start_marker, str):
+        start_marker = [start_marker]
+    
+    result = []
+    skip_mode = False
+    brace_depth = 0
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        
+        # Check if we should start skipping
+        if not skip_mode:
+            for marker in start_marker:
+                if marker in line:
+                    skip_mode = True
+                    if end_condition == 'closing_brace':
+                        # Count opening braces on the function declaration line
+                        brace_depth = line.count('{') - line.count('}')
+                    break
+            
+            if not skip_mode:
+                result.append(line)
+        else:
+            # We're in skip mode
+            if end_condition == 'empty_line':
+                # Skip until we find an empty line
+                if line.strip() == '':
+                    skip_mode = False
+                    # Don't add the empty line, continue to next
+            elif end_condition == 'closing_brace':
+                # Track brace depth
+                brace_depth += line.count('{') - line.count('}')
+                if brace_depth == 0 and '}' in line:
+                    # Function ended, skip until next empty line
+                    end_condition = 'empty_line'
+        
+        i += 1
+    
+    return result
+
+
 def modify_speed_go(filepath):
     """
-    Brutally remove privatespeedtest-related code from speed.go
-    by deleting known blocks from upstream source.
+    Remove privatespeedtest-related code from speed.go.
+    Uses line-by-line processing for reliability.
     """
     content = read_file(filepath)
-
-    content = re.sub(
-        r'\n\s*"time"\s*\n',
-        '\n',
-        content,
-        flags=re.MULTILINE
-    )
-
+    lines = content.split('\n')
+    
+    # Remove specific code blocks by their comment markers
+    blocks_to_remove = [
+        '// formatString 格式化字符串到指定宽度',
+        '// printTableRow 打印表格行',
+        '// privateSpeedTest 使用 privatespeedtest 进行单个运营商测速',
+        '// privateSpeedTestWithFallback 使用私有测速，如果失败则回退到 global 节点',
+        '// 对于三网测速（cmcc、cu、ct）和 other，优先使用 privatespeedtest 进行私有测速',
+    ]
+    
+    for block_marker in blocks_to_remove:
+        lines = remove_code_block(lines, block_marker)
+    
+    # Reconstruct content
+    content = '\n'.join(lines)
+    
+    # Remove privatespeedtest import
     content = re.sub(
         r'\n\s*"github\.com/oneclickvirt/privatespeedtest/pst"\s*\n',
         '\n',
         content,
         flags=re.MULTILINE
     )
-
+    
+    # Remove time import (only used by privatespeedtest)
     content = re.sub(
-        r'// formatString 格式化字符串到指定宽度[\s\S]*?return nil\n}\n',
-        '',
-        content,
-        flags=re.MULTILINE
-    )
-
-    content = re.sub(
-        r'^[ \t]*// 对于三网测速（cmcc、cu、ct），优先使用 privatespeedtest 进行私有测速[\s\S]*?\n\s*\n',
+        r'\n\s*"time"\s*\n',
         '\n',
         content,
         flags=re.MULTILINE
     )
-
+    
+    # Clean up multiple consecutive empty lines (optional)
+    content = re.sub(r'\n{3,}', '\n\n', content)
+    
     write_file(filepath, content)
-    print(f"✓ Cleanly removed privatespeedtest from {filepath}")
+    print(f"✓ Removed privatespeedtest from {filepath}")
 
 def modify_utils_go(filepath):
     """

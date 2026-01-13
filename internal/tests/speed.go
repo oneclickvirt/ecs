@@ -69,7 +69,7 @@ func printTableRow(result pst.SpeedTestResult) {
 	}
 	latency := fmt.Sprintf("%.2f ms", result.PingLatency.Seconds()*1000)
 	packetLoss := "N/A"
-	fmt.Print(formatString(location, 16))
+	fmt.Print(formatString(location, 15))
 	fmt.Print(formatString(upload, 16))
 	fmt.Print(formatString(download, 16))
 	fmt.Print(formatString(latency, 16))
@@ -78,25 +78,26 @@ func printTableRow(result pst.SpeedTestResult) {
 }
 
 // privateSpeedTest 使用 privatespeedtest 进行单个运营商测速
-// operator 参数：只支持 "cmcc"、"cu"、"ct"
-func privateSpeedTest(num int, operator string) error {
+// operator 参数：只支持 "cmcc"、"cu"、"ct"、"other"
+// 返回值：实际测试的节点数量和错误信息
+func privateSpeedTest(num int, operator string) (int, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "[WARN] privateSpeedTest panic: %v\n", r)
 		}
 	}()
 	*pst.NoProgress = true
-    *pst.Quiet = true
-    *pst.NoHeader = true
-    *pst.NoProjectURL = true
+	*pst.Quiet = true
+	*pst.NoHeader = true
+	*pst.NoProjectURL = true
 	// 加载服务器列表
 	serverList, err := pst.LoadServerList()
 	if err != nil {
-		return fmt.Errorf("加载自定义服务器列表失败")
+		return 0, fmt.Errorf("加载自定义服务器列表失败")
 	}
 	// 使用三网测速模式（每个运营商选择指定数量的最低延迟节点）
 	serversPerISP := num
-	if serversPerISP <= 0 || serversPerISP > 5{
+	if serversPerISP <= 0 || serversPerISP > 5 {
 		serversPerISP = 2
 	}
 	// 单个运营商测速：先过滤服务器列表
@@ -108,8 +109,10 @@ func privateSpeedTest(num int, operator string) error {
 		carrierType = "Unicom"
 	case "ct":
 		carrierType = "Telecom"
+	case "other":
+		carrierType = "Other"
 	default:
-		return fmt.Errorf("不支持的运营商类型: %s", operator)
+		return 0, fmt.Errorf("不支持的运营商类型: %s", operator)
 	}
 	// 过滤出指定运营商的服务器
 	filteredServers := pst.FilterServersByISP(serverList.Servers, carrierType)
@@ -121,13 +124,13 @@ func privateSpeedTest(num int, operator string) error {
 	// 使用 FindBestServers 选择最佳服务器
 	candidateServers, err := pst.FindBestServers(
 		filteredServers,
-		candidateCount,   // 选择更多候选节点用于去重
-		5*time.Second,    // ping 超时
-		true,             // 显示进度条
-		true,             // 静默
+		candidateCount, // 选择更多候选节点用于去重
+		5*time.Second,  // ping 超时
+		true,           // 显示进度条
+		true,           // 静默
 	)
 	if err != nil {
-		return fmt.Errorf("分组查找失败")
+		return 0, fmt.Errorf("分组查找失败")
 	}
 	// 去重：确保同一运营商内城市不重复
 	seenCities := make(map[string]bool)
@@ -147,18 +150,18 @@ func privateSpeedTest(num int, operator string) error {
 		}
 	}
 	if len(bestServers) == 0 {
-		return fmt.Errorf("去重后没有可用的服务器")
+		return 0, fmt.Errorf("去重后没有可用的服务器")
 	}
 	// 执行测速并逐个打印结果（不打印表头）
 	for i, serverInfo := range bestServers {
 		result := pst.RunSpeedTest(
 			serverInfo.Server,
-			false,            // 不禁用下载测试
-			false,            // 不禁用上传测试
-			6,                // 并发线程数
-			12*time.Second,   // 超时时间
+			false,          // 不禁用下载测试
+			false,          // 不禁用上传测试
+			6,              // 并发线程数
+			12*time.Second, // 超时时间
 			&serverInfo,
-			false,             // 不显示进度条
+			false, // 不显示进度条
 		)
 		if result.Success {
 			printTableRow(result)
@@ -168,7 +171,31 @@ func privateSpeedTest(num int, operator string) error {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	return nil
+	// 返回实际测试的节点数量
+	return len(bestServers), nil
+}
+
+// privateSpeedTestWithFallback 使用私有测速，如果失败则回退到 global 节点
+// 主要用于 Other 类型的测速
+func privateSpeedTestWithFallback(num int, operator, language string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "[WARN] privateSpeedTestWithFallback panic: %v\n", r)
+		}
+	}()
+	// 先尝试私有节点测速
+	testedCount, err := privateSpeedTest(num, operator)
+	if err != nil || testedCount == 0 {
+		// 私有节点失败，回退到 global 节点
+		var url, parseType string
+		url = model.NetGlobal
+		parseType = "id"
+		if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
+			sp.CustomSpeedTest(url, parseType, num, language)
+		} else {
+			sp.OfficialCustomSpeedTest(url, parseType, num, language)
+		}
+	}
 }
 
 func CustomSP(platform, operator string, num int, language string) {
@@ -177,16 +204,23 @@ func CustomSP(platform, operator string, num int, language string) {
 			fmt.Fprintf(os.Stderr, "[WARN] CustomSP panic: %v\n", r)
 		}
 	}()
-	// 对于三网测速（cmcc、cu、ct），优先使用 privatespeedtest 进行私有测速
+	// 对于三网测速（cmcc、cu、ct）和 other，优先使用 privatespeedtest 进行私有测速
 	opLower := strings.ToLower(operator)
-	if opLower == "cmcc" || opLower == "cu" || opLower == "ct" {
-		err := privateSpeedTest(num, opLower)
+	if opLower == "cmcc" || opLower == "cu" || opLower == "ct" || opLower == "other" {
+		testedCount, err := privateSpeedTest(num, opLower)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] privatespeedtest failed\n")
-			// 继续使用原有的兜底方案
-		} else {
-			// 测速成功，直接返回
+			fmt.Fprintf(os.Stderr, "[WARN] privatespeedtest failed: %v\n", err)
+			// 全部失败，继续使用原有的公共节点兜底方案
+		} else if testedCount >= num {
+			// 私有节点测速成功且数量达标，直接返回
 			return
+		} else if testedCount > 0 {
+			// 部分私有节点测速成功，但数量不足，用公共节点补充
+			fmt.Fprintf(os.Stderr, "[INFO] 私有节点仅测试了 %d 个，补充 %d 个公共节点\n", testedCount, num-testedCount)
+			num = num - testedCount // 只测剩余数量的公共节点
+			// 继续执行下面的公共节点测速逻辑
+		} else {
+			// testedCount == 0，继续使用公共节点
 		}
 	}
 
@@ -223,7 +257,8 @@ func CustomSP(platform, operator string, num int, language string) {
 			url = model.NetJP
 		} else if strings.ToLower(operator) == "sg" {
 			url = model.NetSG
-		} else if strings.ToLower(operator) == "global" {
+		} else if strings.ToLower(operator) == "global" || strings.ToLower(operator) == "other" {
+			// other 类型回退到 global 节点
 			url = model.NetGlobal
 		}
 		parseType = "id"

@@ -348,7 +348,17 @@ func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex
 				tests.CustomSP("net", "ct", config.SpNum, config.Language)
 				tests.CustomSP("net", "cmcc", config.SpNum, config.Language)
 			} else if config.Choice == "2" || config.Choice == "3" || config.Choice == "4" || config.Choice == "5" {
-				tests.CustomSP("net", "global", 4, config.Language)
+				// 中文模式：就近测速 + 三网各1个 + Other 1个（带回退）
+				if config.Language == "zh" {
+					tests.NearbySP()
+					tests.CustomSP("net", "other", 1, config.Language)
+					tests.CustomSP("net", "cu", 1, config.Language)
+					tests.CustomSP("net", "ct", 1, config.Language)
+					tests.CustomSP("net", "cmcc", 1, config.Language)
+				} else {
+					// 英文模式：保持原有逻辑，测4个global节点
+					tests.CustomSP("net", "global", 4, config.Language)
+				}
 			} else if config.Choice == "6" {
 				tests.CustomSP("net", "global", 11, config.Language)
 			}
@@ -442,7 +452,7 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 				// 使用context来控制上传goroutine
 				uploadCtx, uploadCancel := context.WithTimeout(context.Background(), 30*time.Second)
 				defer uploadCancel()
-				
+
 				go func() {
 					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload)
 					select {
@@ -455,7 +465,7 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 						return
 					}
 				}()
-				
+
 				select {
 				case result := <-resultChan:
 					uploadCancel() // 成功完成，取消context

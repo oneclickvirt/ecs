@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	ecsVersion   = "v0.1.108"                    // 融合怪版本号
+	ecsVersion   = "v0.1.109"                   // 融合怪版本号
 	configs      = params.NewConfig(ecsVersion) // 全局配置实例
 	userSetFlags = make(map[string]bool)        // 用于跟踪哪些参数是用户显式设置的
 )
