@@ -3,7 +3,6 @@ before:
     - go mod tidy -v
     - go clean -cache
 
-# 添加并行构建限制以减少磁盘占用
 project_name: goecs
 
 builds:
@@ -36,6 +35,7 @@ builds:
         goarch: arm
     main: ./
     binary: goecs
+
   - id: darwin-amd64
     env:
       - CGO_ENABLED=1
@@ -49,6 +49,7 @@ builds:
       - amd64
     main: ./
     binary: goecs
+
   - id: darwin-arm64
     env:
       - CGO_ENABLED=1
@@ -62,18 +63,23 @@ builds:
       - arm64
     main: ./
     binary: goecs
+
 universal_binaries:
   - name_template: "goecs"
     replace: false
+
 checksum:
   name_template: "checksums.txt"
+
 snapshot:
   name_template: "goecs"
+
 archives:
   - name_template: "goecs_{{ .Os }}_{{ .Arch }}"
     format: zip
     files:
       - none*
+
 changelog:
   sort: asc
   filters:
@@ -85,3 +91,17 @@ changelog:
       - Merge branch
       - go mod tidy
       - New translations
+
+upx:
+  - enabled: true
+    brute: true
+    goos:
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - 386
+      - arm64
+      - ppc64le
+      - s390x
+      - riscv64
