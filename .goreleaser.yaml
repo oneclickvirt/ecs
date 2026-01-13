@@ -1,6 +1,11 @@
 before:
   hooks:
     - go mod tidy -v
+    - go clean -cache
+
+# 添加并行构建限制以减少磁盘占用
+project_name: goecs
+
 builds:
   - id: universal
     env:
