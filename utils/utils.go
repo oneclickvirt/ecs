@@ -219,6 +219,11 @@ func CaptureOutput(f func()) string {
 	}()
 	// 执行函数
 	f()
+	// 确保所有输出都已经刷新
+	os.Stdout.Sync()
+	os.Stderr.Sync()
+	// 等待一小段时间，确保后台goroutine的输出完成
+	time.Sleep(100 * time.Millisecond)
 	// 关闭管道写入端，让管道读取端可以读取所有数据
 	stdoutPipeW.Close()
 	stderrPipeW.Close()

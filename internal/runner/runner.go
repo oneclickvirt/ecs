@@ -330,6 +330,8 @@ func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string,
 				fmt.Println(pt.WebsiteTest())
 			}
 		}
+		// 等待第三方库的输出完全刷新到标准输出
+		time.Sleep(300 * time.Millisecond)
 	}, tempOutput, output)
 }
 
@@ -362,6 +364,8 @@ func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex
 			} else if config.Choice == "6" {
 				tests.CustomSP("net", "global", 11, config.Language)
 			}
+			// 等待第三方库的输出完全刷新到标准输出
+			time.Sleep(500 * time.Millisecond)
 		}
 	}, tempOutput, output)
 }
@@ -380,6 +384,8 @@ func RunEnglishNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *
 				fmt.Println(pt.WebsiteTest())
 			}
 		}
+		// 等待第三方库的输出完全刷新到标准输出
+		time.Sleep(300 * time.Millisecond)
 	}, tempOutput, output)
 }
 
@@ -393,6 +399,8 @@ func RunEnglishSpeedTests(config *params.Config, output, tempOutput string, outp
 			tests.ShowHead(config.Language)
 			tests.NearbySP()
 			tests.CustomSP("net", "global", -1, config.Language)
+			// 等待第三方库的输出完全刷新到标准输出
+			time.Sleep(500 * time.Millisecond)
 		}
 	}, tempOutput, output)
 }

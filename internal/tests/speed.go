@@ -135,6 +135,8 @@ func privateSpeedTest(num int, operator string) (int, error) {
 	// 去重：确保同一运营商内城市不重复
 	seenCities := make(map[string]bool)
 	var bestServers []pst.ServerWithLatencyInfo
+	// 保留更多备用节点，以应对测速失败的情况（保留 serversPerISP * 2 个备用节点）
+	maxBackupServers := serversPerISP * 2
 	for _, serverInfo := range candidateServers {
 		city := serverInfo.Server.City
 		if city == "" {
@@ -143,8 +145,8 @@ func privateSpeedTest(num int, operator string) (int, error) {
 		if !seenCities[city] {
 			seenCities[city] = true
 			bestServers = append(bestServers, serverInfo)
-			// 去重后取前 serversPerISP 个
-			if len(bestServers) >= serversPerISP {
+			// 去重后保留足够的备用节点
+			if len(bestServers) >= maxBackupServers {
 				break
 			}
 		}
@@ -153,7 +155,13 @@ func privateSpeedTest(num int, operator string) (int, error) {
 		return 0, fmt.Errorf("去重后没有可用的服务器")
 	}
 	// 执行测速并逐个打印结果（不打印表头）
+	// 统计成功输出的节点数
+	successCount := 0
 	for i, serverInfo := range bestServers {
+		// 如果已经成功输出了足够的节点，则停止测试
+		if successCount >= serversPerISP {
+			break
+		}
 		result := pst.RunSpeedTest(
 			serverInfo.Server,
 			false,          // 不禁用下载测试
@@ -163,16 +171,18 @@ func privateSpeedTest(num int, operator string) (int, error) {
 			&serverInfo,
 			false, // 不显示进度条
 		)
-		if result.Success {
+		// 只有当测试成功且上传和下载速度都有效时，才输出结果
+		if result.Success && result.UploadMbps > 0 && result.DownloadMbps > 0 {
 			printTableRow(result)
+			successCount++
 		}
-		// 在测试之间暂停（除了最后一个）
-		if i < len(bestServers)-1 {
+		// 在测试之间暂停（如果还需要继续测试的话）
+		if successCount < serversPerISP && i < len(bestServers)-1 {
 			time.Sleep(1 * time.Second)
 		}
 	}
-	// 返回实际测试的节点数量
-	return len(bestServers), nil
+	// 返回实际成功输出的节点数量
+	return successCount, nil
 }
 
 // privateSpeedTestWithFallback 使用私有测速，如果失败则回退到 global 节点
