@@ -171,10 +171,13 @@ func privateSpeedTest(num int, operator string) (int, error) {
 			&serverInfo,
 			false, // 不显示进度条
 		)
-		// 只有当测试成功且上传和下载速度都有效时，才输出结果
-		if result.Success && result.UploadMbps > 0 && result.DownloadMbps > 0 {
+		// 只要测试成功且有任意一个速度值有效，就输出结果（部分成功也显示）
+		if result.Success && (result.UploadMbps > 0 || result.DownloadMbps > 0) {
 			printTableRow(result)
-			successCount++
+			// 只有上传和下载都成功时才计入成功数
+			if result.UploadMbps > 0 && result.DownloadMbps > 0 {
+				successCount++
+			}
 		}
 		// 在测试之间暂停（如果还需要继续测试的话）
 		if successCount < serversPerISP && i < len(bestServers)-1 {
