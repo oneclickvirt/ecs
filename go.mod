@@ -16,7 +16,7 @@ require (
 	github.com/oneclickvirt/pingtest v0.0.9-20251104112920
 	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
 	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218
-	github.com/oneclickvirt/security v0.0.8-20260104113003
+	github.com/oneclickvirt/security v0.0.8-20260202071316
 	github.com/oneclickvirt/speedtest v0.0.11-20251102151740
 )
 
