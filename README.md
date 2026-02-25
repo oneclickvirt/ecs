@@ -45,7 +45,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 | 系统           | 说明                       |
 |----------------|---------------------------|
-| OpenBSD/NetBSD | 部分Goalng的官方库未支持本系统(尤其是net相关项目)  |
+| OpenBSD/NetBSD | 部分Golang的官方库未支持本系统(尤其是net相关项目)  |
 
 ---
 
