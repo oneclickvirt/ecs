@@ -260,29 +260,38 @@ goecs_check() {
     fi
     rm -f goecs.zip README.md LICENSE README_EN.md
     chmod 777 goecs
+    installed_to_system=false
     for install_path in "/usr/bin" "/usr/local/bin"; do
         if [ -d "$install_path" ]; then
-            cp -f goecs "$install_path/"
-            break
+            if cp -f goecs "$install_path/" 2>/dev/null; then
+                installed_to_system=true
+                break
+            fi
         fi
     done
+    if [ "$installed_to_system" = "false" ]; then
+        _yellow "权限不足，无法安装到系统路径，goecs 已保留在当前目录下"
+        _yellow "Insufficient permissions to install to system path, goecs is kept in the current directory"
+        _yellow "请使用以下命令运行: ./goecs"
+        _yellow "Please use the following command to run: ./goecs"
+    fi
     if [ "$os" != "Darwin" ]; then
         PARAM="net.ipv4.ping_group_range"
         NEW_VALUE="0 2147483647"
         if [ -f /etc/sysctl.conf ]; then
-            if grep -q "^$PARAM" /etc/sysctl.conf; then
-                sed -i "s/^$PARAM.*/$PARAM = $NEW_VALUE/" /etc/sysctl.conf
+            if grep -q "^$PARAM" /etc/sysctl.conf 2>/dev/null; then
+                sed -i "s/^$PARAM.*/$PARAM = $NEW_VALUE/" /etc/sysctl.conf 2>/dev/null || true
             else
-                echo "$PARAM = $NEW_VALUE" >> /etc/sysctl.conf
+                echo "$PARAM = $NEW_VALUE" >> /etc/sysctl.conf 2>/dev/null || true
             fi
-            sysctl -p >/dev/null 2>&1
+            sysctl -p >/dev/null 2>&1 || true
         fi
     fi
-    setcap cap_net_raw=+ep goecs 2>/dev/null
-    setcap cap_net_raw=+ep /usr/bin/goecs 2>/dev/null
-    setcap cap_net_raw=+ep /usr/local/bin/goecs 2>/dev/null
-    _green "goecs installation complete, current version:"
-    goecs -v || ./goecs -v
+    setcap cap_net_raw=+ep goecs 2>/dev/null || true
+    setcap cap_net_raw=+ep /usr/bin/goecs 2>/dev/null || true
+    setcap cap_net_raw=+ep /usr/local/bin/goecs 2>/dev/null || true
+    _green "goecs 安装完成 / goecs installation complete, 当前版本 / current version:"
+    goecs -v 2>/dev/null || ./goecs -v
 }
 
 InstallSysbench() {

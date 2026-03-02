@@ -45,7 +45,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 | OS     | Notes                                                                                           |
 |--------|-------------------------------------------------------------------------------------------------|
-| OpenBSD/NetBSD | Some of Goalng's official libraries do not support this system (especially net-related items) |
+| OpenBSD/NetBSD | Some of Golang's official libraries do not support this system (especially net-related items) |
 
 ---
 
