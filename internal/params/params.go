@@ -73,7 +73,7 @@ func NewConfig(version string) *Config {
 		MemoryTestStatus:     true,
 		DiskTestStatus:       true,
 		UtTestStatus:         true,
-		SecurityTestStatus:   true,
+		SecurityTestStatus:   false,
 		EmailTestStatus:      true,
 		BacktraceStatus:      true,
 		Nt3Status:            true,
@@ -106,7 +106,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.MemoryTestStatus, "memory", true, "Enable/Disable memory test")
 	c.GoecsFlag.BoolVar(&c.DiskTestStatus, "disk", true, "Enable/Disable disk test")
 	c.GoecsFlag.BoolVar(&c.UtTestStatus, "ut", true, "Enable/Disable unlock media test")
-	c.GoecsFlag.BoolVar(&c.SecurityTestStatus, "security", true, "Enable/Disable security test")
+	c.GoecsFlag.BoolVar(&c.SecurityTestStatus, "security", false, "Enable/Disable security test")
 	c.GoecsFlag.BoolVar(&c.EmailTestStatus, "email", true, "Enable/Disable email port test")
 	c.GoecsFlag.BoolVar(&c.BacktraceStatus, "backtrace", true, "Enable/Disable backtrace test (in 'en' language or on windows it always false)")
 	c.GoecsFlag.BoolVar(&c.Nt3Status, "nt3", true, "Enable/Disable NT3 test (in 'en' language or on windows it always false)")

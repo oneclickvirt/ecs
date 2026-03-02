@@ -244,8 +244,7 @@ Usage: goecs [options]
         Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
   -ping
         Enable/Disable ping test
-  -security
-        Enable/Disable security test (default true)
+  -security        Enable/Disable security test (default false)
   -speed
         Enable/Disable speed test (default true)
   -spnum int
