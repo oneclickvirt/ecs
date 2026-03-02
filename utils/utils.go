@@ -26,6 +26,88 @@ import (
 	"github.com/oneclickvirt/security/network"
 )
 
+// IsAndroid 检测当前是否在 Android (Termux) 环境下运行
+func IsAndroid() bool {
+	// Termux 会设置 TERMUX_VERSION 或 PREFIX 环境变量
+	if os.Getenv("TERMUX_VERSION") != "" {
+		return true
+	}
+	if prefix := os.Getenv("PREFIX"); strings.Contains(prefix, "termux") {
+		return true
+	}
+	// Android 系统标志文件
+	if _, err := os.Stat("/system/build.prop"); err == nil {
+		return true
+	}
+	// ANDROID_ROOT 环境变量 (Android 系统设置为 /system)
+	if os.Getenv("ANDROID_ROOT") != "" {
+		return true
+	}
+	return false
+}
+
+// androidDNSServers 是用于修复 Android/Termux 下 DNS 问题的备用服务器列表
+var androidDNSServers = []string{
+	"nameserver 8.8.8.8",
+	"nameserver 8.8.4.4",
+	"nameserver 1.1.1.1",
+	"nameserver 223.5.5.5",
+}
+
+// CheckAndFixAndroidDNS 检测并尝试修复 Android Termux 下的 DNS 解析问题。
+// 仅在检测到 Android 环境下调用。不出现问题时无任何输出。
+// language: "zh" 或 "en"
+func CheckAndFixAndroidDNS(language string) {
+	if !IsAndroid() {
+		return
+	}
+	resolvPath := "/etc/resolv.conf"
+	hasValidDNS := false
+	if data, err := os.ReadFile(resolvPath); err == nil {
+		for _, line := range strings.Split(string(data), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "nameserver") && len(strings.Fields(line)) >= 2 {
+				hasValidDNS = true
+				break
+			}
+		}
+	}
+	if hasValidDNS {
+		// DNS 配置正常，无需处理
+		return
+	}
+	// /etc/resolv.conf 缺失或无有效 nameserver，尝试自动创建
+	content := strings.Join(androidDNSServers, "\n") + "\n"
+	err := os.WriteFile(resolvPath, []byte(content), 0644)
+	if err != nil {
+		// 写入失败（权限不足），给出双语提示和修复建议
+		fmt.Println("-----------------------------------------------------")
+		fmt.Println("[Android/Termux] 检测到 DNS 解析配置缺失！")
+		fmt.Println("这将导致依赖系统 DNS 的测试项目无法正常运行。")
+		fmt.Println("解决方案（推荐）：")
+		fmt.Println("  通过 Magisk / KernelSU 刷入以下模块后重启手机：")
+		fmt.Println("  https://github.com/weigui404/resolv.conf")
+		fmt.Println("解决方案（临时）：")
+		fmt.Println("  以 root 身份执行: echo 'nameserver 8.8.8.8' > /etc/resolv.conf")
+		fmt.Println("-----------------------------------------------------")
+		fmt.Println("[Android/Termux] DNS resolver config is missing!")
+		fmt.Println("This will cause DNS-dependent tests to fail.")
+		fmt.Println("Fix (recommended):")
+		fmt.Println("  Flash the following module via Magisk / KernelSU and reboot:")
+		fmt.Println("  https://github.com/weigui404/resolv.conf")
+		fmt.Println("Fix (temporary):")
+		fmt.Println("  Run as root: echo 'nameserver 8.8.8.8' > /etc/resolv.conf")
+		fmt.Println("-----------------------------------------------------")
+	} else {
+		// 写入成功
+		if language == "zh" {
+			fmt.Println("[Android/Termux] DNS 配置缺失，已自动写入 /etc/resolv.conf，DNS 解析已恢复。")
+		} else {
+			fmt.Println("[Android/Termux] DNS config was missing; auto-written to /etc/resolv.conf, DNS resolution restored.")
+		}
+	}
+}
+
 // 获取本程序本日及总执行的统计信息
 type StatsResponse struct {
 	Counter   string `json:"counter"`
