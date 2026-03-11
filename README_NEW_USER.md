@@ -3,11 +3,13 @@
 [![Hits](https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net) [![Downloads](https://ghdownload.spiritlhl.net/oneclickvirt/ecs?color=36c600)](https://github.com/oneclickvirt/ecs/releases)
 
 ## 语言 / Languages / 言語
+
 - [中文](#中文)
 - [English](#English)
 - [日本語](#日本語)
 
 ## 中文
+
 - [系统基础信息](#系统基础信息)
 - [CPU测试](#CPU测试)
 - [内存测试](#内存测试)
@@ -21,6 +23,7 @@
 - [就近测速](#就近测速)
 
 ## English
+
 - [Basic System Information](#Basic-System-Information)
 - [CPU Testing](#CPU-Testing)
 - [Memory Testing](#Memory-Testing)
@@ -32,6 +35,7 @@
 - [Nearby Speed Testing](#Nearby-Speed-Testing)
 
 ## 日本語
+
 - [システム基本情報](#システム基本情報)
 - [CPUテスト](#CPUテスト)
 - [メモリテスト](#メモリテスト)
