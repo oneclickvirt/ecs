@@ -1,6 +1,6 @@
 {
   "total_cpu_models": 1476,
-  "total_samples": 249034,
+  "total_samples": 249325,
   "global_max_single": 14646,
   "global_max_multi": 956278,
   "cpu_statistics": [
@@ -231,13 +231,13 @@
     {
       "cpu_prefix": "AMDRyzen99950X16-CoreProcessor",
       "cpu_model": "AMD Ryzen 9 9950X 16-Core Processor",
-      "sample_count": 2685,
+      "sample_count": 2686,
       "max_single_score": 7366,
       "max_multi_score": 117766,
       "min_single_score": 93,
       "min_multi_score": 335,
       "avg_single_score": 6264,
-      "avg_multi_score": 17441,
+      "avg_multi_score": 17437,
       "typical_cores": 1,
       "typical_threads": 32,
       "rank": 17
@@ -287,13 +287,13 @@
     {
       "cpu_prefix": "AMDRyzen97950X16-CoreProcessor",
       "cpu_model": "AMD Ryzen 9 7950X 16-Core Processor @ 545.000 MHz",
-      "sample_count": 3416,
+      "sample_count": 3418,
       "max_single_score": 7089,
       "max_multi_score": 111338,
       "min_single_score": 390,
       "min_multi_score": 479,
-      "avg_single_score": 5758,
-      "avg_multi_score": 11888,
+      "avg_single_score": 5757,
+      "avg_multi_score": 11884,
       "typical_cores": 32,
       "typical_threads": 32,
       "rank": 21
@@ -315,13 +315,13 @@
     {
       "cpu_prefix": "AMDEPYC-GenoaProcessor",
       "cpu_model": "AMD EPYC-Genoa Processor",
-      "sample_count": 3527,
+      "sample_count": 3529,
       "max_single_score": 7038,
       "max_multi_score": 65387,
       "min_single_score": 62,
       "min_multi_score": 62,
-      "avg_single_score": 3026,
-      "avg_multi_score": 5633,
+      "avg_single_score": 3028,
+      "avg_multi_score": 5635,
       "typical_cores": 8,
       "typical_threads": 8,
       "rank": 23
@@ -329,13 +329,13 @@
     {
       "cpu_prefix": "AMDEPYC-MilanProcessor",
       "cpu_model": "AMD EPYC-Milan Processor",
-      "sample_count": 4376,
+      "sample_count": 4378,
       "max_single_score": 7023,
       "max_multi_score": 341976,
       "min_single_score": 53,
       "min_multi_score": 58,
       "avg_single_score": 4137,
-      "avg_multi_score": 9947,
+      "avg_multi_score": 9944,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 24
@@ -525,13 +525,13 @@
     {
       "cpu_prefix": "AMDEPYC4545P16-CoreProcessor",
       "cpu_model": "AMD EPYC 4545P 16-Core Processor",
-      "sample_count": 50,
+      "sample_count": 51,
       "max_single_score": 6689,
       "max_multi_score": 97811,
       "min_single_score": 3139,
       "min_multi_score": 3139,
-      "avg_single_score": 5857,
-      "avg_multi_score": 8736,
+      "avg_single_score": 5844,
+      "avg_multi_score": 8951,
       "typical_cores": 1,
       "typical_threads": 32,
       "rank": 38
@@ -1029,13 +1029,13 @@
     {
       "cpu_prefix": "AMDEPYC-RomeProcessor",
       "cpu_model": "AMD EPYC-Rome Processor",
-      "sample_count": 4484,
+      "sample_count": 4516,
       "max_single_score": 5888,
       "max_multi_score": 259356,
       "min_single_score": 172,
       "min_multi_score": 178,
-      "avg_single_score": 1883,
-      "avg_multi_score": 4387,
+      "avg_single_score": 1881,
+      "avg_multi_score": 4375,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 74
@@ -1127,13 +1127,13 @@
     {
       "cpu_prefix": "AMDRyzen95900X12-CoreProcessor",
       "cpu_model": "AMD Ryzen 9 5900X 12-Core Processor",
-      "sample_count": 825,
+      "sample_count": 826,
       "max_single_score": 5645,
       "max_multi_score": 69731,
       "min_single_score": 392,
       "min_multi_score": 392,
       "avg_single_score": 4504,
-      "avg_multi_score": 7601,
+      "avg_multi_score": 7597,
       "typical_cores": 1,
       "typical_threads": 24,
       "rank": 81
@@ -1603,13 +1603,13 @@
     {
       "cpu_prefix": "AMDEPYC9K85128-CoreProcessor",
       "cpu_model": "AMD EPYC 9K85 128-Core Processor",
-      "sample_count": 4,
+      "sample_count": 5,
       "max_single_score": 5118,
       "max_multi_score": 170083,
       "min_single_score": 5088,
       "min_multi_score": 5345,
-      "avg_single_score": 5108,
-      "avg_multi_score": 67968,
+      "avg_single_score": 5110,
+      "avg_multi_score": 88300,
       "typical_cores": 64,
       "typical_threads": 64,
       "rank": 115
@@ -2289,13 +2289,13 @@
     {
       "cpu_prefix": "AMDEPYC965496-CoreProcessor",
       "cpu_model": "AMD EPYC 9654 96-Core Processor",
-      "sample_count": 3331,
+      "sample_count": 3337,
       "max_single_score": 4594,
       "max_multi_score": 811494,
       "min_single_score": 491,
       "min_multi_score": 520,
-      "avg_single_score": 4242,
-      "avg_multi_score": 7138,
+      "avg_single_score": 4241,
+      "avg_multi_score": 7132,
       "typical_cores": 192,
       "typical_threads": 192,
       "rank": 164
@@ -2373,13 +2373,13 @@
     {
       "cpu_prefix": "AMDEPYC912416-CoreProcessor",
       "cpu_model": "AMD EPYC 9124 16-Core Processor",
-      "sample_count": 15,
+      "sample_count": 16,
       "max_single_score": 4557,
       "max_multi_score": 75081,
       "min_single_score": 2449,
       "min_multi_score": 2934,
-      "avg_single_score": 4368,
-      "avg_multi_score": 27348,
+      "avg_single_score": 4359,
+      "avg_multi_score": 26148,
       "typical_cores": 1,
       "typical_threads": 32,
       "rank": 170
@@ -2485,13 +2485,13 @@
     {
       "cpu_prefix": "AMDEPYC9J1496-CoreProcessor",
       "cpu_model": "AMD EPYC 9J14 96-Core Processor",
-      "sample_count": 142,
+      "sample_count": 143,
       "max_single_score": 4526,
       "max_multi_score": 421761,
       "min_single_score": 911,
       "min_multi_score": 935,
-      "avg_single_score": 4111,
-      "avg_multi_score": 24597,
+      "avg_single_score": 4112,
+      "avg_multi_score": 24556,
       "typical_cores": 24,
       "typical_threads": 24,
       "rank": 178
@@ -3157,13 +3157,13 @@
     {
       "cpu_prefix": "AMDEPYC7C1364-CoreProcessor",
       "cpu_model": "AMD EPYC 7C13 64-Core Processor",
-      "sample_count": 2740,
+      "sample_count": 2743,
       "max_single_score": 4181,
       "max_multi_score": 244383,
       "min_single_score": 242,
       "min_multi_score": 262,
       "avg_single_score": 3194,
-      "avg_multi_score": 6345,
+      "avg_multi_score": 6341,
       "typical_cores": 8,
       "typical_threads": 8,
       "rank": 226
@@ -3199,13 +3199,13 @@
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i7-13700H",
       "cpu_model": "13th Gen Intel(R) Core(TM) i7-13700H",
-      "sample_count": 8,
+      "sample_count": 9,
       "max_single_score": 4178,
       "max_multi_score": 43975,
       "min_single_score": 1231,
       "min_multi_score": 3598,
-      "avg_single_score": 2588,
-      "avg_multi_score": 18967,
+      "avg_single_score": 2531,
+      "avg_multi_score": 18233,
       "typical_cores": 20,
       "typical_threads": 20,
       "rank": 229
@@ -3213,7 +3213,7 @@
     {
       "cpu_prefix": "GeneralPurposeProcessor",
       "cpu_model": "General Purpose Processor @ 2399.998 MHz",
-      "sample_count": 948,
+      "sample_count": 949,
       "max_single_score": 4174,
       "max_multi_score": 37576,
       "min_single_score": 867,
@@ -3535,13 +3535,13 @@
     {
       "cpu_prefix": "AMDEPYC776364-CoreProcessor",
       "cpu_model": "AMD EPYC 7763 64-Core Processor",
-      "sample_count": 2617,
+      "sample_count": 2623,
       "max_single_score": 4037,
       "max_multi_score": 435360,
       "min_single_score": 172,
       "min_multi_score": 172,
       "avg_single_score": 3424,
-      "avg_multi_score": 9833,
+      "avg_multi_score": 9826,
       "typical_cores": 256,
       "typical_threads": 256,
       "rank": 253
@@ -3563,13 +3563,13 @@
     {
       "cpu_prefix": "AMDEPYC766356-CoreProcessor",
       "cpu_model": "AMD EPYC 7663 56-Core Processor",
-      "sample_count": 1060,
+      "sample_count": 1062,
       "max_single_score": 4033,
       "max_multi_score": 232604,
       "min_single_score": 1384,
       "min_multi_score": 1384,
-      "avg_single_score": 3616,
-      "avg_multi_score": 5586,
+      "avg_single_score": 3615,
+      "avg_multi_score": 5582,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 255
@@ -3759,13 +3759,13 @@
     {
       "cpu_prefix": "IntelCoreProcessor(Broadwell,noTSX,IBRS)",
       "cpu_model": "Intel Core Processor (Broadwell, no TSX, IBRS)",
-      "sample_count": 479,
+      "sample_count": 486,
       "max_single_score": 3978,
       "max_multi_score": 7944,
       "min_single_score": 96,
       "min_multi_score": 96,
-      "avg_single_score": 781,
-      "avg_multi_score": 893,
+      "avg_single_score": 780,
+      "avg_multi_score": 891,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 269
@@ -3787,13 +3787,13 @@
     {
       "cpu_prefix": "AMDEPYC7J1364-CoreProcessor",
       "cpu_model": "AMD EPYC 7J13 64-Core Processor",
-      "sample_count": 577,
+      "sample_count": 578,
       "max_single_score": 3967,
       "max_multi_score": 252241,
       "min_single_score": 145,
       "min_multi_score": 163,
-      "avg_single_score": 2414,
-      "avg_multi_score": 7474,
+      "avg_single_score": 2416,
+      "avg_multi_score": 7486,
       "typical_cores": 1,
       "typical_threads": 128,
       "rank": 271
@@ -4275,6 +4275,20 @@
       "rank": 305
     },
     {
+      "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11400F",
+      "cpu_model": "11th Gen Intel(R) Core(TM) i5-11400F @ 2.60GHz",
+      "sample_count": 4,
+      "max_single_score": 3756,
+      "max_multi_score": 22064,
+      "min_single_score": 3418,
+      "min_multi_score": 2561,
+      "avg_single_score": 3515,
+      "avg_multi_score": 16978,
+      "typical_cores": 12,
+      "typical_threads": 12,
+      "rank": 306
+    },
+    {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-1250P",
       "cpu_model": "12th Gen Intel(R) Core(TM) i5-1250P",
       "sample_count": 1,
@@ -4286,7 +4300,7 @@
       "avg_multi_score": 12983,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 306
+      "rank": 307
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-12450H",
@@ -4300,7 +4314,7 @@
       "avg_multi_score": 14675,
       "typical_cores": 1,
       "typical_threads": 16,
-      "rank": 307
+      "rank": 308
     },
     {
       "cpu_prefix": "AMDEPYC7773X64-CoreProcessor",
@@ -4314,7 +4328,7 @@
       "avg_multi_score": 22274,
       "typical_cores": 256,
       "typical_threads": 256,
-      "rank": 308
+      "rank": 309
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-1235U",
@@ -4328,7 +4342,7 @@
       "avg_multi_score": 13654,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 309
+      "rank": 310
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i3-N305",
@@ -4342,7 +4356,7 @@
       "avg_multi_score": 13944,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 310
+      "rank": 311
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i9-12950HX",
@@ -4356,21 +4370,21 @@
       "avg_multi_score": 41586,
       "typical_cores": 24,
       "typical_threads": 24,
-      "rank": 311
+      "rank": 312
     },
     {
       "cpu_prefix": "AMDEPYC7K8364-CoreProcessor",
       "cpu_model": "AMD EPYC 7K83 64-Core Processor",
-      "sample_count": 113,
+      "sample_count": 114,
       "max_single_score": 3701,
       "max_multi_score": 17203,
       "min_single_score": 2122,
       "min_multi_score": 2080,
       "avg_single_score": 3615,
-      "avg_multi_score": 4536,
+      "avg_multi_score": 4532,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 312
+      "rank": 313
     },
     {
       "cpu_prefix": "AMDEPYC7T8364-CoreProcessor",
@@ -4384,7 +4398,7 @@
       "avg_multi_score": 5539,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 313
+      "rank": 314
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i3-12100F",
@@ -4398,7 +4412,7 @@
       "avg_multi_score": 12034,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 314
+      "rank": 315
     },
     {
       "cpu_prefix": "AMDEPYC7B12",
@@ -4412,7 +4426,7 @@
       "avg_multi_score": 5082,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 315
+      "rank": 316
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11400H",
@@ -4426,7 +4440,7 @@
       "avg_multi_score": 16214,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 316
+      "rank": 317
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i7-12800HX",
@@ -4440,7 +4454,7 @@
       "avg_multi_score": 25371,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 317
+      "rank": 318
     },
     {
       "cpu_prefix": "AMDEPYC7W8364-CoreProcessor",
@@ -4454,7 +4468,7 @@
       "avg_multi_score": 6129,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 318
+      "rank": 319
     },
     {
       "cpu_prefix": "IntelXeonProcessor(Icelake)",
@@ -4468,7 +4482,7 @@
       "avg_multi_score": 9239,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 319
+      "rank": 320
     },
     {
       "cpu_prefix": "AMDEPYC7Y8364-CoreProcessor",
@@ -4482,7 +4496,7 @@
       "avg_multi_score": 5766,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 320
+      "rank": 321
     },
     {
       "cpu_prefix": "Cortex-A510Cortex-A710-",
@@ -4496,7 +4510,7 @@
       "avg_multi_score": 12790,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 321
+      "rank": 322
     },
     {
       "cpu_prefix": "AMDEPYC7R4364-CoreProcessor",
@@ -4510,7 +4524,7 @@
       "avg_multi_score": 3871,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 322
+      "rank": 323
     },
     {
       "cpu_prefix": "AMDRyzen77840Hw/Radeon(TM)780MGraphics",
@@ -4524,7 +4538,7 @@
       "avg_multi_score": 31641,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 323
+      "rank": 324
     },
     {
       "cpu_prefix": "Intel(R)CoreTMUltra5125U",
@@ -4538,7 +4552,7 @@
       "avg_multi_score": 39153,
       "typical_cores": 1,
       "typical_threads": 24,
-      "rank": 324
+      "rank": 325
     },
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i7-1360P",
@@ -4552,7 +4566,7 @@
       "avg_multi_score": 13764,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 325
+      "rank": 326
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i3-12100",
@@ -4566,7 +4580,7 @@
       "avg_multi_score": 8964,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 326
+      "rank": 327
     },
     {
       "cpu_prefix": "Cortex-A55",
@@ -4580,7 +4594,7 @@
       "avg_multi_score": 6792,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 327
+      "rank": 328
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i7-11390H",
@@ -4594,7 +4608,7 @@
       "avg_multi_score": 3836,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 328
+      "rank": 329
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11260H",
@@ -4608,7 +4622,7 @@
       "avg_multi_score": 11999,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 329
+      "rank": 330
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-12400F",
@@ -4622,7 +4636,7 @@
       "avg_multi_score": 15368,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 330
+      "rank": 331
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-1135G7",
@@ -4636,21 +4650,21 @@
       "avg_multi_score": 9874,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 331
+      "rank": 332
     },
     {
       "cpu_prefix": "GenuineIntel(R)CPU0000",
       "cpu_model": "Genuine Intel(R) CPU 0000 @ 2.20GHz",
-      "sample_count": 61,
+      "sample_count": 62,
       "max_single_score": 3586,
       "max_multi_score": 26970,
       "min_single_score": 577,
       "min_multi_score": 809,
-      "avg_single_score": 1235,
-      "avg_multi_score": 8667,
+      "avg_single_score": 1233,
+      "avg_multi_score": 8681,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 332
+      "rank": 333
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)6315P",
@@ -4664,7 +4678,7 @@
       "avg_multi_score": 13679,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 333
+      "rank": 334
     },
     {
       "cpu_prefix": "Neoverse-V2BIOSAxionCPU",
@@ -4678,7 +4692,7 @@
       "avg_multi_score": 19000,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 334
+      "rank": 335
     },
     {
       "cpu_prefix": "Cortex-A77Kryo-4XX-Silver",
@@ -4692,21 +4706,21 @@
       "avg_multi_score": 14593,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 335
+      "rank": 336
     },
     {
       "cpu_prefix": "Neoverse-N1",
       "cpu_model": "Neoverse-N1",
-      "sample_count": 5596,
+      "sample_count": 5603,
       "max_single_score": 3567,
       "max_multi_score": 74369,
       "min_single_score": 181,
       "min_multi_score": 193,
       "avg_single_score": 2927,
-      "avg_multi_score": 8842,
+      "avg_multi_score": 8843,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 336
+      "rank": 337
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-4.2CPU",
@@ -4720,7 +4734,7 @@
       "avg_multi_score": 10577,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 337
+      "rank": 338
     },
     {
       "cpu_prefix": "Neoverse-V2BIOSAxion",
@@ -4734,7 +4748,7 @@
       "avg_multi_score": 7119,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 338
+      "rank": 339
     },
     {
       "cpu_prefix": "Neoverse-V2",
@@ -4748,7 +4762,7 @@
       "avg_multi_score": 5773,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 339
+      "rank": 340
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-4.2",
@@ -4762,7 +4776,7 @@
       "avg_multi_score": 9219,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 340
+      "rank": 341
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSAmpere(R)Altra(R)Processor",
@@ -4776,7 +4790,7 @@
       "avg_multi_score": 6909,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 341
+      "rank": 342
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-7.2",
@@ -4790,7 +4804,7 @@
       "avg_multi_score": 8860,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 342
+      "rank": 343
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i3-12300T",
@@ -4804,7 +4818,7 @@
       "avg_multi_score": 11828,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 343
+      "rank": 344
     },
     {
       "cpu_prefix": "Cortex-A510Cortex-A715Cortex-A710-",
@@ -4818,7 +4832,7 @@
       "avg_multi_score": 11379,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 344
+      "rank": 345
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i3-1115G4",
@@ -4832,7 +4846,7 @@
       "avg_multi_score": 6414,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 345
+      "rank": 346
     },
     {
       "cpu_prefix": "Intel(R)N150",
@@ -4846,7 +4860,7 @@
       "avg_multi_score": 10069,
       "typical_cores": 1,
       "typical_threads": 4,
-      "rank": 346
+      "rank": 347
     },
     {
       "cpu_prefix": "Intel(R)N97",
@@ -4860,7 +4874,7 @@
       "avg_multi_score": 9024,
       "typical_cores": 1,
       "typical_threads": 4,
-      "rank": 347
+      "rank": 348
     },
     {
       "cpu_prefix": "AMDEPYC8224P24-CoreProcessor",
@@ -4874,7 +4888,7 @@
       "avg_multi_score": 10651,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 348
+      "rank": 349
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-1240P",
@@ -4888,7 +4902,7 @@
       "avg_multi_score": 19259,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 349
+      "rank": 350
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11400",
@@ -4902,7 +4916,7 @@
       "avg_multi_score": 15305,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 350
+      "rank": 351
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11300H",
@@ -4916,7 +4930,7 @@
       "avg_multi_score": 4472,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 351
+      "rank": 352
     },
     {
       "cpu_prefix": "WJYVirtualProcessor",
@@ -4930,7 +4944,7 @@
       "avg_multi_score": 10721,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 352
+      "rank": 353
     },
     {
       "cpu_prefix": "Neoverse-N2BIOSvirt-rhel7.6.0CPU",
@@ -4944,7 +4958,7 @@
       "avg_multi_score": 46227,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 353
+      "rank": 354
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8580",
@@ -4958,7 +4972,7 @@
       "avg_multi_score": 160453,
       "typical_cores": 2,
       "typical_threads": 240,
-      "rank": 354
+      "rank": 355
     },
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i5-13400F",
@@ -4972,34 +4986,20 @@
       "avg_multi_score": 33619,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 355
+      "rank": 356
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-7.2CPU",
       "cpu_model": "Neoverse-N1 BIOS virt-7.2 CPU @ 2.0GHz",
-      "sample_count": 1711,
+      "sample_count": 1715,
       "max_single_score": 3462,
       "max_multi_score": 104017,
       "min_single_score": 833,
       "min_multi_score": 834,
       "avg_single_score": 3323,
-      "avg_multi_score": 10364,
+      "avg_multi_score": 10367,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 356
-    },
-    {
-      "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11400F",
-      "cpu_model": "11th Gen Intel(R) Core(TM) i5-11400F @ 2.60GHz",
-      "sample_count": 3,
-      "max_single_score": 3457,
-      "max_multi_score": 22064,
-      "min_single_score": 3418,
-      "min_multi_score": 21434,
-      "avg_single_score": 3435,
-      "avg_multi_score": 21784,
-      "typical_cores": 12,
-      "typical_threads": 12,
       "rank": 357
     },
     {
@@ -5017,6 +5017,20 @@
       "rank": 358
     },
     {
+      "cpu_prefix": "Intel(R)Xeon(R)Processor",
+      "cpu_model": "Intel(R) Xeon(R) Processor",
+      "sample_count": 6,
+      "max_single_score": 3447,
+      "max_multi_score": 14563,
+      "min_single_score": 873,
+      "min_multi_score": 2417,
+      "avg_single_score": 1785,
+      "avg_multi_score": 8515,
+      "typical_cores": 4,
+      "typical_threads": 4,
+      "rank": 359
+    },
+    {
       "cpu_prefix": "Neoverse-N1BIOSAmpere(R)Altra(R)ProcessorNoneCPU",
       "cpu_model": "Neoverse-N1 BIOS Ampere(R) Altra(R) Processor None CPU @ 3.0GHz",
       "sample_count": 37,
@@ -5028,7 +5042,7 @@
       "avg_multi_score": 7091,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 359
+      "rank": 360
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSNotSpecifiedCPU",
@@ -5042,7 +5056,7 @@
       "avg_multi_score": 11413,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 360
+      "rank": 361
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-rhel8.6.0",
@@ -5056,7 +5070,7 @@
       "avg_multi_score": 13506,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 361
+      "rank": 362
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSAmpere(R)Altra(R)ProcessorQ80-30CPU",
@@ -5070,7 +5084,7 @@
       "avg_multi_score": 272015,
       "typical_cores": 1,
       "typical_threads": 80,
-      "rank": 362
+      "rank": 363
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-rhel8.6.0CPU",
@@ -5084,7 +5098,7 @@
       "avg_multi_score": 13431,
       "typical_cores": 10,
       "typical_threads": 10,
-      "rank": 363
+      "rank": 364
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-5.2CPU",
@@ -5098,7 +5112,7 @@
       "avg_multi_score": 17277,
       "typical_cores": 10,
       "typical_threads": 10,
-      "rank": 364
+      "rank": 365
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-6.2CPU",
@@ -5112,7 +5126,7 @@
       "avg_multi_score": 18889,
       "typical_cores": 6,
       "typical_threads": 6,
-      "rank": 365
+      "rank": 366
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-rhel8.5.0CPU",
@@ -5126,7 +5140,7 @@
       "avg_multi_score": 2990,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 366
+      "rank": 367
     },
     {
       "cpu_prefix": "IntelXeonProcessor(Skylake)",
@@ -5140,21 +5154,21 @@
       "avg_multi_score": 1917,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 367
+      "rank": 368
     },
     {
       "cpu_prefix": "AMDEPYC7402P24-CoreProcessor",
       "cpu_model": "AMD EPYC 7402P 24-Core Processor",
-      "sample_count": 3286,
+      "sample_count": 3287,
       "max_single_score": 3399,
       "max_multi_score": 41973,
       "min_single_score": 35,
       "min_multi_score": 35,
       "avg_single_score": 1539,
-      "avg_multi_score": 2003,
+      "avg_multi_score": 2002,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 368
+      "rank": 369
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSCPU",
@@ -5168,21 +5182,21 @@
       "avg_multi_score": 12198,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 369
+      "rank": 370
     },
     {
       "cpu_prefix": "AMDEPYC7K6248-CoreProcessor",
       "cpu_model": "AMD EPYC 7K62 48-Core Processor",
-      "sample_count": 5314,
+      "sample_count": 5334,
       "max_single_score": 3380,
       "max_multi_score": 162713,
       "min_single_score": 64,
       "min_multi_score": 296,
       "avg_single_score": 1541,
-      "avg_multi_score": 7077,
+      "avg_multi_score": 7081,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 370
+      "rank": 371
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6462C",
@@ -5196,7 +5210,7 @@
       "avg_multi_score": 53963,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 371
+      "rank": 372
     },
     {
       "cpu_prefix": "AMDEPYC760132-CoreProcessor",
@@ -5210,7 +5224,7 @@
       "avg_multi_score": 3176,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 372
+      "rank": 373
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSNotSpecified",
@@ -5224,7 +5238,7 @@
       "avg_multi_score": 18624,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 373
+      "rank": 374
     },
     {
       "cpu_prefix": "Intel(R)N100",
@@ -5238,7 +5252,7 @@
       "avg_multi_score": 7995,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 374
+      "rank": 375
     },
     {
       "cpu_prefix": "HUAWEI,Kunpeng920",
@@ -5252,7 +5266,7 @@
       "avg_multi_score": 177487,
       "typical_cores": 2,
       "typical_threads": 64,
-      "rank": 375
+      "rank": 376
     },
     {
       "cpu_prefix": "AMDEPYC-Rome-v4Processor(noXSAVES)",
@@ -5266,12 +5280,12 @@
       "avg_multi_score": 2465,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 376
+      "rank": 377
     },
     {
       "cpu_prefix": "IntelXeonProcessor(SierraForest)",
       "cpu_model": "Intel Xeon Processor (SierraForest)",
-      "sample_count": 1580,
+      "sample_count": 1581,
       "max_single_score": 3358,
       "max_multi_score": 6190,
       "min_single_score": 46,
@@ -5280,7 +5294,7 @@
       "avg_multi_score": 1099,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 377
+      "rank": 378
     },
     {
       "cpu_prefix": "TencentCloudCVM",
@@ -5294,7 +5308,7 @@
       "avg_multi_score": 26462,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 378
+      "rank": 379
     },
     {
       "cpu_prefix": "SamsungS5E8855boardbasedonERD8855",
@@ -5308,7 +5322,7 @@
       "avg_multi_score": 16676,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 379
+      "rank": 380
     },
     {
       "cpu_prefix": "AMDEPYC7D1336-CoreProcessor",
@@ -5322,7 +5336,7 @@
       "avg_multi_score": 5733,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 380
+      "rank": 381
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i7-1280P",
@@ -5336,7 +5350,7 @@
       "avg_multi_score": 22564,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 381
+      "rank": 382
     },
     {
       "cpu_prefix": "Kunpeng-920",
@@ -5350,7 +5364,7 @@
       "avg_multi_score": 16920,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 382
+      "rank": 383
     },
     {
       "cpu_prefix": "06/cf",
@@ -5364,7 +5378,7 @@
       "avg_multi_score": 1682,
       "typical_cores": 88,
       "typical_threads": 88,
-      "rank": 383
+      "rank": 384
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)6975P-C",
@@ -5378,7 +5392,7 @@
       "avg_multi_score": 58033,
       "typical_cores": 64,
       "typical_threads": 64,
-      "rank": 384
+      "rank": 385
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-6.2",
@@ -5392,7 +5406,7 @@
       "avg_multi_score": 19973,
       "typical_cores": 10,
       "typical_threads": 10,
-      "rank": 385
+      "rank": 386
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)6982P-C",
@@ -5406,7 +5420,7 @@
       "avg_multi_score": 4741,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 386
+      "rank": 387
     },
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i5-13500T",
@@ -5420,7 +5434,7 @@
       "avg_multi_score": 41699,
       "typical_cores": 20,
       "typical_threads": 20,
-      "rank": 387
+      "rank": 388
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)E-2378CPU",
@@ -5434,7 +5448,7 @@
       "avg_multi_score": 9924,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 388
+      "rank": 389
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5412U",
@@ -5448,7 +5462,7 @@
       "avg_multi_score": 4253,
       "typical_cores": 1,
       "typical_threads": 48,
-      "rank": 389
+      "rank": 390
     },
     {
       "cpu_prefix": "Cortex-A55Cortex-A78",
@@ -5462,7 +5476,7 @@
       "avg_multi_score": 15145,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 390
+      "rank": 391
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8581CCPU",
@@ -5476,7 +5490,7 @@
       "avg_multi_score": 2769,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 391
+      "rank": 392
     },
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i5-13500TE",
@@ -5490,7 +5504,7 @@
       "avg_multi_score": 40822,
       "typical_cores": 20,
       "typical_threads": 20,
-      "rank": 392
+      "rank": 393
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8568Y+",
@@ -5504,21 +5518,21 @@
       "avg_multi_score": 53651,
       "typical_cores": 20,
       "typical_threads": 20,
-      "rank": 393
+      "rank": 394
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2680v3",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2680 v3 @ 2.50GHz",
-      "sample_count": 548,
+      "sample_count": 550,
       "max_single_score": 3302,
       "max_multi_score": 35927,
       "min_single_score": 138,
       "min_multi_score": 138,
-      "avg_single_score": 731,
-      "avg_multi_score": 2240,
+      "avg_single_score": 732,
+      "avg_multi_score": 2235,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 394
+      "rank": 395
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)Ultra5225H",
@@ -5532,7 +5546,7 @@
       "avg_multi_score": 56762,
       "typical_cores": 14,
       "typical_threads": 14,
-      "rank": 395
+      "rank": 396
     },
     {
       "cpu_prefix": "Kryo-4XX-SilverKryo-4XX-Gold",
@@ -5546,7 +5560,7 @@
       "avg_multi_score": 13272,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 396
+      "rank": 397
     },
     {
       "cpu_prefix": "Kryo-4XX-Silver",
@@ -5560,7 +5574,7 @@
       "avg_multi_score": 14908,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 397
+      "rank": 398
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8481C",
@@ -5574,7 +5588,7 @@
       "avg_multi_score": 61203,
       "typical_cores": 2,
       "typical_threads": 224,
-      "rank": 398
+      "rank": 399
     },
     {
       "cpu_prefix": "Huawei,Kunpeng920",
@@ -5588,7 +5602,7 @@
       "avg_multi_score": 26594,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 399
+      "rank": 400
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)w9-3495X",
@@ -5602,7 +5616,7 @@
       "avg_multi_score": 46513,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 400
+      "rank": 401
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-5.2",
@@ -5616,7 +5630,7 @@
       "avg_multi_score": 17736,
       "typical_cores": 6,
       "typical_threads": 6,
-      "rank": 401
+      "rank": 402
     },
     {
       "cpu_prefix": "Kryo-4XX-SilverCortex-A77",
@@ -5630,7 +5644,7 @@
       "avg_multi_score": 13128,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 402
+      "rank": 403
     },
     {
       "cpu_prefix": "AArch64Processorrev14(aarch64)",
@@ -5644,7 +5658,7 @@
       "avg_multi_score": 13125,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 403
+      "rank": 404
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8488C",
@@ -5658,7 +5672,7 @@
       "avg_multi_score": 9713,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 404
+      "rank": 405
     },
     {
       "cpu_prefix": "13thGenIntel(R)CoreTi9-13900H",
@@ -5672,7 +5686,7 @@
       "avg_multi_score": 41172,
       "typical_cores": 1,
       "typical_threads": 28,
-      "rank": 405
+      "rank": 406
     },
     {
       "cpu_prefix": "Cortex-A510Cortex-A715Cortex-X3",
@@ -5686,7 +5700,7 @@
       "avg_multi_score": 16367,
       "typical_cores": 9,
       "typical_threads": 9,
-      "rank": 406
+      "rank": 407
     },
     {
       "cpu_prefix": "-BIOSvirt-6.2CPU",
@@ -5700,7 +5714,7 @@
       "avg_multi_score": 12936,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 407
+      "rank": 408
     },
     {
       "cpu_prefix": "12thGenIntel(R)Core(TM)i5-1245U",
@@ -5714,7 +5728,7 @@
       "avg_multi_score": 32226,
       "typical_cores": 10,
       "typical_threads": 10,
-      "rank": 408
+      "rank": 409
     },
     {
       "cpu_prefix": "Cortex-A55-",
@@ -5728,7 +5742,7 @@
       "avg_multi_score": 14610,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 409
+      "rank": 410
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i7-1065G7CPU",
@@ -5742,21 +5756,21 @@
       "avg_multi_score": 12583,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 410
+      "rank": 411
     },
     {
       "cpu_prefix": "DO-Premium-Intel",
       "cpu_model": "DO-Premium-Intel",
-      "sample_count": 348,
+      "sample_count": 350,
       "max_single_score": 3191,
       "max_multi_score": 12044,
       "min_single_score": 193,
       "min_multi_score": 183,
-      "avg_single_score": 1663,
-      "avg_multi_score": 2346,
+      "avg_single_score": 1665,
+      "avg_multi_score": 2349,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 411
+      "rank": 412
     },
     {
       "cpu_prefix": "CEPHEUS",
@@ -5770,7 +5784,7 @@
       "avg_multi_score": 12652,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 412
+      "rank": 413
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i3-1125G4",
@@ -5784,7 +5798,7 @@
       "avg_multi_score": 8863,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 413
+      "rank": 414
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5416S",
@@ -5798,7 +5812,7 @@
       "avg_multi_score": 78350,
       "typical_cores": 2,
       "typical_threads": 64,
-      "rank": 414
+      "rank": 415
     },
     {
       "cpu_prefix": "13thGenIntel(R)Core(TM)i7-13705H",
@@ -5812,7 +5826,7 @@
       "avg_multi_score": 42724,
       "typical_cores": 1,
       "typical_threads": 28,
-      "rank": 415
+      "rank": 416
     },
     {
       "cpu_prefix": "TaiShan-v110BIOS1.0CPU",
@@ -5826,7 +5840,7 @@
       "avg_multi_score": 12465,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 416
+      "rank": 417
     },
     {
       "cpu_prefix": "Cortex-A55Cortex-A78Cortex-X1",
@@ -5840,7 +5854,7 @@
       "avg_multi_score": 14372,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 417
+      "rank": 418
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8468",
@@ -5854,7 +5868,7 @@
       "avg_multi_score": 65642,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 418
+      "rank": 419
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)W-3345CPU",
@@ -5868,7 +5882,7 @@
       "avg_multi_score": 11991,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 419
+      "rank": 420
     },
     {
       "cpu_prefix": "Kunpeng-920BIOS1.0CPU",
@@ -5882,7 +5896,7 @@
       "avg_multi_score": 11252,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 420
+      "rank": 421
     },
     {
       "cpu_prefix": "MTP",
@@ -5896,7 +5910,7 @@
       "avg_multi_score": 12789,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 421
+      "rank": 422
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8573C",
@@ -5910,7 +5924,7 @@
       "avg_multi_score": 7653,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 422
+      "rank": 423
     },
     {
       "cpu_prefix": "ARMv8CPU",
@@ -5924,7 +5938,7 @@
       "avg_multi_score": 49712,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 423
+      "rank": 424
     },
     {
       "cpu_prefix": "Kryo-4XX-Gold",
@@ -5938,7 +5952,7 @@
       "avg_multi_score": 14547,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 424
+      "rank": 425
     },
     {
       "cpu_prefix": "AMDRyzen9390012-CoreProcessor",
@@ -5952,21 +5966,21 @@
       "avg_multi_score": 3755,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 425
+      "rank": 426
     },
     {
       "cpu_prefix": "IntelXeonProcessor(Skylake,IBRS)",
       "cpu_model": "Intel Xeon Processor (Skylake, IBRS)",
-      "sample_count": 2442,
+      "sample_count": 2446,
       "max_single_score": 3065,
       "max_multi_score": 57227,
       "min_single_score": 82,
       "min_multi_score": 82,
       "avg_single_score": 901,
-      "avg_multi_score": 1711,
+      "avg_multi_score": 1710,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 426
+      "rank": 427
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6354CPU",
@@ -5980,7 +5994,7 @@
       "avg_multi_score": 31875,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 427
+      "rank": 428
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6346CPU",
@@ -5994,7 +6008,7 @@
       "avg_multi_score": 17987,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 428
+      "rank": 429
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i5-1035G1CPU",
@@ -6008,7 +6022,7 @@
       "avg_multi_score": 10306,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 429
+      "rank": 430
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSvirt-9.2CPU",
@@ -6022,7 +6036,7 @@
       "avg_multi_score": 18374,
       "typical_cores": 6,
       "typical_threads": 6,
-      "rank": 430
+      "rank": 431
     },
     {
       "cpu_prefix": "Cortex-A510",
@@ -6036,7 +6050,7 @@
       "avg_multi_score": 12450,
       "typical_cores": 9,
       "typical_threads": 9,
-      "rank": 431
+      "rank": 432
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)GOLD6548N",
@@ -6050,7 +6064,7 @@
       "avg_multi_score": 24884,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 432
+      "rank": 433
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8369BCPU",
@@ -6064,7 +6078,7 @@
       "avg_multi_score": 14053,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 433
+      "rank": 434
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)6960P",
@@ -6078,7 +6092,7 @@
       "avg_multi_score": 158888,
       "typical_cores": 288,
       "typical_threads": 288,
-      "rank": 434
+      "rank": 435
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8490H",
@@ -6092,7 +6106,7 @@
       "avg_multi_score": 57725,
       "typical_cores": 20,
       "typical_threads": 20,
-      "rank": 435
+      "rank": 436
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8378CCPU",
@@ -6106,7 +6120,7 @@
       "avg_multi_score": 14291,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 436
+      "rank": 437
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8375CCPU",
@@ -6120,7 +6134,7 @@
       "avg_multi_score": 14399,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 437
+      "rank": 438
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8370CCPU",
@@ -6134,7 +6148,7 @@
       "avg_multi_score": 3506,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 438
+      "rank": 439
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i5-1035G4CPU",
@@ -6148,7 +6162,7 @@
       "avg_multi_score": 8922,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 439
+      "rank": 440
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8372CCPU",
@@ -6162,7 +6176,7 @@
       "avg_multi_score": 15602,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 440
+      "rank": 441
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)6981E-C",
@@ -6176,7 +6190,7 @@
       "avg_multi_score": 11387,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 441
+      "rank": 442
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8378ACPU",
@@ -6190,12 +6204,12 @@
       "avg_multi_score": 19110,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 442
+      "rank": 443
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum",
       "cpu_model": "Intel(R) Xeon(R) Platinum",
-      "sample_count": 9943,
+      "sample_count": 9947,
       "max_single_score": 2994,
       "max_multi_score": 14176,
       "min_single_score": 128,
@@ -6204,21 +6218,21 @@
       "avg_multi_score": 1568,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 443
+      "rank": 444
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2686v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2686 v4 @ 2.30GHz",
-      "sample_count": 1962,
+      "sample_count": 1963,
       "max_single_score": 2992,
       "max_multi_score": 50076,
       "min_single_score": 28,
       "min_multi_score": 28,
       "avg_single_score": 1057,
-      "avg_multi_score": 2832,
+      "avg_multi_score": 2831,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 444
+      "rank": 445
     },
     {
       "cpu_prefix": "IntelXeonProcessor(SapphireRapids)",
@@ -6232,7 +6246,7 @@
       "avg_multi_score": 10968,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 445
+      "rank": 446
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6342CPU",
@@ -6246,7 +6260,7 @@
       "avg_multi_score": 22498,
       "typical_cores": 96,
       "typical_threads": 96,
-      "rank": 446
+      "rank": 447
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5315YCPU",
@@ -6260,7 +6274,7 @@
       "avg_multi_score": 3947,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 447
+      "rank": 448
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4309YCPU",
@@ -6274,7 +6288,7 @@
       "avg_multi_score": 27838,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 448
+      "rank": 449
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6430",
@@ -6288,7 +6302,7 @@
       "avg_multi_score": 96528,
       "typical_cores": 128,
       "typical_threads": 128,
-      "rank": 449
+      "rank": 450
     },
     {
       "cpu_prefix": "Neoverse-V1",
@@ -6302,7 +6316,7 @@
       "avg_multi_score": 2935,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 450
+      "rank": 451
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)3N355",
@@ -6316,7 +6330,7 @@
       "avg_multi_score": 21276,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 451
+      "rank": 452
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)D-1747NTECPU",
@@ -6330,7 +6344,7 @@
       "avg_multi_score": 20067,
       "typical_cores": 20,
       "typical_threads": 20,
-      "rank": 452
+      "rank": 453
     },
     {
       "cpu_prefix": "Intel(R)Celeron(R)G6900",
@@ -6344,7 +6358,7 @@
       "avg_multi_score": 5463,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 453
+      "rank": 454
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8480+",
@@ -6358,7 +6372,7 @@
       "avg_multi_score": 77647,
       "typical_cores": 2,
       "typical_threads": 224,
-      "rank": 454
+      "rank": 455
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6348CPU",
@@ -6372,7 +6386,7 @@
       "avg_multi_score": 13268,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 455
+      "rank": 456
     },
     {
       "cpu_prefix": "Intel(R)Pentium(R)Gold7505",
@@ -6386,7 +6400,7 @@
       "avg_multi_score": 5865,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 456
+      "rank": 457
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i5-11500T",
@@ -6400,7 +6414,7 @@
       "avg_multi_score": 14398,
       "typical_cores": 5,
       "typical_threads": 5,
-      "rank": 457
+      "rank": 458
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i3-1005G1CPU",
@@ -6414,12 +6428,12 @@
       "avg_multi_score": 5950,
       "typical_cores": 1,
       "typical_threads": 4,
-      "rank": 458
+      "rank": 459
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPU",
       "cpu_model": "Intel(R) Xeon(R) CPU @ 2.60GHz",
-      "sample_count": 2573,
+      "sample_count": 2575,
       "max_single_score": 2903,
       "max_multi_score": 14877,
       "min_single_score": 13,
@@ -6428,7 +6442,7 @@
       "avg_multi_score": 1967,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 459
+      "rank": 460
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8358PCPU",
@@ -6442,7 +6456,7 @@
       "avg_multi_score": 10604,
       "typical_cores": 128,
       "typical_threads": 128,
-      "rank": 460
+      "rank": 461
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8358CPU",
@@ -6456,7 +6470,7 @@
       "avg_multi_score": 22596,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 461
+      "rank": 462
     },
     {
       "cpu_prefix": "Neoverse-V1BIOSAWSGraviton3AWSGraviton3CPU",
@@ -6470,7 +6484,7 @@
       "avg_multi_score": 2895,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 462
+      "rank": 463
     },
     {
       "cpu_prefix": "Cortex-A720BIOSCIXP1CP8180CPU",
@@ -6484,7 +6498,7 @@
       "avg_multi_score": 26479,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 463
+      "rank": 464
     },
     {
       "cpu_prefix": "11thGenIntel(R)Core(TM)i7-1185G7",
@@ -6498,7 +6512,7 @@
       "avg_multi_score": 9761,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 464
+      "rank": 465
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4314CPU",
@@ -6512,7 +6526,7 @@
       "avg_multi_score": 8875,
       "typical_cores": 32,
       "typical_threads": 32,
-      "rank": 465
+      "rank": 466
     },
     {
       "cpu_prefix": "GenuineIntel(R)CPU0000%!",
@@ -6526,7 +6540,7 @@
       "avg_multi_score": 10374,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 466
+      "rank": 467
     },
     {
       "cpu_prefix": "HUAWEIxxxxx",
@@ -6540,21 +6554,21 @@
       "avg_multi_score": 10518,
       "typical_cores": 3,
       "typical_threads": 6,
-      "rank": 467
+      "rank": 468
     },
     {
       "cpu_prefix": "AMDEPYC764248-CoreProcessor",
       "cpu_model": "AMD EPYC 7642 48-Core Processor @ 2299.954 MHz",
-      "sample_count": 590,
+      "sample_count": 592,
       "max_single_score": 2866,
       "max_multi_score": 81711,
       "min_single_score": 168,
       "min_multi_score": 168,
       "avg_single_score": 1523,
-      "avg_multi_score": 3667,
+      "avg_multi_score": 3659,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 468
+      "rank": 469
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4416+",
@@ -6568,7 +6582,7 @@
       "avg_multi_score": 3592,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 469
+      "rank": 470
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8458P",
@@ -6582,7 +6596,7 @@
       "avg_multi_score": 4137,
       "typical_cores": 176,
       "typical_threads": 176,
-      "rank": 470
+      "rank": 471
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8352VCPU",
@@ -6596,7 +6610,7 @@
       "avg_multi_score": 26510,
       "typical_cores": 18,
       "typical_threads": 18,
-      "rank": 471
+      "rank": 472
     },
     {
       "cpu_prefix": "HUAWEIKirin9000C",
@@ -6610,7 +6624,7 @@
       "avg_multi_score": 10479,
       "typical_cores": 3,
       "typical_threads": 6,
-      "rank": 472
+      "rank": 473
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSAWSGraviton2AWSGraviton2CPU",
@@ -6624,7 +6638,7 @@
       "avg_multi_score": 6744,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 473
+      "rank": 474
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)SILVER4510",
@@ -6638,7 +6652,7 @@
       "avg_multi_score": 3055,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 474
+      "rank": 475
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8374CCPU",
@@ -6652,7 +6666,7 @@
       "avg_multi_score": 33831,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 475
+      "rank": 476
     },
     {
       "cpu_prefix": "CIXP1CD8180",
@@ -6666,7 +6680,7 @@
       "avg_multi_score": 23595,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 476
+      "rank": 477
     },
     {
       "cpu_prefix": "Cortex-A55Cortex-A77",
@@ -6680,7 +6694,7 @@
       "avg_multi_score": 13276,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 477
+      "rank": 478
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6426Y",
@@ -6694,7 +6708,7 @@
       "avg_multi_score": 92457,
       "typical_cores": 2,
       "typical_threads": 64,
-      "rank": 478
+      "rank": 479
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6326CPU",
@@ -6708,7 +6722,7 @@
       "avg_multi_score": 14267,
       "typical_cores": 3,
       "typical_threads": 3,
-      "rank": 479
+      "rank": 480
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)2DuoCPUT7700",
@@ -6722,7 +6736,7 @@
       "avg_multi_score": 18144,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 480
+      "rank": 481
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4316CPU",
@@ -6736,7 +6750,7 @@
       "avg_multi_score": 42335,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 481
+      "rank": 482
     },
     {
       "cpu_prefix": "Neoverse-N1BIOSAWSGraviton2",
@@ -6750,21 +6764,21 @@
       "avg_multi_score": 5544,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 482
+      "rank": 483
     },
     {
       "cpu_prefix": "DO-Regular",
       "cpu_model": "DO-Regular",
-      "sample_count": 810,
+      "sample_count": 812,
       "max_single_score": 2784,
       "max_multi_score": 8268,
       "min_single_score": 77,
       "min_multi_score": 69,
-      "avg_single_score": 1118,
+      "avg_single_score": 1117,
       "avg_multi_score": 1485,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 483
+      "rank": 484
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8575C",
@@ -6778,7 +6792,7 @@
       "avg_multi_score": 6526,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 484
+      "rank": 485
     },
     {
       "cpu_prefix": "AArch64Processorrev0(aarch64)",
@@ -6792,7 +6806,7 @@
       "avg_multi_score": 11879,
       "typical_cores": 5,
       "typical_threads": 5,
-      "rank": 485
+      "rank": 486
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8444H",
@@ -6806,7 +6820,7 @@
       "avg_multi_score": 42417,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 486
+      "rank": 487
     },
     {
       "cpu_prefix": "Kryo-3XX-SilverKryo-3XX-Gold",
@@ -6820,7 +6834,7 @@
       "avg_multi_score": 9825,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 487
+      "rank": 488
     },
     {
       "cpu_prefix": "IntelXeonE312xx(SandyBridge)",
@@ -6834,7 +6848,7 @@
       "avg_multi_score": 1574,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 488
+      "rank": 489
     },
     {
       "cpu_prefix": "IntelXeonProcessor(Cascadelake)",
@@ -6848,7 +6862,7 @@
       "avg_multi_score": 2052,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 489
+      "rank": 490
     },
     {
       "cpu_prefix": "Cortex-A510Cortex-A715-",
@@ -6862,7 +6876,7 @@
       "avg_multi_score": 10580,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 490
+      "rank": 491
     },
     {
       "cpu_prefix": "HygonC86Processor",
@@ -6876,7 +6890,7 @@
       "avg_multi_score": 25937,
       "typical_cores": 128,
       "typical_threads": 128,
-      "rank": 491
+      "rank": 492
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4310CPU",
@@ -6890,7 +6904,7 @@
       "avg_multi_score": 17348,
       "typical_cores": 2,
       "typical_threads": 48,
-      "rank": 492
+      "rank": 493
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8470Q",
@@ -6904,7 +6918,7 @@
       "avg_multi_score": 35028,
       "typical_cores": 208,
       "typical_threads": 208,
-      "rank": 493
+      "rank": 494
     },
     {
       "cpu_prefix": "Cortex-A76",
@@ -6918,7 +6932,7 @@
       "avg_multi_score": 8817,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 494
+      "rank": 495
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6338CPU",
@@ -6932,7 +6946,7 @@
       "avg_multi_score": 17047,
       "typical_cores": 24,
       "typical_threads": 24,
-      "rank": 495
+      "rank": 496
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8475B",
@@ -6946,7 +6960,7 @@
       "avg_multi_score": 4264,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 496
+      "rank": 497
     },
     {
       "cpu_prefix": "Undefined",
@@ -6960,7 +6974,7 @@
       "avg_multi_score": 12721,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 497
+      "rank": 498
     },
     {
       "cpu_prefix": "GENUINEINTEL(R)0000",
@@ -6974,7 +6988,7 @@
       "avg_multi_score": 11381,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 498
+      "rank": 499
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i5-1035G7CPU",
@@ -6988,7 +7002,7 @@
       "avg_multi_score": 11317,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 499
+      "rank": 500
     },
     {
       "cpu_prefix": "IntelXeonProcessor(Skylake,IBRS,noTSX)",
@@ -7002,7 +7016,7 @@
       "avg_multi_score": 2095,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 500
+      "rank": 501
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5318YCPU",
@@ -7016,7 +7030,7 @@
       "avg_multi_score": 26735,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 501
+      "rank": 502
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8563C",
@@ -7030,7 +7044,7 @@
       "avg_multi_score": 287214,
       "typical_cores": 2,
       "typical_threads": 208,
-      "rank": 502
+      "rank": 503
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8457C",
@@ -7044,7 +7058,7 @@
       "avg_multi_score": 53504,
       "typical_cores": 2,
       "typical_threads": 192,
-      "rank": 503
+      "rank": 504
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6448H",
@@ -7058,7 +7072,7 @@
       "avg_multi_score": 2658,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 504
+      "rank": 505
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8360YCPU",
@@ -7072,7 +7086,7 @@
       "avg_multi_score": 138213,
       "typical_cores": 2,
       "typical_threads": 144,
-      "rank": 505
+      "rank": 506
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8350CCPU",
@@ -7086,7 +7100,7 @@
       "avg_multi_score": 5530,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 506
+      "rank": 507
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)GOLD6548Y+",
@@ -7100,7 +7114,7 @@
       "avg_multi_score": 5880,
       "typical_cores": 3,
       "typical_threads": 3,
-      "rank": 507
+      "rank": 508
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i7-10510UCPU",
@@ -7114,7 +7128,7 @@
       "avg_multi_score": 8054,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 508
+      "rank": 509
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8338CCPU",
@@ -7128,7 +7142,7 @@
       "avg_multi_score": 10390,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 509
+      "rank": 510
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6312UCPU",
@@ -7142,7 +7156,7 @@
       "avg_multi_score": 14330,
       "typical_cores": 1,
       "typical_threads": 48,
-      "rank": 510
+      "rank": 511
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6330CPU",
@@ -7156,7 +7170,7 @@
       "avg_multi_score": 77723,
       "typical_cores": 2,
       "typical_threads": 112,
-      "rank": 511
+      "rank": 512
     },
     {
       "cpu_prefix": "Cortex-A55Cortex-A76",
@@ -7170,7 +7184,7 @@
       "avg_multi_score": 11618,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 512
+      "rank": 513
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6448Y",
@@ -7184,7 +7198,7 @@
       "avg_multi_score": 12081,
       "typical_cores": 128,
       "typical_threads": 128,
-      "rank": 513
+      "rank": 514
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8470",
@@ -7198,7 +7212,7 @@
       "avg_multi_score": 121993,
       "typical_cores": 22,
       "typical_threads": 22,
-      "rank": 514
+      "rank": 515
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8576C",
@@ -7212,7 +7226,7 @@
       "avg_multi_score": 3045,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 515
+      "rank": 516
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)PLATINUM8582C",
@@ -7226,7 +7240,7 @@
       "avg_multi_score": 16493,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 516
+      "rank": 517
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8481CCPU",
@@ -7240,7 +7254,7 @@
       "avg_multi_score": 8007,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 517
+      "rank": 518
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8336CCPU",
@@ -7254,21 +7268,21 @@
       "avg_multi_score": 9121,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 518
+      "rank": 519
     },
     {
       "cpu_prefix": "WestmereE56xx/L56xx/X56xx(Nehalem-C)",
       "cpu_model": "Westmere E56xx/L56xx/X56xx (Nehalem-C) @ 1881.600 MHz",
-      "sample_count": 15,
+      "sample_count": 16,
       "max_single_score": 2575,
       "max_multi_score": 9548,
       "min_single_score": 383,
       "min_multi_score": 383,
-      "avg_single_score": 951,
-      "avg_multi_score": 2104,
+      "avg_single_score": 939,
+      "avg_multi_score": 2021,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 519
+      "rank": 520
     },
     {
       "cpu_prefix": "Intel(R)Core(TM)i3-N300",
@@ -7282,7 +7296,7 @@
       "avg_multi_score": 5142,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 520
+      "rank": 521
     },
     {
       "cpu_prefix": "Intel(R)N95",
@@ -7296,7 +7310,7 @@
       "avg_multi_score": 9535,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 521
+      "rank": 522
     },
     {
       "cpu_prefix": "RockchipRK3588(Cortex-A76+Cortex-A55)",
@@ -7310,7 +7324,7 @@
       "avg_multi_score": 13794,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 522
+      "rank": 523
     },
     {
       "cpu_prefix": "RockchipRK3588(S)CoolPi",
@@ -7324,7 +7338,7 @@
       "avg_multi_score": 13730,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 523
+      "rank": 524
     },
     {
       "cpu_prefix": "Cortex-A78AE",
@@ -7338,7 +7352,7 @@
       "avg_multi_score": 30311,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 524
+      "rank": 525
     },
     {
       "cpu_prefix": "IntelCorei79xx(NehalemClassCorei7)",
@@ -7352,7 +7366,7 @@
       "avg_multi_score": 3491,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 525
+      "rank": 526
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8380CPU",
@@ -7366,7 +7380,7 @@
       "avg_multi_score": 8990,
       "typical_cores": 160,
       "typical_threads": 160,
-      "rank": 526
+      "rank": 527
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8468V",
@@ -7380,7 +7394,7 @@
       "avg_multi_score": 55261,
       "typical_cores": 44,
       "typical_threads": 44,
-      "rank": 527
+      "rank": 528
     },
     {
       "cpu_prefix": "Cortex-A510Cortex-A710Cortex-X2",
@@ -7394,7 +7408,7 @@
       "avg_multi_score": 9614,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 528
+      "rank": 529
     },
     {
       "cpu_prefix": "IBM/S390",
@@ -7408,7 +7422,7 @@
       "avg_multi_score": 4964,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 529
+      "rank": 530
     },
     {
       "cpu_prefix": "ARMv8Processorrev1(v8l)",
@@ -7422,7 +7436,7 @@
       "avg_multi_score": 9519,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 530
+      "rank": 531
     },
     {
       "cpu_prefix": "Cortex-A55Cortex-A78-",
@@ -7436,7 +7450,7 @@
       "avg_multi_score": 13505,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 531
+      "rank": 532
     },
     {
       "cpu_prefix": "Cortex-A72",
@@ -7450,21 +7464,21 @@
       "avg_multi_score": 6310,
       "typical_cores": 1,
       "typical_threads": 8,
-      "rank": 532
+      "rank": 533
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2670v2",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2670 v2 @ 2.50GHz",
-      "sample_count": 501,
+      "sample_count": 503,
       "max_single_score": 2437,
       "max_multi_score": 27057,
       "min_single_score": 117,
       "min_multi_score": 117,
       "avg_single_score": 711,
-      "avg_multi_score": 3838,
+      "avg_multi_score": 3825,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 533
+      "rank": 534
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8452Y",
@@ -7478,7 +7492,7 @@
       "avg_multi_score": 3579,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 534
+      "rank": 535
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5418Y",
@@ -7492,7 +7506,7 @@
       "avg_multi_score": 73791,
       "typical_cores": 96,
       "typical_threads": 96,
-      "rank": 535
+      "rank": 536
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5320CPU",
@@ -7506,7 +7520,7 @@
       "avg_multi_score": 6559,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 536
+      "rank": 537
     },
     {
       "cpu_prefix": "GenuineIntel(R)CPU$0000%",
@@ -7520,7 +7534,7 @@
       "avg_multi_score": 77768,
       "typical_cores": 2,
       "typical_threads": 64,
-      "rank": 537
+      "rank": 538
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8352YCPU",
@@ -7534,7 +7548,7 @@
       "avg_multi_score": 17344,
       "typical_cores": 128,
       "typical_threads": 128,
-      "rank": 538
+      "rank": 539
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8461V",
@@ -7548,7 +7562,7 @@
       "avg_multi_score": 2388,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 539
+      "rank": 540
     },
     {
       "cpu_prefix": "IntelCoreProcessor(Broadwell)",
@@ -7562,7 +7576,7 @@
       "avg_multi_score": 1862,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 540
+      "rank": 541
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8368CPU",
@@ -7576,7 +7590,7 @@
       "avg_multi_score": 10185,
       "typical_cores": 4,
       "typical_threads": 4,
-      "rank": 541
+      "rank": 542
     },
     {
       "cpu_prefix": "Phytium,D2000/8E8C",
@@ -7590,7 +7604,7 @@
       "avg_multi_score": 16597,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 542
+      "rank": 543
     },
     {
       "cpu_prefix": "INTEL(R)XEON(R)GOLD6530",
@@ -7604,7 +7618,7 @@
       "avg_multi_score": 100152,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 543
+      "rank": 544
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold5420+",
@@ -7618,7 +7632,7 @@
       "avg_multi_score": 26715,
       "typical_cores": 12,
       "typical_threads": 12,
-      "rank": 544
+      "rank": 545
     },
     {
       "cpu_prefix": "AMDRyzen93900XT12-CoreProcessor",
@@ -7632,7 +7646,7 @@
       "avg_multi_score": 26189,
       "typical_cores": 1,
       "typical_threads": 24,
-      "rank": 545
+      "rank": 546
     },
     {
       "cpu_prefix": "AMDRyzen93950X16-CoreProcessor",
@@ -7646,7 +7660,7 @@
       "avg_multi_score": 3082,
       "typical_cores": 1,
       "typical_threads": 32,
-      "rank": 546
+      "rank": 547
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8260CPU",
@@ -7660,7 +7674,7 @@
       "avg_multi_score": 1208,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 547
+      "rank": 548
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6338NCPU",
@@ -7674,7 +7688,7 @@
       "avg_multi_score": 35849,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 548
+      "rank": 549
     },
     {
       "cpu_prefix": "AMDRyzen93900X12-CoreProcessor",
@@ -7688,7 +7702,7 @@
       "avg_multi_score": 2502,
       "typical_cores": 1,
       "typical_threads": 24,
-      "rank": 549
+      "rank": 550
     },
     {
       "cpu_prefix": "AMDRyzen73800X8-CoreProcessor",
@@ -7702,7 +7716,7 @@
       "avg_multi_score": 5826,
       "typical_cores": 1,
       "typical_threads": 16,
-      "rank": 550
+      "rank": 551
     },
     {
       "cpu_prefix": "Kryo-V2Falkor-V1/Kryo",
@@ -7716,7 +7730,7 @@
       "avg_multi_score": 10436,
       "typical_cores": 8,
       "typical_threads": 8,
-      "rank": 551
+      "rank": 552
     },
     {
       "cpu_prefix": "AMDRyzen73700X8-CoreProcessor",
@@ -7730,20 +7744,6 @@
       "avg_multi_score": 3648,
       "typical_cores": 16,
       "typical_threads": 16,
-      "rank": 552
-    },
-    {
-      "cpu_prefix": "Intel(R)Xeon(R)Processor",
-      "cpu_model": "Intel(R) Xeon(R) Processor @ 2.40GHz",
-      "sample_count": 5,
-      "max_single_score": 2249,
-      "max_multi_score": 14563,
-      "min_single_score": 873,
-      "min_multi_score": 2417,
-      "avg_single_score": 1453,
-      "avg_multi_score": 7487,
-      "typical_cores": 6,
-      "typical_threads": 6,
       "rank": 553
     },
     {
@@ -7973,12 +7973,12 @@
     {
       "cpu_prefix": "IntelCoreProcessor(Haswell,noTSX,IBRS)",
       "cpu_model": "Intel Core Processor (Haswell, no TSX, IBRS)",
-      "sample_count": 1408,
+      "sample_count": 1412,
       "max_single_score": 2104,
       "max_multi_score": 29786,
       "min_single_score": 115,
       "min_multi_score": 120,
-      "avg_single_score": 751,
+      "avg_single_score": 750,
       "avg_multi_score": 1059,
       "typical_cores": 8,
       "typical_threads": 8,
@@ -8547,13 +8547,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2696v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2696 v4 @ 2.20GHz",
-      "sample_count": 3305,
+      "sample_count": 3311,
       "max_single_score": 1830,
       "max_multi_score": 63475,
       "min_single_score": 43,
       "min_multi_score": 43,
       "avg_single_score": 711,
-      "avg_multi_score": 3743,
+      "avg_multi_score": 3757,
       "typical_cores": 4,
       "typical_threads": 4,
       "rank": 611
@@ -9051,13 +9051,13 @@
     {
       "cpu_prefix": "AMDEPYC753232-CoreProcessor",
       "cpu_model": "AMD EPYC 7532 32-Core Processor",
-      "sample_count": 1513,
+      "sample_count": 1516,
       "max_single_score": 1654,
       "max_multi_score": 108692,
       "min_single_score": 25,
       "min_multi_score": 25,
       "avg_single_score": 1415,
-      "avg_multi_score": 4795,
+      "avg_multi_score": 4789,
       "typical_cores": 2,
       "typical_threads": 2,
       "rank": 647
@@ -9189,20 +9189,6 @@
       "rank": 656
     },
     {
-      "cpu_prefix": "AMDEPYC730216-CoreProcessor",
-      "cpu_model": "AMD EPYC 7302 16-Core Processor @ 2400.000 MHz",
-      "sample_count": 637,
-      "max_single_score": 1639,
-      "max_multi_score": 54889,
-      "min_single_score": 167,
-      "min_multi_score": 167,
-      "avg_single_score": 1230,
-      "avg_multi_score": 3853,
-      "typical_cores": 32,
-      "typical_threads": 32,
-      "rank": 657
-    },
-    {
       "cpu_prefix": "AMDEPYC7B1264-CoreProcessor",
       "cpu_model": "AMD EPYC 7B12 64-Core Processor",
       "sample_count": 269,
@@ -9214,6 +9200,20 @@
       "avg_multi_score": 5477,
       "typical_cores": 1,
       "typical_threads": 128,
+      "rank": 657
+    },
+    {
+      "cpu_prefix": "AMDEPYC730216-CoreProcessor",
+      "cpu_model": "AMD EPYC 7302 16-Core Processor @ 2400.000 MHz",
+      "sample_count": 637,
+      "max_single_score": 1639,
+      "max_multi_score": 54889,
+      "min_single_score": 167,
+      "min_multi_score": 167,
+      "avg_single_score": 1230,
+      "avg_multi_score": 3853,
+      "typical_cores": 32,
+      "typical_threads": 32,
       "rank": 658
     },
     {
@@ -9289,13 +9289,13 @@
     {
       "cpu_prefix": "AMDEPYC7R1248-CoreProcessor",
       "cpu_model": "AMD EPYC 7R12 48-Core Processor",
-      "sample_count": 196,
+      "sample_count": 197,
       "max_single_score": 1633,
       "max_multi_score": 160252,
       "min_single_score": 308,
       "min_multi_score": 308,
       "avg_single_score": 1444,
-      "avg_multi_score": 3663,
+      "avg_multi_score": 3652,
       "typical_cores": 2,
       "typical_threads": 192,
       "rank": 664
@@ -9401,13 +9401,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6152CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6152 CPU @ 2.10GHz",
-      "sample_count": 1391,
+      "sample_count": 1403,
       "max_single_score": 1614,
       "max_multi_score": 71329,
       "min_single_score": 68,
       "min_multi_score": 68,
-      "avg_single_score": 866,
-      "avg_multi_score": 2735,
+      "avg_single_score": 867,
+      "avg_multi_score": 2732,
       "typical_cores": 4,
       "typical_threads": 4,
       "rank": 672
@@ -9961,13 +9961,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6240CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6240 CPU @ 2.60GHz",
-      "sample_count": 63,
+      "sample_count": 70,
       "max_single_score": 1504,
       "max_multi_score": 74389,
       "min_single_score": 546,
       "min_multi_score": 546,
-      "avg_single_score": 994,
-      "avg_multi_score": 5845,
+      "avg_single_score": 971,
+      "avg_multi_score": 6471,
       "typical_cores": 72,
       "typical_threads": 72,
       "rank": 712
@@ -10143,13 +10143,13 @@
     {
       "cpu_prefix": "AMDEPYC757132-CoreProcessor",
       "cpu_model": "AMD EPYC 7571 32-Core Processor",
-      "sample_count": 305,
+      "sample_count": 308,
       "max_single_score": 1478,
       "max_multi_score": 82586,
       "min_single_score": 147,
       "min_multi_score": 147,
-      "avg_single_score": 996,
-      "avg_multi_score": 7353,
+      "avg_single_score": 997,
+      "avg_multi_score": 7357,
       "typical_cores": 2,
       "typical_threads": 128,
       "rank": 725
@@ -10297,7 +10297,7 @@
     {
       "cpu_prefix": "AMDEPYC755132-CoreProcessor",
       "cpu_model": "AMD EPYC 7551 32-Core Processor",
-      "sample_count": 4723,
+      "sample_count": 4725,
       "max_single_score": 1458,
       "max_multi_score": 41555,
       "min_single_score": 68,
@@ -11165,13 +11165,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6230CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6230 CPU @ 2.10GHz",
-      "sample_count": 206,
+      "sample_count": 208,
       "max_single_score": 1352,
       "max_multi_score": 118022,
       "min_single_score": 282,
       "min_multi_score": 282,
       "avg_single_score": 932,
-      "avg_multi_score": 5257,
+      "avg_multi_score": 5273,
       "typical_cores": 160,
       "typical_threads": 160,
       "rank": 798
@@ -11221,7 +11221,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2680v2",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2680 v2 @ 2.80GHz",
-      "sample_count": 4932,
+      "sample_count": 4938,
       "max_single_score": 1346,
       "max_multi_score": 29013,
       "min_single_score": 20,
@@ -11361,7 +11361,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8255CCPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8255C CPU @ 2.50GHz",
-      "sample_count": 2247,
+      "sample_count": 2250,
       "max_single_score": 1329,
       "max_multi_score": 84880,
       "min_single_score": 239,
@@ -11795,7 +11795,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6138CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6138 CPU @ 2.00GHz",
-      "sample_count": 5476,
+      "sample_count": 5482,
       "max_single_score": 1292,
       "max_multi_score": 62818,
       "min_single_score": 7,
@@ -11809,13 +11809,13 @@
     {
       "cpu_prefix": "Intel(R)Core(TM)i5-6600CPU",
       "cpu_model": "Intel(R) Core(TM) i5-6600 CPU @ 3.30GHz",
-      "sample_count": 17,
+      "sample_count": 19,
       "max_single_score": 1291,
       "max_multi_score": 4785,
       "min_single_score": 1157,
       "min_multi_score": 4261,
-      "avg_single_score": 1236,
-      "avg_multi_score": 4619,
+      "avg_single_score": 1241,
+      "avg_multi_score": 4635,
       "typical_cores": 4,
       "typical_threads": 4,
       "rank": 844
@@ -12019,13 +12019,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8168CPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz",
-      "sample_count": 643,
+      "sample_count": 649,
       "max_single_score": 1266,
       "max_multi_score": 92637,
       "min_single_score": 259,
       "min_multi_score": 258,
-      "avg_single_score": 903,
-      "avg_multi_score": 2356,
+      "avg_single_score": 904,
+      "avg_multi_score": 2345,
       "typical_cores": 96,
       "typical_threads": 96,
       "rank": 859
@@ -12201,13 +12201,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8180CPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8180 CPU @ 2.50GHz",
-      "sample_count": 10,
+      "sample_count": 11,
       "max_single_score": 1256,
       "max_multi_score": 99932,
       "min_single_score": 901,
       "min_multi_score": 1035,
-      "avg_single_score": 1048,
-      "avg_multi_score": 21103,
+      "avg_single_score": 1052,
+      "avg_multi_score": 19285,
       "typical_cores": 2,
       "typical_threads": 112,
       "rank": 872
@@ -12255,20 +12255,6 @@
       "rank": 875
     },
     {
-      "cpu_prefix": "Intel(R)Xeon(R)Platinum8268CPU",
-      "cpu_model": "Intel(R) Xeon(R) Platinum 8268 CPU @ 2.90GHz",
-      "sample_count": 37,
-      "max_single_score": 1253,
-      "max_multi_score": 19124,
-      "min_single_score": 224,
-      "min_multi_score": 224,
-      "avg_single_score": 1069,
-      "avg_multi_score": 2800,
-      "typical_cores": 2,
-      "typical_threads": 2,
-      "rank": 876
-    },
-    {
       "cpu_prefix": "Intel(R)Core(TM)i9-9900TCPU",
       "cpu_model": "Intel(R) Core(TM) i9-9900T CPU @ 2.10GHz",
       "sample_count": 2,
@@ -12280,6 +12266,20 @@
       "avg_multi_score": 6629,
       "typical_cores": 8,
       "typical_threads": 8,
+      "rank": 876
+    },
+    {
+      "cpu_prefix": "Intel(R)Xeon(R)Platinum8268CPU",
+      "cpu_model": "Intel(R) Xeon(R) Platinum 8268 CPU @ 2.90GHz",
+      "sample_count": 37,
+      "max_single_score": 1253,
+      "max_multi_score": 19124,
+      "min_single_score": 224,
+      "min_multi_score": 224,
+      "avg_single_score": 1069,
+      "avg_multi_score": 2800,
+      "typical_cores": 2,
+      "typical_threads": 2,
       "rank": 877
     },
     {
@@ -12411,13 +12411,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8160CPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8160 CPU @ 2.10GHz",
-      "sample_count": 39,
+      "sample_count": 40,
       "max_single_score": 1236,
       "max_multi_score": 74483,
       "min_single_score": 309,
       "min_multi_score": 309,
-      "avg_single_score": 794,
-      "avg_multi_score": 6129,
+      "avg_single_score": 798,
+      "avg_multi_score": 5999,
       "typical_cores": 96,
       "typical_threads": 96,
       "rank": 887
@@ -12479,20 +12479,6 @@
       "rank": 891
     },
     {
-      "cpu_prefix": "Intel(R)Xeon(R)CPUE3-1240v3",
-      "cpu_model": "Intel(R) Xeon(R) CPU E3-1240 v3 @ 3.40GHz",
-      "sample_count": 328,
-      "max_single_score": 1231,
-      "max_multi_score": 7519,
-      "min_single_score": 85,
-      "min_multi_score": 85,
-      "avg_single_score": 984,
-      "avg_multi_score": 4008,
-      "typical_cores": 1,
-      "typical_threads": 8,
-      "rank": 892
-    },
-    {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE3-1231v3",
       "cpu_model": "Intel(R) Xeon(R) CPU E3-1231 v3 @ 3.40GHz",
       "sample_count": 288,
@@ -12502,6 +12488,20 @@
       "min_multi_score": 128,
       "avg_single_score": 936,
       "avg_multi_score": 3394,
+      "typical_cores": 1,
+      "typical_threads": 8,
+      "rank": 892
+    },
+    {
+      "cpu_prefix": "Intel(R)Xeon(R)CPUE3-1240v3",
+      "cpu_model": "Intel(R) Xeon(R) CPU E3-1240 v3 @ 3.40GHz",
+      "sample_count": 328,
+      "max_single_score": 1231,
+      "max_multi_score": 7519,
+      "min_single_score": 85,
+      "min_multi_score": 85,
+      "avg_single_score": 984,
+      "avg_multi_score": 4008,
       "typical_cores": 1,
       "typical_threads": 8,
       "rank": 893
@@ -12551,13 +12551,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2699v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2699 v4 @ 2.20GHz",
-      "sample_count": 3069,
+      "sample_count": 3077,
       "max_single_score": 1225,
       "max_multi_score": 63582,
       "min_single_score": 47,
       "min_multi_score": 47,
       "avg_single_score": 730,
-      "avg_multi_score": 2877,
+      "avg_multi_score": 2881,
       "typical_cores": 2,
       "typical_threads": 88,
       "rank": 897
@@ -12565,13 +12565,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6154CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6154 CPU @ 3.00GHz",
-      "sample_count": 140,
+      "sample_count": 141,
       "max_single_score": 1225,
       "max_multi_score": 56417,
       "min_single_score": 181,
       "min_multi_score": 204,
-      "avg_single_score": 1000,
-      "avg_multi_score": 3642,
+      "avg_single_score": 999,
+      "avg_multi_score": 3649,
       "typical_cores": 3,
       "typical_threads": 3,
       "rank": 898
@@ -12747,13 +12747,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8272CLCPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz",
-      "sample_count": 1946,
+      "sample_count": 1959,
       "max_single_score": 1216,
       "max_multi_score": 98655,
       "min_single_score": 91,
       "min_multi_score": 204,
       "avg_single_score": 1021,
-      "avg_multi_score": 5648,
+      "avg_multi_score": 5703,
       "typical_cores": 26,
       "typical_threads": 26,
       "rank": 911
@@ -12913,6 +12913,20 @@
       "rank": 922
     },
     {
+      "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2673v4",
+      "cpu_model": "Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.30GHz",
+      "sample_count": 1439,
+      "max_single_score": 1201,
+      "max_multi_score": 53649,
+      "min_single_score": 22,
+      "min_multi_score": 34,
+      "avg_single_score": 749,
+      "avg_multi_score": 3526,
+      "typical_cores": 1,
+      "typical_threads": 40,
+      "rank": 923
+    },
+    {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6140CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6140 CPU @ 2.30GHz",
       "sample_count": 301,
@@ -12924,20 +12938,6 @@
       "avg_multi_score": 2024,
       "typical_cores": 2,
       "typical_threads": 2,
-      "rank": 923
-    },
-    {
-      "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2673v4",
-      "cpu_model": "Intel(R) Xeon(R) CPU E5-2673 v4 @ 2.30GHz",
-      "sample_count": 1438,
-      "max_single_score": 1201,
-      "max_multi_score": 53649,
-      "min_single_score": 22,
-      "min_multi_score": 34,
-      "avg_single_score": 749,
-      "avg_multi_score": 3527,
-      "typical_cores": 1,
-      "typical_threads": 40,
       "rank": 924
     },
     {
@@ -12985,13 +12985,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8259CLCPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz",
-      "sample_count": 3493,
+      "sample_count": 3497,
       "max_single_score": 1197,
       "max_multi_score": 85979,
       "min_single_score": 27,
       "min_multi_score": 60,
       "avg_single_score": 934,
-      "avg_multi_score": 4047,
+      "avg_multi_score": 4045,
       "typical_cores": 48,
       "typical_threads": 48,
       "rank": 928
@@ -13307,7 +13307,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2690v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz",
-      "sample_count": 3842,
+      "sample_count": 3843,
       "max_single_score": 1184,
       "max_multi_score": 46228,
       "min_single_score": 46,
@@ -13321,13 +13321,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6132CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6132 CPU @ 2.60GHz",
-      "sample_count": 163,
+      "sample_count": 164,
       "max_single_score": 1184,
       "max_multi_score": 33696,
       "min_single_score": 186,
       "min_multi_score": 186,
-      "avg_single_score": 1043,
-      "avg_multi_score": 2347,
+      "avg_single_score": 1044,
+      "avg_multi_score": 2340,
       "typical_cores": 2,
       "typical_threads": 2,
       "rank": 952
@@ -13363,13 +13363,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6133CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6133 CPU @ 2.50GHz",
-      "sample_count": 7699,
+      "sample_count": 7724,
       "max_single_score": 1181,
       "max_multi_score": 64624,
       "min_single_score": 28,
       "min_multi_score": 36,
       "avg_single_score": 861,
-      "avg_multi_score": 2066,
+      "avg_multi_score": 2090,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 955
@@ -13447,12 +13447,12 @@
     {
       "cpu_prefix": "IntelCoreProcessor(Broadwell,IBRS)",
       "cpu_model": "Intel Core Processor (Broadwell, IBRS)",
-      "sample_count": 5799,
+      "sample_count": 5805,
       "max_single_score": 1176,
       "max_multi_score": 44367,
       "min_single_score": 89,
       "min_multi_score": 94,
-      "avg_single_score": 805,
+      "avg_single_score": 806,
       "avg_multi_score": 1440,
       "typical_cores": 4,
       "typical_threads": 4,
@@ -13923,13 +13923,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8171MCPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz",
-      "sample_count": 473,
+      "sample_count": 475,
       "max_single_score": 1138,
       "max_multi_score": 88750,
       "min_single_score": 28,
       "min_multi_score": 28,
-      "avg_single_score": 862,
-      "avg_multi_score": 2133,
+      "avg_single_score": 861,
+      "avg_multi_score": 2128,
       "typical_cores": 1,
       "typical_threads": 1,
       "rank": 995
@@ -13937,13 +13937,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Gold6122CPU",
       "cpu_model": "Intel(R) Xeon(R) Gold 6122 CPU @ 1.80GHz",
-      "sample_count": 109,
+      "sample_count": 111,
       "max_single_score": 1138,
       "max_multi_score": 2231,
       "min_single_score": 148,
       "min_multi_score": 148,
-      "avg_single_score": 696,
-      "avg_multi_score": 1101,
+      "avg_single_score": 692,
+      "avg_multi_score": 1099,
       "typical_cores": 2,
       "typical_threads": 2,
       "rank": 996
@@ -13965,13 +13965,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2697v3",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2697 v3 @ 2.60GHz",
-      "sample_count": 653,
+      "sample_count": 654,
       "max_single_score": 1136,
       "max_multi_score": 45027,
       "min_single_score": 72,
       "min_multi_score": 72,
       "avg_single_score": 777,
-      "avg_multi_score": 2450,
+      "avg_multi_score": 2448,
       "typical_cores": 1,
       "typical_threads": 28,
       "rank": 998
@@ -14133,13 +14133,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2690v2",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2690 v2 @ 3.00GHz",
-      "sample_count": 1507,
+      "sample_count": 1509,
       "max_single_score": 1123,
       "max_multi_score": 30773,
       "min_single_score": 66,
       "min_multi_score": 172,
       "avg_single_score": 821,
-      "avg_multi_score": 2403,
+      "avg_multi_score": 2402,
       "typical_cores": 2,
       "typical_threads": 40,
       "rank": 1010
@@ -14245,7 +14245,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2680v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2680 v4 @ 2.40GHz",
-      "sample_count": 11037,
+      "sample_count": 11041,
       "max_single_score": 1117,
       "max_multi_score": 55643,
       "min_single_score": 20,
@@ -14329,7 +14329,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-26xxv4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-26xx v4",
-      "sample_count": 637,
+      "sample_count": 638,
       "max_single_score": 1111,
       "max_multi_score": 3681,
       "min_single_score": 424,
@@ -14399,13 +14399,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2698v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz",
-      "sample_count": 2060,
+      "sample_count": 2063,
       "max_single_score": 1108,
       "max_multi_score": 54192,
       "min_single_score": 16,
       "min_multi_score": 31,
       "avg_single_score": 699,
-      "avg_multi_score": 2270,
+      "avg_multi_score": 2277,
       "typical_cores": 2,
       "typical_threads": 2,
       "rank": 1029
@@ -14455,13 +14455,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2697v2",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2697 v2 @ 2.70GHz",
-      "sample_count": 8139,
+      "sample_count": 8142,
       "max_single_score": 1099,
       "max_multi_score": 33501,
       "min_single_score": 21,
       "min_multi_score": 21,
       "avg_single_score": 763,
-      "avg_multi_score": 1714,
+      "avg_multi_score": 1713,
       "typical_cores": 2,
       "typical_threads": 48,
       "rank": 1033
@@ -15211,16 +15211,30 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Platinum8163CPU",
       "cpu_model": "Intel(R) Xeon(R) Platinum 8163 CPU @ 2.50GHz",
-      "sample_count": 1970,
+      "sample_count": 1974,
       "max_single_score": 1056,
       "max_multi_score": 74715,
       "min_single_score": 108,
       "min_multi_score": 179,
       "avg_single_score": 855,
-      "avg_multi_score": 2311,
+      "avg_multi_score": 2320,
       "typical_cores": 96,
       "typical_threads": 96,
       "rank": 1087
+    },
+    {
+      "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2630v4",
+      "cpu_model": "Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz",
+      "sample_count": 386,
+      "max_single_score": 1052,
+      "max_multi_score": 24653,
+      "min_single_score": 142,
+      "min_multi_score": 142,
+      "avg_single_score": 719,
+      "avg_multi_score": 3344,
+      "typical_cores": 2,
+      "typical_threads": 40,
+      "rank": 1088
     },
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2678v3",
@@ -15234,20 +15248,6 @@
       "avg_multi_score": 2048,
       "typical_cores": 1,
       "typical_threads": 1,
-      "rank": 1088
-    },
-    {
-      "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2630v4",
-      "cpu_model": "Intel(R) Xeon(R) CPU E5-2630 v4 @ 2.20GHz",
-      "sample_count": 385,
-      "max_single_score": 1052,
-      "max_multi_score": 24653,
-      "min_single_score": 142,
-      "min_multi_score": 142,
-      "avg_single_score": 719,
-      "avg_multi_score": 3351,
-      "typical_cores": 2,
-      "typical_threads": 40,
       "rank": 1089
     },
     {
@@ -15673,13 +15673,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4116CPU",
       "cpu_model": "Intel(R) Xeon(R) Silver 4116 CPU @ 2.10GHz",
-      "sample_count": 56,
+      "sample_count": 57,
       "max_single_score": 1021,
       "max_multi_score": 32168,
       "min_single_score": 246,
       "min_multi_score": 542,
-      "avg_single_score": 790,
-      "avg_multi_score": 6326,
+      "avg_single_score": 794,
+      "avg_multi_score": 6280,
       "typical_cores": 2,
       "typical_threads": 48,
       "rank": 1120
@@ -15757,7 +15757,7 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2683v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2683 v4 @ 2.10GHz",
-      "sample_count": 4320,
+      "sample_count": 4321,
       "max_single_score": 1013,
       "max_multi_score": 42561,
       "min_single_score": 25,
@@ -15953,13 +15953,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)Silver4114CPU",
       "cpu_model": "Intel(R) Xeon(R) Silver 4114 CPU @ 2.20GHz",
-      "sample_count": 67,
+      "sample_count": 68,
       "max_single_score": 992,
       "max_multi_score": 28154,
       "min_single_score": 255,
       "min_multi_score": 255,
-      "avg_single_score": 800,
-      "avg_multi_score": 4866,
+      "avg_single_score": 797,
+      "avg_multi_score": 4811,
       "typical_cores": 2,
       "typical_threads": 40,
       "rank": 1140
@@ -15995,13 +15995,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2650v4",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz",
-      "sample_count": 1808,
+      "sample_count": 1809,
       "max_single_score": 987,
       "max_multi_score": 30970,
       "min_single_score": 152,
       "min_multi_score": 152,
       "avg_single_score": 571,
-      "avg_multi_score": 1947,
+      "avg_multi_score": 1946,
       "typical_cores": 48,
       "typical_threads": 48,
       "rank": 1143
@@ -16247,13 +16247,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2683v3",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2683 v3 @ 2.00GHz",
-      "sample_count": 405,
+      "sample_count": 407,
       "max_single_score": 963,
       "max_multi_score": 39503,
       "min_single_score": 323,
       "min_multi_score": 323,
       "avg_single_score": 596,
-      "avg_multi_score": 2111,
+      "avg_multi_score": 2115,
       "typical_cores": 56,
       "typical_threads": 56,
       "rank": 1161
@@ -16429,13 +16429,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2660v2",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2660 v2 @ 2.20GHz",
-      "sample_count": 1417,
+      "sample_count": 1420,
       "max_single_score": 952,
       "max_multi_score": 24303,
       "min_single_score": 17,
       "min_multi_score": 49,
       "avg_single_score": 606,
-      "avg_multi_score": 2520,
+      "avg_multi_score": 2515,
       "typical_cores": 2,
       "typical_threads": 40,
       "rank": 1174
@@ -16933,13 +16933,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2676v3",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz",
-      "sample_count": 305,
+      "sample_count": 306,
       "max_single_score": 914,
       "max_multi_score": 16780,
       "min_single_score": 25,
       "min_multi_score": 25,
-      "avg_single_score": 781,
-      "avg_multi_score": 1047,
+      "avg_single_score": 780,
+      "avg_multi_score": 1048,
       "typical_cores": 2,
       "typical_threads": 2,
       "rank": 1210
@@ -16961,13 +16961,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUD-1541",
       "cpu_model": "Intel(R) Xeon(R) CPU D-1541 @ 2.10GHz",
-      "sample_count": 157,
+      "sample_count": 158,
       "max_single_score": 913,
       "max_multi_score": 10341,
       "min_single_score": 379,
       "min_multi_score": 369,
-      "avg_single_score": 831,
-      "avg_multi_score": 9505,
+      "avg_single_score": 832,
+      "avg_multi_score": 9509,
       "typical_cores": 1,
       "typical_threads": 16,
       "rank": 1212
@@ -17003,13 +17003,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-26600",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2660 0 @ 2.20GHz",
-      "sample_count": 409,
+      "sample_count": 410,
       "max_single_score": 911,
       "max_multi_score": 19580,
       "min_single_score": 91,
       "min_multi_score": 91,
       "avg_single_score": 661,
-      "avg_multi_score": 3324,
+      "avg_multi_score": 3316,
       "typical_cores": 32,
       "typical_threads": 32,
       "rank": 1215
@@ -18725,13 +18725,13 @@
     {
       "cpu_prefix": "Intel(R)Xeon(R)CPUE5-2650Lv3",
       "cpu_model": "Intel(R) Xeon(R) CPU E5-2650L v3 @ 1.80GHz",
-      "sample_count": 28,
+      "sample_count": 29,
       "max_single_score": 721,
       "max_multi_score": 25962,
       "min_single_score": 344,
       "min_multi_score": 414,
-      "avg_single_score": 542,
-      "avg_multi_score": 11418,
+      "avg_single_score": 543,
+      "avg_multi_score": 11758,
       "typical_cores": 2,
       "typical_threads": 48,
       "rank": 1338
