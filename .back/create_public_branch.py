@@ -233,8 +233,8 @@ def modify_readme(filepath, is_english=False):
         
         # Update security status
         content = re.sub(
-            r'but binary files compiled in \[securityCheck\][^\)]*\)',
-            'but open sourced',
+            r', binary files compiled in \[securityCheck\][^\)]*\)',
+            ', but open sourced',
             content
         )
         
@@ -254,7 +254,7 @@ def modify_readme(filepath, is_english=False):
         
         # Update security status
         content = re.sub(
-            r'但二进制文件编译至 \[securityCheck\][^\)]*\)',
+            r'二进制文件编译至 \[securityCheck\][^\)]*\)',
             '但已开源',
             content
         )
@@ -294,8 +294,8 @@ def main():
         
     # Modify README files
     print("Modifying README files...")
-    modify_readme('README.md', is_english=False)
-    modify_readme('README_EN.md', is_english=True)
+    modify_readme('README_ZH.md', is_english=False)
+    modify_readme('README.md', is_english=True)
     print()
     
     print("✓ All modifications completed successfully!")
