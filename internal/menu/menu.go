@@ -25,7 +25,11 @@ func GetMenuChoice(language string) string {
 	go func() {
 		select {
 		case <-sigChan:
-			fmt.Println("\n程序在选择过程中被用户中断")
+			if language == "zh" {
+				fmt.Println("\n程序在选择过程中被用户中断")
+			} else {
+				fmt.Println("\nProgram interrupted by user during selection")
+			}
 			os.Exit(0)
 		case <-ctx.Done():
 			return
@@ -34,7 +38,11 @@ func GetMenuChoice(language string) string {
 	
 	for {
 		var input string
-		fmt.Print("请输入选项 / Please enter your choice: ")
+		if language == "zh" {
+			fmt.Print("请输入选项: ")
+		} else {
+			fmt.Print("Please enter your choice: ")
+		}
 		fmt.Scanln(&input)
 		input = strings.TrimSpace(input)
 		input = strings.TrimRight(input, "\n")
@@ -175,7 +183,7 @@ Loop:
 			os.Exit(0)
 		case "1":
 			SetFullTestStatus(preCheck, config)
-			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger)
+			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
 			break Loop
 		case "2":
 			SetMinimalTestStatus(preCheck, config)

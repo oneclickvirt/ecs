@@ -296,7 +296,7 @@ func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string,
 	return utils.PrintAndCapture(func() {
 		if config.BacktraceStatus && !config.OnlyChinaTest {
 			utils.PrintCenteredTitle("上游及回程线路检测", config.Width)
-			tests.UpstreamsCheck()
+			tests.UpstreamsCheck(config.Language)
 		}
 		if config.Nt3Status && !config.OnlyChinaTest {
 			utils.PrintCenteredTitle("三网回程路由检测", config.Width)
@@ -462,7 +462,7 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 				defer uploadCancel()
 
 				go func() {
-					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload)
+					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload, config.Language)
 					select {
 					case resultChan <- struct {
 						httpURL  string
@@ -516,7 +516,7 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 
 // HandleUploadResults handles uploading results
 func HandleUploadResults(config *params.Config, output string) {
-	httpURL, httpsURL := utils.ProcessAndUpload(output, config.FilePath, config.EnableUpload)
+	httpURL, httpsURL := utils.ProcessAndUpload(output, config.FilePath, config.EnableUpload, config.Language)
 	if httpURL != "" || httpsURL != "" {
 		if config.Language == "en" {
 			fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)

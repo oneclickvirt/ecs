@@ -29,11 +29,15 @@ type ConcurrentResults struct {
 
 var IPV4, IPV6 string
 
-func UpstreamsCheck() {
+func UpstreamsCheck(language string) {
 	// 添加panic恢复机制
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("\n上游检测出现错误，已跳过")
+			if language == "zh" {
+				fmt.Println("\n上游检测出现错误，已跳过")
+			} else {
+				fmt.Println("\nUpstream check failed, skipped")
+			}
 			fmt.Fprintf(os.Stderr, "[WARN] Upstream check panic: %v\n", r)
 		}
 	}()
@@ -80,6 +84,11 @@ func UpstreamsCheck() {
 	if results.backtraceResult != "" {
 		fmt.Printf("%s\n", results.backtraceResult)
 	}
-	fmt.Println(Yellow("准确线路自行查看详细路由，本测试结果仅作参考"))
-	fmt.Println(Yellow("同一目标地址多个线路时，检测可能已越过汇聚层，除第一个线路外，后续信息可能无效"))
+	if language == "zh" {
+		fmt.Println(Yellow("准确线路自行查看详细路由，本测试结果仅作参考"))
+		fmt.Println(Yellow("同一目标地址多个线路时，检测可能已越过汇聚层，除第一个线路外，后续信息可能无效"))
+	} else {
+		fmt.Println(Yellow("For accurate routing, check the detailed routes yourself. This result is for reference only."))
+		fmt.Println(Yellow("When multiple routes share the same destination, detection may have passed the aggregation layer; only the first route is reliable."))
+	}
 }

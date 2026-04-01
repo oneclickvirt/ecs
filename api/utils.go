@@ -54,8 +54,8 @@ func PrintCenteredTitle(title string, width int) {
 // filePath: 文件路径
 // enableUpload: 是否启用上传
 // 返回: (HTTP URL, HTTPS URL)
-func ProcessAndUpload(output, filePath string, enableUpload bool) (string, string) {
-	return utils.ProcessAndUpload(output, filePath, enableUpload)
+func ProcessAndUpload(output, filePath string, enableUpload bool, language string) (string, string) {
+	return utils.ProcessAndUpload(output, filePath, enableUpload, language)
 }
 
 // BasicsAndSecurityCheck 基础信息和安全检查

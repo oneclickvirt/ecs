@@ -66,28 +66,28 @@ download_file() {
 }
 
 check_china() {
-    _yellow "正在检测IP所在区域......"
+    _yellow "Detecting IP region......"
     if [ -z "${CN}" ]; then
         if curl -m 6 -s https://ipapi.co/json | grep -q 'China'; then
-            _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
+            _yellow "According to ipapi.co, this IP may be located in China"
             if [ "$noninteractive" != "true" ]; then
-                reading "是否使用中国镜像完成安装? ([y]/n) " input
+                reading "Use China mirror for installation? ([y]/n) " input
                 case $input in
                     [yY][eE][sS] | [yY] | "")
-                        _green "已选择使用中国镜像"
+                        _green "China mirror selected"
                         CN=true
                         ;;
                     [nN][oO] | [nN])
-                        _yellow "已选择不使用中国镜像"
+                        _yellow "China mirror not selected"
                         CN=false
                         ;;
                     *)
-                        _green "已选择使用中国镜像"
+                        _green "China mirror selected"
                         CN=true
                         ;;
                 esac
             else
-                # 在非交互模式下默认不使用中国镜像
+                # In non-interactive mode, default to not using China mirror
                 CN=false
             fi
         else
@@ -270,9 +270,7 @@ goecs_check() {
         fi
     done
     if [ "$installed_to_system" = "false" ]; then
-        _yellow "权限不足，无法安装到系统路径，goecs 已保留在当前目录下"
         _yellow "Insufficient permissions to install to system path, goecs is kept in the current directory"
-        _yellow "请使用以下命令运行: ./goecs"
         _yellow "Please use the following command to run: ./goecs"
     fi
     if [ "$os" != "Darwin" ]; then
@@ -290,7 +288,7 @@ goecs_check() {
     setcap cap_net_raw=+ep goecs 2>/dev/null || true
     setcap cap_net_raw=+ep /usr/bin/goecs 2>/dev/null || true
     setcap cap_net_raw=+ep /usr/local/bin/goecs 2>/dev/null || true
-    _green "goecs 安装完成 / goecs installation complete, 当前版本 / current version:"
+    _green "goecs installation complete, current version:"
     goecs -v 2>/dev/null || ./goecs -v
 }
 

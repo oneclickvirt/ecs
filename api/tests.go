@@ -76,8 +76,8 @@ func NextTrace3Check(language, location, checkType string) {
 }
 
 // UpstreamsCheck 上游及回程线路检测
-func UpstreamsCheck() {
-	tests.UpstreamsCheck()
+func UpstreamsCheck(language string) {
+	tests.UpstreamsCheck(language)
 }
 
 // GetIPv4Address 获取当前IPv4地址

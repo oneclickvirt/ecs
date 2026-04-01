@@ -150,7 +150,7 @@ func PrintHead(language string, width int, ecsVersion string) {
 	}
 }
 
-func CheckChina(enableLogger bool) bool {
+func CheckChina(enableLogger bool, language string) bool {
 	if enableLogger {
 		InitLogger()
 		defer Logger.Sync()
@@ -166,7 +166,7 @@ func CheckChina(enableLogger bool) bool {
 	ipapiResp, err := client.R().Get(ipapiURL)
 	if err != nil {
 		if enableLogger {
-			Logger.Info("无法获取IP信息:" + err.Error())
+			Logger.Info("Failed to get IP info: " + err.Error())
 		}
 		return false
 	}
@@ -174,24 +174,41 @@ func CheckChina(enableLogger bool) bool {
 	ipapiBody, err := ipapiResp.ToString()
 	if err != nil {
 		if enableLogger {
-			Logger.Info("无法读取IP信息响应:" + err.Error())
+			Logger.Info("Failed to read IP info response: " + err.Error())
 		}
 		return false
 	}
 	isInChina := strings.Contains(ipapiBody, "China")
 	if isInChina {
-		fmt.Println("根据 ipapi.co 提供的信息，当前IP可能在中国")
 		var input string
-		fmt.Print("是否选用中国专项测试(无平台解锁测试，有三网Ping值测试)? ([y]/n) ")
+		if language == "zh" {
+			fmt.Println("根据 ipapi.co 提供的信息，当前IP可能在中国")
+			fmt.Print("是否选用中国专项测试(无平台解锁测试，有三网Ping值测试)? ([y]/n) ")
+		} else {
+			fmt.Println("According to ipapi.co, this IP may be located in China")
+			fmt.Print("Use China-specific test (no platform unlock test, includes 3-network ping test)? ([y]/n) ")
+		}
 		fmt.Scanln(&input)
 		switch strings.ToLower(input) {
 		case "yes", "y":
-			fmt.Println("使用中国专项测试")
+			if language == "zh" {
+				fmt.Println("使用中国专项测试")
+			} else {
+				fmt.Println("Using China-specific test")
+			}
 			selectChina = true
 		case "no", "n":
-			fmt.Println("不使用中国专项测试")
+			if language == "zh" {
+				fmt.Println("不使用中国专项测试")
+			} else {
+				fmt.Println("Not using China-specific test")
+			}
 		default:
-			fmt.Println("使用中国专项测试")
+			if language == "zh" {
+				fmt.Println("使用中国专项测试")
+			} else {
+				fmt.Println("Using China-specific test")
+			}
 			selectChina = true
 		}
 	}
@@ -396,13 +413,11 @@ func UploadText(absPath string) (string, string, error) {
 }
 
 // ProcessAndUpload 创建结果文件并上传文件
-func ProcessAndUpload(output string, filePath string, enableUplaod bool) (string, string) {
+func ProcessAndUpload(output string, filePath string, enableUplaod bool, language string) (string, string) {
 	// 使用 defer 来处理 panic
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[ERROR] 处理上传时发生严重错误: %v\n", r)
-			// 可以选择打印堆栈信息以便调试
-			// debug.PrintStack()
+			fmt.Fprintf(os.Stderr, "[ERROR] Fatal error during upload: %v\n", r)
 		}
 	}()
 	// 检查文件是否存在
@@ -410,14 +425,22 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) (string
 		// 文件存在，删除文件
 		err = os.Remove(filePath)
 		if err != nil {
-			fmt.Println("无法删除文件:", err)
+			if language == "zh" {
+				fmt.Println("无法删除文件:", err)
+			} else {
+				fmt.Println("Failed to delete file:", err)
+			}
 			return "", ""
 		}
 	}
 	// 创建文件
 	file, err := os.Create(filePath)
 	if err != nil {
-		fmt.Println("无法创建文件:", err)
+		if language == "zh" {
+			fmt.Println("无法创建文件:", err)
+		} else {
+			fmt.Println("Failed to create file:", err)
+		}
 		return "", ""
 	}
 	defer file.Close()
@@ -429,27 +452,47 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool) (string
 	writer := bufio.NewWriter(file)
 	_, err = writer.WriteString(cleanedOutput)
 	if err != nil {
-		fmt.Println("无法写入文件:", err)
+		if language == "zh" {
+			fmt.Println("无法写入文件:", err)
+		} else {
+			fmt.Println("Failed to write file:", err)
+		}
 		return "", ""
 	}
 	// 确保写入缓冲区的数据都刷新到文件中
 	err = writer.Flush()
 	if err != nil {
-		fmt.Println("无法刷新文件缓冲:", err)
+		if language == "zh" {
+			fmt.Println("无法刷新文件缓冲:", err)
+		} else {
+			fmt.Println("Failed to flush file buffer:", err)
+		}
 		return "", ""
 	}
-	fmt.Printf("测试结果已写入 %s\n", filePath)
+	if language == "zh" {
+		fmt.Printf("测试结果已写入 %s\n", filePath)
+	} else {
+		fmt.Printf("Test results written to %s\n", filePath)
+	}
 	if enableUplaod {
 		// 获取文件的绝对路径
 		absPath, err := filepath.Abs(filePath)
 		if err != nil {
-			fmt.Println("无法获取文件绝对路径:", err)
+			if language == "zh" {
+				fmt.Println("无法获取文件绝对路径:", err)
+			} else {
+				fmt.Println("Failed to get absolute file path:", err)
+			}
 			return "", ""
 		}
 		// 上传文件并生成短链接
 		http_url, https_url, err := UploadText(absPath)
 		if err != nil {
-			fmt.Println("上传失败，无法生成链接")
+			if language == "zh" {
+				fmt.Println("上传失败，无法生成链接")
+			} else {
+				fmt.Println("Upload failed, unable to generate link")
+			}
 			fmt.Println(err.Error())
 			return "", ""
 		}
