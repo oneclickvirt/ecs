@@ -40,7 +40,8 @@ jobs:
               sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
               echo "已更新 README_EN.md"
             fi
-            git add README.md README_EN.md
+            git add README.md
+            [ -f "README_EN.md" ] && git add README_EN.md || true
             git commit -m "Auto update README files" || echo "No changes to commit"
             git push origin ${{ github.ref_name }}
           else

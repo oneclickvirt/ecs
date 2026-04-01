@@ -32,8 +32,9 @@ jobs:
       - name: Copy repository files
         run: |
           cp goecs.sh temp_repo/
-          cp README_EN.md temp_repo/
           cp README.md temp_repo/
+          [ -f "README_EN.md" ] && cp README_EN.md temp_repo/ || true
+          [ -f "README_ZH.md" ] && cp README_ZH.md temp_repo/ || true
           cp LICENSE temp_repo/
           
       - name: Download release assets
