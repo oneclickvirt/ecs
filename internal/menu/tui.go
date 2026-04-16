@@ -120,14 +120,14 @@ type tuiModel struct {
 func defaultMainItems() []mainMenuItem {
 	return []mainMenuItem{
 		{id: "1", zh: "融合怪完全体(能测全测)", en: "Full Test (All Available Tests)", descZh: "系统信息、CPU、内存、磁盘、解锁、IP质量、邮件端口、回程、NT3、测速、TGDC、网站延迟。", descEn: "Runs all available modules: system, compute, memory, disk, unlock, security, routing and speed.", needNet: false},
-		{id: "2", zh: "极简版", en: "Minimal Suite", descZh: "基础系统+CPU+内存+磁盘+5个测速节点，适合快速健康检查。", descEn: "Basic system + CPU + memory + disk + 5 speed nodes for quick health checks.", needNet: false},
-		{id: "3", zh: "精简版", en: "Standard Suite", descZh: "在极简版基础上增加平台解锁与路由能力评估。", descEn: "Minimal suite plus unlock and routing capability checks.", needNet: false},
-		{id: "4", zh: "精简网络版", en: "Network Suite", descZh: "强调网络回程与路由质量，辅以基础硬件测试。", descEn: "Network-focused profile with backtrace/routing plus basic hardware checks.", needNet: false},
-		{id: "5", zh: "精简解锁版", en: "Unlock Suite", descZh: "以流媒体和平台解锁能力为主，附基础性能测试。", descEn: "Unlock-focused profile with essential compute/storage checks.", needNet: false},
+		{id: "2", zh: "极简版", en: "Minimal Suite", descZh: "系统信息+CPU+内存+磁盘+测速节点×5，不含解锁/网络/路由测试。", descEn: "System info + CPU + memory + disk + 5 speed nodes. No unlock/network/routing tests.", needNet: false},
+		{id: "3", zh: "精简版", en: "Standard Suite", descZh: "系统信息+CPU+内存+磁盘+跨国平台解锁+三网回程路由+测速节点×5。", descEn: "System info + CPU + memory + disk + streaming unlock + 3-network routing + 5 speed nodes.", needNet: false},
+		{id: "4", zh: "精简网络版", en: "Network Suite", descZh: "系统信息+CPU+内存+磁盘+上游及三网回程路由+测速节点×5。", descEn: "System info + CPU + memory + disk + upstream/3-network backtrace routing + 5 speed nodes.", needNet: false},
+		{id: "5", zh: "精简解锁版", en: "Unlock Suite", descZh: "系统信息+CPU+内存+磁盘IO+跨国平台解锁+测速节点×5。", descEn: "System info + CPU + memory + disk IO + streaming unlock + 5 speed nodes.", needNet: false},
 		{id: "6", zh: "网络单项", en: "Network Only", descZh: "仅网络维度：IP质量、回程、NT3、延迟、TGDC、网站和测速。", descEn: "Network-only profile: IP quality, route, latency, TGDC, websites, speed.", needNet: true},
 		{id: "7", zh: "解锁单项", en: "Unlock Only", descZh: "仅进行跨国平台解锁与流媒体可用性检测。", descEn: "Unlock-only profile for cross-border media/service availability.", needNet: true},
 		{id: "8", zh: "硬件单项", en: "Hardware Only", descZh: "系统信息、CPU、内存、dd/fio 磁盘测试。", descEn: "Hardware-only profile with system, CPU, memory and disk tests.", needNet: false},
-		{id: "9", zh: "IP质量检测", en: "IP Quality", descZh: "15库 IP质量 + 邮件端口，适合网络身份风险评估。", descEn: "IP quality across multiple datasets plus email port checks.", needNet: true},
+		{id: "9", zh: "IP质量检测", en: "IP Quality", descZh: "15个数据库IP质量检测+邮件端口连通性检测。", descEn: "IP quality check across 15 databases + email port connectivity test.", needNet: true},
 		{id: "10", zh: "三网回程线路", en: "3-Network Route", descZh: "三网回程、NT3路由、延迟、TGDC、网站延迟专项。", descEn: "3-network backtrace + NT3 route + latency/TGDC/website checks.", needNet: true},
 		{id: "custom", zh: ">>> 高级自定义(全参数模式)", en: ">>> Advanced Custom (Full Parameters)", descZh: "按参数逐项配置，支持测试项、方法、路径、上传和结果分析。", descEn: "Configure per-parameter with test toggles, methods, paths, upload and analysis.", needNet: false},
 		{id: "0", zh: "退出程序", en: "Exit Program", descZh: "退出当前程序。", descEn: "Exit program.", needNet: false},
@@ -147,7 +147,7 @@ func defaultTestToggles() []testToggle {
 		{key: "nt3", nameZh: "NT3路由", nameEn: "NT3 Route", descZh: "按指定地区与协议执行详细路由追踪。", descEn: "Run detailed route trace by selected location/protocol.", enabled: false, needNet: true},
 		{key: "speed", nameZh: "测速", nameEn: "Speed Test", descZh: "测试下载/上传带宽与延迟。", descEn: "Measure download/upload bandwidth and latency.", enabled: false, needNet: true},
 		{key: "ping", nameZh: "Ping测试", nameEn: "Ping Test", descZh: "全国/多地区延迟质量测试。", descEn: "Latency quality checks across multiple regions.", enabled: false, needNet: true},
-		{key: "tgdc", nameZh: "Telegram DC测试", nameEn: "Telegram DC Test", descZh: "检测 Telegram 数据中心延迟表现。", descEn: "Measure latency to Telegram data centers.", enabled: false, needNet: true},
+		{key: "tgdc", nameZh: "Telegram DC测试", nameEn: "Telegram DC Test", descZh: "检测各 Telegram 数据中心节点延迟。", descEn: "Measure latency to each Telegram data center node.", enabled: false, needNet: true},
 		{key: "web", nameZh: "网站延迟", nameEn: "Website Latency", descZh: "检测常见网站访问延迟。", descEn: "Check latency to commonly used websites.", enabled: false, needNet: true},
 	}
 }
@@ -160,43 +160,43 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 	adv := []advSetting{
 		{
 			key: "cpum", nameZh: "CPU测试方法", nameEn: "CPU Method", kind: "option",
-			descZh: "选择 CPU 压测方法，不同方法偏向不同负载模型。",
-			descEn: "Choose CPU benchmark method. Different methods model different workloads.",
+			descZh: "选择 CPU 基准测试工具（sysbench/geekbench/winsat）。",
+			descEn: "Choose CPU benchmark tool (sysbench/geekbench/winsat).",
 			options: []advOption{
-				option("sysbench", "Sysbench", "Sysbench", "通用基准，稳定易比较。", "General-purpose benchmark with stable comparability."),
-				option("geekbench", "Geekbench", "Geekbench", "偏综合应用模型，便于横向对比。", "Application-like synthetic benchmark for broad comparison."),
-				option("winsat", "WinSAT", "WinSAT", "Windows 场景下常用基准。", "Common benchmark in Windows environments."),
+				option("sysbench", "Sysbench", "Sysbench", "通用 CPU 基准测试工具。", "General-purpose CPU benchmark tool."),
+				option("geekbench", "Geekbench", "Geekbench", "综合场景 CPU 基准测试工具。", "Synthetic benchmark simulating real-world application workloads."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 环境下的 CPU 基准测试工具。", "CPU benchmark tool for Windows environments."),
 			},
 		},
 		{
 			key: "cput", nameZh: "CPU线程模式", nameEn: "CPU Thread Mode", kind: "option",
-			descZh: "单线程看核心峰值，多线程看整机并发能力。",
-			descEn: "Single-core shows peak core power; multi-core shows parallel throughput.",
+			descZh: "单线程: 测试单核最高运算速度; 多线程: 测试全核并发吞吐。",
+			descEn: "Single-thread: peak single-core speed; Multi-thread: full-core parallel throughput.",
 			options: []advOption{
-				option("multi", "多线程", "Multi-thread", "评估整机并发算力。", "Evaluate full-machine parallel compute capability."),
-				option("single", "单线程", "Single-thread", "评估单核心峰值性能。", "Evaluate peak single-core performance."),
+				option("multi", "多线程", "Multi-thread", "测试所有核心并发运算吞吐。", "Measure parallel compute throughput across all cores."),
+				option("single", "单线程", "Single-thread", "测试单核最高运算速度。", "Measure peak single-core compute speed."),
 			},
 		},
 		{
 			key: "memorym", nameZh: "内存测试方法", nameEn: "Memory Method", kind: "option",
-			descZh: "选择内存测试方法，结果关注带宽与访问效率。",
-			descEn: "Choose memory benchmark method to evaluate bandwidth/access efficiency.",
+			descZh: "选择内存基准测试工具。",
+			descEn: "Choose memory benchmark tool.",
 			options: []advOption{
-				option("stream", "STREAM", "STREAM", "侧重带宽测试。", "Focused on memory bandwidth."),
-				option("sysbench", "Sysbench", "Sysbench", "通用内存压测。", "General-purpose memory stress benchmark."),
-				option("dd", "dd", "dd", "基于系统工具的简化测试。", "Simple system-tool-based measurement."),
-				option("winsat", "WinSAT", "WinSAT", "Windows 环境内存基准。", "Windows-oriented memory benchmark."),
-				option("auto", "自动", "Auto", "自动选择可用且优先方法。", "Automatically select the preferred available method."),
+				option("stream", "STREAM", "STREAM", "专项内存带宽基准测试工具（STREAM）。", "Memory bandwidth benchmark tool (STREAM)."),
+				option("sysbench", "Sysbench", "Sysbench", "通用内存基准测试工具。", "General-purpose memory benchmark tool."),
+				option("dd", "dd", "dd", "使用 dd 命令测量内存顺序读写。", "Measure memory sequential R/W using dd command."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 环境内存基准测试工具。", "Memory benchmark tool for Windows environments."),
+				option("auto", "自动", "Auto", "按优先级自动选择可用测试工具。", "Automatically select the preferred available tool."),
 			},
 		},
 		{
 			key: "diskm", nameZh: "磁盘测试方法", nameEn: "Disk Method", kind: "option",
-			descZh: "选择磁盘测试方法，评估顺序/随机读写能力。",
-			descEn: "Choose disk method to evaluate sequential/random I/O performance.",
+			descZh: "选择磁盘基准测试工具。",
+			descEn: "Choose disk benchmark tool.",
 			options: []advOption{
-				option("fio", "FIO", "FIO", "更全面的磁盘 I/O 基准。", "Comprehensive disk I/O benchmark."),
-				option("dd", "dd", "dd", "快速顺序写读基准。", "Quick sequential write/read benchmark."),
-				option("winsat", "WinSAT", "WinSAT", "Windows 磁盘基准。", "Disk benchmark for Windows environments."),
+				option("fio", "FIO", "FIO", "多队列深度顺序/随机 I/O 全面基准测试。", "Comprehensive sequential/random I/O benchmark with multiple queue depths."),
+				option("dd", "dd", "dd", "使用 dd 命令进行顺序读写基准测试。", "Sequential read/write benchmark using dd command."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 环境磁盘基准测试工具。", "Disk benchmark tool for Windows environments."),
 			},
 		},
 		{
@@ -207,9 +207,15 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		},
 		{
 			key: "diskmc", nameZh: "多磁盘检测", nameEn: "Multi-Disk Check", kind: "bool",
-			descZh:  "启用后尝试检测并测试多磁盘路径。",
-			descEn:  "When enabled, detect and benchmark multiple disk paths.",
+			descZh:  "启用后检测并测试所有已挂载磁盘路径。",
+			descEn:  "When enabled, detect and benchmark all mounted disk paths.",
 			boolVal: config.DiskMultiCheck,
+		},
+		{
+			key: "autodiskm", nameZh: "磁盘方法失败自动切换", nameEn: "Auto Switch Disk Method", kind: "bool",
+			descZh:  "所选磁盘测试方法失败时自动切换为其他可用方法。",
+			descEn:  "Automatically try another available disk method if the selected method fails.",
+			boolVal: config.AutoChangeDiskMethod,
 		},
 		{
 			key: "nt3loc", nameZh: "NT3测试地区", nameEn: "NT3 Location", kind: "option",
@@ -235,19 +241,19 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		},
 		{
 			key: "spnum", nameZh: "测速节点数/运营商", nameEn: "Speed Nodes per ISP", kind: "option",
-			descZh: "每个运营商选择的测速节点数量。",
-			descEn: "Number of speed test nodes selected per ISP.",
+			descZh: "每个运营商参与测速的节点数量。",
+			descEn: "Number of speed test nodes per ISP.",
 			options: []advOption{
-				option("1", "1 个", "1 node", "最快速，覆盖最少。", "Fastest run with least coverage."),
-				option("2", "2 个", "2 nodes", "默认平衡。", "Default balanced option."),
-				option("3", "3 个", "3 nodes", "覆盖更广，耗时增加。", "Broader coverage with more runtime."),
-				option("4", "4 个", "4 nodes", "更完整网络采样。", "More complete network sampling."),
-				option("5", "5 个", "5 nodes", "高覆盖，耗时较高。", "High coverage with longer runtime."),
-				option("6", "6 个", "6 nodes", "深度采样。", "Deep sampling."),
-				option("7", "7 个", "7 nodes", "深度采样。", "Deep sampling."),
-				option("8", "8 个", "8 nodes", "深度采样。", "Deep sampling."),
-				option("9", "9 个", "9 nodes", "深度采样。", "Deep sampling."),
-				option("10", "10 个", "10 nodes", "最全面，耗时最高。", "Most comprehensive, longest runtime."),
+				option("1", "1 个", "1 node", "每运营商1节点，耗时最短，覆盖面最小。", "1 node per ISP, shortest runtime, least coverage."),
+				option("2", "2 个", "2 nodes", "每运营商2节点（默认值）。", "2 nodes per ISP (default)."),
+				option("3", "3 个", "3 nodes", "每运营商3节点，覆盖面扩大，耗时增加。", "3 nodes per ISP, wider coverage, longer runtime."),
+				option("4", "4 个", "4 nodes", "每运营商4节点。", "4 nodes per ISP."),
+				option("5", "5 个", "5 nodes", "每运营商5节点，覆盖面宽，耗时较高。", "5 nodes per ISP, wide coverage, higher runtime."),
+				option("6", "6 个", "6 nodes", "每运营商6节点。", "6 nodes per ISP."),
+				option("7", "7 个", "7 nodes", "每运营商7节点。", "7 nodes per ISP."),
+				option("8", "8 个", "8 nodes", "每运营商8节点。", "8 nodes per ISP."),
+				option("9", "9 个", "9 nodes", "每运营商9节点。", "9 nodes per ISP."),
+				option("10", "10 个", "10 nodes", "每运营商10节点，覆盖面最宽，耗时最高。", "10 nodes per ISP, widest coverage, longest runtime."),
 			},
 		},
 		{
@@ -264,8 +270,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		},
 		{
 			key: "analysis", nameZh: "测试后结果总结分析", nameEn: "Post-Test Summary Analysis", kind: "bool",
-			descZh:  "测试结束后生成简明总结，提炼优势、短板和用途建议。",
-			descEn:  "Generate concise final summary with strengths, limits and usage hints.",
+			descZh:  "测试结束后输出简明总结（含CPU排名、带宽和延迟数据）。",
+			descEn:  "Output a concise summary after tests (CPU rank, bandwidth, latency scores).",
 			boolVal: config.AnalyzeResult,
 		},
 		{
@@ -766,11 +772,28 @@ func (m tuiModel) viewCustom() string {
 	var s strings.Builder
 	s.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tTitleStyle.Render("  高级自定义参数模式"))
+		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s  —  高级自定义", m.config.EcsVersion)))
 	} else {
-		s.WriteString(tTitleStyle.Render("  Advanced Custom Parameter Mode"))
+		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s  —  Advanced Custom", m.config.EcsVersion)))
 	}
-	s.WriteString("\n\n")
+	s.WriteString("\n")
+	if m.preCheck.Connected && m.cmpVersion == -1 {
+		if lang == "zh" {
+			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
+		} else {
+			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
+		}
+		s.WriteString("\n")
+	}
+	if m.preCheck.Connected && m.hasStats {
+		if lang == "zh" {
+			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+		} else {
+			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+		}
+		s.WriteString("\n")
+	}
+	s.WriteString("\n")
 	if lang == "zh" {
 		s.WriteString(tSectStyle.Render("  测试开关 (空格切换, a 全选/全不选):"))
 	} else {
@@ -967,6 +990,8 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.DiskTestPath = strings.TrimSpace(a.textVal)
 		case "diskmc":
 			config.DiskMultiCheck = a.boolVal
+		case "autodiskm":
+			config.AutoChangeDiskMethod = a.boolVal
 		case "nt3loc":
 			config.Nt3Location = a.options[a.current].value
 		case "nt3t":
@@ -995,5 +1020,4 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 	if !config.BasicStatus && !config.CpuTestStatus && !config.MemoryTestStatus && !config.DiskTestStatus {
 		config.OnlyIpInfoCheck = true
 	}
-	config.AutoChangeDiskMethod = true
 }
