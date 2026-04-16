@@ -21,7 +21,7 @@ func GetMenuChoice(language string) string {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer signal.Stop(sigChan)
-	
+
 	go func() {
 		select {
 		case <-sigChan:
@@ -35,7 +35,7 @@ func GetMenuChoice(language string) string {
 			return
 		}
 	}()
-	
+
 	for {
 		var input string
 		if language == "zh" {
@@ -46,7 +46,7 @@ func GetMenuChoice(language string) string {
 		fmt.Scanln(&input)
 		input = strings.TrimSpace(input)
 		input = strings.TrimRight(input, "\n")
-		
+
 		re := regexp.MustCompile(`^\d+$`)
 		if re.MatchString(input) {
 			inChoice := input
@@ -125,13 +125,13 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 			}
 			fmt.Printf("使用统计: %s\n", statsInfo)
 		}
-	fmt.Println("1. 融合怪完全体(能测全测)")
-	fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
-	fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+跨国平台解锁+路由+测速节点5个)")
-	fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
-	fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+跨国平台解锁+测速节点5个)")
-	fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站延迟+测速节点11个)")
-	fmt.Println("7. 解锁单项(跨国平台解锁)")
+		fmt.Println("1. 融合怪完全体(能测全测)")
+		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
+		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+跨国平台解锁+路由+测速节点5个)")
+		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
+		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+跨国平台解锁+测速节点5个)")
+		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站延迟+测速节点11个)")
+		fmt.Println("7. 解锁单项(跨国平台解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
 		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+全国延迟+TGDC+网站延迟")
@@ -145,20 +145,20 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 			}
 			fmt.Printf("%s\n", statsInfo)
 		}
-	fmt.Println("1. VPS Fusion Monster Test (Full Test)")
-	fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
-	fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + International Platform Unlock + Routing + 5 Speed Test Nodes)")
-	fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + Backtrace + Routing + 5 Speed Test Nodes)")
-	fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + International Platform Unlock + 5 Speed Test Nodes)")
-	fmt.Println("6. Network-Only Test (IP Quality Test + Upstream & 3-Network Backtrace + Guangzhou 3-Network Detailed Routing + National Latency + TGDC + Websites + 11 Speed Test Nodes)")
-	fmt.Println("7. Unlock-Only Test (International Platform Unlock)")
-	fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
-	fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
-	fmt.Println("0. Exit Program")
+		fmt.Println("1. VPS Fusion Monster Test (Full Test)")
+		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
+		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + International Platform Unlock + Routing + 5 Speed Test Nodes)")
+		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + Backtrace + Routing + 5 Speed Test Nodes)")
+		fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + International Platform Unlock + 5 Speed Test Nodes)")
+		fmt.Println("6. Network-Only Test (IP Quality Test + Upstream & 3-Network Backtrace + Guangzhou 3-Network Detailed Routing + National Latency + TGDC + Websites + 11 Speed Test Nodes)")
+		fmt.Println("7. Unlock-Only Test (International Platform Unlock)")
+		fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
+		fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
+		fmt.Println("0. Exit Program")
 	}
 }
 
-// HandleMenuMode handles menu selection
+// HandleMenuMode handles menu selection using the interactive TUI
 func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 	savedParams := config.SaveUserSetParams()
 	config.BasicStatus = false
@@ -174,63 +174,47 @@ func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 	config.TgdcTestStatus = false
 	config.WebTestStatus = false
 	config.AutoChangeDiskMethod = true
-	PrintMenuOptions(preCheck, config)
-Loop:
-	for {
-		config.Choice = GetMenuChoice(config.Language)
-		switch config.Choice {
+
+	result := RunTuiMenu(preCheck, config)
+	if result.quit {
+		os.Exit(0)
+	}
+
+	// Update language if changed by TUI selection
+	config.Language = result.language
+
+	if result.custom {
+		applyCustomResult(result, preCheck, config)
+		if config.SpeedTestStatus {
+			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
+		}
+	} else {
+		config.Choice = result.choice
+		switch result.choice {
 		case "0":
 			os.Exit(0)
 		case "1":
 			SetFullTestStatus(preCheck, config)
 			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
-			break Loop
 		case "2":
 			SetMinimalTestStatus(preCheck, config)
-			break Loop
 		case "3":
 			SetStandardTestStatus(preCheck, config)
-			break Loop
 		case "4":
 			SetNetworkFocusedTestStatus(preCheck, config)
-			break Loop
 		case "5":
 			SetUnlockFocusedTestStatus(preCheck, config)
-			break Loop
 		case "6":
-			if !preCheck.Connected {
-				fmt.Println("Can not test without network connection!")
-				return
-			}
 			SetNetworkOnlyTestStatus(config)
-			break Loop
 		case "7":
-			if !preCheck.Connected {
-				fmt.Println("Can not test without network connection!")
-				return
-			}
 			SetUnlockOnlyTestStatus(config)
-			break Loop
 		case "8":
 			SetHardwareOnlyTestStatus(preCheck, config)
-			break Loop
 		case "9":
-			if !preCheck.Connected {
-				fmt.Println("Can not test without network connection!")
-				return
-			}
 			SetIPQualityTestStatus(config)
-			break Loop
 		case "10":
-			if !preCheck.Connected {
-				fmt.Println("Can not test without network connection!")
-				return
-			}
 			config.Nt3Location = "ALL"
 			SetRouteTestStatus(config)
-			break Loop
-		default:
-			PrintInvalidChoice(config.Language)
 		}
 	}
 	config.RestoreUserSetParams(savedParams)

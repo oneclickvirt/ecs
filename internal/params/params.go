@@ -3,6 +3,7 @@ package params
 import (
 	"flag"
 	"fmt"
+	"strings"
 )
 
 // Config holds all configuration parameters
@@ -64,7 +65,7 @@ func NewConfig(version string) *Config {
 		MemoryTestMethod:     "stream",
 		DiskTestMethod:       "fio",
 		DiskTestPath:         "",
-		DiskMultiCheck:      false,
+		DiskMultiCheck:       false,
 		Nt3CheckType:         "ipv4",
 		SpNum:                2,
 		Width:                82,
@@ -92,8 +93,56 @@ func NewConfig(version string) *Config {
 	}
 }
 
+// normalizeBoolArgs preprocesses args so that bool flags written as
+// "-flag true" or "-flag false" (space-separated) are converted to
+// "-flag=true" / "-flag=false" that the standard flag package understands.
+// This also strips any duplicate spaces that may appear between tokens when
+// args have been assembled by shell scripts or other callers.
+func normalizeBoolArgs(args []string) []string {
+	// All known boolean flag names (without leading dash).
+	boolFlags := map[string]bool{
+		"h": true, "help": true, "v": true, "version": true,
+		"menu": true, "basic": true, "cpu": true, "memory": true,
+		"disk": true, "ut": true, "security": true, "email": true,
+		"backtrace": true, "nt3": true, "speed": true, "ping": true,
+		"tgdc": true, "web": true, "log": true, "upload": true,
+		"diskmc": true,
+	}
+
+	out := make([]string, 0, len(args))
+	i := 0
+	for i < len(args) {
+		arg := args[i]
+		// Skip empty tokens that can appear from split on multiple spaces.
+		if arg == "" {
+			i++
+			continue
+		}
+
+		// Detect flag tokens: -flag or --flag (without embedded =).
+		if strings.HasPrefix(arg, "-") && !strings.Contains(arg, "=") {
+			name := strings.TrimLeft(arg, "-")
+			if boolFlags[name] {
+				// Peek at next token: if it is "true" or "false", merge.
+				if i+1 < len(args) {
+					next := strings.ToLower(strings.TrimSpace(args[i+1]))
+					if next == "true" || next == "false" {
+						out = append(out, arg+"="+next)
+						i += 2
+						continue
+					}
+				}
+			}
+		}
+		out = append(out, arg)
+		i++
+	}
+	return out
+}
+
 // ParseFlags parses command line flags
 func (c *Config) ParseFlags(args []string) {
+	args = normalizeBoolArgs(args)
 	c.GoecsFlag.BoolVar(&c.Help, "h", false, "Show help information")
 	c.GoecsFlag.BoolVar(&c.Help, "help", false, "Show help information")
 	c.GoecsFlag.BoolVar(&c.ShowVersion, "v", false, "Display version information")
