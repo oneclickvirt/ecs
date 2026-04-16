@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/oneclickvirt/ecs/internal/analysis"
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/tests"
 	"github.com/oneclickvirt/ecs/utils"
@@ -153,7 +154,7 @@ func RunBasicTests(preCheck utils.NetCheckResult, config *params.Config, basicIn
 			}
 			if config.BasicStatus {
 				fmt.Printf("%s", *basicInfo)
-			} else if (config.Input == "6" || config.Input == "9") && config.SecurityTestStatus {
+			} else if (config.Choice == "6" || config.Choice == "9") && config.SecurityTestStatus {
 				scanner := bufio.NewScanner(strings.NewReader(*basicInfo))
 				for scanner.Scan() {
 					line := scanner.Text()
@@ -363,6 +364,12 @@ func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex
 				}
 			} else if config.Choice == "6" {
 				tests.CustomSP("net", "global", 11, config.Language)
+			} else {
+				// Custom menu mode and any other fallback choices.
+				tests.NearbySP()
+				tests.CustomSP("net", "cu", config.SpNum, config.Language)
+				tests.CustomSP("net", "ct", config.SpNum, config.Language)
+				tests.CustomSP("net", "cmcc", config.SpNum, config.Language)
 			}
 			// 等待第三方库的输出完全刷新到标准输出
 			time.Sleep(500 * time.Millisecond)
@@ -424,6 +431,25 @@ func AppendTimeInfo(config *params.Config, output, tempOutput string, startTime 
 			fmt.Printf("Current Time          : %s\n", currentTime)
 		}
 		utils.PrintCenteredTitle("", config.Width)
+	}, tempOutput, output)
+}
+
+// AppendAnalysisSummary appends a concise bilingual summary for easier interpretation.
+func AppendAnalysisSummary(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
+	finalOutput := output
+	return utils.PrintAndCapture(func() {
+		summary := analysis.GenerateSummary(config, finalOutput)
+		if strings.TrimSpace(summary) == "" {
+			return
+		}
+		if config.Language == "zh" {
+			utils.PrintCenteredTitle("测试总结分析", config.Width)
+		} else {
+			utils.PrintCenteredTitle("Result Summary Analysis", config.Width)
+		}
+		fmt.Println(summary)
 	}, tempOutput, output)
 }
 

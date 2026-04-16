@@ -3,16 +3,16 @@ package menu
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
+	textinput "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/utils"
 )
-
-// --- Styles ---
 
 var (
 	tTitleStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("39"))
@@ -27,9 +27,8 @@ var (
 	tChkOffStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 	tBtnStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("120")).Bold(true).Padding(0, 2)
 	tBtnDimStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Background(lipgloss.Color("238")).Padding(0, 2)
+	tPanelStyle  = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("238")).Padding(0, 1)
 )
-
-// --- Types ---
 
 type menuPhase int
 
@@ -43,21 +42,40 @@ type mainMenuItem struct {
 	id      string
 	zh      string
 	en      string
+	descZh  string
+	descEn  string
 	needNet bool
 }
 
 type testToggle struct {
+	key     string
 	nameZh  string
 	nameEn  string
+	descZh  string
+	descEn  string
 	enabled bool
 	needNet bool
 }
 
+type advOption struct {
+	value   string
+	labelZh string
+	labelEn string
+	descZh  string
+	descEn  string
+}
+
 type advSetting struct {
+	key     string
 	nameZh  string
 	nameEn  string
-	options []string
+	descZh  string
+	descEn  string
+	kind    string // option | bool | text
+	options []advOption
 	current int
+	boolVal bool
+	textVal string
 }
 
 type tuiResult struct {
@@ -75,104 +93,241 @@ type tuiModel struct {
 	preCheck   utils.NetCheckResult
 	langPreset bool
 
-	// Language selection
 	langCursor int
-
-	// Main menu
 	mainCursor int
 	mainItems  []mainMenuItem
 
-	// Custom mode
 	customCursor int
 	toggles      []testToggle
 	advanced     []advSetting
-	customTotal  int // toggles + advanced + 1 (confirm button)
+	customTotal  int
 
-	// Pre-loaded info
+	editingText bool
+	editingIdx  int
+	textInput   textinput.Model
+
 	statsTotal int
 	statsDaily int
 	hasStats   bool
 	cmpVersion int
 	newVersion string
 
-	// Result
 	result tuiResult
-
 	width  int
 	height int
 }
 
-// --- Default data ---
-
 func defaultMainItems() []mainMenuItem {
 	return []mainMenuItem{
-		{id: "1", zh: "融合怪完全体(能测全测)", en: "Full Test (All Available Tests)", needNet: false},
-		{id: "2", zh: "极简版(系统信息+CPU+内存+磁盘+测速节点5个)", en: "Minimal Suite (SysInfo+CPU+Mem+Disk+5 Speed Nodes)", needNet: false},
-		{id: "3", zh: "精简版(系统信息+CPU+内存+磁盘+解锁+路由+测速节点5个)", en: "Standard Suite (SysInfo+CPU+Mem+Disk+Unlock+Route+5 Speed Nodes)", needNet: false},
-		{id: "4", zh: "精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)", en: "Network Suite (SysInfo+CPU+Mem+Disk+Backtrace+Route+5 Speed Nodes)", needNet: false},
-		{id: "5", zh: "精简解锁版(系统信息+CPU+内存+磁盘IO+解锁+测速节点5个)", en: "Unlock Suite (SysInfo+CPU+Mem+DiskIO+Unlock+5 Speed Nodes)", needNet: false},
-		{id: "6", zh: "网络单项(IP质量+回程+路由+延迟+TGDC+网站+测速节点11个)", en: "Network Only (IPQuality+Backtrace+Route+Latency+TGDC+Web+11 Speed Nodes)", needNet: true},
-		{id: "7", zh: "解锁单项(跨国平台解锁)", en: "Unlock Only (International Platform Unlock)", needNet: true},
-		{id: "8", zh: "硬件单项(系统信息+CPU+内存+dd磁盘+fio磁盘)", en: "Hardware Only (SysInfo+CPU+Mem+DD Disk+FIO Disk)", needNet: false},
-		{id: "9", zh: "IP质量检测(15个数据库+邮件端口检测)", en: "IP Quality (15 Databases + Email Port Test)", needNet: true},
-		{id: "10", zh: "三网回程线路+路由+延迟+TGDC+网站延迟", en: "3-Net Backtrace+Route+Latency+TGDC+Websites", needNet: true},
-		{id: "custom", zh: ">>> 自定义测试(自由选择测试项和高级设置)", en: ">>> Custom Test (Choose Tests & Advanced Settings)", needNet: false},
-		{id: "0", zh: "退出程序", en: "Exit Program", needNet: false},
+		{id: "1", zh: "融合怪完全体(能测全测)", en: "Full Test (All Available Tests)", descZh: "系统信息、CPU、内存、磁盘、解锁、IP质量、邮件端口、回程、NT3、测速、TGDC、网站延迟。", descEn: "Runs all available modules: system, compute, memory, disk, unlock, security, routing and speed.", needNet: false},
+		{id: "2", zh: "极简版", en: "Minimal Suite", descZh: "基础系统+CPU+内存+磁盘+5个测速节点，适合快速健康检查。", descEn: "Basic system + CPU + memory + disk + 5 speed nodes for quick health checks.", needNet: false},
+		{id: "3", zh: "精简版", en: "Standard Suite", descZh: "在极简版基础上增加平台解锁与路由能力评估。", descEn: "Minimal suite plus unlock and routing capability checks.", needNet: false},
+		{id: "4", zh: "精简网络版", en: "Network Suite", descZh: "强调网络回程与路由质量，辅以基础硬件测试。", descEn: "Network-focused profile with backtrace/routing plus basic hardware checks.", needNet: false},
+		{id: "5", zh: "精简解锁版", en: "Unlock Suite", descZh: "以流媒体和平台解锁能力为主，附基础性能测试。", descEn: "Unlock-focused profile with essential compute/storage checks.", needNet: false},
+		{id: "6", zh: "网络单项", en: "Network Only", descZh: "仅网络维度：IP质量、回程、NT3、延迟、TGDC、网站和测速。", descEn: "Network-only profile: IP quality, route, latency, TGDC, websites, speed.", needNet: true},
+		{id: "7", zh: "解锁单项", en: "Unlock Only", descZh: "仅进行跨国平台解锁与流媒体可用性检测。", descEn: "Unlock-only profile for cross-border media/service availability.", needNet: true},
+		{id: "8", zh: "硬件单项", en: "Hardware Only", descZh: "系统信息、CPU、内存、dd/fio 磁盘测试。", descEn: "Hardware-only profile with system, CPU, memory and disk tests.", needNet: false},
+		{id: "9", zh: "IP质量检测", en: "IP Quality", descZh: "15库 IP质量 + 邮件端口，适合网络身份风险评估。", descEn: "IP quality across multiple datasets plus email port checks.", needNet: true},
+		{id: "10", zh: "三网回程线路", en: "3-Network Route", descZh: "三网回程、NT3路由、延迟、TGDC、网站延迟专项。", descEn: "3-network backtrace + NT3 route + latency/TGDC/website checks.", needNet: true},
+		{id: "custom", zh: ">>> 高级自定义(全参数模式)", en: ">>> Advanced Custom (Full Parameters)", descZh: "按参数逐项配置，支持测试项、方法、路径、上传和结果分析。", descEn: "Configure per-parameter with test toggles, methods, paths, upload and analysis.", needNet: false},
+		{id: "0", zh: "退出程序", en: "Exit Program", descZh: "退出当前程序。", descEn: "Exit program.", needNet: false},
 	}
 }
 
 func defaultTestToggles() []testToggle {
 	return []testToggle{
-		{nameZh: "基础系统信息", nameEn: "Basic System Info", enabled: true, needNet: false},
-		{nameZh: "CPU测试", nameEn: "CPU Test", enabled: true, needNet: false},
-		{nameZh: "内存测试", nameEn: "Memory Test", enabled: true, needNet: false},
-		{nameZh: "磁盘测试", nameEn: "Disk Test", enabled: true, needNet: false},
-		{nameZh: "跨国平台解锁", nameEn: "Streaming Unlock", enabled: false, needNet: true},
-		{nameZh: "IP质量检测", nameEn: "IP Quality Check", enabled: false, needNet: true},
-		{nameZh: "邮件端口检测", nameEn: "Email Port Check", enabled: false, needNet: true},
-		{nameZh: "回程路由", nameEn: "Backtrace Route", enabled: false, needNet: true},
-		{nameZh: "NT3路由", nameEn: "NT3 Route", enabled: false, needNet: true},
-		{nameZh: "测速", nameEn: "Speed Test", enabled: false, needNet: true},
-		{nameZh: "Ping测试", nameEn: "Ping Test", enabled: false, needNet: true},
-		{nameZh: "TGDC测试", nameEn: "TGDC Test", enabled: false, needNet: true},
-		{nameZh: "网站延迟", nameEn: "Website Latency", enabled: false, needNet: true},
+		{key: "basic", nameZh: "基础系统信息", nameEn: "Basic System Info", descZh: "操作系统、CPU型号、内核、虚拟化等基础信息。", descEn: "OS, CPU model, kernel, virtualization and base environment info.", enabled: true, needNet: false},
+		{key: "cpu", nameZh: "CPU测试", nameEn: "CPU Test", descZh: "按所选方法执行 CPU 计算性能测试。", descEn: "Run CPU compute benchmarks using selected method.", enabled: true, needNet: false},
+		{key: "memory", nameZh: "内存测试", nameEn: "Memory Test", descZh: "按所选方法测试内存吞吐和访问性能。", descEn: "Run memory throughput and access benchmarks by selected method.", enabled: true, needNet: false},
+		{key: "disk", nameZh: "磁盘测试", nameEn: "Disk Test", descZh: "按所选方法执行磁盘读写性能测试。", descEn: "Run disk read/write benchmark using selected method/path.", enabled: true, needNet: false},
+		{key: "ut", nameZh: "跨国平台解锁", nameEn: "Streaming Unlock", descZh: "检测多类海外流媒体与服务可用性。", descEn: "Check availability of cross-border streaming/services.", enabled: false, needNet: true},
+		{key: "security", nameZh: "IP质量检测", nameEn: "IP Quality Check", descZh: "多库 IP 信誉、风险和质量信息检测。", descEn: "IP reputation/risk/quality checks across multiple datasets.", enabled: false, needNet: true},
+		{key: "email", nameZh: "邮件端口检测", nameEn: "Email Port Check", descZh: "检查常见邮件相关端口连通能力。", descEn: "Check common mail-related port connectivity.", enabled: false, needNet: true},
+		{key: "backtrace", nameZh: "回程路由", nameEn: "Backtrace Route", descZh: "检测上游及三网回程路径。", descEn: "Inspect upstream and 3-network return routes.", enabled: false, needNet: true},
+		{key: "nt3", nameZh: "NT3路由", nameEn: "NT3 Route", descZh: "按指定地区与协议执行详细路由追踪。", descEn: "Run detailed route trace by selected location/protocol.", enabled: false, needNet: true},
+		{key: "speed", nameZh: "测速", nameEn: "Speed Test", descZh: "测试下载/上传带宽与延迟。", descEn: "Measure download/upload bandwidth and latency.", enabled: false, needNet: true},
+		{key: "ping", nameZh: "Ping测试", nameEn: "Ping Test", descZh: "全国/多地区延迟质量测试。", descEn: "Latency quality checks across multiple regions.", enabled: false, needNet: true},
+		{key: "tgdc", nameZh: "Telegram DC测试", nameEn: "Telegram DC Test", descZh: "检测 Telegram 数据中心延迟表现。", descEn: "Measure latency to Telegram data centers.", enabled: false, needNet: true},
+		{key: "web", nameZh: "网站延迟", nameEn: "Website Latency", descZh: "检测常见网站访问延迟。", descEn: "Check latency to commonly used websites.", enabled: false, needNet: true},
 	}
+}
+
+func option(value, zh, en, descZh, descEn string) advOption {
+	return advOption{value: value, labelZh: zh, labelEn: en, descZh: descZh, descEn: descEn}
 }
 
 func defaultAdvSettings(config *params.Config) []advSetting {
 	adv := []advSetting{
-		{nameZh: "CPU测试方法", nameEn: "CPU Method", options: []string{"sysbench", "geekbench", "winsat"}, current: 0},
-		{nameZh: "CPU线程模式", nameEn: "CPU Thread", options: []string{"multi", "single"}, current: 0},
-		{nameZh: "内存测试方法", nameEn: "Memory Method", options: []string{"stream", "sysbench", "dd", "winsat", "auto"}, current: 0},
-		{nameZh: "磁盘测试方法", nameEn: "Disk Method", options: []string{"fio", "dd", "winsat"}, current: 0},
-		{nameZh: "NT3测试位置", nameEn: "NT3 Location", options: []string{"GZ", "SH", "BJ", "CD", "ALL"}, current: 0},
-		{nameZh: "NT3测试类型", nameEn: "NT3 Type", options: []string{"ipv4", "ipv6", "both"}, current: 0},
-		{nameZh: "测速节点数/运营商", nameEn: "Speed Nodes/ISP", options: []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}, current: 1},
+		{
+			key: "cpum", nameZh: "CPU测试方法", nameEn: "CPU Method", kind: "option",
+			descZh: "选择 CPU 压测方法，不同方法偏向不同负载模型。",
+			descEn: "Choose CPU benchmark method. Different methods model different workloads.",
+			options: []advOption{
+				option("sysbench", "Sysbench", "Sysbench", "通用基准，稳定易比较。", "General-purpose benchmark with stable comparability."),
+				option("geekbench", "Geekbench", "Geekbench", "偏综合应用模型，便于横向对比。", "Application-like synthetic benchmark for broad comparison."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 场景下常用基准。", "Common benchmark in Windows environments."),
+			},
+		},
+		{
+			key: "cput", nameZh: "CPU线程模式", nameEn: "CPU Thread Mode", kind: "option",
+			descZh: "单线程看核心峰值，多线程看整机并发能力。",
+			descEn: "Single-core shows peak core power; multi-core shows parallel throughput.",
+			options: []advOption{
+				option("multi", "多线程", "Multi-thread", "评估整机并发算力。", "Evaluate full-machine parallel compute capability."),
+				option("single", "单线程", "Single-thread", "评估单核心峰值性能。", "Evaluate peak single-core performance."),
+			},
+		},
+		{
+			key: "memorym", nameZh: "内存测试方法", nameEn: "Memory Method", kind: "option",
+			descZh: "选择内存测试方法，结果关注带宽与访问效率。",
+			descEn: "Choose memory benchmark method to evaluate bandwidth/access efficiency.",
+			options: []advOption{
+				option("stream", "STREAM", "STREAM", "侧重带宽测试。", "Focused on memory bandwidth."),
+				option("sysbench", "Sysbench", "Sysbench", "通用内存压测。", "General-purpose memory stress benchmark."),
+				option("dd", "dd", "dd", "基于系统工具的简化测试。", "Simple system-tool-based measurement."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 环境内存基准。", "Windows-oriented memory benchmark."),
+				option("auto", "自动", "Auto", "自动选择可用且优先方法。", "Automatically select the preferred available method."),
+			},
+		},
+		{
+			key: "diskm", nameZh: "磁盘测试方法", nameEn: "Disk Method", kind: "option",
+			descZh: "选择磁盘测试方法，评估顺序/随机读写能力。",
+			descEn: "Choose disk method to evaluate sequential/random I/O performance.",
+			options: []advOption{
+				option("fio", "FIO", "FIO", "更全面的磁盘 I/O 基准。", "Comprehensive disk I/O benchmark."),
+				option("dd", "dd", "dd", "快速顺序写读基准。", "Quick sequential write/read benchmark."),
+				option("winsat", "WinSAT", "WinSAT", "Windows 磁盘基准。", "Disk benchmark for Windows environments."),
+			},
+		},
+		{
+			key: "diskp", nameZh: "磁盘测试路径", nameEn: "Disk Test Path", kind: "text",
+			descZh:  "自定义磁盘测试目录。留空表示默认路径。",
+			descEn:  "Custom disk test directory. Empty means default path.",
+			textVal: config.DiskTestPath,
+		},
+		{
+			key: "diskmc", nameZh: "多磁盘检测", nameEn: "Multi-Disk Check", kind: "bool",
+			descZh:  "启用后尝试检测并测试多磁盘路径。",
+			descEn:  "When enabled, detect and benchmark multiple disk paths.",
+			boolVal: config.DiskMultiCheck,
+		},
+		{
+			key: "nt3loc", nameZh: "NT3测试地区", nameEn: "NT3 Location", kind: "option",
+			descZh: "选择路由追踪地区。显示中文全称，内部仍使用标准参数值。",
+			descEn: "Choose route trace region. Full names are shown while preserving standard values.",
+			options: []advOption{
+				option("GZ", "广州", "Guangzhou", "从广州节点进行追踪。", "Trace from Guangzhou node."),
+				option("SH", "上海", "Shanghai", "从上海节点进行追踪。", "Trace from Shanghai node."),
+				option("BJ", "北京", "Beijing", "从北京节点进行追踪。", "Trace from Beijing node."),
+				option("CD", "成都", "Chengdu", "从成都节点进行追踪。", "Trace from Chengdu node."),
+				option("ALL", "全部地区", "All Regions", "依次测试全部地区节点。", "Run route traces from all supported regions."),
+			},
+		},
+		{
+			key: "nt3t", nameZh: "NT3协议类型", nameEn: "NT3 Protocol", kind: "option",
+			descZh: "指定 NT3 路由检测协议栈。",
+			descEn: "Select protocol stack used by NT3 route checks.",
+			options: []advOption{
+				option("ipv4", "仅 IPv4", "IPv4 Only", "仅测试 IPv4 路由路径。", "Test IPv4 routing only."),
+				option("ipv6", "仅 IPv6", "IPv6 Only", "仅测试 IPv6 路由路径。", "Test IPv6 routing only."),
+				option("both", "IPv4 + IPv6", "IPv4 + IPv6", "同时测试 IPv4 与 IPv6。", "Test both IPv4 and IPv6."),
+			},
+		},
+		{
+			key: "spnum", nameZh: "测速节点数/运营商", nameEn: "Speed Nodes per ISP", kind: "option",
+			descZh: "每个运营商选择的测速节点数量。",
+			descEn: "Number of speed test nodes selected per ISP.",
+			options: []advOption{
+				option("1", "1 个", "1 node", "最快速，覆盖最少。", "Fastest run with least coverage."),
+				option("2", "2 个", "2 nodes", "默认平衡。", "Default balanced option."),
+				option("3", "3 个", "3 nodes", "覆盖更广，耗时增加。", "Broader coverage with more runtime."),
+				option("4", "4 个", "4 nodes", "更完整网络采样。", "More complete network sampling."),
+				option("5", "5 个", "5 nodes", "高覆盖，耗时较高。", "High coverage with longer runtime."),
+				option("6", "6 个", "6 nodes", "深度采样。", "Deep sampling."),
+				option("7", "7 个", "7 nodes", "深度采样。", "Deep sampling."),
+				option("8", "8 个", "8 nodes", "深度采样。", "Deep sampling."),
+				option("9", "9 个", "9 nodes", "深度采样。", "Deep sampling."),
+				option("10", "10 个", "10 nodes", "最全面，耗时最高。", "Most comprehensive, longest runtime."),
+			},
+		},
+		{
+			key: "log", nameZh: "调试日志", nameEn: "Debug Logger", kind: "bool",
+			descZh:  "启用后输出更多调试日志，便于排障。",
+			descEn:  "Enable verbose logs for troubleshooting.",
+			boolVal: config.EnableLogger,
+		},
+		{
+			key: "upload", nameZh: "上传并生成分享链接", nameEn: "Upload & Share Link", kind: "bool",
+			descZh:  "启用后上传测试结果并生成可分享链接。",
+			descEn:  "Upload final result and generate a shareable link.",
+			boolVal: config.EnableUpload,
+		},
+		{
+			key: "analysis", nameZh: "测试后结果总结分析", nameEn: "Post-Test Summary Analysis", kind: "bool",
+			descZh:  "测试结束后生成简明总结，提炼优势、短板和用途建议。",
+			descEn:  "Generate concise final summary with strengths, limits and usage hints.",
+			boolVal: config.AnalyzeResult,
+		},
+		{
+			key: "filepath", nameZh: "结果文件名", nameEn: "Result File Name", kind: "text",
+			descZh:  "上传前本地结果文件名。",
+			descEn:  "Local result filename used before upload.",
+			textVal: config.FilePath,
+		},
+		{
+			key: "width", nameZh: "输出宽度", nameEn: "Output Width", kind: "option",
+			descZh: "控制终端输出排版宽度。",
+			descEn: "Controls console output formatting width.",
+			options: []advOption{
+				option("72", "72 列", "72 cols", "紧凑显示。", "Compact layout."),
+				option("82", "82 列", "82 cols", "默认宽度。", "Default width."),
+				option("100", "100 列", "100 cols", "更宽显示。", "Wider layout."),
+				option("120", "120 列", "120 cols", "宽屏显示。", "Wide-screen layout."),
+			},
+		},
 	}
-	// Set current values from config
-	setAdvCurrent := func(idx int, val string) {
-		for j, opt := range adv[idx].options {
-			if opt == val {
-				adv[idx].current = j
-				return
-			}
+
+	for i := range adv {
+		switch adv[i].key {
+		case "cpum":
+			adv[i].current = optionIndexByValue(adv[i].options, config.CpuTestMethod)
+		case "cput":
+			adv[i].current = optionIndexByValue(adv[i].options, config.CpuTestThreadMode)
+		case "memorym":
+			adv[i].current = optionIndexByValue(adv[i].options, config.MemoryTestMethod)
+		case "diskm":
+			adv[i].current = optionIndexByValue(adv[i].options, config.DiskTestMethod)
+		case "nt3loc":
+			adv[i].current = optionIndexByValue(adv[i].options, config.Nt3Location)
+		case "nt3t":
+			adv[i].current = optionIndexByValue(adv[i].options, config.Nt3CheckType)
+		case "spnum":
+			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.SpNum))
+		case "width":
+			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.Width))
 		}
 	}
-	setAdvCurrent(0, config.CpuTestMethod)
-	setAdvCurrent(1, config.CpuTestThreadMode)
-	setAdvCurrent(2, config.MemoryTestMethod)
-	setAdvCurrent(3, config.DiskTestMethod)
-	setAdvCurrent(4, config.Nt3Location)
-	setAdvCurrent(5, config.Nt3CheckType)
-	if config.SpNum >= 1 && config.SpNum <= 10 {
-		adv[6].current = config.SpNum - 1
-	}
+
 	return adv
+}
+
+func optionIndexByValue(options []advOption, value string) int {
+	for i, opt := range options {
+		if opt.value == value {
+			return i
+		}
+	}
+	return 0
 }
 
 func newTuiModel(preCheck utils.NetCheckResult, config *params.Config, langPreset bool, statsTotal, statsDaily int, hasStats bool, cmpVersion int, newVersion string) tuiModel {
 	toggles := defaultTestToggles()
 	advanced := defaultAdvSettings(config)
+	ti := textinput.New()
+	ti.Prompt = "> "
+	ti.Placeholder = ""
+	ti.CharLimit = 255
+	ti.Width = 45
 	m := tuiModel{
 		config:      config,
 		preCheck:    preCheck,
@@ -186,8 +341,9 @@ func newTuiModel(preCheck utils.NetCheckResult, config *params.Config, langPrese
 		hasStats:    hasStats,
 		cmpVersion:  cmpVersion,
 		newVersion:  newVersion,
-		width:       80,
+		width:       config.Width,
 		height:      24,
+		textInput:   ti,
 	}
 	if langPreset {
 		m.phase = phaseMain
@@ -197,8 +353,6 @@ func newTuiModel(preCheck utils.NetCheckResult, config *params.Config, langPrese
 	}
 	return m
 }
-
-// --- Bubbletea Interface ---
 
 func (m tuiModel) Init() tea.Cmd {
 	return nil
@@ -234,8 +388,6 @@ func (m tuiModel) View() string {
 	}
 	return ""
 }
-
-// --- Language Selection ---
 
 func (m tuiModel) updateLang(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
@@ -274,15 +426,7 @@ func (m tuiModel) viewLang() string {
 	s.WriteString("\n\n")
 	s.WriteString(tInfoStyle.Render("  请选择语言 / Please select language:"))
 	s.WriteString("\n\n")
-
-	langs := []struct {
-		label string
-		desc  string
-	}{
-		{"1. 中文", "Chinese"},
-		{"2. English", "英文"},
-	}
-
+	langs := []string{"1. 中文", "2. English"}
 	for i, l := range langs {
 		cursor := "   "
 		style := tNormStyle
@@ -290,16 +434,13 @@ func (m tuiModel) viewLang() string {
 			cursor = " > "
 			style = tSelStyle
 		}
-		s.WriteString(fmt.Sprintf("%s%s  %s\n", cursor, style.Render(l.label), tDimStyle.Render(l.desc)))
+		s.WriteString(fmt.Sprintf("%s%s\n", cursor, style.Render(l)))
 	}
-
 	s.WriteString("\n")
 	s.WriteString(tHelpStyle.Render("  ↑/↓ Navigate  Enter Confirm  1/2 Quick-Select  q Quit"))
 	s.WriteString("\n")
 	return s.String()
 }
-
-// --- Main Menu ---
 
 func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	key := msg.String()
@@ -319,7 +460,7 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		item := m.mainItems[m.mainCursor]
 		if item.needNet && !m.preCheck.Connected {
-			return m, nil // can't select network-dependent items without connection
+			return m, nil
 		}
 		if item.id == "custom" {
 			m.phase = phaseCustom
@@ -332,7 +473,6 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.result.quit = true
 		return m, tea.Quit
 	default:
-		// Number quick-select
 		for i, item := range m.mainItems {
 			if key == item.id {
 				if item.needNet && !m.preCheck.Connected {
@@ -352,51 +492,47 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m tuiModel) selectedMainDesc(lang string) string {
+	item := m.mainItems[m.mainCursor]
+	if lang == "zh" {
+		return item.descZh
+	}
+	return item.descEn
+}
+
 func (m tuiModel) viewMain() string {
 	lang := m.result.language
 	var s strings.Builder
 	s.WriteString("\n")
-
-	// Title
 	if lang == "zh" {
 		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s", m.config.EcsVersion)))
 	} else {
 		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s", m.config.EcsVersion)))
 	}
 	s.WriteString("\n")
-
-	// Version warning
 	if m.preCheck.Connected && m.cmpVersion == -1 {
 		if lang == "zh" {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新！", m.newVersion)))
+			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
 		} else {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected, update if necessary!", m.newVersion)))
+			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
 		}
 		s.WriteString("\n")
 	}
-
-	// Stats
 	if m.preCheck.Connected && m.hasStats {
 		if lang == "zh" {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s",
-				utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		} else {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s",
-				utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		}
 		s.WriteString("\n")
 	}
 	s.WriteString("\n")
-
-	// Section header
 	if lang == "zh" {
 		s.WriteString(tSectStyle.Render("  请选择测试方案:"))
 	} else {
 		s.WriteString(tSectStyle.Render("  Select Test Suite:"))
 	}
 	s.WriteString("\n\n")
-
-	// Menu items
 	for i, item := range m.mainItems {
 		cursor := "   "
 		style := tNormStyle
@@ -404,15 +540,10 @@ func (m tuiModel) viewMain() string {
 			cursor = " > "
 			style = tSelStyle
 		}
-
-		var label string
+		label := item.en
 		if lang == "zh" {
 			label = item.zh
-		} else {
-			label = item.en
 		}
-
-		// Number prefix
 		prefix := ""
 		switch {
 		case item.id == "custom":
@@ -422,8 +553,6 @@ func (m tuiModel) viewMain() string {
 		default:
 			prefix = fmt.Sprintf("%2s. ", item.id)
 		}
-
-		// Disabled indicator for network-dependent items when no connection
 		suffix := ""
 		if item.needNet && !m.preCheck.Connected {
 			style = tDimStyle
@@ -433,10 +562,16 @@ func (m tuiModel) viewMain() string {
 				suffix = " [No Network]"
 			}
 		}
-
 		s.WriteString(fmt.Sprintf("%s%s%s\n", cursor, style.Render(prefix+label), tDimStyle.Render(suffix)))
 	}
-
+	s.WriteString("\n")
+	panelTitle := "  当前选项说明"
+	panelBody := m.selectedMainDesc(lang)
+	if lang == "en" {
+		panelTitle = "  Selected Option Description"
+	}
+	s.WriteString(tSectStyle.Render(panelTitle) + "\n")
+	s.WriteString(tPanelStyle.Width(maxInt(60, m.width-6)).Render(panelBody) + "\n")
 	s.WriteString("\n")
 	if lang == "zh" {
 		s.WriteString(tHelpStyle.Render("  ↑/↓/j/k 移动  Enter 确认  数字 快速选择  q 退出"))
@@ -447,9 +582,39 @@ func (m tuiModel) viewMain() string {
 	return s.String()
 }
 
-// --- Custom Mode ---
+func (m *tuiModel) startEditText(settingIdx int) {
+	m.editingText = true
+	m.editingIdx = settingIdx
+	m.textInput.SetValue(m.advanced[settingIdx].textVal)
+	m.textInput.Focus()
+}
+
+func (m *tuiModel) stopEditText(save bool) {
+	if save {
+		m.advanced[m.editingIdx].textVal = strings.TrimSpace(m.textInput.Value())
+	}
+	m.textInput.Blur()
+	m.editingText = false
+}
 
 func (m tuiModel) updateCustom(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.editingText {
+		switch msg.String() {
+		case "enter":
+			m.stopEditText(true)
+			return m, nil
+		case "esc":
+			m.stopEditText(false)
+			return m, nil
+		case "ctrl+c":
+			m.result.quit = true
+			return m, tea.Quit
+		}
+		var cmd tea.Cmd
+		m.textInput, cmd = m.textInput.Update(msg)
+		return m, cmd
+	}
+
 	key := msg.String()
 	switch key {
 	case "up", "k":
@@ -464,34 +629,41 @@ func (m tuiModel) updateCustom(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.customCursor = 0
 	case "end":
 		m.customCursor = m.customTotal - 1
-	case " ":
+	case " ", "enter", "right", "l", "left", "h":
 		if m.customCursor < len(m.toggles) {
-			// Toggle test item
 			t := &m.toggles[m.customCursor]
 			if t.needNet && !m.preCheck.Connected {
-				break // can't enable without network
+				break
 			}
 			t.enabled = !t.enabled
-		} else if m.customCursor < len(m.toggles)+len(m.advanced) {
-			// Cycle advanced setting forward
-			idx := m.customCursor - len(m.toggles)
-			a := &m.advanced[idx]
-			a.current = (a.current + 1) % len(a.options)
+			break
 		}
-	case "right", "l":
-		if m.customCursor >= len(m.toggles) && m.customCursor < len(m.toggles)+len(m.advanced) {
-			idx := m.customCursor - len(m.toggles)
-			a := &m.advanced[idx]
-			a.current = (a.current + 1) % len(a.options)
+		if m.customCursor == m.customTotal-1 {
+			m.result.custom = true
+			m.result.choice = "custom"
+			m.result.toggles = m.toggles
+			m.result.advanced = m.advanced
+			return m, tea.Quit
 		}
-	case "left", "h":
-		if m.customCursor >= len(m.toggles) && m.customCursor < len(m.toggles)+len(m.advanced) {
-			idx := m.customCursor - len(m.toggles)
-			a := &m.advanced[idx]
-			a.current = (a.current - 1 + len(a.options)) % len(a.options)
+		advIdx := m.customCursor - len(m.toggles)
+		if advIdx >= 0 && advIdx < len(m.advanced) {
+			a := &m.advanced[advIdx]
+			switch a.kind {
+			case "bool":
+				a.boolVal = !a.boolVal
+			case "option":
+				if key == "left" || key == "h" {
+					a.current = (a.current - 1 + len(a.options)) % len(a.options)
+				} else {
+					a.current = (a.current + 1) % len(a.options)
+				}
+			case "text":
+				if key == "enter" || key == " " {
+					m.startEditText(advIdx)
+				}
+			}
 		}
 	case "a":
-		// Toggle all test items
 		allEnabled := true
 		for _, t := range m.toggles {
 			if !t.enabled && (!t.needNet || m.preCheck.Connected) {
@@ -505,27 +677,6 @@ func (m tuiModel) updateCustom(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			m.toggles[i].enabled = !allEnabled
 		}
-	case "enter":
-		if m.customCursor == m.customTotal-1 {
-			// Confirm button
-			m.result.custom = true
-			m.result.choice = "custom"
-			m.result.toggles = m.toggles
-			m.result.advanced = m.advanced
-			return m, tea.Quit
-		}
-		// Toggle current item (same as space)
-		if m.customCursor < len(m.toggles) {
-			t := &m.toggles[m.customCursor]
-			if t.needNet && !m.preCheck.Connected {
-				break
-			}
-			t.enabled = !t.enabled
-		} else if m.customCursor < len(m.toggles)+len(m.advanced) {
-			idx := m.customCursor - len(m.toggles)
-			a := &m.advanced[idx]
-			a.current = (a.current + 1) % len(a.options)
-		}
 	case "esc":
 		m.phase = phaseMain
 		return m, nil
@@ -536,98 +687,144 @@ func (m tuiModel) updateCustom(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m tuiModel) currentCustomDescription(lang string) string {
+	if m.customCursor < len(m.toggles) {
+		t := m.toggles[m.customCursor]
+		if lang == "zh" {
+			return t.descZh
+		}
+		return t.descEn
+	}
+	if m.customCursor == m.customTotal-1 {
+		if lang == "zh" {
+			return "确认当前高级自定义配置并开始测试。"
+		}
+		return "Confirm current advanced custom configuration and start tests."
+	}
+	idx := m.customCursor - len(m.toggles)
+	a := m.advanced[idx]
+	if a.kind == "option" {
+		op := a.options[a.current]
+		if lang == "zh" {
+			return a.descZh + " 当前选项: " + op.labelZh + "。" + op.descZh
+		}
+		return a.descEn + " Current option: " + op.labelEn + ". " + op.descEn
+	}
+	if a.kind == "bool" {
+		if lang == "zh" {
+			state := "关闭"
+			if a.boolVal {
+				state = "开启"
+			}
+			return a.descZh + " 当前状态: " + state + "。"
+		}
+		state := "OFF"
+		if a.boolVal {
+			state = "ON"
+		}
+		return a.descEn + " Current state: " + state + "."
+	}
+	if lang == "zh" {
+		return a.descZh + " 当前值: " + a.textVal
+	}
+	return a.descEn + " Current value: " + a.textVal
+}
+
+func (m tuiModel) advDisplayValue(a advSetting, lang string) string {
+	switch a.kind {
+	case "option":
+		op := a.options[a.current]
+		if lang == "zh" {
+			return op.labelZh
+		}
+		return op.labelEn
+	case "bool":
+		if a.boolVal {
+			if lang == "zh" {
+				return "开启"
+			}
+			return "ON"
+		}
+		if lang == "zh" {
+			return "关闭"
+		}
+		return "OFF"
+	case "text":
+		if strings.TrimSpace(a.textVal) == "" {
+			if lang == "zh" {
+				return "(默认)"
+			}
+			return "(default)"
+		}
+		return a.textVal
+	}
+	return ""
+}
+
 func (m tuiModel) viewCustom() string {
 	lang := m.result.language
 	var s strings.Builder
 	s.WriteString("\n")
-
 	if lang == "zh" {
-		s.WriteString(tTitleStyle.Render("  自定义测试配置"))
+		s.WriteString(tTitleStyle.Render("  高级自定义参数模式"))
 	} else {
-		s.WriteString(tTitleStyle.Render("  Custom Test Configuration"))
+		s.WriteString(tTitleStyle.Render("  Advanced Custom Parameter Mode"))
 	}
 	s.WriteString("\n\n")
-
-	// Test toggles
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  测试项目 (空格切换, a 全选/全不选):"))
+		s.WriteString(tSectStyle.Render("  测试开关 (空格切换, a 全选/全不选):"))
 	} else {
-		s.WriteString(tSectStyle.Render("  Test Items (Space toggle, a Select all/none):"))
+		s.WriteString(tSectStyle.Render("  Test Toggles (Space to toggle, a all/none):"))
 	}
 	s.WriteString("\n\n")
-
 	for i, t := range m.toggles {
 		cursor := "   "
-		if m.customCursor == i {
-			cursor = " > "
-		}
-
-		var check string
-		if t.enabled {
-			check = tChkOnStyle.Render("[x]")
-		} else {
-			check = tChkOffStyle.Render("[ ]")
-		}
-
-		var name string
-		if lang == "zh" {
-			name = t.nameZh
-		} else {
-			name = t.nameEn
-		}
-
 		style := tNormStyle
 		if m.customCursor == i {
+			cursor = " > "
 			style = tSelStyle
 		}
 		if t.needNet && !m.preCheck.Connected {
 			style = tDimStyle
 		}
-
+		check := tChkOffStyle.Render("[ ]")
+		if t.enabled {
+			check = tChkOnStyle.Render("[x]")
+		}
+		name := t.nameEn
+		if lang == "zh" {
+			name = t.nameZh
+		}
 		s.WriteString(fmt.Sprintf("%s%s %s\n", cursor, check, style.Render(name)))
 	}
-
-	// Advanced settings
 	s.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  高级设置 (空格/←/→ 切换选项):"))
+		s.WriteString(tSectStyle.Render("  参数设置 (Enter/空格切换, ←/→改选项):"))
 	} else {
-		s.WriteString(tSectStyle.Render("  Advanced Settings (Space/Left/Right cycle):"))
+		s.WriteString(tSectStyle.Render("  Parameter Settings (Enter/Space switch, Left/Right cycle):"))
 	}
 	s.WriteString("\n\n")
-
 	for i, a := range m.advanced {
 		idx := len(m.toggles) + i
 		cursor := "   "
 		if m.customCursor == idx {
 			cursor = " > "
 		}
-
-		var name string
-		if lang == "zh" {
-			name = a.nameZh
-		} else {
-			name = a.nameEn
-		}
-
 		style := tNormStyle
 		if m.customCursor == idx {
 			style = tSelStyle
 		}
-
-		// Render current value with arrows
-		val := a.options[a.current]
-		var optStr string
-		if m.customCursor == idx {
-			optStr = tSelStyle.Render(fmt.Sprintf("< %s >", val))
-		} else {
-			optStr = tDimStyle.Render(fmt.Sprintf("< %s >", val))
+		name := a.nameEn
+		if lang == "zh" {
+			name = a.nameZh
 		}
-
-		s.WriteString(fmt.Sprintf("%s%-22s %s\n", cursor, style.Render(name+":"), optStr))
+		value := m.advDisplayValue(a, lang)
+		if a.kind == "option" {
+			value = "< " + value + " >"
+		}
+		s.WriteString(fmt.Sprintf("%s%-26s %s\n", cursor, style.Render(name+":"), tDimStyle.Render(value)))
 	}
 
-	// Confirm button
 	s.WriteString("\n")
 	confirmIdx := m.customTotal - 1
 	if m.customCursor == confirmIdx {
@@ -645,25 +842,44 @@ func (m tuiModel) viewCustom() string {
 	}
 
 	s.WriteString("\n")
+	panelTitle := "  当前项说明"
+	if lang == "en" {
+		panelTitle = "  Current Item Description"
+	}
+	s.WriteString(tSectStyle.Render(panelTitle) + "\n")
+	s.WriteString(tPanelStyle.Width(maxInt(60, m.width-6)).Render(m.currentCustomDescription(lang)) + "\n")
+
+	if m.editingText {
+		if lang == "zh" {
+			s.WriteString("\n" + tWarnStyle.Render("  文本编辑模式: Enter 保存, Esc 取消") + "\n")
+		} else {
+			s.WriteString("\n" + tWarnStyle.Render("  Text edit mode: Enter save, Esc cancel") + "\n")
+		}
+		s.WriteString("  " + m.textInput.View() + "\n")
+	}
+
+	s.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tHelpStyle.Render("  ↑/↓ 移动  空格/Enter 切换  ←/→ 调整  a 全选  Esc 返回  q 退出"))
+		s.WriteString(tHelpStyle.Render("  ↑/↓ 移动  Enter/空格 切换  ←/→ 改选项  a 全选  Esc 返回  q 退出"))
 	} else {
-		s.WriteString(tHelpStyle.Render("  Up/Down Move  Space/Enter Toggle  Left/Right Adjust  a All  Esc Back  q Quit"))
+		s.WriteString(tHelpStyle.Render("  Up/Down Move  Enter/Space Toggle  Left/Right Cycle  a All  Esc Back  q Quit"))
 	}
 	s.WriteString("\n")
 	return s.String()
 }
 
-// --- Public Interface ---
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
 
-// RunTuiMenu runs the interactive TUI menu and returns the result
 func RunTuiMenu(preCheck utils.NetCheckResult, config *params.Config) tuiResult {
-	// Pre-load stats
 	var statsTotal, statsDaily int
 	var hasStats bool
 	var cmpVersion int
 	var newVersion string
-
 	if preCheck.Connected {
 		var wg sync.WaitGroup
 		var stats *utils.StatsResponse
@@ -690,10 +906,8 @@ func RunTuiMenu(preCheck utils.NetCheckResult, config *params.Config) tuiResult 
 			newVersion = githubInfo.TagName
 		}
 	}
-
 	langPreset := config.UserSetFlags["lang"] || config.UserSetFlags["l"]
 	m := newTuiModel(preCheck, config, langPreset, statsTotal, statsDaily, hasStats, cmpVersion, newVersion)
-
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	finalModel, err := p.Run()
 	if err != nil {
@@ -703,60 +917,83 @@ func RunTuiMenu(preCheck utils.NetCheckResult, config *params.Config) tuiResult 
 	return finalModel.(tuiModel).result
 }
 
-// applyCustomResult applies custom mode selections to config
 func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *params.Config) {
-	// Apply test toggles (order must match defaultTestToggles)
-	for i, t := range result.toggles {
+	for _, t := range result.toggles {
 		enabled := t.enabled
 		if t.needNet && !preCheck.Connected {
 			enabled = false
 		}
-		switch i {
-		case 0:
+		switch t.key {
+		case "basic":
 			config.BasicStatus = enabled
-		case 1:
+		case "cpu":
 			config.CpuTestStatus = enabled
-		case 2:
+		case "memory":
 			config.MemoryTestStatus = enabled
-		case 3:
+		case "disk":
 			config.DiskTestStatus = enabled
-		case 4:
+		case "ut":
 			config.UtTestStatus = enabled
-		case 5:
+		case "security":
 			config.SecurityTestStatus = enabled
-		case 6:
+		case "email":
 			config.EmailTestStatus = enabled
-		case 7:
+		case "backtrace":
 			config.BacktraceStatus = enabled
-		case 8:
+		case "nt3":
 			config.Nt3Status = enabled
-		case 9:
+		case "speed":
 			config.SpeedTestStatus = enabled
-		case 10:
+		case "ping":
 			config.PingTestStatus = enabled
-		case 11:
+		case "tgdc":
 			config.TgdcTestStatus = enabled
-		case 12:
+		case "web":
 			config.WebTestStatus = enabled
 		}
 	}
 
-	// Apply advanced settings (order must match defaultAdvSettings)
-	if len(result.advanced) >= 7 {
-		config.CpuTestMethod = result.advanced[0].options[result.advanced[0].current]
-		config.CpuTestThreadMode = result.advanced[1].options[result.advanced[1].current]
-		config.MemoryTestMethod = result.advanced[2].options[result.advanced[2].current]
-		config.DiskTestMethod = result.advanced[3].options[result.advanced[3].current]
-		config.Nt3Location = result.advanced[4].options[result.advanced[4].current]
-		config.Nt3CheckType = result.advanced[5].options[result.advanced[5].current]
-		spIdx := result.advanced[6].current
-		config.SpNum = spIdx + 1
+	for _, a := range result.advanced {
+		switch a.key {
+		case "cpum":
+			config.CpuTestMethod = a.options[a.current].value
+		case "cput":
+			config.CpuTestThreadMode = a.options[a.current].value
+		case "memorym":
+			config.MemoryTestMethod = a.options[a.current].value
+		case "diskm":
+			config.DiskTestMethod = a.options[a.current].value
+		case "diskp":
+			config.DiskTestPath = strings.TrimSpace(a.textVal)
+		case "diskmc":
+			config.DiskMultiCheck = a.boolVal
+		case "nt3loc":
+			config.Nt3Location = a.options[a.current].value
+		case "nt3t":
+			config.Nt3CheckType = a.options[a.current].value
+		case "spnum":
+			if v, err := strconv.Atoi(a.options[a.current].value); err == nil {
+				config.SpNum = v
+			}
+		case "log":
+			config.EnableLogger = a.boolVal
+		case "upload":
+			config.EnableUpload = a.boolVal
+		case "analysis":
+			config.AnalyzeResult = a.boolVal
+		case "filepath":
+			if strings.TrimSpace(a.textVal) != "" {
+				config.FilePath = strings.TrimSpace(a.textVal)
+			}
+		case "width":
+			if v, err := strconv.Atoi(a.options[a.current].value); err == nil {
+				config.Width = v
+			}
+		}
 	}
 
-	// Set OnlyIpInfoCheck if no hardware tests are enabled
 	if !config.BasicStatus && !config.CpuTestStatus && !config.MemoryTestStatus && !config.DiskTestStatus {
 		config.OnlyIpInfoCheck = true
 	}
-
 	config.AutoChangeDiskMethod = true
 }

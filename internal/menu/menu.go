@@ -184,6 +184,7 @@ func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 	config.Language = result.language
 
 	if result.custom {
+		config.Choice = "custom"
 		applyCustomResult(result, preCheck, config)
 		if config.SpeedTestStatus {
 			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)

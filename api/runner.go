@@ -28,12 +28,12 @@ func RunAllTests(preCheck utils.NetCheckResult, config *Config) *RunResult {
 		outputMutex                                           sync.Mutex
 		infoMutex                                             sync.Mutex
 	)
-	
+
 	startTime := time.Now()
-	
+
 	switch config.Language {
 	case "zh":
-		runner.RunChineseTests(preCheck, config, &wg1, &wg2, &wg3, 
+		runner.RunChineseTests(preCheck, config, &wg1, &wg2, &wg3,
 			&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
 			&output, tempOutput, startTime, &outputMutex, &infoMutex)
 	case "en":
@@ -45,9 +45,12 @@ func RunAllTests(preCheck utils.NetCheckResult, config *Config) *RunResult {
 			&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
 			&output, tempOutput, startTime, &outputMutex, &infoMutex)
 	}
-	
+	if config.AnalyzeResult {
+		output = runner.AppendAnalysisSummary(config, output, tempOutput, &outputMutex)
+	}
+
 	endTime := time.Now()
-	
+
 	return &RunResult{
 		Output:    output,
 		Duration:  endTime.Sub(startTime),

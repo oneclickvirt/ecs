@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	ecsVersion   = "v0.1.118"                   // 融合怪版本号
+	ecsVersion   = "v0.1.119"                   // 融合怪版本号
 	configs      = params.NewConfig(ecsVersion) // 全局配置实例
 	userSetFlags = make(map[string]bool)        // 用于跟踪哪些参数是用户显式设置的
 )
@@ -98,6 +98,9 @@ func main() {
 		runner.RunEnglishTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
 	default:
 		fmt.Println("Unsupported language")
+	}
+	if configs.AnalyzeResult {
+		output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
 	}
 	if preCheck.Connected {
 		runner.HandleUploadResults(configs, output)

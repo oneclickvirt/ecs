@@ -102,6 +102,13 @@ func WithEnableUpload(enable bool) ConfigOption {
 	}
 }
 
+// WithAnalyzeResult 设置是否启用测试后结果总结分析
+func WithAnalyzeResult(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.AnalyzeResult = enable
+	}
+}
+
 // WithEnableLogger 设置是否启用日志
 func WithEnableLogger(enable bool) ConfigOption {
 	return func(c *Config) {

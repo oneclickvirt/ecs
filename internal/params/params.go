@@ -42,6 +42,7 @@ type Config struct {
 	AutoChangeDiskMethod bool
 	FilePath             string
 	EnableUpload         bool
+	AnalyzeResult        bool
 	OnlyIpInfoCheck      bool
 	Help                 bool
 	Finish               bool
@@ -85,6 +86,7 @@ func NewConfig(version string) *Config {
 		AutoChangeDiskMethod: true,
 		FilePath:             "goecs.txt",
 		EnableUpload:         true,
+		AnalyzeResult:        false,
 		OnlyIpInfoCheck:      false,
 		Help:                 false,
 		Finish:               false,
@@ -106,6 +108,7 @@ func normalizeBoolArgs(args []string) []string {
 		"disk": true, "ut": true, "security": true, "email": true,
 		"backtrace": true, "nt3": true, "speed": true, "ping": true,
 		"tgdc": true, "web": true, "log": true, "upload": true,
+		"analysis": true, "analyze": true,
 		"diskmc": true,
 	}
 
@@ -180,6 +183,8 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")
+	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analysis", false, "Enable/Disable post-test concise summary analysis")
+	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analyze", false, "Enable/Disable post-test concise summary analysis")
 	c.GoecsFlag.Parse(args)
 
 	c.GoecsFlag.Visit(func(f *flag.Flag) {
@@ -270,6 +275,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["spnum"] {
 		saved["spnum"] = c.SpNum
+	}
+	if c.UserSetFlags["analysis"] || c.UserSetFlags["analyze"] {
+		saved["analysis"] = c.AnalyzeResult
 	}
 
 	return saved
@@ -387,6 +395,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 	if val, ok := saved["spnum"]; ok {
 		if intVal, ok := val.(int); ok {
 			c.SpNum = intVal
+		}
+	}
+	if val, ok := saved["analysis"]; ok {
+		if boolVal, ok := val.(bool); ok {
+			c.AnalyzeResult = boolVal
 		}
 	}
 
