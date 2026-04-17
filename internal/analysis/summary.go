@@ -28,6 +28,12 @@ var (
 	gbMultiRe       = regexp.MustCompile(`(?im)^\s*Multi-Core\s*Score\s*[:：]\s*([0-9][0-9,]*(?:\.[0-9]+)?)\s*$`)
 
 	alphaNumRe = regexp.MustCompile(`[a-z0-9]+`)
+
+	// New patterns for condensed summary
+	ansiEscapeRe = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+	streamFuncRe = regexp.MustCompile(`(?im)^\s*(?:Copy|Scale|Add|Triad)\s*:\s*(\d+(?:\.\d+)?)`)
+	anyGbpsRe    = regexp.MustCompile(`(?i)(\d+(?:\.\d+)?)\s*GB/s`)
+	anyMbpsRe    = regexp.MustCompile(`(?i)(\d+(?:\.\d+)?)\s*MB/s`)
 )
 
 const (
@@ -64,9 +70,9 @@ type cpuStatsPayload struct {
 }
 
 var (
-	cpuStatsMu        sync.Mutex
-	cachedCPUStats    *cpuStatsPayload
-	cpuStatsExpireAt  time.Time
+	cpuStatsMu       sync.Mutex
+	cachedCPUStats   *cpuStatsPayload
+	cpuStatsExpireAt time.Time
 )
 
 func parseFloatsByRegex(content string, re *regexp.Regexp) []float64 {
@@ -604,49 +610,415 @@ func scopesText(scopes []string, lang string) string {
 	return strings.Join(out, ", ")
 }
 
-// GenerateSummary creates a concise post-test summary from final output.
+// stripAnsiCodes removes ANSI escape codes from a string.
+func stripAnsiCodes(s string) string {
+	return ansiEscapeRe.ReplaceAllString(s, "")
+}
+
+// extractAllSectionContent returns the concatenated text of every section whose
+// header contains markerZh or markerEn (case-sensitive). Section headers are
+// lines that start with three or more dashes (produced by PrintCenteredTitle).
+func extractAllSectionContent(output, markerZh, markerEn string) string {
+	lines := strings.Split(output, "\n")
+	var sb strings.Builder
+	inSection := false
+	for _, line := range lines {
+		stripped := strings.TrimSpace(line)
+		if strings.HasPrefix(stripped, "---") {
+			if strings.Contains(stripped, markerZh) || (markerEn != "" && strings.Contains(stripped, markerEn)) {
+				inSection = true
+				continue
+			}
+			// Any other section header ends the current one
+			inSection = false
+			continue
+		}
+		if inSection {
+			sb.WriteString(line)
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}
+
+// extractMaxMemoryBandwidth returns the highest bandwidth value (in MB/s) found
+// inside the memory-test section(s) of the captured output.
+func extractMaxMemoryBandwidth(output string) float64 {
+	content := extractAllSectionContent(output, "内存测试", "Memory-Test")
+	if content == "" {
+		return 0
+	}
+	maxMbps := 0.0
+	// STREAM format: "Copy:  12345.6 ..." – the first number is Best Rate MB/s
+	for _, m := range streamFuncRe.FindAllStringSubmatch(content, -1) {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > maxMbps {
+			maxMbps = v
+		}
+	}
+	// Values reported as GB/s (some dd / mbw outputs)
+	for _, m := range anyGbpsRe.FindAllStringSubmatch(content, -1) {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil {
+			if mbps := v * 1024; mbps > maxMbps {
+				maxMbps = mbps
+			}
+		}
+	}
+	// Values reported as MB/s (mbw, sysbench, dd, winsat …)
+	for _, m := range anyMbpsRe.FindAllStringSubmatch(content, -1) {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > maxMbps {
+			maxMbps = v
+		}
+	}
+	return maxMbps
+}
+
+// inferMemoryDDRAndChannels converts a memory bandwidth (MB/s) to a human-readable
+// DDR type + channel string using the thresholds from README_NEW_USER.
+//
+//	DDR3 single: 10240–17408 MB/s
+//	DDR4 single: 17408–34816 MB/s
+//	DDR4 dual:   34816–51200 MB/s
+//	DDR5 single: 51200–77824 MB/s
+//	DDR5 dual:   ≥77824 MB/s
+func inferMemoryDDRAndChannels(mbps float64, lang string) string {
+	type tier struct {
+		minMbps         float64
+		ddr, chZh, chEn string
+	}
+	tiers := []tier{
+		{77824, "DDR5", "双通道", "Dual-Channel"},
+		{51200, "DDR5", "单通道", "Single-Channel"},
+		{34816, "DDR4", "双通道", "Dual-Channel"},
+		{17408, "DDR4", "单通道", "Single-Channel"},
+		{0, "DDR3", "单通道", "Single-Channel"},
+	}
+	for _, t := range tiers {
+		if mbps >= t.minMbps {
+			if lang == "zh" {
+				return t.ddr + " " + t.chZh
+			}
+			return t.ddr + " " + t.chEn
+		}
+	}
+	if lang == "zh" {
+		return "DDR3 单通道"
+	}
+	return "DDR3 Single-Channel"
+}
+
+// extractDiskTypeAndCount scans all disk-test section(s) for fio 4K rows and
+// returns the 4K read speed (MB/s) and the number of unique test paths found.
+// Falls back to any MB/s / GB/s value in the disk section when no 4K rows exist.
+func extractDiskTypeAndCount(output string) (readMbps float64, pathCount int) {
+	content := extractAllSectionContent(output, "硬盘测试", "Disk-Test")
+	if content == "" {
+		return 0, 0
+	}
+	pathSet := make(map[string]struct{})
+	for _, line := range strings.Split(content, "\n") {
+		fields := strings.Fields(strings.TrimSpace(line))
+		// fio output row: <path> <blocksize> <readSpeed> <readUnit(iops)> ...
+		if len(fields) < 4 {
+			continue
+		}
+		if !strings.EqualFold(fields[1], "4k") {
+			continue
+		}
+		pathSet[fields[0]] = struct{}{}
+		val, err := strconv.ParseFloat(fields[2], 64)
+		if err != nil {
+			continue
+		}
+		unit := strings.ToUpper(fields[3])
+		var mbps float64
+		if strings.HasPrefix(unit, "GB") {
+			mbps = val * 1024
+		} else {
+			mbps = val
+		}
+		if mbps > readMbps {
+			readMbps = mbps
+		}
+	}
+	pathCount = len(pathSet)
+	// Fallback: no 4K rows found – use any speed value present (dd / winsat)
+	if readMbps == 0 {
+		for _, m := range anyGbpsRe.FindAllStringSubmatch(content, -1) {
+			if v, err := strconv.ParseFloat(m[1], 64); err == nil {
+				if mbps := v * 1024; mbps > readMbps {
+					readMbps = mbps
+				}
+			}
+		}
+		for _, m := range anyMbpsRe.FindAllStringSubmatch(content, -1) {
+			if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > readMbps {
+				readMbps = v
+			}
+		}
+	}
+	if pathCount == 0 && readMbps > 0 {
+		pathCount = 1
+	}
+	return readMbps, pathCount
+}
+
+// inferDiskType classifies a disk by its 4K (or sequential fallback) read speed.
+//
+//	NVMe SSD : ≥200 MB/s
+//	SATA SSD : 50–200 MB/s
+//	HDD      : 10–50 MB/s
+func inferDiskType(readMbps float64, lang string) string {
+	switch {
+	case readMbps >= 200:
+		return "NVMe SSD"
+	case readMbps >= 50:
+		if lang == "zh" {
+			return "SATA SSD"
+		}
+		return "SATA SSD"
+	case readMbps >= 10:
+		return "HDD"
+	default:
+		if lang == "zh" {
+			return "低性能磁盘"
+		}
+		return "Low-Perf Disk"
+	}
+}
+
+// extractISPRanking parses the backtrace section and returns a ranking string
+// like "电信 > 联通 > 移动" based on the best route quality detected per ISP.
+// Quality tiers: [精品线路]=3, [优质线路]=2, [普通线路]=1.
+func extractISPRanking(output, lang string) string {
+	content := extractAllSectionContent(output, "上游及回程线路检测", "Upstream")
+	if content == "" {
+		return ""
+	}
+	scores := map[string]int{"电信": 0, "联通": 0, "移动": 0}
+	for _, raw := range strings.Split(content, "\n") {
+		line := stripAnsiCodes(raw)
+		var q int
+		switch {
+		case strings.Contains(line, "[精品线路]"):
+			q = 3
+		case strings.Contains(line, "[优质线路]"):
+			q = 2
+		case strings.Contains(line, "[普通线路]"):
+			q = 1
+		default:
+			continue
+		}
+		for isp := range scores {
+			if strings.Contains(line, isp) && q > scores[isp] {
+				scores[isp] = q
+			}
+		}
+	}
+	if scores["电信"] == 0 && scores["联通"] == 0 && scores["移动"] == 0 {
+		return ""
+	}
+	isps := []string{"电信", "联通", "移动"}
+	order := map[string]int{"电信": 0, "联通": 1, "移动": 2}
+	sort.Slice(isps, func(i, j int) bool {
+		si, sj := scores[isps[i]], scores[isps[j]]
+		if si != sj {
+			return si > sj
+		}
+		return order[isps[i]] < order[isps[j]]
+	})
+	return strings.Join(isps, " > ")
+}
+
+// extractCPURankCondensed returns "CPU排名 #N 为满血性能的XX.XX%" (zh) or the
+// English equivalent, using the same CPU stats lookup as summarizeCPUWithRanking.
+func extractCPURankCondensed(finalOutput, lang string) string {
+	model := extractCPUModel(finalOutput)
+	single, singleOK, multi, multiOK := extractCPUScores(finalOutput)
+	if !singleOK && !multiOK {
+		return ""
+	}
+	stats := loadCPUStats()
+	entry := matchCPUStatsEntry(model, stats)
+	if entry == nil || entry.Rank <= 0 {
+		return ""
+	}
+	var score, maxScore float64
+	if singleOK && entry.MaxSingle > 0 {
+		score, maxScore = single, entry.MaxSingle
+	} else if multiOK && entry.MaxMulti > 0 {
+		score, maxScore = multi, entry.MaxMulti
+	} else {
+		return ""
+	}
+	pct := score / maxScore * 100
+	if lang == "zh" {
+		return fmt.Sprintf("CPU排名 #%d 为满血性能的%.2f%%", entry.Rank, pct)
+	}
+	return fmt.Sprintf("CPU rank #%d is %.2f%% of full performance", entry.Rank, pct)
+}
+
+// extractBandwidthCondensed returns the peak bandwidth as a human-readable
+// "网络峰值带宽大于 X.XXGbps" / "> X.XXGbps" string.
+func extractBandwidthCondensed(vals []float64, lang string) string {
+	if len(vals) == 0 {
+		return ""
+	}
+	sort.Float64s(vals)
+	maxV := vals[len(vals)-1]
+	if lang == "zh" {
+		if maxV >= 1000 {
+			return fmt.Sprintf("网络峰值带宽大于 %.2fGbps", maxV/1000)
+		}
+		return fmt.Sprintf("网络峰值带宽大于 %.2fMbps", maxV)
+	}
+	if maxV >= 1000 {
+		return fmt.Sprintf("Peak bandwidth > %.2fGbps", maxV/1000)
+	}
+	return fmt.Sprintf("Peak bandwidth > %.2fMbps", maxV)
+}
+
+// sectionExists reports whether the output contains a section header matching
+// the given Chinese or English marker.
+func sectionExists(output, markerZh, markerEn string) bool {
+	for _, line := range strings.Split(output, "\n") {
+		stripped := strings.TrimSpace(line)
+		if strings.HasPrefix(stripped, "---") {
+			if strings.Contains(stripped, markerZh) || (markerEn != "" && strings.Contains(stripped, markerEn)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// GenerateSummary creates a concise one-line post-test summary from final output.
 func GenerateSummary(config *params.Config, finalOutput string) string {
 	lang := config.Language
-	scopes := testedScopes(config)
-	bandwidthVals := parseFloatsByRegex(finalOutput, mbpsRe)
-	latencyVals := parseFloatsByRegex(finalOutput, msRe)
-	cpuLines := summarizeCPUWithRanking(finalOutput, lang)
+	parts := make([]string, 0, 5)
 
-	if lang == "zh" {
-		lines := []string{
-			"测试结果总结:",
-			fmt.Sprintf("- 本次覆盖: %s", scopesText(scopes, lang)),
+	// helper: localised N/A string
+	na := func() string {
+		if lang == "zh" {
+			return "无有效数据"
 		}
-		for _, line := range cpuLines {
-			lines = append(lines, "- "+line)
-		}
-		if config.SpeedTestStatus {
-			lines = append(lines, "- "+summarizeBandwidth(bandwidthVals, lang))
-			lines = append(lines, "- 参考 README_NEW_USER: 一般境外机器带宽 100Mbps 起步，是否够用应以业务下载/传输需求为准。")
-		}
-		if config.PingTestStatus || config.TgdcTestStatus || config.WebTestStatus || config.BacktraceStatus || config.Nt3Status {
-			lines = append(lines, "- "+summarizeLatency(latencyVals, lang))
-			lines = append(lines, "- 参考 README_NEW_USER: 延迟 >= 9999ms 可视为目标不可用。")
-		}
-		lines = append(lines, "- 建议: 结合业务场景(高并发计算/存储/跨境网络)重点参考对应分项。")
-		return strings.Join(lines, "\n")
+		return "N/A"
 	}
 
-	lines := []string{
-		"Test Summary:",
-		fmt.Sprintf("- Scope covered: %s", scopesText(scopes, lang)),
+	// 1. CPU rank and full-blood percentage
+	if config.CpuTestStatus {
+		s := extractCPURankCondensed(finalOutput, lang)
+		if s != "" {
+			parts = append(parts, s)
+		} else if sectionExists(finalOutput, "CPU测试", "CPU-Test") {
+			// Section ran but no rank could be derived (test failure or no DB match)
+			if lang == "zh" {
+				parts = append(parts, "CPU排名: "+na())
+			} else {
+				parts = append(parts, "CPU rank: "+na())
+			}
+		}
+		// If the section doesn't appear at all, the test simply wasn't run – omit silently.
 	}
-	for _, line := range cpuLines {
-		lines = append(lines, "- "+line)
+
+	// 2. Memory DDR type and channels, with average-level check
+	if config.MemoryTestStatus {
+		bw := extractMaxMemoryBandwidth(finalOutput)
+		if bw > 0 {
+			mem := inferMemoryDDRAndChannels(bw, lang)
+			// README_NEW_USER threshold: < 10240 MB/s (≈10 GB/s) indicates overselling risk
+			const memAvgThreshMbps = 10240.0
+			if lang == "zh" {
+				if bw >= memAvgThreshMbps {
+					parts = append(parts, "内存为 "+mem+"(达标)")
+				} else {
+					parts = append(parts, "内存为 "+mem+"(未达标)")
+				}
+			} else {
+				if bw >= memAvgThreshMbps {
+					parts = append(parts, "Memory: "+mem+"(pass)")
+				} else {
+					parts = append(parts, "Memory: "+mem+"(below avg)")
+				}
+			}
+		} else if sectionExists(finalOutput, "内存测试", "Memory-Test") {
+			if lang == "zh" {
+				parts = append(parts, "内存: "+na())
+			} else {
+				parts = append(parts, "Memory: "+na())
+			}
+		}
 	}
+
+	// 3. Disk type and path count, with average-level check
+	if config.DiskTestStatus {
+		readMbps, pathCount := extractDiskTypeAndCount(finalOutput)
+		if readMbps > 0 || pathCount > 0 {
+			if pathCount <= 0 {
+				pathCount = 1
+			}
+			dtype := inferDiskType(readMbps, lang)
+			// README_NEW_USER: < 10 MB/s = poor performance / severe overselling
+			diskOK := readMbps >= 10
+			if lang == "zh" {
+				var label string
+				if diskOK {
+					label = "(达标)"
+				} else {
+					label = "(未达标)"
+				}
+				parts = append(parts, fmt.Sprintf("硬盘IO为 %s %d路%s", dtype, pathCount, label))
+			} else {
+				var label string
+				if diskOK {
+					label = "(pass)"
+				} else {
+					label = "(below avg)"
+				}
+				parts = append(parts, fmt.Sprintf("Disk IO: %s %d path(s)%s", dtype, pathCount, label))
+			}
+		} else if sectionExists(finalOutput, "硬盘测试", "Disk-Test") {
+			if lang == "zh" {
+				parts = append(parts, "硬盘IO: "+na())
+			} else {
+				parts = append(parts, "Disk IO: "+na())
+			}
+		}
+	}
+
+	// 4. Network peak bandwidth
 	if config.SpeedTestStatus {
-		lines = append(lines, "- "+summarizeBandwidth(bandwidthVals, lang))
-		lines = append(lines, "- README_NEW_USER note: offshore servers commonly start around 100Mbps; evaluate against your actual workload needs.")
+		bwVals := parseFloatsByRegex(finalOutput, mbpsRe)
+		s := extractBandwidthCondensed(bwVals, lang)
+		if s != "" {
+			parts = append(parts, s)
+		} else if sectionExists(finalOutput, "测速", "Speed-Test") {
+			if lang == "zh" {
+				parts = append(parts, "网络带宽: "+na())
+			} else {
+				parts = append(parts, "Bandwidth: "+na())
+			}
+		}
 	}
-	if config.PingTestStatus || config.TgdcTestStatus || config.WebTestStatus || config.BacktraceStatus || config.Nt3Status {
-		lines = append(lines, "- "+summarizeLatency(latencyVals, lang))
-		lines = append(lines, "- README_NEW_USER note: latency >= 9999ms should be treated as unavailable target.")
+
+	// 5. Domestic ISP ranking — only meaningful in Chinese mode (backtrace targets CN ISPs)
+	if lang == "zh" && config.BacktraceStatus {
+		if ranking := extractISPRanking(finalOutput, lang); ranking != "" {
+			parts = append(parts, "国内三大运营商推荐排名为 "+ranking)
+		} else if sectionExists(finalOutput, "上游及回程线路检测", "") {
+			parts = append(parts, "国内三大运营商推荐排名: "+na())
+		}
 	}
-	lines = append(lines, "- Suggestion: prioritize the metrics that match your workload (compute, storage, or cross-region networking).")
-	return strings.Join(lines, "\n")
+
+	if len(parts) == 0 {
+		if lang == "zh" {
+			return "测试总结: 无足够数据生成摘要。"
+		}
+		return "Test Summary: insufficient data for summary."
+	}
+
+	prefix := "测试总结: "
+	if lang != "zh" {
+		prefix = "Test Summary: "
+	}
+	return prefix + strings.Join(parts, " | ")
 }
