@@ -217,6 +217,9 @@ func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 			config.Nt3Location = "ALL"
 			SetRouteTestStatus(config)
 		}
+		// Apply quick options set on the main menu page
+		config.AnalyzeResult = result.mainAnalyze
+		config.EnableUpload = result.mainUpload
 	}
 	config.RestoreUserSetParams(savedParams)
 }

@@ -28,6 +28,10 @@ var (
 	tBtnStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("0")).Background(lipgloss.Color("120")).Bold(true).Padding(0, 2)
 	tBtnDimStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("252")).Background(lipgloss.Color("238")).Padding(0, 2)
 	tPanelStyle  = lipgloss.NewStyle().BorderStyle(lipgloss.NormalBorder()).BorderForeground(lipgloss.Color("238")).Padding(0, 1)
+	tOnStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("82")).Bold(true)
+	tOffStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("203"))
+	tValStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("117"))
+	tCurStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("220")).Bold(true)
 )
 
 type menuPhase int
@@ -79,12 +83,14 @@ type advSetting struct {
 }
 
 type tuiResult struct {
-	choice   string
-	language string
-	quit     bool
-	custom   bool
-	toggles  []testToggle
-	advanced []advSetting
+	choice      string
+	language    string
+	quit        bool
+	custom      bool
+	toggles     []testToggle
+	advanced    []advSetting
+	mainAnalyze bool
+	mainUpload  bool
 }
 
 type tuiModel struct {
@@ -93,9 +99,12 @@ type tuiModel struct {
 	preCheck   utils.NetCheckResult
 	langPreset bool
 
-	langCursor int
-	mainCursor int
-	mainItems  []mainMenuItem
+	langCursor     int
+	mainCursor     int
+	mainItems      []mainMenuItem
+	mainAnalyze    bool
+	mainUpload     bool
+	mainExtraTotal int
 
 	customCursor int
 	toggles      []testToggle
@@ -335,21 +344,24 @@ func newTuiModel(preCheck utils.NetCheckResult, config *params.Config, langPrese
 	ti.CharLimit = 255
 	ti.Width = 45
 	m := tuiModel{
-		config:      config,
-		preCheck:    preCheck,
-		langPreset:  langPreset,
-		mainItems:   defaultMainItems(),
-		toggles:     toggles,
-		advanced:    advanced,
-		customTotal: len(toggles) + len(advanced) + 1,
-		statsTotal:  statsTotal,
-		statsDaily:  statsDaily,
-		hasStats:    hasStats,
-		cmpVersion:  cmpVersion,
-		newVersion:  newVersion,
-		width:       config.Width,
-		height:      24,
-		textInput:   ti,
+		config:         config,
+		preCheck:       preCheck,
+		langPreset:     langPreset,
+		mainItems:      defaultMainItems(),
+		mainAnalyze:    config.AnalyzeResult,
+		mainUpload:     config.EnableUpload,
+		mainExtraTotal: 2,
+		toggles:        toggles,
+		advanced:       advanced,
+		customTotal:    len(toggles) + len(advanced) + 1,
+		statsTotal:     statsTotal,
+		statsDaily:     statsDaily,
+		hasStats:       hasStats,
+		cmpVersion:     cmpVersion,
+		newVersion:     newVersion,
+		width:          config.Width,
+		height:         24,
+		textInput:      ti,
 	}
 	if langPreset {
 		m.phase = phaseMain
@@ -437,7 +449,7 @@ func (m tuiModel) viewLang() string {
 		cursor := "   "
 		style := tNormStyle
 		if m.langCursor == i {
-			cursor = " > "
+			cursor = tCurStyle.Render(" > ")
 			style = tSelStyle
 		}
 		s.WriteString(fmt.Sprintf("%s%s\n", cursor, style.Render(l)))
@@ -450,20 +462,39 @@ func (m tuiModel) viewLang() string {
 
 func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	key := msg.String()
+	maxCursor := len(m.mainItems) + m.mainExtraTotal - 1
 	switch key {
 	case "up", "k":
 		if m.mainCursor > 0 {
 			m.mainCursor--
 		}
 	case "down", "j":
-		if m.mainCursor < len(m.mainItems)-1 {
+		if m.mainCursor < maxCursor {
 			m.mainCursor++
 		}
 	case "home":
 		m.mainCursor = 0
 	case "end":
-		m.mainCursor = len(m.mainItems) - 1
+		m.mainCursor = maxCursor
+	case " ":
+		if m.mainCursor >= len(m.mainItems) {
+			switch m.mainCursor - len(m.mainItems) {
+			case 0:
+				m.mainAnalyze = !m.mainAnalyze
+			case 1:
+				m.mainUpload = !m.mainUpload
+			}
+		}
 	case "enter":
+		if m.mainCursor >= len(m.mainItems) {
+			switch m.mainCursor - len(m.mainItems) {
+			case 0:
+				m.mainAnalyze = !m.mainAnalyze
+			case 1:
+				m.mainUpload = !m.mainUpload
+			}
+			return m, nil
+		}
 		item := m.mainItems[m.mainCursor]
 		if item.needNet && !m.preCheck.Connected {
 			return m, nil
@@ -473,6 +504,8 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.customCursor = 0
 			return m, nil
 		}
+		m.result.mainAnalyze = m.mainAnalyze
+		m.result.mainUpload = m.mainUpload
 		m.result.choice = item.id
 		return m, tea.Quit
 	case "q", "ctrl+c":
@@ -490,6 +523,8 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.mainCursor = i
+				m.result.mainAnalyze = m.mainAnalyze
+				m.result.mainUpload = m.mainUpload
 				m.result.choice = item.id
 				return m, tea.Quit
 			}
@@ -499,6 +534,21 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m tuiModel) selectedMainDesc(lang string) string {
+	if m.mainCursor >= len(m.mainItems) {
+		switch m.mainCursor - len(m.mainItems) {
+		case 0:
+			if lang == "zh" {
+				return "测试结束后输出简明总结（含CPU排名、带宽和延迟数据）。默认关闭。"
+			}
+			return "Output a concise summary after tests (CPU rank, bandwidth, latency scores). Disabled by default."
+		case 1:
+			if lang == "zh" {
+				return "上传测试结果到服务端并生成可分享链接。默认启用。"
+			}
+			return "Upload test results to the server and generate a shareable link. Enabled by default."
+		}
+		return ""
+	}
 	item := m.mainItems[m.mainCursor]
 	if lang == "zh" {
 		return item.descZh
@@ -543,7 +593,7 @@ func (m tuiModel) viewMain() string {
 		cursor := "   "
 		style := tNormStyle
 		if m.mainCursor == i {
-			cursor = " > "
+			cursor = tCurStyle.Render(" > ")
 			style = tSelStyle
 		}
 		label := item.en
@@ -579,10 +629,59 @@ func (m tuiModel) viewMain() string {
 	s.WriteString(tSectStyle.Render(panelTitle) + "\n")
 	s.WriteString(tPanelStyle.Width(maxInt(60, m.width-6)).Render(panelBody) + "\n")
 	s.WriteString("\n")
+	// Quick options: analyze + upload
 	if lang == "zh" {
-		s.WriteString(tHelpStyle.Render("  ↑/↓/j/k 移动  Enter 确认  数字 快速选择  q 退出"))
+		s.WriteString(tSectStyle.Render("  快速选项:") + "  " + tDimStyle.Render("Space/Enter 切换"))
 	} else {
-		s.WriteString(tHelpStyle.Render("  Up/Down/j/k Navigate  Enter Confirm  Number Quick-Select  q Quit"))
+		s.WriteString(tSectStyle.Render("  Quick Options:") + "  " + tDimStyle.Render("Space/Enter to toggle"))
+	}
+	s.WriteString("\n")
+	for qi, qState := range []bool{m.mainAnalyze, m.mainUpload} {
+		qIdx := len(m.mainItems) + qi
+		cur := "   "
+		nameStyle := tNormStyle
+		if m.mainCursor == qIdx {
+			cur = tCurStyle.Render(" > ")
+			nameStyle = tSelStyle
+		}
+		chk := tChkOffStyle.Render("[ ]")
+		if qState {
+			chk = tChkOnStyle.Render("[x]")
+		}
+		var qName, qVal string
+		if qi == 0 {
+			if lang == "zh" {
+				qName = "测试后自动总结分析"
+			} else {
+				qName = "Post-test Summary Analysis"
+			}
+		} else {
+			if lang == "zh" {
+				qName = "上传结果并生成分享链接"
+			} else {
+				qName = "Upload Result & Share Link"
+			}
+		}
+		if qState {
+			if lang == "zh" {
+				qVal = tOnStyle.Render("开启")
+			} else {
+				qVal = tOnStyle.Render("ON")
+			}
+		} else {
+			if lang == "zh" {
+				qVal = tOffStyle.Render("关闭")
+			} else {
+				qVal = tOffStyle.Render("OFF")
+			}
+		}
+		s.WriteString(fmt.Sprintf("%s%s %s  %s\n", cur, chk, nameStyle.Render(qName), qVal))
+	}
+	s.WriteString("\n")
+	if lang == "zh" {
+		s.WriteString(tHelpStyle.Render("  ↑/↓/j/k 移动  Enter 确认  Space 切换  数字 快速选择  q 退出"))
+	} else {
+		s.WriteString(tHelpStyle.Render("  Up/Down/j/k Move  Enter Confirm  Space Toggle  Number Quick-Select  q Quit"))
 	}
 	s.WriteString("\n")
 	return s.String()
@@ -804,7 +903,7 @@ func (m tuiModel) viewCustom() string {
 		cursor := "   "
 		style := tNormStyle
 		if m.customCursor == i {
-			cursor = " > "
+			cursor = tCurStyle.Render(" > ")
 			style = tSelStyle
 		}
 		if t.needNet && !m.preCheck.Connected {
@@ -830,22 +929,51 @@ func (m tuiModel) viewCustom() string {
 	for i, a := range m.advanced {
 		idx := len(m.toggles) + i
 		cursor := "   "
-		if m.customCursor == idx {
-			cursor = " > "
-		}
 		style := tNormStyle
 		if m.customCursor == idx {
+			cursor = tCurStyle.Render(" > ")
 			style = tSelStyle
 		}
 		name := a.nameEn
 		if lang == "zh" {
 			name = a.nameZh
 		}
-		value := m.advDisplayValue(a, lang)
-		if a.kind == "option" {
-			value = "< " + value + " >"
+		var valueRendered string
+		switch a.kind {
+		case "bool":
+			if a.boolVal {
+				if lang == "zh" {
+					valueRendered = tOnStyle.Render("开启")
+				} else {
+					valueRendered = tOnStyle.Render("ON")
+				}
+			} else {
+				if lang == "zh" {
+					valueRendered = tOffStyle.Render("关闭")
+				} else {
+					valueRendered = tOffStyle.Render("OFF")
+				}
+			}
+		case "option":
+			op := a.options[a.current]
+			lbl := op.labelEn
+			if lang == "zh" {
+				lbl = op.labelZh
+			}
+			valueRendered = tDimStyle.Render("< ") + tValStyle.Render(lbl) + tDimStyle.Render(" >")
+		case "text":
+			v := strings.TrimSpace(a.textVal)
+			if v == "" {
+				if lang == "zh" {
+					valueRendered = tDimStyle.Render("(默认)")
+				} else {
+					valueRendered = tDimStyle.Render("(default)")
+				}
+			} else {
+				valueRendered = tValStyle.Render(v)
+			}
 		}
-		s.WriteString(fmt.Sprintf("%s%-26s %s\n", cursor, style.Render(name+":"), tDimStyle.Render(value)))
+		s.WriteString(fmt.Sprintf("%s%-26s %s\n", cursor, style.Render(name+":"), valueRendered))
 	}
 
 	s.WriteString("\n")
