@@ -891,10 +891,13 @@ func sectionExists(output, markerZh, markerEn string) bool {
 	return false
 }
 
-// GenerateSummary creates a concise one-line post-test summary from final output.
+// summaryRow holds a localised label/value pair for the markdown summary table.
+type summaryRow struct{ label, value string }
+
+// GenerateSummary creates a Markdown table post-test summary from final output.
 func GenerateSummary(config *params.Config, finalOutput string) string {
 	lang := config.Language
-	parts := make([]string, 0, 5)
+	rows := make([]summaryRow, 0, 5)
 
 	// helper: localised N/A string
 	na := func() string {
@@ -906,18 +909,45 @@ func GenerateSummary(config *params.Config, finalOutput string) string {
 
 	// 1. CPU rank and full-blood percentage
 	if config.CpuTestStatus {
-		s := extractCPURankCondensed(finalOutput, lang)
-		if s != "" {
-			parts = append(parts, s)
+		model := extractCPUModel(finalOutput)
+		single, singleOK, multi, multiOK := extractCPUScores(finalOutput)
+		if singleOK || multiOK {
+			stats := loadCPUStats()
+			entry := matchCPUStatsEntry(model, stats)
+			if entry != nil && entry.Rank > 0 {
+				var score, maxScore float64
+				if singleOK && entry.MaxSingle > 0 {
+					score, maxScore = single, entry.MaxSingle
+				} else if multiOK && entry.MaxMulti > 0 {
+					score, maxScore = multi, entry.MaxMulti
+				}
+				if maxScore > 0 {
+					pct := score / maxScore * 100
+					if lang == "zh" {
+						rows = append(rows, summaryRow{"CPU排名", fmt.Sprintf("#%d  满血性能 %.2f%%", entry.Rank, pct)})
+					} else {
+						rows = append(rows, summaryRow{"CPU Rank", fmt.Sprintf("#%d (%.2f%% of max)", entry.Rank, pct)})
+					}
+				} else if lang == "zh" {
+					rows = append(rows, summaryRow{"CPU排名", na()})
+				} else {
+					rows = append(rows, summaryRow{"CPU Rank", na()})
+				}
+			} else if sectionExists(finalOutput, "CPU测试", "CPU-Test") {
+				if lang == "zh" {
+					rows = append(rows, summaryRow{"CPU排名", na()})
+				} else {
+					rows = append(rows, summaryRow{"CPU Rank", na()})
+				}
+			}
 		} else if sectionExists(finalOutput, "CPU测试", "CPU-Test") {
-			// Section ran but no rank could be derived (test failure or no DB match)
 			if lang == "zh" {
-				parts = append(parts, "CPU排名: "+na())
+				rows = append(rows, summaryRow{"CPU排名", na()})
 			} else {
-				parts = append(parts, "CPU rank: "+na())
+				rows = append(rows, summaryRow{"CPU Rank", na()})
 			}
 		}
-		// If the section doesn't appear at all, the test simply wasn't run – omit silently.
+		// If section not present at all, the test simply wasn't run – omit silently.
 	}
 
 	// 2. Memory DDR type and channels, with average-level check
@@ -929,22 +959,22 @@ func GenerateSummary(config *params.Config, finalOutput string) string {
 			const memAvgThreshMbps = 10240.0
 			if lang == "zh" {
 				if bw >= memAvgThreshMbps {
-					parts = append(parts, "内存为 "+mem+"(达标)")
+					rows = append(rows, summaryRow{"内存", mem + " (达标)"})
 				} else {
-					parts = append(parts, "内存为 "+mem+"(未达标)")
+					rows = append(rows, summaryRow{"内存", mem + " (未达标)"})
 				}
 			} else {
 				if bw >= memAvgThreshMbps {
-					parts = append(parts, "Memory: "+mem+"(pass)")
+					rows = append(rows, summaryRow{"Memory", mem + " (pass)"})
 				} else {
-					parts = append(parts, "Memory: "+mem+"(below avg)")
+					rows = append(rows, summaryRow{"Memory", mem + " (below avg)"})
 				}
 			}
 		} else if sectionExists(finalOutput, "内存测试", "Memory-Test") {
 			if lang == "zh" {
-				parts = append(parts, "内存: "+na())
+				rows = append(rows, summaryRow{"内存", na()})
 			} else {
-				parts = append(parts, "Memory: "+na())
+				rows = append(rows, summaryRow{"Memory", na()})
 			}
 		}
 	}
@@ -959,28 +989,27 @@ func GenerateSummary(config *params.Config, finalOutput string) string {
 			dtype := inferDiskType(readMbps, lang)
 			// README_NEW_USER: < 10 MB/s = poor performance / severe overselling
 			diskOK := readMbps >= 10
+			var qual string
 			if lang == "zh" {
-				var label string
 				if diskOK {
-					label = "(达标)"
+					qual = " (达标)"
 				} else {
-					label = "(未达标)"
+					qual = " (未达标)"
 				}
-				parts = append(parts, fmt.Sprintf("硬盘IO为 %s %d路%s", dtype, pathCount, label))
+				rows = append(rows, summaryRow{"硬盘IO", fmt.Sprintf("%s %d路%s", dtype, pathCount, qual)})
 			} else {
-				var label string
 				if diskOK {
-					label = "(pass)"
+					qual = " (pass)"
 				} else {
-					label = "(below avg)"
+					qual = " (below avg)"
 				}
-				parts = append(parts, fmt.Sprintf("Disk IO: %s %d path(s)%s", dtype, pathCount, label))
+				rows = append(rows, summaryRow{"Disk IO", fmt.Sprintf("%s %d path(s)%s", dtype, pathCount, qual)})
 			}
 		} else if sectionExists(finalOutput, "硬盘测试", "Disk-Test") {
 			if lang == "zh" {
-				parts = append(parts, "硬盘IO: "+na())
+				rows = append(rows, summaryRow{"硬盘IO", na()})
 			} else {
-				parts = append(parts, "Disk IO: "+na())
+				rows = append(rows, summaryRow{"Disk IO", na()})
 			}
 		}
 	}
@@ -988,14 +1017,27 @@ func GenerateSummary(config *params.Config, finalOutput string) string {
 	// 4. Network peak bandwidth
 	if config.SpeedTestStatus {
 		bwVals := parseFloatsByRegex(finalOutput, mbpsRe)
-		s := extractBandwidthCondensed(bwVals, lang)
-		if s != "" {
-			parts = append(parts, s)
+		var bwVal string
+		if len(bwVals) > 0 {
+			sort.Float64s(bwVals)
+			maxV := bwVals[len(bwVals)-1]
+			if maxV >= 1000 {
+				bwVal = fmt.Sprintf("> %.2fGbps", maxV/1000)
+			} else {
+				bwVal = fmt.Sprintf("> %.2fMbps", maxV)
+			}
+		}
+		if bwVal != "" {
+			if lang == "zh" {
+				rows = append(rows, summaryRow{"网络峰值带宽", bwVal})
+			} else {
+				rows = append(rows, summaryRow{"Peak Bandwidth", bwVal})
+			}
 		} else if sectionExists(finalOutput, "测速", "Speed-Test") {
 			if lang == "zh" {
-				parts = append(parts, "网络带宽: "+na())
+				rows = append(rows, summaryRow{"网络峰值带宽", na()})
 			} else {
-				parts = append(parts, "Bandwidth: "+na())
+				rows = append(rows, summaryRow{"Peak Bandwidth", na()})
 			}
 		}
 	}
@@ -1003,22 +1045,33 @@ func GenerateSummary(config *params.Config, finalOutput string) string {
 	// 5. Domestic ISP ranking — only meaningful in Chinese mode (backtrace targets CN ISPs)
 	if lang == "zh" && config.BacktraceStatus {
 		if ranking := extractISPRanking(finalOutput, lang); ranking != "" {
-			parts = append(parts, "国内三大运营商推荐排名为 "+ranking)
+			rows = append(rows, summaryRow{"国内三大运营商推荐排名", ranking})
 		} else if sectionExists(finalOutput, "上游及回程线路检测", "") {
-			parts = append(parts, "国内三大运营商推荐排名: "+na())
+			rows = append(rows, summaryRow{"国内三大运营商推荐排名", na()})
 		}
 	}
 
-	if len(parts) == 0 {
+	if len(rows) == 0 {
 		if lang == "zh" {
-			return "测试总结: 无足够数据生成摘要。"
+			return "无足够数据生成摘要。"
 		}
-		return "Test Summary: insufficient data for summary."
+		return "Insufficient data for summary."
 	}
 
-	prefix := "测试总结: "
-	if lang != "zh" {
-		prefix = "Test Summary: "
+	// Render as Markdown table
+	var sb strings.Builder
+	if lang == "zh" {
+		sb.WriteString("| 测试项目 | 结果 |\n")
+	} else {
+		sb.WriteString("| Test Item | Result |\n")
 	}
-	return prefix + strings.Join(parts, " | ")
+	sb.WriteString("|:---------|:-------|\n")
+	for _, r := range rows {
+		sb.WriteString("| ")
+		sb.WriteString(r.label)
+		sb.WriteString(" | ")
+		sb.WriteString(r.value)
+		sb.WriteString(" |\n")
+	}
+	return sb.String()
 }

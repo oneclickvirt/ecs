@@ -444,11 +444,6 @@ func AppendAnalysisSummary(config *params.Config, output, tempOutput string, out
 		if strings.TrimSpace(summary) == "" {
 			return
 		}
-		if config.Language == "zh" {
-			utils.PrintCenteredTitle("测试总结分析", config.Width)
-		} else {
-			utils.PrintCenteredTitle("Result Summary Analysis", config.Width)
-		}
 		fmt.Println(summary)
 	}, tempOutput, output)
 }
