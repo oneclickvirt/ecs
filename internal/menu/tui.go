@@ -10,6 +10,7 @@ import (
 	textinput "github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	runewidth "github.com/mattn/go-runewidth"
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/utils"
 )
@@ -99,17 +100,19 @@ type tuiModel struct {
 	preCheck   utils.NetCheckResult
 	langPreset bool
 
-	langCursor     int
-	mainCursor     int
-	mainItems      []mainMenuItem
-	mainAnalyze    bool
-	mainUpload     bool
-	mainExtraTotal int
+	langCursor       int
+	mainCursor       int
+	mainItems        []mainMenuItem
+	mainAnalyze      bool
+	mainUpload       bool
+	mainExtraTotal   int
+	mainScrollOffset int
 
-	customCursor int
-	toggles      []testToggle
-	advanced     []advSetting
-	customTotal  int
+	customCursor       int
+	toggles            []testToggle
+	advanced           []advSetting
+	customTotal        int
+	customScrollOffset int
 
 	editingText bool
 	editingIdx  int
@@ -373,7 +376,7 @@ func newTuiModel(preCheck utils.NetCheckResult, config *params.Config, langPrese
 }
 
 func (m tuiModel) Init() tea.Cmd {
-	return nil
+	return tea.WindowSize()
 }
 
 func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -381,6 +384,9 @@ func (m tuiModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		// Re-clamp scroll offsets after resize
+		m.clampMainScroll()
+		m.clampCustomScroll()
 		return m, nil
 	case tea.KeyMsg:
 		switch m.phase {
@@ -468,14 +474,18 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.mainCursor > 0 {
 			m.mainCursor--
 		}
+		m.ensureMainCursorVisible()
 	case "down", "j":
 		if m.mainCursor < maxCursor {
 			m.mainCursor++
 		}
+		m.ensureMainCursorVisible()
 	case "home":
 		m.mainCursor = 0
+		m.ensureMainCursorVisible()
 	case "end":
 		m.mainCursor = maxCursor
+		m.ensureMainCursorVisible()
 	case " ":
 		if m.mainCursor >= len(m.mainItems) {
 			switch m.mainCursor - len(m.mainItems) {
@@ -502,12 +512,16 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if item.id == "custom" {
 			m.phase = phaseCustom
 			m.customCursor = 0
+			m.customScrollOffset = 0
 			return m, nil
 		}
 		m.result.mainAnalyze = m.mainAnalyze
 		m.result.mainUpload = m.mainUpload
 		m.result.choice = item.id
 		return m, tea.Quit
+	case "esc":
+		m.phase = phaseLang
+		return m, nil
 	case "q", "ctrl+c":
 		m.result.quit = true
 		return m, tea.Quit
@@ -520,9 +534,11 @@ func (m tuiModel) updateMain(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				if item.id == "custom" {
 					m.phase = phaseCustom
 					m.customCursor = 0
+					m.customScrollOffset = 0
 					return m, nil
 				}
 				m.mainCursor = i
+				m.ensureMainCursorVisible()
 				m.result.mainAnalyze = m.mainAnalyze
 				m.result.mainUpload = m.mainUpload
 				m.result.choice = item.id
@@ -558,37 +574,65 @@ func (m tuiModel) selectedMainDesc(lang string) string {
 
 func (m tuiModel) viewMain() string {
 	lang := m.result.language
-	var s strings.Builder
-	s.WriteString("\n")
+
+	// === FIXED HEADER (always visible at top) ===
+	var hdr strings.Builder
+	hdr.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s", m.config.EcsVersion)))
+		hdr.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s", m.config.EcsVersion)))
 	} else {
-		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s", m.config.EcsVersion)))
+		hdr.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s", m.config.EcsVersion)))
 	}
-	s.WriteString("\n")
+	hdr.WriteString("\n")
 	if m.preCheck.Connected && m.cmpVersion == -1 {
 		if lang == "zh" {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
+			hdr.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
 		} else {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
+			hdr.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
 		}
-		s.WriteString("\n")
+		hdr.WriteString("\n")
 	}
 	if m.preCheck.Connected && m.hasStats {
 		if lang == "zh" {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			hdr.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		} else {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			hdr.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		}
-		s.WriteString("\n")
+		hdr.WriteString("\n")
 	}
-	s.WriteString("\n")
+	hdr.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  请选择测试方案:"))
+		hdr.WriteString(tSectStyle.Render("  请选择测试方案:"))
 	} else {
-		s.WriteString(tSectStyle.Render("  Select Test Suite:"))
+		hdr.WriteString(tSectStyle.Render("  Select Test Suite:"))
 	}
-	s.WriteString("\n\n")
+	hdr.WriteString("\n\n")
+	headerStr := hdr.String()
+	headerLines := strings.Count(headerStr, "\n")
+
+	// === FIXED FOOTER (always visible at bottom) ===
+	var ftr strings.Builder
+	ftr.WriteString("\n")
+	panelTitle := "  当前选项说明"
+	panelBody := m.selectedMainDesc(lang)
+	if lang == "en" {
+		panelTitle = "  Selected Option Description"
+	}
+	renderedPanel := tPanelStyle.Width(maxInt(60, m.width-6)).Render(panelBody)
+	ftr.WriteString(tSectStyle.Render(panelTitle) + "\n")
+	ftr.WriteString(renderedPanel + "\n")
+	ftr.WriteString("\n")
+	if lang == "zh" {
+		ftr.WriteString(tHelpStyle.Render("  ↑/↓/j/k 移动  Enter 确认  Space 切换  数字 快速选择  Esc 返回语言  q 退出"))
+	} else {
+		ftr.WriteString(tHelpStyle.Render("  Up/Down/j/k Move  Enter Confirm  Space Toggle  Number Quick-Select  Esc Lang  q Quit"))
+	}
+	ftr.WriteString("\n")
+	footerStr := ftr.String()
+	footerLines := strings.Count(footerStr, "\n")
+
+	// === SCROLLABLE BODY: items + quick options ===
+	var bodyLines []string
 	for i, item := range m.mainItems {
 		cursor := "   "
 		style := tNormStyle
@@ -618,24 +662,15 @@ func (m tuiModel) viewMain() string {
 				suffix = " [No Network]"
 			}
 		}
-		s.WriteString(fmt.Sprintf("%s%s%s\n", cursor, style.Render(prefix+label), tDimStyle.Render(suffix)))
+		bodyLines = append(bodyLines, fmt.Sprintf("%s%s%s\n", cursor, style.Render(prefix+label), tDimStyle.Render(suffix)))
 	}
-	s.WriteString("\n")
-	panelTitle := "  当前选项说明"
-	panelBody := m.selectedMainDesc(lang)
-	if lang == "en" {
-		panelTitle = "  Selected Option Description"
-	}
-	s.WriteString(tSectStyle.Render(panelTitle) + "\n")
-	s.WriteString(tPanelStyle.Width(maxInt(60, m.width-6)).Render(panelBody) + "\n")
-	s.WriteString("\n")
-	// Quick options: analyze + upload
+	// Separator + quick options section
+	bodyLines = append(bodyLines, "\n")
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  快速选项:") + "  " + tDimStyle.Render("Space/Enter 切换"))
+		bodyLines = append(bodyLines, tSectStyle.Render("  快速选项:")+"  "+tDimStyle.Render("Space/Enter 切换")+"\n")
 	} else {
-		s.WriteString(tSectStyle.Render("  Quick Options:") + "  " + tDimStyle.Render("Space/Enter to toggle"))
+		bodyLines = append(bodyLines, tSectStyle.Render("  Quick Options:")+"  "+tDimStyle.Render("Space/Enter to toggle")+"\n")
 	}
-	s.WriteString("\n")
 	for qi, qState := range []bool{m.mainAnalyze, m.mainUpload} {
 		qIdx := len(m.mainItems) + qi
 		cur := "   "
@@ -675,15 +710,48 @@ func (m tuiModel) viewMain() string {
 				qVal = tOffStyle.Render("OFF")
 			}
 		}
-		s.WriteString(fmt.Sprintf("%s%s %s  %s\n", cur, chk, nameStyle.Render(qName), qVal))
+		bodyLines = append(bodyLines, fmt.Sprintf("%s%s %s  %s\n", cur, chk, nameStyle.Render(qName), qVal))
 	}
-	s.WriteString("\n")
-	if lang == "zh" {
-		s.WriteString(tHelpStyle.Render("  ↑/↓/j/k 移动  Enter 确认  Space 切换  数字 快速选择  q 退出"))
-	} else {
-		s.WriteString(tHelpStyle.Render("  Up/Down/j/k Move  Enter Confirm  Space Toggle  Number Quick-Select  q Quit"))
+
+	// === VIEWPORT: show only what fits between header and footer ===
+	totalBodyLines := len(bodyLines)
+	avail := m.height - headerLines - footerLines - 1 // -1 for scroll indicator
+	if avail < 4 || m.height == 0 {
+		avail = totalBodyLines // terminal too small or unknown: show all
 	}
-	s.WriteString("\n")
+	startLine := m.mainScrollOffset
+	if startLine < 0 {
+		startLine = 0
+	}
+	if startLine > totalBodyLines-1 {
+		startLine = totalBodyLines - 1
+	}
+	endLine := startLine + avail
+	if endLine > totalBodyLines {
+		endLine = totalBodyLines
+	}
+
+	// === ASSEMBLE OUTPUT ===
+	var s strings.Builder
+	s.WriteString(headerStr)
+	if startLine > 0 {
+		if lang == "zh" {
+			s.WriteString(tDimStyle.Render("  ↑ 向上滚动查看更多") + "\n")
+		} else {
+			s.WriteString(tDimStyle.Render("  ↑ Scroll up for more") + "\n")
+		}
+	}
+	for _, line := range bodyLines[startLine:endLine] {
+		s.WriteString(line)
+	}
+	if endLine < totalBodyLines {
+		if lang == "zh" {
+			s.WriteString(tDimStyle.Render("  ↓ 向下滚动查看更多") + "\n")
+		} else {
+			s.WriteString(tDimStyle.Render("  ↓ Scroll down for more") + "\n")
+		}
+	}
+	s.WriteString(footerStr)
 	return s.String()
 }
 
@@ -726,14 +794,18 @@ func (m tuiModel) updateCustom(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.customCursor > 0 {
 			m.customCursor--
 		}
+		m.ensureCustomCursorVisible()
 	case "down", "j":
 		if m.customCursor < m.customTotal-1 {
 			m.customCursor++
 		}
+		m.ensureCustomCursorVisible()
 	case "home":
 		m.customCursor = 0
+		m.ensureCustomCursorVisible()
 	case "end":
 		m.customCursor = m.customTotal - 1
+		m.ensureCustomCursorVisible()
 	case " ", "enter", "right", "l", "left", "h":
 		if m.customCursor < len(m.toggles) {
 			t := &m.toggles[m.customCursor]
@@ -868,37 +940,74 @@ func (m tuiModel) advDisplayValue(a advSetting, lang string) string {
 
 func (m tuiModel) viewCustom() string {
 	lang := m.result.language
-	var s strings.Builder
-	s.WriteString("\n")
+
+	// === FIXED HEADER (always visible at top) ===
+	var hdr strings.Builder
+	hdr.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s  —  高级自定义", m.config.EcsVersion)))
+		hdr.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS融合怪 %s  —  高级自定义", m.config.EcsVersion)))
 	} else {
-		s.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s  —  Advanced Custom", m.config.EcsVersion)))
+		hdr.WriteString(tTitleStyle.Render(fmt.Sprintf("  VPS Fusion Monster %s  —  Advanced Custom", m.config.EcsVersion)))
 	}
-	s.WriteString("\n")
+	hdr.WriteString("\n")
 	if m.preCheck.Connected && m.cmpVersion == -1 {
 		if lang == "zh" {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
+			hdr.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! 检测到新版本 %s 如有必要请更新", m.newVersion)))
 		} else {
-			s.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
+			hdr.WriteString(tWarnStyle.Render(fmt.Sprintf("  ! New version %s detected", m.newVersion)))
 		}
-		s.WriteString("\n")
+		hdr.WriteString("\n")
 	}
 	if m.preCheck.Connected && m.hasStats {
 		if lang == "zh" {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			hdr.WriteString(tInfoStyle.Render(fmt.Sprintf("  总使用量: %s | 今日使用: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		} else {
-			s.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
+			hdr.WriteString(tInfoStyle.Render(fmt.Sprintf("  Total Usage: %s | Daily Usage: %s", utils.FormatGoecsNumber(m.statsTotal), utils.FormatGoecsNumber(m.statsDaily))))
 		}
-		s.WriteString("\n")
+		hdr.WriteString("\n")
 	}
-	s.WriteString("\n")
+	hdr.WriteString("\n")
+	headerStr := hdr.String()
+	headerLines := strings.Count(headerStr, "\n")
+
+	// === FIXED FOOTER (always visible at bottom) ===
+	var ftr strings.Builder
+	ftr.WriteString("\n")
+	panelTitle := "  当前项说明"
+	if lang == "en" {
+		panelTitle = "  Current Item Description"
+	}
+	renderedPanel := tPanelStyle.Width(maxInt(60, m.width-6)).Render(m.currentCustomDescription(lang))
+	ftr.WriteString(tSectStyle.Render(panelTitle) + "\n")
+	ftr.WriteString(renderedPanel + "\n")
+	if m.editingText {
+		if lang == "zh" {
+			ftr.WriteString("\n" + tWarnStyle.Render("  文本编辑模式: Enter 保存, Esc 取消") + "\n")
+		} else {
+			ftr.WriteString("\n" + tWarnStyle.Render("  Text edit mode: Enter save, Esc cancel") + "\n")
+		}
+		ftr.WriteString("  " + m.textInput.View() + "\n")
+	}
+	ftr.WriteString("\n")
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  测试开关 (空格切换, a 全选/全不选):"))
+		ftr.WriteString(tHelpStyle.Render("  ↑/↓ 移动  Enter/空格 切换  ←/→ 改选项  a 全选  Esc 返回  q 退出"))
 	} else {
-		s.WriteString(tSectStyle.Render("  Test Toggles (Space to toggle, a all/none):"))
+		ftr.WriteString(tHelpStyle.Render("  Up/Down Move  Enter/Space Toggle  Left/Right Cycle  a All  Esc Back  q Quit"))
 	}
-	s.WriteString("\n\n")
+	ftr.WriteString("\n")
+	footerStr := ftr.String()
+	footerLines := strings.Count(footerStr, "\n")
+
+	// === SCROLLABLE BODY ===
+	var bodyLines []string
+
+	// Toggles section header
+	if lang == "zh" {
+		bodyLines = append(bodyLines, tSectStyle.Render("  测试开关 (空格切换, a 全选/全不选):")+"\n")
+	} else {
+		bodyLines = append(bodyLines, tSectStyle.Render("  Test Toggles (Space to toggle, a all/none):")+"\n")
+	}
+	bodyLines = append(bodyLines, "\n")
 	for i, t := range m.toggles {
 		cursor := "   "
 		style := tNormStyle
@@ -917,15 +1026,20 @@ func (m tuiModel) viewCustom() string {
 		if lang == "zh" {
 			name = t.nameZh
 		}
-		s.WriteString(fmt.Sprintf("%s%s %s\n", cursor, check, style.Render(name)))
+		bodyLines = append(bodyLines, fmt.Sprintf("%s%s %s\n", cursor, check, style.Render(name)))
 	}
-	s.WriteString("\n")
+	bodyLines = append(bodyLines, "\n")
+
+	// Advanced section header
 	if lang == "zh" {
-		s.WriteString(tSectStyle.Render("  参数设置 (Enter/空格切换, ←/→改选项):"))
+		bodyLines = append(bodyLines, tSectStyle.Render("  参数设置 (Enter/空格切换, ←/→改选项):")+"\n")
 	} else {
-		s.WriteString(tSectStyle.Render("  Parameter Settings (Enter/Space switch, Left/Right cycle):"))
+		bodyLines = append(bodyLines, tSectStyle.Render("  Parameter Settings (Enter/Space switch, Left/Right cycle):")+"\n")
 	}
-	s.WriteString("\n\n")
+	bodyLines = append(bodyLines, "\n")
+
+	// Advanced settings — alignment fix: compute column width using runewidth
+	nameColW := advNameColWidth(m.advanced, lang)
 	for i, a := range m.advanced {
 		idx := len(m.toggles) + i
 		cursor := "   "
@@ -973,50 +1087,225 @@ func (m tuiModel) viewCustom() string {
 				valueRendered = tValStyle.Render(v)
 			}
 		}
-		s.WriteString(fmt.Sprintf("%s%-26s %s\n", cursor, style.Render(name+":"), valueRendered))
+		// Alignment: pad the name column to nameColW visible cells
+		nameWithColon := name + ":"
+		visW := runewidth.StringWidth(nameWithColon)
+		padLen := nameColW - visW
+		if padLen < 1 {
+			padLen = 1
+		}
+		padding := strings.Repeat(" ", padLen)
+		bodyLines = append(bodyLines, fmt.Sprintf("%s%s%s %s\n", cursor, style.Render(nameWithColon), padding, valueRendered))
 	}
+	bodyLines = append(bodyLines, "\n")
 
-	s.WriteString("\n")
+	// Confirm button
 	confirmIdx := m.customTotal - 1
 	if m.customCursor == confirmIdx {
 		if lang == "zh" {
-			s.WriteString(fmt.Sprintf("   %s\n", tBtnStyle.Render(">> 开始测试 <<")))
+			bodyLines = append(bodyLines, fmt.Sprintf("   %s\n", tBtnStyle.Render(">> 开始测试 <<")))
 		} else {
-			s.WriteString(fmt.Sprintf("   %s\n", tBtnStyle.Render(">> Start Test <<")))
+			bodyLines = append(bodyLines, fmt.Sprintf("   %s\n", tBtnStyle.Render(">> Start Test <<")))
 		}
 	} else {
 		if lang == "zh" {
-			s.WriteString(fmt.Sprintf("   %s\n", tBtnDimStyle.Render(">> 开始测试 <<")))
+			bodyLines = append(bodyLines, fmt.Sprintf("   %s\n", tBtnDimStyle.Render(">> 开始测试 <<")))
 		} else {
-			s.WriteString(fmt.Sprintf("   %s\n", tBtnDimStyle.Render(">> Start Test <<")))
+			bodyLines = append(bodyLines, fmt.Sprintf("   %s\n", tBtnDimStyle.Render(">> Start Test <<")))
 		}
 	}
 
-	s.WriteString("\n")
-	panelTitle := "  当前项说明"
-	if lang == "en" {
-		panelTitle = "  Current Item Description"
+	// === VIEWPORT: show only what fits between header and footer ===
+	totalBodyLines := len(bodyLines)
+	avail := m.height - headerLines - footerLines - 1 // -1 for scroll indicator
+	if avail < 4 || m.height == 0 {
+		avail = totalBodyLines
 	}
-	s.WriteString(tSectStyle.Render(panelTitle) + "\n")
-	s.WriteString(tPanelStyle.Width(maxInt(60, m.width-6)).Render(m.currentCustomDescription(lang)) + "\n")
+	startLine := m.customScrollOffset
+	if startLine < 0 {
+		startLine = 0
+	}
+	if startLine > totalBodyLines-1 {
+		startLine = totalBodyLines - 1
+	}
+	endLine := startLine + avail
+	if endLine > totalBodyLines {
+		endLine = totalBodyLines
+	}
 
-	if m.editingText {
+	// === ASSEMBLE OUTPUT ===
+	var s strings.Builder
+	s.WriteString(headerStr)
+	if startLine > 0 {
 		if lang == "zh" {
-			s.WriteString("\n" + tWarnStyle.Render("  文本编辑模式: Enter 保存, Esc 取消") + "\n")
+			s.WriteString(tDimStyle.Render("  ↑ 向上滚动查看更多") + "\n")
 		} else {
-			s.WriteString("\n" + tWarnStyle.Render("  Text edit mode: Enter save, Esc cancel") + "\n")
+			s.WriteString(tDimStyle.Render("  ↑ Scroll up for more") + "\n")
 		}
-		s.WriteString("  " + m.textInput.View() + "\n")
 	}
-
-	s.WriteString("\n")
-	if lang == "zh" {
-		s.WriteString(tHelpStyle.Render("  ↑/↓ 移动  Enter/空格 切换  ←/→ 改选项  a 全选  Esc 返回  q 退出"))
-	} else {
-		s.WriteString(tHelpStyle.Render("  Up/Down Move  Enter/Space Toggle  Left/Right Cycle  a All  Esc Back  q Quit"))
+	for _, line := range bodyLines[startLine:endLine] {
+		s.WriteString(line)
 	}
-	s.WriteString("\n")
+	if endLine < totalBodyLines {
+		if lang == "zh" {
+			s.WriteString(tDimStyle.Render("  ↓ 向下滚动查看更多") + "\n")
+		} else {
+			s.WriteString(tDimStyle.Render("  ↓ Scroll down for more") + "\n")
+		}
+	}
+	s.WriteString(footerStr)
 	return s.String()
+}
+
+// advNameColWidth returns the visible-cell width needed for the name column
+// in the advanced settings panel, computed from the widest name + colon + 1 space.
+func advNameColWidth(advanced []advSetting, lang string) int {
+	maxW := 0
+	for _, a := range advanced {
+		name := a.nameEn
+		if lang == "zh" {
+			name = a.nameZh
+		}
+		w := runewidth.StringWidth(name + ":")
+		if w > maxW {
+			maxW = w
+		}
+	}
+	return maxW + 1 // +1 for guaranteed spacing between name and value
+}
+
+// ensureMainCursorVisible adjusts mainScrollOffset so the cursor row is
+// within the visible viewport.
+func (m *tuiModel) ensureMainCursorVisible() {
+	// header ≈ 9 lines (max: blank+title+blank+version+stats+blank+label+blank+blank)
+	// footer ≈ 8 lines (blank+panelTitle+panel(3)+blank+help+blank)
+	const hdrEst = 9
+	const ftrEst = 8
+	avail := m.height - hdrEst - ftrEst - 1 // -1 for possible scroll indicator
+	if avail < 4 || m.height == 0 {
+		return
+	}
+	// body: mainItems(12) + blank(1) + sectionHdr(1) + quickOpts(2) = 16
+	totalBody := len(m.mainItems) + 1 + 1 + m.mainExtraTotal
+	maxOff := totalBody - avail
+	if maxOff < 0 {
+		maxOff = 0
+	}
+	// cursor → body row: +2 offset for quick-option entries (blank+sectionHdr before them)
+	curBodyRow := m.mainCursor
+	if m.mainCursor >= len(m.mainItems) {
+		curBodyRow = m.mainCursor + 2
+	}
+	if curBodyRow < m.mainScrollOffset {
+		m.mainScrollOffset = curBodyRow
+	} else if curBodyRow >= m.mainScrollOffset+avail {
+		m.mainScrollOffset = curBodyRow - avail + 1
+	}
+	if m.mainScrollOffset > maxOff {
+		m.mainScrollOffset = maxOff
+	}
+	if m.mainScrollOffset < 0 {
+		m.mainScrollOffset = 0
+	}
+}
+
+// clampMainScroll clamps mainScrollOffset to valid range after a resize.
+func (m *tuiModel) clampMainScroll() {
+	const hdrEst = 9
+	const ftrEst = 8
+	avail := m.height - hdrEst - ftrEst - 1
+	if avail < 4 || m.height == 0 {
+		m.mainScrollOffset = 0
+		return
+	}
+	totalBody := len(m.mainItems) + 1 + 1 + m.mainExtraTotal
+	maxOff := totalBody - avail
+	if maxOff < 0 {
+		maxOff = 0
+	}
+	if m.mainScrollOffset > maxOff {
+		m.mainScrollOffset = maxOff
+	}
+	if m.mainScrollOffset < 0 {
+		m.mainScrollOffset = 0
+	}
+}
+
+// customCursorToBodyLine maps a custom-menu cursor index to the body line index.
+// Body layout:
+//
+//	line 0  : toggle section header
+//	line 1  : blank
+//	lines 2..2+nT-1  : nT toggle items  (cursor 0..nT-1)
+//	line 2+nT        : blank
+//	line 2+nT+1      : advanced section header
+//	line 2+nT+2      : blank
+//	lines 2+nT+3..2+nT+3+nA-1 : nA advanced items (cursor nT..nT+nA-1)
+//	line 2+nT+3+nA   : blank before confirm
+//	line 2+nT+3+nA+1 : confirm button (cursor nT+nA = customTotal-1)
+func (m tuiModel) customCursorToBodyLine(cursor int) int {
+	nT := len(m.toggles)
+	nA := len(m.advanced)
+	if cursor < nT {
+		return cursor + 2
+	}
+	if cursor == m.customTotal-1 {
+		return nT + nA + 6 // 2+nT+3+nA+1 = nT+nA+6
+	}
+	// advanced item
+	return cursor + 5 // cursor - nT + (2 + nT + 3) = cursor + 5
+}
+
+// ensureCustomCursorVisible adjusts customScrollOffset so the cursor row is visible.
+func (m *tuiModel) ensureCustomCursorVisible() {
+	const hdrEst = 6
+	const ftrEst = 9
+	avail := m.height - hdrEst - ftrEst - 1
+	if avail < 4 || m.height == 0 {
+		return
+	}
+	nT := len(m.toggles)
+	nA := len(m.advanced)
+	// total body lines = 2 + nT + 1 + 1 + 1 + nA + 1 + 1 = nT + nA + 7
+	totalBody := nT + nA + 7
+	maxOff := totalBody - avail
+	if maxOff < 0 {
+		maxOff = 0
+	}
+	curBodyLine := m.customCursorToBodyLine(m.customCursor)
+	if curBodyLine < m.customScrollOffset {
+		m.customScrollOffset = curBodyLine
+	} else if curBodyLine >= m.customScrollOffset+avail {
+		m.customScrollOffset = curBodyLine - avail + 1
+	}
+	if m.customScrollOffset > maxOff {
+		m.customScrollOffset = maxOff
+	}
+	if m.customScrollOffset < 0 {
+		m.customScrollOffset = 0
+	}
+}
+
+// clampCustomScroll clamps customScrollOffset to valid range after a resize.
+func (m *tuiModel) clampCustomScroll() {
+	const hdrEst = 6
+	const ftrEst = 9
+	avail := m.height - hdrEst - ftrEst - 1
+	if avail < 4 || m.height == 0 {
+		m.customScrollOffset = 0
+		return
+	}
+	totalBody := len(m.toggles) + len(m.advanced) + 7
+	maxOff := totalBody - avail
+	if maxOff < 0 {
+		maxOff = 0
+	}
+	if m.customScrollOffset > maxOff {
+		m.customScrollOffset = maxOff
+	}
+	if m.customScrollOffset < 0 {
+		m.customScrollOffset = 0
+	}
 }
 
 func maxInt(a, b int) int {
