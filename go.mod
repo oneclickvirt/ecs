@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.54.0
 	github.com/oneclickvirt/UnlockTests v0.0.35-20260207053956
-	github.com/oneclickvirt/backtrace v0.0.8-20251109090457
+	github.com/oneclickvirt/backtrace v0.0.8-20260501031244
 	github.com/oneclickvirt/basics v0.0.16-20260430152125
 	github.com/oneclickvirt/cputest v0.0.12-20251111095842
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
