@@ -56,7 +56,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Memory test: Self-developed [memorytest](https://github.com/oneclickvirt/memorytest) supporting sysbench, dd, winsat, mbw, stream
 - Disk test: Self-developed [disktest](https://github.com/oneclickvirt/disktest) supporting dd, fio, winsat
 - Streaming platform unlock tests concurrent query: Self-developed to [UnlockTests](https://github.com/oneclickvirt/UnlockTests), logic modified from [RegionRestrictionCheck](https://github.com/lmc999/RegionRestrictionCheck) and others
-- IP quality/security information concurrent query: Self-developed, binary files compiled in [securityCheck](https://github.com/oneclickvirt/securityCheck)
+- IP quality/security information concurrent query: Self-developed, but open sourced
 - Email port test: Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)
 - Three-network return path test: Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 - Three-network route test: Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)
@@ -244,8 +244,7 @@ Usage: goecs [options]
         Set NT3 test type (supported: both, ipv4, ipv6) (default "ipv4")
   -ping
         Enable/Disable ping test
-  -security
-        Enable/Disable security test (default true)
+  -security        Enable/Disable security test (default false)
   -speed
         Enable/Disable speed test (default true)
   -spnum int
