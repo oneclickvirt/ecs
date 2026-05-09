@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/oneclickvirt/ecs/internal/analysis"
@@ -483,19 +482,6 @@ func AppendAnalysisSummary(config *params.Config, output, tempOutput string, out
 		}
 		fmt.Println(summary)
 	}, tempOutput, output)
-}
-
-// forceExit kills the current process group (so child subprocesses are also
-// terminated) and then calls os.Exit. On Windows, only os.Exit is called.
-func forceExit(code int) {
-	if runtime.GOOS != "windows" {
-		pgid, err := syscall.Getpgid(os.Getpid())
-		if err == nil {
-			// Kill the entire process group so stream/fio/sysbench/etc. also stop.
-			_ = syscall.Kill(-pgid, syscall.SIGKILL)
-		}
-	}
-	os.Exit(code)
 }
 
 // printTimeInfo prints elapsed-time / current-time to stdout directly (no mutex).
