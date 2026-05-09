@@ -585,7 +585,7 @@ env_check() {
     if ! command -v geekbench >/dev/null 2>&1; then
         _green "Installing geekbench"
         curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
-        sh dgb.sh -v gb5
+        sh dgb.sh -v gb6
         rm -rf dgb.sh
     fi
     if ! command -v speedtest >/dev/null 2>&1; then
