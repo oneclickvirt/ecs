@@ -35,6 +35,17 @@ builds:
         goarch: arm
     main: ./
     binary: goecs
+    hooks:
+      pre:
+        # Populate geekbench_bins in the cputest module cache with the
+        # platform-specific Geekbench binary so it gets embedded via
+        # //go:embed all:geekbench_bins in cputest's geekbench_embed.go.
+        # Targets linux/amd64, linux/arm64, linux/arm get real binaries;
+        # all other targets get an empty dir → runtime PATH fallback.
+        - cmd: bash scripts/embed_geekbench.sh
+          env:
+            - GOOS={{ .Os }}
+            - GOARCH={{ .Arch }}
 
   - id: darwin-amd64
     env:

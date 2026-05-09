@@ -51,10 +51,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
 
-      - name: Clean Go cache before build
+      - name: Clean Go build cache before build
         run: |
-          go clean -cache -modcache -testcache
+          go clean -cache -testcache
           df -h
+
+      - name: Download Go modules
+        run: go mod download
+        env:
+          GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
