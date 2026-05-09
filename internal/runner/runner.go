@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/oneclickvirt/ecs/internal/analysis"
@@ -484,90 +485,149 @@ func AppendAnalysisSummary(config *params.Config, output, tempOutput string, out
 	}, tempOutput, output)
 }
 
+// forceExit kills the current process group (so child subprocesses are also
+// terminated) and then calls os.Exit. On Windows, only os.Exit is called.
+func forceExit(code int) {
+	if runtime.GOOS != "windows" {
+		pgid, err := syscall.Getpgid(os.Getpid())
+		if err == nil {
+			// Kill the entire process group so stream/fio/sysbench/etc. also stop.
+			_ = syscall.Kill(-pgid, syscall.SIGKILL)
+		}
+	}
+	os.Exit(code)
+}
+
+// printTimeInfo prints elapsed-time / current-time to stdout directly (no mutex).
+func printTimeInfo(config *params.Config, minutes, seconds int, currentTime string) {
+	utils.PrintCenteredTitle("", config.Width)
+	if config.Language == "zh" {
+		fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
+		fmt.Printf("时间          : %s\n", currentTime)
+	} else {
+		fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
+		fmt.Printf("Current Time          : %s\n", currentTime)
+	}
+	utils.PrintCenteredTitle("", config.Width)
+}
+
 // HandleSignalInterrupt handles interrupt signals
+//
+// First Ctrl+C  → cancel the context (no new tests start) and wait for the
+// currently-running test to finish, then upload & exit gracefully.
+//
+// Second Ctrl+C (or if cleanup takes > 30 s) → kill the process group so that
+// any child subprocess (stream, fio, dd, sysbench, geekbench …) is also
+// terminated immediately, then os.Exit(1).
 func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
 	case <-sig:
-		// 立即取消 context，使后续尚未开始的测试跳过执行
+		// ── First Ctrl+C ────────────────────────────────────────────────────────
+		// Cancel context so that tests that have not yet started are skipped.
 		cancel()
-		if !config.Finish {
-			endTime := time.Now()
-			duration := endTime.Sub(*startTime)
-			minutes := int(duration.Minutes())
-			seconds := int(duration.Seconds()) % 60
-			currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+
+		// Arm a goroutine that watches for a second Ctrl+C or a 30-second
+		// timeout, whichever comes first, and then force-terminates everything.
+		go func() {
+			select {
+			case <-sig:
+				// Second Ctrl+C → hard kill
+				forceExit(1)
+			case <-time.After(30 * time.Second):
+				// Cleanup stuck for 30 s → hard kill
+				forceExit(1)
+			}
+		}()
+
+		if config.Finish {
+			os.Exit(0)
+		}
+
+		// ── Snapshot timing information ──────────────────────────────────────────
+		endTime := time.Now()
+		duration := endTime.Sub(*startTime)
+		minutes := int(duration.Minutes())
+		seconds := int(duration.Seconds()) % 60
+		currentTime := time.Now().Format("Mon Jan 2 15:04:05 MST 2006")
+
+		// ── Acquire outputMutex without blocking forever ─────────────────────────
+		// The currently running test (memory/disk/cpu…) may hold the lock for a
+		// long time. We try to get it in a background goroutine and give it up to
+		// 10 seconds. If we timeout we still print the time info directly to the
+		// terminal and exit – the output won't be captured for upload but the
+		// important thing is that the user sees the summary and the program exits.
+		lockCh := make(chan struct{}, 1)
+		go func() {
 			outputMutex.Lock()
+			select {
+			case lockCh <- struct{}{}:
+			default:
+				// Timed out while we were waiting; release immediately.
+				outputMutex.Unlock()
+			}
+		}()
+
+		var finalOutput string
+		select {
+		case <-lockCh:
+			// Got the lock – capture time info so it goes into the upload too.
 			timeInfo := utils.PrintAndCapture(func() {
-				utils.PrintCenteredTitle("", config.Width)
-				if config.Language == "zh" {
-					fmt.Printf("花费          : %d 分 %d 秒\n", minutes, seconds)
-					fmt.Printf("时间          : %s\n", currentTime)
-				} else {
-					fmt.Printf("Cost    Time          : %d min %d sec\n", minutes, seconds)
-					fmt.Printf("Current Time          : %s\n", currentTime)
-				}
-				utils.PrintCenteredTitle("", config.Width)
+				printTimeInfo(config, minutes, seconds, currentTime)
 			}, "", "")
 			*output += timeInfo
-			finalOutput := *output
+			finalOutput = *output
 			outputMutex.Unlock()
+
+		case <-time.After(10 * time.Second):
+			// Could not get the lock in 10 s (test subprocess still running).
+			// Print directly without mutex; interleaving with test output is OK.
+			fmt.Println()
+			printTimeInfo(config, minutes, seconds, currentTime)
+			// We don't have a clean finalOutput for upload; use whatever was
+			// accumulated so far (best-effort, no data race protection here).
+			finalOutput = *output
+		}
+
+		// ── Upload and exit ──────────────────────────────────────────────────────
+		if config.EnableUpload {
+			uploadCtx, uploadCancel := context.WithTimeout(context.Background(), 20*time.Second)
+			defer uploadCancel()
 			resultChan := make(chan struct {
 				httpURL  string
 				httpsURL string
 			}, 1)
-			if config.EnableUpload {
-				// 使用context来控制上传goroutine
-				uploadCtx, uploadCancel := context.WithTimeout(context.Background(), 30*time.Second)
-				defer uploadCancel()
-
-				go func() {
-					httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload, config.Language)
-					select {
-					case resultChan <- struct {
-						httpURL  string
-						httpsURL string
-					}{httpURL, httpsURL}:
-					case <-uploadCtx.Done():
-						// 上传被取消或超时，直接返回
-						return
-					}
-				}()
-
+			go func() {
+				httpURL, httpsURL := utils.ProcessAndUpload(finalOutput, config.FilePath, config.EnableUpload, config.Language)
 				select {
-				case result := <-resultChan:
-					uploadCancel() // 成功完成，取消context
-					if result.httpURL != "" || result.httpsURL != "" {
-						if config.Language == "en" {
-							fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
-						} else {
-							fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
-						}
-					}
-					time.Sleep(100 * time.Millisecond)
-					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-						fmt.Println("Press Enter to exit...")
-						fmt.Scanln()
-					}
-					os.Exit(0)
+				case resultChan <- struct {
+					httpURL  string
+					httpsURL string
+				}{httpURL, httpsURL}:
 				case <-uploadCtx.Done():
+				}
+			}()
+			select {
+			case result := <-resultChan:
+				uploadCancel()
+				if result.httpURL != "" || result.httpsURL != "" {
 					if config.Language == "en" {
-						fmt.Println("Upload timeout, program exit")
+						fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
 					} else {
-						fmt.Println("上传超时，程序退出")
+						fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
 					}
-					if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-						fmt.Println("Press Enter to exit...")
-						fmt.Scanln()
-					}
-					os.Exit(1)
 				}
-			} else {
-				if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
-					fmt.Println("Press Enter to exit...")
-					fmt.Scanln()
+				time.Sleep(100 * time.Millisecond)
+			case <-uploadCtx.Done():
+				if config.Language == "en" {
+					fmt.Println("Upload timeout, program exit")
+				} else {
+					fmt.Println("上传超时，程序退出")
 				}
-				os.Exit(0)
 			}
+		}
+		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+			fmt.Println("Press Enter to exit...")
+			fmt.Scanln()
 		}
 		os.Exit(0)
 	case <-ctx.Done():

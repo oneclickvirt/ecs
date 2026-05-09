@@ -67,7 +67,10 @@ jobs:
           distribution: goreleaser
           # version: latest
           version: '~> v2'
-          args: release --clean
+          # --parallelism 1: build targets sequentially so the per-build
+          # embed_geekbench.sh pre-hook can safely modify the shared
+          # module-cache geekbench_bins directory without race conditions.
+          args: release --clean --parallelism 1
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
