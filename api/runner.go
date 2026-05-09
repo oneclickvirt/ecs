@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -33,15 +34,15 @@ func RunAllTests(preCheck utils.NetCheckResult, config *Config) *RunResult {
 
 	switch config.Language {
 	case "zh":
-		runner.RunChineseTests(preCheck, config, &wg1, &wg2, &wg3,
+		runner.RunChineseTests(context.Background(), preCheck, config, &wg1, &wg2, &wg3,
 			&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
 			&output, tempOutput, startTime, &outputMutex, &infoMutex)
 	case "en":
-		runner.RunEnglishTests(preCheck, config, &wg1, &wg2, &wg3,
+		runner.RunEnglishTests(context.Background(), preCheck, config, &wg1, &wg2, &wg3,
 			&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
 			&output, tempOutput, startTime, &outputMutex, &infoMutex)
 	default:
-		runner.RunChineseTests(preCheck, config, &wg1, &wg2, &wg3,
+		runner.RunChineseTests(context.Background(), preCheck, config, &wg1, &wg2, &wg3,
 			&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
 			&output, tempOutput, startTime, &outputMutex, &infoMutex)
 	}
@@ -66,7 +67,7 @@ func RunBasicTests(preCheck utils.NetCheckResult, config *Config) string {
 		output, tempOutput      string
 		outputMutex             sync.Mutex
 	)
-	return runner.RunBasicTests(preCheck, config, &basicInfo, &securityInfo, output, tempOutput, &outputMutex)
+	return runner.RunBasicTests(context.Background(), preCheck, config, &basicInfo, &securityInfo, output, tempOutput, &outputMutex)
 }
 
 // RunCPUTest 运行CPU测试
@@ -75,7 +76,7 @@ func RunCPUTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunCPUTest(config, output, tempOutput, &outputMutex)
+	return runner.RunCPUTest(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // RunMemoryTest 运行内存测试
@@ -84,7 +85,7 @@ func RunMemoryTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunMemoryTest(config, output, tempOutput, &outputMutex)
+	return runner.RunMemoryTest(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // RunDiskTest 运行硬盘测试
@@ -93,7 +94,7 @@ func RunDiskTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunDiskTest(config, output, tempOutput, &outputMutex)
+	return runner.RunDiskTest(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // RunIpInfoCheck 执行IP信息检测
@@ -102,7 +103,7 @@ func RunIpInfoCheck(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunIpInfoCheck(config, output, tempOutput, &outputMutex)
+	return runner.RunIpInfoCheck(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // RunStreamingTests 运行流媒体测试
@@ -113,7 +114,7 @@ func RunStreamingTests(config *Config, mediaInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunStreamingTests(config, &wg1, &mediaInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return runner.RunStreamingTests(context.Background(), config, &wg1, &mediaInfo, output, tempOutput, &outputMutex, &infoMutex)
 }
 
 // RunSecurityTests 运行安全测试
@@ -122,7 +123,7 @@ func RunSecurityTests(config *Config, securityInfo string) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunSecurityTests(config, securityInfo, output, tempOutput, &outputMutex)
+	return runner.RunSecurityTests(context.Background(), config, securityInfo, output, tempOutput, &outputMutex)
 }
 
 // RunEmailTests 运行邮件端口测试
@@ -133,7 +134,7 @@ func RunEmailTests(config *Config, emailInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunEmailTests(config, &wg2, &emailInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return runner.RunEmailTests(context.Background(), config, &wg2, &emailInfo, output, tempOutput, &outputMutex, &infoMutex)
 }
 
 // RunNetworkTests 运行网络测试（中文模式）
@@ -144,7 +145,7 @@ func RunNetworkTests(config *Config, ptInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunNetworkTests(config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return runner.RunNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex)
 }
 
 // RunSpeedTests 运行测速测试（中文模式）
@@ -153,7 +154,7 @@ func RunSpeedTests(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunSpeedTests(config, output, tempOutput, &outputMutex)
+	return runner.RunSpeedTests(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // RunEnglishNetworkTests 运行网络测试（英文模式）
@@ -163,7 +164,7 @@ func RunEnglishNetworkTests(config *Config, ptInfo string) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunEnglishNetworkTests(config, &wg3, &ptInfo, output, tempOutput, &outputMutex)
+	return runner.RunEnglishNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex)
 }
 
 // RunEnglishSpeedTests 运行测速测试（英文模式）
@@ -172,7 +173,7 @@ func RunEnglishSpeedTests(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunEnglishSpeedTests(config, output, tempOutput, &outputMutex)
+	return runner.RunEnglishSpeedTests(context.Background(), config, output, tempOutput, &outputMutex)
 }
 
 // AppendTimeInfo 添加时间信息

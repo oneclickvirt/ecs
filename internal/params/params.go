@@ -125,16 +125,31 @@ func normalizeBoolArgs(args []string) []string {
 		// Detect flag tokens: -flag or --flag (without embedded =).
 		if strings.HasPrefix(arg, "-") && !strings.Contains(arg, "=") {
 			name := strings.TrimLeft(arg, "-")
+
+			// Calculate the index of the value token, possibly skipping a standalone "=".
+			// This handles the "-flag = value" pattern (spaces around =).
+			valueIdx := i + 1
+			skipEq := valueIdx < len(args) && strings.TrimSpace(args[valueIdx]) == "="
+			if skipEq {
+				valueIdx++ // skip the standalone "=" token
+			}
+
 			if boolFlags[name] {
-				// Peek at next token: if it is "true" or "false", merge.
-				if i+1 < len(args) {
-					next := strings.ToLower(strings.TrimSpace(args[i+1]))
-					if next == "true" || next == "false" {
+				// Peek at the value token: handle all valid bool representations.
+				// The flag package accepts: true, false, 1, 0, t, f (and uppercase variants).
+				if valueIdx < len(args) {
+					next := strings.ToLower(strings.TrimSpace(args[valueIdx]))
+					if next == "true" || next == "false" || next == "1" || next == "0" || next == "t" || next == "f" {
 						out = append(out, arg+"="+next)
-						i += 2
+						i = valueIdx + 1
 						continue
 					}
 				}
+			} else if skipEq && valueIdx < len(args) {
+				// Non-bool flag with spaces around "=": "-flag = value" → "-flag=value"
+				out = append(out, arg+"="+args[valueIdx])
+				i = valueIdx + 1
+				continue
 			}
 		}
 		out = append(out, arg)

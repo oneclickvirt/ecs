@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -27,7 +28,7 @@ import (
 )
 
 var (
-	ecsVersion   = "v0.1.124"                   // 融合怪版本号
+	ecsVersion   = "v0.1.125"                   // 融合怪版本号
 	configs      = params.NewConfig(ecsVersion) // 全局配置实例
 	userSetFlags = make(map[string]bool)        // 用于跟踪哪些参数是用户显式设置的
 )
@@ -90,20 +91,24 @@ func main() {
 	uploadDone := make(chan bool, 1)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	go runner.HandleSignalInterrupt(sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch configs.Language {
 	case "zh":
-		runner.RunChineseTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
+		runner.RunChineseTests(ctx, preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
 	case "en":
-		runner.RunEnglishTests(preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
+		runner.RunEnglishTests(ctx, preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
 	default:
 		fmt.Println("Unsupported language")
 	}
-	if configs.AnalyzeResult {
-		output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
-	}
-	if preCheck.Connected {
-		runner.HandleUploadResults(configs, output)
+	if ctx.Err() == nil {
+		if configs.AnalyzeResult {
+			output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
+		}
+		if preCheck.Connected {
+			runner.HandleUploadResults(configs, output)
+		}
 	}
 	configs.Finish = true
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {

@@ -19,13 +19,13 @@ import (
 )
 
 // RunChineseTests runs all tests in Chinese mode
-func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
-	*output = RunBasicTests(preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
-	*output = RunCPUTest(config, *output, tempOutput, outputMutex)
-	*output = RunMemoryTest(config, *output, tempOutput, outputMutex)
-	*output = RunDiskTest(config, *output, tempOutput, outputMutex)
+func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
+	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
+	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunIpInfoCheck(config, *output, tempOutput, outputMutex)
+		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
 	}
 	if config.UtTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" && !config.OnlyChinaTest {
 		wg1.Add(1)
@@ -58,27 +58,27 @@ func RunChineseTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 		}()
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunSecurityTests(config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunStreamingTests(ctx, config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
+		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
 	}
 	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunNetworkTests(config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunSpeedTests(config, *output, tempOutput, outputMutex)
+		*output = RunSpeedTests(ctx, config, *output, tempOutput, outputMutex)
 	}
 	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
 }
 
 // RunEnglishTests runs all tests in English mode
-func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
-	*output = RunBasicTests(preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
-	*output = RunCPUTest(config, *output, tempOutput, outputMutex)
-	*output = RunMemoryTest(config, *output, tempOutput, outputMutex)
-	*output = RunDiskTest(config, *output, tempOutput, outputMutex)
+func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
+	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
+	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunIpInfoCheck(config, *output, tempOutput, outputMutex)
+		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		if config.UtTestStatus {
@@ -101,17 +101,20 @@ func RunEnglishTests(preCheck utils.NetCheckResult, config *params.Config, wg1, 
 				infoMutex.Unlock()
 			}()
 		}
-		*output = RunStreamingTests(config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunSecurityTests(config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunEnglishNetworkTests(config, wg3, ptInfo, *output, tempOutput, outputMutex)
-		*output = RunEnglishSpeedTests(config, *output, tempOutput, outputMutex)
+		*output = RunStreamingTests(ctx, config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
+		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunEnglishNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex)
+		*output = RunEnglishSpeedTests(ctx, config, *output, tempOutput, outputMutex)
 	}
 	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
 }
 
 // RunIpInfoCheck performs IP info check
-func RunIpInfoCheck(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunIpInfoCheck(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -129,7 +132,10 @@ func RunIpInfoCheck(config *params.Config, output, tempOutput string, outputMute
 }
 
 // RunBasicTests runs basic system tests
-func RunBasicTests(preCheck utils.NetCheckResult, config *params.Config, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunBasicTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, basicInfo, securityInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -168,7 +174,10 @@ func RunBasicTests(preCheck utils.NetCheckResult, config *params.Config, basicIn
 }
 
 // RunCPUTest runs CPU test
-func RunCPUTest(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunCPUTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -185,7 +194,10 @@ func RunCPUTest(config *params.Config, output, tempOutput string, outputMutex *s
 }
 
 // RunMemoryTest runs memory test
-func RunMemoryTest(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunMemoryTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -202,7 +214,10 @@ func RunMemoryTest(config *params.Config, output, tempOutput string, outputMutex
 }
 
 // RunDiskTest runs disk test
-func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunDiskTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -235,7 +250,10 @@ func RunDiskTest(config *params.Config, output, tempOutput string, outputMutex *
 }
 
 // RunStreamingTests runs platform unlock tests
-func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+func RunStreamingTests(ctx context.Context, config *params.Config, wg1 *sync.WaitGroup, mediaInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -255,7 +273,10 @@ func RunStreamingTests(config *params.Config, wg1 *sync.WaitGroup, mediaInfo *st
 }
 
 // RunSecurityTests runs security tests
-func RunSecurityTests(config *params.Config, securityInfo, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunSecurityTests(ctx context.Context, config *params.Config, securityInfo, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -271,7 +292,10 @@ func RunSecurityTests(config *params.Config, securityInfo, output, tempOutput st
 }
 
 // RunEmailTests runs email port tests
-func RunEmailTests(config *params.Config, wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+func RunEmailTests(ctx context.Context, config *params.Config, wg2 *sync.WaitGroup, emailInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -291,7 +315,10 @@ func RunEmailTests(config *params.Config, wg2 *sync.WaitGroup, emailInfo *string
 }
 
 // RunNetworkTests runs network tests (Chinese mode)
-func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+func RunNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -337,7 +364,10 @@ func RunNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string,
 }
 
 // RunSpeedTests runs speed tests (Chinese mode)
-func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunSpeedTests(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -378,7 +408,10 @@ func RunSpeedTests(config *params.Config, output, tempOutput string, outputMutex
 }
 
 // RunEnglishNetworkTests runs network tests (English mode)
-func RunEnglishNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunEnglishNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -397,7 +430,10 @@ func RunEnglishNetworkTests(config *params.Config, wg3 *sync.WaitGroup, ptInfo *
 }
 
 // RunEnglishSpeedTests runs speed tests (English mode)
-func RunEnglishSpeedTests(config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunEnglishSpeedTests(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
@@ -449,9 +485,11 @@ func AppendAnalysisSummary(config *params.Config, output, tempOutput string, out
 }
 
 // HandleSignalInterrupt handles interrupt signals
-func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
+func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
 	case <-sig:
+		// 立即取消 context，使后续尚未开始的测试跳过执行
+		cancel()
 		if !config.Finish {
 			endTime := time.Now()
 			duration := endTime.Sub(*startTime)
@@ -532,6 +570,8 @@ func HandleSignalInterrupt(sig chan os.Signal, config *params.Config, startTime 
 			}
 		}
 		os.Exit(0)
+	case <-ctx.Done():
+		return
 	}
 }
 
