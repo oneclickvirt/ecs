@@ -1,6 +1,6 @@
 module github.com/oneclickvirt/ecs
 
-go 1.25.4
+go 1.26.1
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
@@ -8,20 +8,22 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.54.0
 	github.com/oneclickvirt/UnlockTests v0.0.35-20260207053956
-	github.com/oneclickvirt/backtrace v0.0.8-20260501031244
+	github.com/oneclickvirt/backtrace v0.0.9-20260521161358
 	github.com/oneclickvirt/basics v0.0.18-20260521154614
 	github.com/oneclickvirt/cputest v0.0.12-20260509135512
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.10-20250924030424
+	github.com/oneclickvirt/disktest v0.0.11-20260521162552
 	github.com/oneclickvirt/gostun v0.0.6-20260509043509
 	github.com/oneclickvirt/memorytest v0.0.10-20251218032900
-	github.com/oneclickvirt/nt3 v0.0.11-20260112140912
-	github.com/oneclickvirt/pingtest v0.0.9-20251104112920
+	github.com/oneclickvirt/nt3 v0.0.13-20260521161120
+	github.com/oneclickvirt/pingtest v0.0.10-20260521161204
 	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
 	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218
 	github.com/oneclickvirt/security v0.0.9-20260521154908
-	github.com/oneclickvirt/speedtest v0.0.11-20251102151740
+	github.com/oneclickvirt/speedtest v0.0.12-20260521162416
 )
+
+require github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2 // indirect
@@ -66,7 +68,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.19
+	github.com/mattn/go-runewidth v0.0.21
 	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -75,7 +77,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/nxtrace/NTrace-core v1.5.0 // indirect
+	github.com/nxtrace/NTrace-core v1.6.1 // indirect
 	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
 	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect
@@ -90,11 +92,11 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus-community/pro-bing v0.4.1 // indirect
-	github.com/quic-go/qpack v0.5.1 // indirect
-	github.com/quic-go/quic-go v0.55.0 // indirect
+	github.com/quic-go/qpack v0.6.0 // indirect
+	github.com/quic-go/quic-go v0.59.0 // indirect
 	github.com/refraction-networking/utls v1.7.3 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/rodaine/table v1.3.0 // indirect
+	github.com/rodaine/table v1.3.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/schollz/progressbar/v3 v3.17.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
@@ -117,14 +119,14 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/mod v0.33.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/tools v0.42.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.0 // indirect
 )
