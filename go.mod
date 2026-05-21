@@ -20,7 +20,7 @@ require (
 	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
 	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218
 	github.com/oneclickvirt/security v0.0.9-20260521154908
-	github.com/oneclickvirt/speedtest v0.0.12-20260521162416
+	github.com/oneclickvirt/speedtest v0.0.12-20260521180111
 )
 
 require github.com/lionsoul2014/ip2region v2.11.2+incompatible // indirect
