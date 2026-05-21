@@ -61,6 +61,13 @@ jobs:
         env:
           GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
+      - name: Verify go.mod and go.sum are clean
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+        env:
+          GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -74,6 +81,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
           GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
+          GOFLAGS: -mod=readonly
 
       - name: Update goecs.sh with new version
         run: |

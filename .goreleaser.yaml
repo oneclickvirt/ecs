@@ -1,6 +1,7 @@
+version: 2
+
 before:
   hooks:
-    - go mod tidy -v
     - go clean -cache
 
 project_name: goecs
