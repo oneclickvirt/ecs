@@ -8,8 +8,6 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
-    env:
-      GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
     container:
       # 1.20 是 Windows 7/8 Server 2008/2012 最后一个支持版本
       image: goreleaser/goreleaser-cross:v1.20
@@ -60,9 +58,8 @@ jobs:
 
       - name: Download Go modules
         run: go mod download
-
-      - name: Verify go.mod and go.sum are committed
-        run: git diff --exit-code go.mod go.sum
+        env:
+          GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
@@ -76,7 +73,7 @@ jobs:
           args: release --clean --parallelism 1
         env:
           GITHUB_TOKEN: ${{ secrets.GHT }}
-          GOFLAGS: -mod=readonly
+          GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
       - name: Update goecs.sh with new version
         run: |

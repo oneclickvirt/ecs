@@ -1,6 +1,6 @@
 module github.com/oneclickvirt/ecs
 
-go 1.26.1
+go 1.25.4
 
 require (
 	github.com/charmbracelet/bubbles v1.0.0
@@ -15,7 +15,7 @@ require (
 	github.com/oneclickvirt/disktest v0.0.11-20260521162552
 	github.com/oneclickvirt/gostun v0.0.6-20260509043509
 	github.com/oneclickvirt/memorytest v0.0.10-20251218032900
-	github.com/oneclickvirt/nt3 v0.0.13-20260521161120
+	github.com/oneclickvirt/nt3 v0.0.10-20251111095706
 	github.com/oneclickvirt/pingtest v0.0.10-20260521161204
 	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
 	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218
@@ -23,7 +23,7 @@ require (
 	github.com/oneclickvirt/speedtest v0.0.12-20260521162416
 )
 
-require github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
+require github.com/lionsoul2014/ip2region v2.11.2+incompatible // indirect
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2 // indirect
@@ -39,7 +39,6 @@ require (
 	github.com/clipperhouse/displaywidth v0.9.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.5.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -47,18 +46,15 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0 // indirect
-	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huin/goupnp v1.2.0 // indirect
 	github.com/icholy/digest v1.1.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jaypipes/ghw v0.17.0 // indirect
 	github.com/jaypipes/pcidb v1.0.1 // indirect
-	github.com/jsdelivr/globalping-cli v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/koron/go-ssdp v0.0.4 // indirect
@@ -78,7 +74,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/nxtrace/NTrace-core v1.6.1 // indirect
+	github.com/nxtrace/NTrace-core v1.4.3-rc.1 // indirect
 	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
 	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect
