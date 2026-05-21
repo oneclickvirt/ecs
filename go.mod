@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbles v1.0.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/imroc/req/v3 v3.54.0
+	github.com/imroc/req/v3 v3.57.0
 	github.com/oneclickvirt/UnlockTests v0.0.35-20260207053956
 	github.com/oneclickvirt/backtrace v0.0.9-20260521161358
 	github.com/oneclickvirt/basics v0.0.18-20260521154614
@@ -48,6 +48,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gofrs/uuid/v5 v5.2.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -59,7 +60,7 @@ require (
 	github.com/jaypipes/pcidb v1.0.1 // indirect
 	github.com/jsdelivr/globalping-cli v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/koron/go-ssdp v0.0.4 // indirect
 	github.com/libp2p/go-nat v0.2.0 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
@@ -93,8 +94,8 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus-community/pro-bing v0.4.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.59.0 // indirect
-	github.com/refraction-networking/utls v1.7.3 // indirect
+	github.com/quic-go/quic-go v0.57.1 // indirect
+	github.com/refraction-networking/utls v1.8.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rodaine/table v1.3.1 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
