@@ -26,8 +26,6 @@ import (
 	"github.com/oneclickvirt/security/network"
 )
 
-const unsafeSecurityCheckEnv = "GOECS_ENABLE_UNSAFE_SECURITY_CHECK"
-
 var networkCheckFn = network.NetworkCheck
 
 // IsAndroid 检测当前是否在 Android (Termux) 环境下运行
@@ -252,12 +250,7 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 				fmt.Fprintf(os.Stderr, "[WARN] NetworkCheck panic: %v\n", r)
 			}
 		}()
-		// Always collect basic IP info with security checks disabled to avoid
-		// dependency panics in security database goroutines from aborting main flow.
-		ipv4, ipv6, ipInfo, _, _ = networkCheckFn("both", false, language)
-		if securityCheckStatus {
-			securityInfo = getSecurityInfoWithFallback(language)
-		}
+		ipv4, ipv6, ipInfo, securityInfo, _ = networkCheckFn("both", securityCheckStatus, language)
 		// if err != nil {
 		// 	fmt.Println(err.Error())
 		// }
@@ -295,29 +288,6 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 	}
 	basicInfo = strings.ReplaceAll(basicInfo, "\n\n", "\n")
 	return ipv4, ipv6, basicInfo, securityInfo, nt3CheckType
-}
-
-func getSecurityInfoWithFallback(language string) string {
-	if os.Getenv(unsafeSecurityCheckEnv) != "1" {
-		return buildSecuritySkippedMessage(language)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] Security check panic: %v\n", r)
-		}
-	}()
-	_, _, _, securityInfo, _ := networkCheckFn("both", true, language)
-	if strings.TrimSpace(securityInfo) == "" {
-		return buildSecuritySkippedMessage(language)
-	}
-	return securityInfo
-}
-
-func buildSecuritySkippedMessage(language string) string {
-	if language == "zh" {
-		return "IP质量检测已降级为保护模式，避免第三方安全数据库异常导致整体中断。\n如需强制启用完整安全检测，请设置环境变量 GOECS_ENABLE_UNSAFE_SECURITY_CHECK=1。\n"
-	}
-	return "IP quality check is running in protected mode to avoid whole-run failures caused by third-party security databases.\nSet GOECS_ENABLE_UNSAFE_SECURITY_CHECK=1 to force full security checks.\n"
 }
 
 // CaptureOutput 捕获函数输出和错误输出，实时输出，并返回字符串
