@@ -5,6 +5,11 @@ on:
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing git tag to release, for example v0.1.137"
+        required: true
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -26,7 +31,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
           fetch-depth: 0
+          fetch-tags: true
+
+      - name: Verify release ref
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            RELEASE_REF="${{ inputs.release_tag }}"
+          else
+            RELEASE_REF="${GITHUB_REF#refs/tags/}"
+          fi
+          git fetch --force --tags origin
+          git describe --exact-match --tags HEAD
+          TAG_COMMIT=$(git rev-list -n 1 "$RELEASE_REF")
+          HEAD_COMMIT=$(git rev-parse HEAD)
+          if [[ "$TAG_COMMIT" != "$HEAD_COMMIT" ]]; then
+            echo "Tag $RELEASE_REF points to $TAG_COMMIT but HEAD is $HEAD_COMMIT"
+            exit 1
+          fi
 
       - name: Prepare Go build directories
         run: |
@@ -94,7 +117,10 @@ jobs:
 
       - name: Update goecs.sh with new version
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.release_tag }}"
+            VERSION="${VERSION#v}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
           else
             VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.1.37")
