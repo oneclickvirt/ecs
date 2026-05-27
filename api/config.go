@@ -15,7 +15,7 @@ func NewConfig(version string) *Config {
 
 // NewDefaultConfig 创建默认配置（使用默认版本号）
 func NewDefaultConfig() *Config {
-	return params.NewConfig("v0.1.114")
+	return params.NewConfig(DefaultVersion)
 }
 
 // ConfigOption 配置选项函数类型
@@ -29,7 +29,7 @@ func WithLanguage(lang string) ConfigOption {
 }
 
 // WithCpuTestMethod 设置CPU测试方法
-// method: "sysbench" 或 "geekbench"
+// method: "sysbench", "geekbench" 或 "winsat"
 func WithCpuTestMethod(method string) ConfigOption {
 	return func(c *Config) {
 		c.CpuTestMethod = method
@@ -45,7 +45,7 @@ func WithCpuTestThreadMode(mode string) ConfigOption {
 }
 
 // WithMemoryTestMethod 设置内存测试方法
-// method: "stream", "sysbench", "dd"
+// method: "stream", "sysbench", "dd", "winsat" 或 "auto"
 func WithMemoryTestMethod(method string) ConfigOption {
 	return func(c *Config) {
 		c.MemoryTestMethod = method
@@ -53,7 +53,7 @@ func WithMemoryTestMethod(method string) ConfigOption {
 }
 
 // WithDiskTestMethod 设置硬盘测试方法
-// method: "fio" 或 "dd"
+// method: "fio", "dd" 或 "winsat"
 func WithDiskTestMethod(method string) ConfigOption {
 	return func(c *Config) {
 		c.DiskTestMethod = method
@@ -208,10 +208,33 @@ func WithWebTest(enable bool) ConfigOption {
 }
 
 // WithNt3CheckType 设置三网路由检测类型
-// checkType: "ipv4", "ipv6" 或 "auto"
+// checkType: "ipv4", "ipv6" 或 "both"
 func WithNt3CheckType(checkType string) ConfigOption {
 	return func(c *Config) {
 		c.Nt3CheckType = checkType
+	}
+}
+
+// WithUnlockTestRegion 设置流媒体解锁检测地区
+// region: "0" 到 "20"
+func WithUnlockTestRegion(region string) ConfigOption {
+	return func(c *Config) {
+		c.UnlockTestRegion = region
+	}
+}
+
+// WithUnlockTestShowIP 设置流媒体测试输出是否显示 IPV4:/IPV6: 标签
+func WithUnlockTestShowIP(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.UnlockTestShowIP = enable
+	}
+}
+
+// WithUnlockTestIPVersion 设置流媒体解锁测试 IP 版本
+// ipVersion: "auto", "ipv4" 或 "ipv6"
+func WithUnlockTestIPVersion(ipVersion string) ConfigOption {
+	return func(c *Config) {
+		c.UnlockTestIPVersion = ipVersion
 	}
 }
 

@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.57.0
-	github.com/oneclickvirt/UnlockTests v0.0.36-20260527075504
+	github.com/oneclickvirt/UnlockTests v0.0.36-20260527144003
 	github.com/oneclickvirt/backtrace v0.0.9-20260521161358
 	github.com/oneclickvirt/basics v0.0.18-20260521154614
 	github.com/oneclickvirt/cputest v0.0.12-20260509135512
@@ -23,7 +23,10 @@ require (
 	github.com/oneclickvirt/speedtest v0.0.12-20260521180111
 )
 
-require github.com/lionsoul2014/ip2region v2.11.2+incompatible // indirect
+require (
+	github.com/lionsoul2014/ip2region v2.11.2+incompatible // indirect
+	github.com/mattn/go-rl v0.0.0-20260413075423-3ae726920de8 // indirect
+)
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2 // indirect
@@ -65,7 +68,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.21
+	github.com/mattn/go-runewidth v0.0.23
 	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

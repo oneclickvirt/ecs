@@ -17,6 +17,19 @@ type RunResult struct {
 	EndTime   time.Time     // 结束时间
 }
 
+func applyLanguageAndUploadRules(preCheck utils.NetCheckResult, config *Config) {
+	if config.Language == "en" {
+		config.BacktraceStatus = false
+		config.Nt3Status = false
+	}
+	if !config.EnableUpload {
+		config.SecurityTestStatus = false
+	}
+	if !preCheck.Connected {
+		config.EnableUpload = false
+	}
+}
+
 // RunAllTests 执行所有测试（高级接口）
 // preCheck: 网络检查结果
 // config: 配置对象
@@ -31,6 +44,7 @@ func RunAllTests(preCheck utils.NetCheckResult, config *Config) *RunResult {
 	)
 
 	startTime := time.Now()
+	applyLanguageAndUploadRules(preCheck, config)
 
 	switch config.Language {
 	case "zh":

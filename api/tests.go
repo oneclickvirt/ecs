@@ -14,7 +14,7 @@ type TestResult struct {
 
 // CpuTest CPU测试公共接口
 // language: 语言 ("zh" 或 "en")
-// testMethod: 测试方法 ("sysbench" 或 "geekbench")
+// testMethod: 测试方法 ("sysbench", "geekbench" 或 "winsat")
 // testThread: 线程模式 ("single" 或 "multi")
 // 返回: (实际测试方法, 测试结果)
 func CpuTest(language, testMethod, testThread string) (string, string) {
@@ -23,7 +23,7 @@ func CpuTest(language, testMethod, testThread string) (string, string) {
 
 // MemoryTest 内存测试公共接口
 // language: 语言 ("zh" 或 "en")
-// testMethod: 测试方法 ("stream", "sysbench", "dd")
+// testMethod: 测试方法 ("stream", "sysbench", "dd", "winsat", "auto")
 // 返回: (实际测试方法, 测试结果)
 func MemoryTest(language, testMethod string) (string, string) {
 	return tests.MemoryTest(language, testMethod)
@@ -31,7 +31,7 @@ func MemoryTest(language, testMethod string) (string, string) {
 
 // DiskTest 硬盘测试公共接口
 // language: 语言 ("zh" 或 "en")
-// testMethod: 测试方法 ("fio" 或 "dd")
+// testMethod: 测试方法 ("fio", "dd" 或 "winsat")
 // testPath: 测试路径
 // isMultiCheck: 是否多路径检测
 // autoChange: 是否自动切换方法
@@ -73,7 +73,7 @@ func SpeedTestCustom(platform, operator string, num int, language string) {
 // NextTrace3Check 三网路由追踪测试
 // language: 语言 ("zh" 或 "en")
 // location: 位置
-// checkType: 检测类型 ("ipv4", "ipv6")
+// checkType: 检测类型 ("ipv4", "ipv6", "both")
 func NextTrace3Check(language, location, checkType string) {
 	tests.NextTrace3Check(language, location, checkType)
 }

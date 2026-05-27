@@ -3,9 +3,9 @@ package api
 const (
 	// Version API版本号
 	Version = "v1.0.0"
-	
+
 	// DefaultVersion 默认的ECS版本号
-	DefaultVersion = "v0.1.114"
+	DefaultVersion = "v0.1.137"
 )
 
 // 测试方法常量
@@ -14,35 +14,42 @@ const (
 	CpuMethodSysbench  = "sysbench"
 	CpuMethodGeekbench = "geekbench"
 	CpuMethodWinsat    = "winsat"
-	
+
 	// 内存测试方法
+	MemoryMethodAuto     = "auto"
 	MemoryMethodStream   = "stream"
 	MemoryMethodSysbench = "sysbench"
 	MemoryMethodDD       = "dd"
 	MemoryMethodWinsat   = "winsat"
-	
+
 	// 硬盘测试方法
 	DiskMethodFio    = "fio"
 	DiskMethodDD     = "dd"
 	DiskMethodWinsat = "winsat"
-	
+
 	// 线程模式
 	ThreadModeSingle = "single"
 	ThreadModeMulti  = "multi"
-	
+
 	// 语言选项
 	LanguageZH = "zh"
 	LanguageEN = "en"
-	
+
 	// IP检测类型
 	CheckTypeIPv4 = "ipv4"
 	CheckTypeIPv6 = "ipv6"
 	CheckTypeAuto = "auto"
-	
+	CheckTypeBoth = "both"
+
+	// 流媒体解锁测试 IP 版本
+	UnlockIPVersionAuto = "auto"
+	UnlockIPVersionIPv4 = "ipv4"
+	UnlockIPVersionIPv6 = "ipv6"
+
 	// 测速平台
 	PlatformCN  = "cn"
 	PlatformNet = "net"
-	
+
 	// 运营商类型
 	OperatorCMCC   = "cmcc"   // 中国移动
 	OperatorCU     = "cu"     // 中国联通
