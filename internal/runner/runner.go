@@ -31,7 +31,7 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 		wg1.Add(1)
 		go func() {
 			defer wg1.Done()
-			result := tests.MediaTest(config.Language, config.UnlockTestRegion)
+			result := tests.MediaTest(config.Language, config.UnlockTestRegion, config.UnlockTestIPVersion, config.UnlockTestShowIP)
 			infoMutex.Lock()
 			*mediaInfo = result
 			infoMutex.Unlock()
@@ -85,7 +85,7 @@ func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 			wg1.Add(1)
 			go func() {
 				defer wg1.Done()
-				result := tests.MediaTest(config.Language, config.UnlockTestRegion)
+				result := tests.MediaTest(config.Language, config.UnlockTestRegion, config.UnlockTestIPVersion, config.UnlockTestShowIP)
 				infoMutex.Lock()
 				*mediaInfo = result
 				infoMutex.Unlock()

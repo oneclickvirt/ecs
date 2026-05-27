@@ -45,6 +45,8 @@ type Config struct {
 	AnalyzeResult        bool
 	OnlyIpInfoCheck      bool
 	UnlockTestRegion     string
+	UnlockTestShowIP     bool
+	UnlockTestIPVersion  string
 	Help                 bool
 	Finish               bool
 	UserSetFlags         map[string]bool
@@ -90,6 +92,8 @@ func NewConfig(version string) *Config {
 		AnalyzeResult:        false,
 		OnlyIpInfoCheck:      false,
 		UnlockTestRegion:     "0",
+		UnlockTestShowIP:     false,
+		UnlockTestIPVersion:  "auto",
 		Help:                 false,
 		Finish:               false,
 		UserSetFlags:         make(map[string]bool),
@@ -111,7 +115,7 @@ func normalizeBoolArgs(args []string) []string {
 		"backtrace": true, "nt3": true, "speed": true, "ping": true,
 		"tgdc": true, "web": true, "log": true, "upload": true,
 		"analysis": true, "analyze": true,
-		"diskmc": true,
+		"diskmc": true, "utshowip": true,
 	}
 
 	out := make([]string, 0, len(args))
@@ -199,6 +203,8 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All)")
+	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Show IPV4:/IPV6: section labels in unlock test output (may reveal sensitive network info)")
+	c.GoecsFlag.StringVar(&c.UnlockTestIPVersion, "utipver", "auto", "Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only)")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")
 	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analysis", false, "Enable/Disable post-test concise summary analysis")
@@ -296,6 +302,12 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["utregion"] {
 		saved["utregion"] = c.UnlockTestRegion
+	}
+	if c.UserSetFlags["utshowip"] {
+		saved["utshowip"] = c.UnlockTestShowIP
+	}
+	if c.UserSetFlags["utipver"] {
+		saved["utipver"] = c.UnlockTestIPVersion
 	}
 	if c.UserSetFlags["analysis"] || c.UserSetFlags["analyze"] {
 		saved["analysis"] = c.AnalyzeResult
@@ -423,6 +435,16 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.UnlockTestRegion = strVal
 		}
 	}
+	if val, ok := saved["utshowip"]; ok {
+		if boolVal, ok := val.(bool); ok {
+			c.UnlockTestShowIP = boolVal
+		}
+	}
+	if val, ok := saved["utipver"]; ok {
+		if strVal, ok := val.(string); ok {
+			c.UnlockTestIPVersion = strVal
+		}
+	}
 	if val, ok := saved["analysis"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.AnalyzeResult = boolVal
@@ -523,5 +545,15 @@ func (c *Config) ValidateParams() {
 			fmt.Printf("Warning: Invalid unlock test region '%s', using default '0'\n", c.UnlockTestRegion)
 		}
 		c.UnlockTestRegion = "0"
+	}
+
+	validIPVersions := map[string]bool{"auto": true, "ipv4": true, "ipv6": true}
+	if !validIPVersions[c.UnlockTestIPVersion] {
+		if c.Language == "zh" {
+			fmt.Printf("警告: 解锁测试IP版本 '%s' 无效，使用默认值 'auto'\n", c.UnlockTestIPVersion)
+		} else {
+			fmt.Printf("Warning: Invalid unlock test IP version '%s', using default 'auto'\n", c.UnlockTestIPVersion)
+		}
+		c.UnlockTestIPVersion = "auto"
 	}
 }

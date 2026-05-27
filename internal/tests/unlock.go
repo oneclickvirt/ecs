@@ -9,7 +9,11 @@ import (
 	"github.com/oneclickvirt/defaultset"
 )
 
-func MediaTest(language, region string) string {
+// MediaTest runs streaming unlock tests.
+// ipVersion controls which IP stacks to probe: "auto" (both), "ipv4", or "ipv6".
+// showIP controls whether to prepend "IPV4:" / "IPV6:" section labels in the output.
+// Unavailable IP versions are silently skipped regardless of the ipVersion setting.
+func MediaTest(language, region, ipVersion string, showIP bool) string {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "[WARN] MediaTest panic: %v\n", r)
@@ -21,12 +25,18 @@ func MediaTest(language, region string) string {
 	if !readStatus {
 		return ""
 	}
-	if IPV4 != "" {
-		res += defaultset.Blue("IPV4:") + "\n"
+	testV4 := ipVersion == "auto" || ipVersion == "" || ipVersion == "ipv4"
+	testV6 := ipVersion == "auto" || ipVersion == "" || ipVersion == "ipv6"
+	if testV4 && IPV4 != "" {
+		if showIP {
+			res += defaultset.Blue("IPV4:") + "\n"
+		}
 		res += executor.RunTests(utils.Ipv4HttpClient, "ipv4", language, false)
 	}
-	if IPV6 != "" {
-		res += defaultset.Blue("IPV6:") + "\n"
+	if testV6 && IPV6 != "" {
+		if showIP {
+			res += defaultset.Blue("IPV6:") + "\n"
+		}
 		res += executor.RunTests(utils.Ipv6HttpClient, "ipv6", language, false)
 	}
 	return res

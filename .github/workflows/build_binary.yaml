@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest

@@ -42,10 +42,12 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck, autoChange bo
 
 // MediaTest 流媒体解锁测试公共接口
 // language: 语言 ("zh" 或 "en")
-// region: 检测地区 ("0"=跨国平台, "1"=跨国+台湾, "2"=跨国+香港, ..., "20"=全部平台)
+// region: 检测地区 ("0"=跨国平台, ..., "20"=全部平台)
+// ipVersion: 测试的IP版本 ("auto"=全测, "ipv4", "ipv6")
+// showIP: 是否在输出中显示 IPV4:/IPV6: 标签
 // 返回: 测试结果
-func MediaTest(language, region string) string {
-	return tests.MediaTest(language, region)
+func MediaTest(language, region, ipVersion string, showIP bool) string {
+	return tests.MediaTest(language, region, ipVersion, showIP)
 }
 
 // SpeedTestShowHead 显示测速表头

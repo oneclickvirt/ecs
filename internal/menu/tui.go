@@ -297,6 +297,22 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			},
 		},
 		{
+			key: "unlockshowip", nameZh: "显示解锁测试IP标签", nameEn: "Show IP Labels in Unlock Test", kind: "bool",
+			descZh:  "启用后在解锁测试输出中显示 IPV4:/IPV6: 标签（可能涉及敏感信息）。默认不显示。",
+			descEn:  "Show IPV4:/IPV6: section labels in unlock test output (may reveal sensitive network info). Disabled by default.",
+			boolVal: config.UnlockTestShowIP,
+		},
+		{
+			key: "unlockipver", nameZh: "解锁测试IP版本", nameEn: "Unlock Test IP Version", kind: "option",
+			descZh: "选择解锁测试使用的IP版本，默认自动测试所有可用版本，测不到时静默跳过。",
+			descEn: "Select which IP version to use for unlock tests. Default auto-tests all available; silently skips unavailable versions.",
+			options: []advOption{
+				option("auto", "自动(全部)", "Auto (Both)", "自动测试所有可用IP版本（默认）。", "Test all available IP versions (default)."),
+				option("ipv4", "仅 IPv4", "IPv4 Only", "仅使用 IPv4 进行解锁测试。", "Only test using IPv4."),
+				option("ipv6", "仅 IPv6", "IPv6 Only", "仅使用 IPv6 进行解锁测试。", "Only test using IPv6."),
+			},
+		},
+		{
 			key: "log", nameZh: "调试日志", nameEn: "Debug Logger", kind: "bool",
 			descZh:  "启用后输出更多调试日志，便于排障。",
 			descEn:  "Enable verbose logs for troubleshooting.",
@@ -340,6 +356,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.SpNum))
 		case "unlockregion":
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestRegion)
+		case "unlockipver":
+			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestIPVersion)
 		}
 	}
 
@@ -1436,6 +1454,10 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			}
 		case "unlockregion":
 			config.UnlockTestRegion = a.options[a.current].value
+		case "unlockshowip":
+			config.UnlockTestShowIP = a.boolVal
+		case "unlockipver":
+			config.UnlockTestIPVersion = a.options[a.current].value
 		case "log":
 			config.EnableLogger = a.boolVal
 		case "upload":
