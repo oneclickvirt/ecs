@@ -1,6 +1,6 @@
 #!/bin/sh
 # From https://github.com/oneclickvirt/ecs
-# 2025.10.08
+# 2026.05.27
 
 # curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh
 # 或
@@ -29,13 +29,66 @@ reading() {
     read "$2"
 }
 
+# Unified HTTP GET to stdout — tries curl first, falls back to wget
+# Usage: http_fetch URL [timeout_seconds]
+http_fetch() {
+    local url="$1"
+    local timeout="${2:-10}"
+    if command -v curl >/dev/null 2>&1; then
+        curl -sL --max-time "$timeout" "$url" 2>/dev/null
+    elif command -v wget >/dev/null 2>&1; then
+        wget -qO- --timeout="$timeout" "$url" 2>/dev/null
+    else
+        _red "No download tool available (curl/wget) / 无可用下载工具 (curl/wget)"
+        return 1
+    fi
+}
+
+# Ensure at least one of curl/wget is available; try to install if missing
+check_download_tools() {
+    if command -v curl >/dev/null 2>&1 || command -v wget >/dev/null 2>&1; then
+        return 0
+    fi
+    _yellow "Neither curl nor wget found, attempting to install curl..."
+    _yellow "未检测到 curl 或 wget，尝试安装 curl..."
+    local _icmd=""
+    if   command -v apt-get >/dev/null 2>&1; then _icmd="apt-get -y install"
+    elif command -v yum     >/dev/null 2>&1; then _icmd="yum -y install"
+    elif command -v dnf     >/dev/null 2>&1; then _icmd="dnf -y install"
+    elif command -v pacman  >/dev/null 2>&1; then _icmd="pacman -S --noconfirm"
+    elif command -v apk     >/dev/null 2>&1; then _icmd="apk add"
+    elif command -v zypper  >/dev/null 2>&1; then _icmd="zypper install -y"
+    fi
+    if [ -n "$_icmd" ]; then
+        if ${_icmd} curl 2>/dev/null && command -v curl >/dev/null 2>&1; then
+            _green "curl installed successfully / curl 安装成功"
+            return 0
+        fi
+        _yellow "curl installation failed, trying wget... / curl 安装失败，尝试安装 wget..."
+        if ${_icmd} wget 2>/dev/null && command -v wget >/dev/null 2>&1; then
+            _green "wget installed successfully / wget 安装成功"
+            return 0
+        fi
+    fi
+    _red "Failed to install curl or wget. Cannot proceed."
+    _red "curl 和 wget 均安装失败，无法继续执行。"
+    return 1
+}
+
 check_cdn() {
     local o_url="$1"
     local cdn_url
     for cdn_url in $cdn_urls; do
-        if curl -4 -sL -k "$cdn_url$o_url" --max-time 6 | grep -q "success" >/dev/null 2>&1; then
-            cdn_success_url="$cdn_url"
-            return 0
+        if command -v curl >/dev/null 2>&1; then
+            if curl -4 -sL -k "$cdn_url$o_url" --max-time 6 2>/dev/null | grep -q "success"; then
+                cdn_success_url="$cdn_url"
+                return 0
+            fi
+        elif command -v wget >/dev/null 2>&1; then
+            if wget -4 -qO- --no-check-certificate --timeout=6 "$cdn_url$o_url" 2>/dev/null | grep -q "success"; then
+                cdn_success_url="$cdn_url"
+                return 0
+            fi
         fi
         sleep 0.5
     done
@@ -55,20 +108,30 @@ check_cdn_file() {
 download_file() {
     local url="$1"
     local output="$2"
-    if ! wget -O "$output" "$url" 2>/dev/null; then
-        _yellow "wget failed, trying curl..."
-        if ! curl -L -o "$output" "$url" 2>/dev/null; then
-            _red "Both wget and curl failed. Unable to download the file."
-            return 1
-        fi
+    if ! check_download_tools; then
+        return 1
     fi
-    return 0
+    if command -v wget >/dev/null 2>&1; then
+        if wget -O "$output" "$url" 2>/dev/null; then
+            return 0
+        fi
+        _yellow "wget failed, falling back to curl... / wget 失败，回退到 curl..."
+    fi
+    if command -v curl >/dev/null 2>&1; then
+        if curl -L -o "$output" "$url" 2>/dev/null; then
+            return 0
+        fi
+        _yellow "curl failed / curl 失败"
+    fi
+    _red "Both wget and curl failed. Unable to download the file."
+    _red "wget 和 curl 均失败，无法下载文件。"
+    return 1
 }
 
 check_china() {
     _yellow "Detecting IP region......"
     if [ -z "${CN}" ]; then
-        if curl -m 6 -s https://ipapi.co/json | grep -q 'China'; then
+        if http_fetch "https://ipapi.co/json" 6 | grep -q 'China'; then
             _yellow "According to ipapi.co, this IP may be located in China"
             if [ "$noninteractive" != "true" ]; then
                 reading "Use China mirror for installation? ([y]/n) " input
@@ -142,12 +205,11 @@ goecs_check() {
         INSTALL_CMD="zypper install -y"
     fi
     if ! command -v unzip >/dev/null 2>&1; then
-        _green "Installing unzip"
+        _green "Installing unzip / 安装 unzip"
         ${INSTALL_CMD} unzip
     fi
-    if ! command -v curl >/dev/null 2>&1; then
-        _green "Installing curl"
-        ${INSTALL_CMD} curl
+    if ! check_download_tools; then
+        return 1
     fi
     os=$(uname -s 2>/dev/null || echo "Unknown")
     arch=$(uname -m 2>/dev/null || echo "Unknown")
@@ -157,7 +219,7 @@ goecs_check() {
         "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
         "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" \
         "https://githubapi.spiritlhl.top/repos/oneclickvirt/ecs/releases/latest"; do
-        ECS_VERSION=$(curl -m 6 -sSL "$api" | awk -F \" '/tag_name/{gsub(/^v/,"",$4); print $4}')
+        ECS_VERSION=$(http_fetch "$api" 6 | awk -F '"' '/tag_name/{gsub(/^v/,"",$4); print $4}')
         if [ -n "$ECS_VERSION" ]; then
             break
         fi
@@ -583,17 +645,25 @@ env_check() {
         fi
     fi
     if ! command -v geekbench >/dev/null 2>&1; then
-        _green "Installing geekbench"
-        curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" -o dgb.sh && chmod +x dgb.sh
-        sh dgb.sh -v gb6
-        rm -rf dgb.sh
+        _green "Installing geekbench / 安装 geekbench"
+        if download_file "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/cputest/main/dgb.sh" "dgb.sh"; then
+            chmod +x dgb.sh
+            sh dgb.sh -v gb6
+            rm -rf dgb.sh
+        else
+            _red "Failed to download geekbench installer / geekbench 安装脚本下载失败"
+        fi
     fi
     if ! command -v speedtest >/dev/null 2>&1; then
-        _green "Installing speedtest"
-        curl -L "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" -o dspt.sh && chmod +x dspt.sh
-        sh dspt.sh
-        rm -rf dspt.sh
-        rm -rf speedtest.tar.gz
+        _green "Installing speedtest / 安装 speedtest"
+        if download_file "${cdn_success_url}https://raw.githubusercontent.com/oneclickvirt/speedtest/main/dspt.sh" "dspt.sh"; then
+            chmod +x dspt.sh
+            sh dspt.sh
+            rm -rf dspt.sh
+            rm -rf speedtest.tar.gz
+        else
+            _red "Failed to download speedtest installer / speedtest 安装脚本下载失败"
+        fi
     fi
     if ! command -v ping >/dev/null 2>&1; then
         _green "Installing ping"
