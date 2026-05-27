@@ -320,17 +320,6 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			descEn:  "Local result filename used before upload.",
 			textVal: config.FilePath,
 		},
-		{
-			key: "width", nameZh: "输出宽度", nameEn: "Output Width", kind: "option",
-			descZh: "控制终端输出排版宽度。",
-			descEn: "Controls console output formatting width.",
-			options: []advOption{
-				option("72", "72 列", "72 cols", "紧凑显示。", "Compact layout."),
-				option("82", "82 列", "82 cols", "默认宽度。", "Default width."),
-				option("100", "100 列", "100 cols", "更宽显示。", "Wider layout."),
-				option("120", "120 列", "120 cols", "宽屏显示。", "Wide-screen layout."),
-			},
-		},
 	}
 
 	for i := range adv {
@@ -351,8 +340,6 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.SpNum))
 		case "unlockregion":
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestRegion)
-		case "width":
-			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.Width))
 		}
 	}
 
@@ -1458,10 +1445,6 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 		case "filepath":
 			if strings.TrimSpace(a.textVal) != "" {
 				config.FilePath = strings.TrimSpace(a.textVal)
-			}
-		case "width":
-			if v, err := strconv.Atoi(a.options[a.current].value); err == nil {
-				config.Width = v
 			}
 		}
 	}

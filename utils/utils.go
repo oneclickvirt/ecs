@@ -15,7 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
+
+	runewidth "github.com/mattn/go-runewidth"
 
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/executor"
@@ -127,9 +128,12 @@ type GitHubRelease struct {
 
 // PrintCenteredTitle 根据指定的宽度打印居中标题
 func PrintCenteredTitle(title string, width int) {
-	// 计算字符串的字符数
-	titleLength := utf8.RuneCountInString(title)
+	// 使用显示宽度（CJK 字符占2列）计算填充量
+	titleLength := runewidth.StringWidth(title)
 	totalPadding := width - titleLength
+	if totalPadding < 0 {
+		totalPadding = 0
+	}
 	padding := totalPadding / 2
 	paddingStr := strings.Repeat("-", padding)
 	fmt.Println(paddingStr + title + paddingStr + strings.Repeat("-", totalPadding%2))

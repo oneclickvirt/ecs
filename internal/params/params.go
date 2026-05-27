@@ -70,7 +70,7 @@ func NewConfig(version string) *Config {
 		DiskMultiCheck:       false,
 		Nt3CheckType:         "ipv4",
 		SpNum:                2,
-		Width:                82,
+		Width:                80,
 		BasicStatus:          true,
 		CpuTestStatus:        true,
 		MemoryTestStatus:     true,

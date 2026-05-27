@@ -21,15 +21,13 @@ func MediaTest(language, region string) string {
 	if !readStatus {
 		return ""
 	}
-	if executor.IPV4 {
+	if IPV4 != "" {
 		res += defaultset.Blue("IPV4:") + "\n"
 		res += executor.RunTests(utils.Ipv4HttpClient, "ipv4", language, false)
-		return res
 	}
-	if executor.IPV6 {
+	if IPV6 != "" {
 		res += defaultset.Blue("IPV6:") + "\n"
 		res += executor.RunTests(utils.Ipv6HttpClient, "ipv6", language, false)
-		return res
 	}
-	return ""
+	return res
 }
