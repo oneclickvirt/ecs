@@ -44,6 +44,7 @@ type Config struct {
 	EnableUpload         bool
 	AnalyzeResult        bool
 	OnlyIpInfoCheck      bool
+	UnlockTestRegion     string
 	Help                 bool
 	Finish               bool
 	UserSetFlags         map[string]bool
@@ -88,6 +89,7 @@ func NewConfig(version string) *Config {
 		EnableUpload:         true,
 		AnalyzeResult:        false,
 		OnlyIpInfoCheck:      false,
+		UnlockTestRegion:     "0",
 		Help:                 false,
 		Finish:               false,
 		UserSetFlags:         make(map[string]bool),
@@ -196,6 +198,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
+	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All)")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")
 	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analysis", false, "Enable/Disable post-test concise summary analysis")
@@ -290,6 +293,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["spnum"] {
 		saved["spnum"] = c.SpNum
+	}
+	if c.UserSetFlags["utregion"] {
+		saved["utregion"] = c.UnlockTestRegion
 	}
 	if c.UserSetFlags["analysis"] || c.UserSetFlags["analyze"] {
 		saved["analysis"] = c.AnalyzeResult
@@ -412,6 +418,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.SpNum = intVal
 		}
 	}
+	if val, ok := saved["utregion"]; ok {
+		if strVal, ok := val.(string); ok {
+			c.UnlockTestRegion = strVal
+		}
+	}
 	if val, ok := saved["analysis"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.AnalyzeResult = boolVal
@@ -496,5 +507,21 @@ func (c *Config) ValidateParams() {
 	if !validLanguages[c.Language] {
 		fmt.Printf("Warning: Invalid language '%s', using default 'zh'\n", c.Language)
 		c.Language = "zh"
+	}
+
+	validUnlockRegions := map[string]bool{
+		"0": true, "1": true, "2": true, "3": true, "4": true,
+		"5": true, "6": true, "7": true, "8": true, "9": true,
+		"10": true, "11": true, "12": true, "13": true, "14": true,
+		"15": true, "16": true, "17": true, "18": true, "19": true,
+		"20": true,
+	}
+	if !validUnlockRegions[c.UnlockTestRegion] {
+		if c.Language == "zh" {
+			fmt.Printf("警告: 解锁测试地区 '%s' 无效，使用默认值 '0'\n", c.UnlockTestRegion)
+		} else {
+			fmt.Printf("Warning: Invalid unlock test region '%s', using default '0'\n", c.UnlockTestRegion)
+		}
+		c.UnlockTestRegion = "0"
 	}
 }

@@ -152,15 +152,15 @@ func defaultTestToggles() []testToggle {
 		{key: "cpu", nameZh: "CPU测试", nameEn: "CPU Test", descZh: "按所选方法执行 CPU 计算性能测试。", descEn: "Run CPU compute benchmarks using selected method.", enabled: true, needNet: false},
 		{key: "memory", nameZh: "内存测试", nameEn: "Memory Test", descZh: "按所选方法测试内存吞吐和访问性能。", descEn: "Run memory throughput and access benchmarks by selected method.", enabled: true, needNet: false},
 		{key: "disk", nameZh: "磁盘测试", nameEn: "Disk Test", descZh: "按所选方法执行磁盘读写性能测试。", descEn: "Run disk read/write benchmark using selected method/path.", enabled: true, needNet: false},
-		{key: "ut", nameZh: "跨国平台解锁", nameEn: "Streaming Unlock", descZh: "检测多类海外流媒体与服务可用性。", descEn: "Check availability of cross-border streaming/services.", enabled: false, needNet: true},
-		{key: "security", nameZh: "IP质量检测", nameEn: "IP Quality Check", descZh: "多库 IP 信誉、风险和质量信息检测。", descEn: "IP reputation/risk/quality checks across multiple datasets.", enabled: false, needNet: true},
-		{key: "email", nameZh: "邮件端口检测", nameEn: "Email Port Check", descZh: "检查常见邮件相关端口连通能力。", descEn: "Check common mail-related port connectivity.", enabled: false, needNet: true},
-		{key: "backtrace", nameZh: "回程路由", nameEn: "Backtrace Route", descZh: "检测上游及三网回程路径。", descEn: "Inspect upstream and 3-network return routes.", enabled: false, needNet: true},
-		{key: "nt3", nameZh: "NT3路由", nameEn: "NT3 Route", descZh: "按指定地区与协议执行详细路由追踪。", descEn: "Run detailed route trace by selected location/protocol.", enabled: false, needNet: true},
-		{key: "speed", nameZh: "测速", nameEn: "Speed Test", descZh: "测试下载/上传带宽与延迟。", descEn: "Measure download/upload bandwidth and latency.", enabled: false, needNet: true},
+		{key: "ut", nameZh: "跨国平台解锁", nameEn: "Streaming Unlock", descZh: "检测多类海外流媒体与服务可用性。", descEn: "Check availability of cross-border streaming/services.", enabled: true, needNet: true},
+		{key: "security", nameZh: "IP质量检测", nameEn: "IP Quality Check", descZh: "多库 IP 信誉、风险和质量信息检测。", descEn: "IP reputation/risk/quality checks across multiple datasets.", enabled: true, needNet: true},
+		{key: "email", nameZh: "邮件端口检测", nameEn: "Email Port Check", descZh: "检查常见邮件相关端口连通能力。", descEn: "Check common mail-related port connectivity.", enabled: true, needNet: true},
+		{key: "backtrace", nameZh: "回程路由", nameEn: "Backtrace Route", descZh: "检测上游及三网回程路径。", descEn: "Inspect upstream and 3-network return routes.", enabled: true, needNet: true},
+		{key: "nt3", nameZh: "NT3路由", nameEn: "NT3 Route", descZh: "按指定地区与协议执行详细路由追踪。", descEn: "Run detailed route trace by selected location/protocol.", enabled: true, needNet: true},
+		{key: "speed", nameZh: "测速", nameEn: "Speed Test", descZh: "测试下载/上传带宽与延迟。", descEn: "Measure download/upload bandwidth and latency.", enabled: true, needNet: true},
 		{key: "ping", nameZh: "Ping测试", nameEn: "Ping Test", descZh: "全国/多地区延迟质量测试。", descEn: "Latency quality checks across multiple regions.", enabled: false, needNet: true},
-		{key: "tgdc", nameZh: "Telegram DC测试", nameEn: "Telegram DC Test", descZh: "检测各 Telegram 数据中心节点延迟。", descEn: "Measure latency to each Telegram data center node.", enabled: false, needNet: true},
-		{key: "web", nameZh: "网站延迟", nameEn: "Website Latency", descZh: "检测常见网站访问延迟。", descEn: "Check latency to commonly used websites.", enabled: false, needNet: true},
+		{key: "tgdc", nameZh: "Telegram DC测试", nameEn: "Telegram DC Test", descZh: "检测各 Telegram 数据中心节点延迟。", descEn: "Measure latency to each Telegram data center node.", enabled: true, needNet: true},
+		{key: "web", nameZh: "网站延迟", nameEn: "Website Latency", descZh: "检测常见网站访问延迟。", descEn: "Check latency to commonly used websites.", enabled: true, needNet: true},
 	}
 }
 
@@ -269,6 +269,34 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			},
 		},
 		{
+			key: "unlockregion", nameZh: "解锁检测地区", nameEn: "Unlock Region", kind: "option",
+			descZh: "选择跨国平台解锁检测覆盖的地区组合（仅在启用解锁检测时生效）。",
+			descEn: "Select region combination for streaming unlock test (only when unlock test is enabled).",
+			options: []advOption{
+				option("0", "跨国平台", "Global", "仅检测跨国流媒体平台（默认）。", "Check global/international streaming platforms only (default)."),
+				option("1", "跨国 + 台湾", "Global + Taiwan", "跨国平台 + 台湾本地平台。", "Global + Taiwan local platforms."),
+				option("2", "跨国 + 香港", "Global + Hong Kong", "跨国平台 + 香港本地平台。", "Global + Hong Kong local platforms."),
+				option("3", "跨国 + 日本", "Global + Japan", "跨国平台 + 日本本地平台。", "Global + Japan local platforms."),
+				option("4", "跨国 + 韩国", "Global + Korea", "跨国平台 + 韩国本地平台。", "Global + Korea local platforms."),
+				option("5", "跨国 + 北美", "Global + North America", "跨国平台 + 北美本地平台。", "Global + North America local platforms."),
+				option("6", "跨国 + 南美", "Global + South America", "跨国平台 + 南美本地平台。", "Global + South America local platforms."),
+				option("7", "跨国 + 欧洲", "Global + Europe", "跨国平台 + 欧洲本地平台。", "Global + Europe local platforms."),
+				option("8", "跨国 + 非洲", "Global + Africa", "跨国平台 + 非洲本地平台。", "Global + Africa local platforms."),
+				option("9", "跨国 + 大洋洲", "Global + Oceania", "跨国平台 + 大洋洲本地平台。", "Global + Oceania local platforms."),
+				option("10", "仅台湾", "Taiwan Only", "仅检测台湾本地平台。", "Taiwan local platforms only."),
+				option("11", "仅香港", "Hong Kong Only", "仅检测香港本地平台。", "Hong Kong local platforms only."),
+				option("12", "仅日本", "Japan Only", "仅检测日本本地平台。", "Japan local platforms only."),
+				option("13", "仅韩国", "Korea Only", "仅检测韩国本地平台。", "Korea local platforms only."),
+				option("14", "仅北美", "North America Only", "仅检测北美本地平台。", "North America local platforms only."),
+				option("15", "仅南美", "South America Only", "仅检测南美本地平台。", "South America local platforms only."),
+				option("16", "仅欧洲", "Europe Only", "仅检测欧洲本地平台。", "Europe local platforms only."),
+				option("17", "仅非洲", "Africa Only", "仅检测非洲本地平台。", "Africa local platforms only."),
+				option("18", "仅大洋洲", "Oceania Only", "仅检测大洋洲本地平台。", "Oceania local platforms only."),
+				option("19", "仅体育", "Sports Only", "仅检测体育类平台。", "Sports platforms only."),
+				option("20", "全部平台", "All Platforms", "检测所有地区全部平台（耗时最长）。", "Check all platforms across all regions (longest runtime)."),
+			},
+		},
+		{
 			key: "log", nameZh: "调试日志", nameEn: "Debug Logger", kind: "bool",
 			descZh:  "启用后输出更多调试日志，便于排障。",
 			descEn:  "Enable verbose logs for troubleshooting.",
@@ -321,6 +349,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, config.Nt3CheckType)
 		case "spnum":
 			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.SpNum))
+		case "unlockregion":
+			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestRegion)
 		case "width":
 			adv[i].current = optionIndexByValue(adv[i].options, strconv.Itoa(config.Width))
 		}
@@ -1417,6 +1447,8 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			if v, err := strconv.Atoi(a.options[a.current].value); err == nil {
 				config.SpNum = v
 			}
+		case "unlockregion":
+			config.UnlockTestRegion = a.options[a.current].value
 		case "log":
 			config.EnableLogger = a.boolVal
 		case "upload":

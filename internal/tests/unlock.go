@@ -9,15 +9,15 @@ import (
 	"github.com/oneclickvirt/defaultset"
 )
 
-func MediaTest(language string) string {
+func MediaTest(language, region string) string {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "[WARN] MediaTest panic: %v\n", r)
 		}
 	}()
-	
+
 	var res string
-	readStatus := executor.ReadSelect(language, "0")
+	readStatus := executor.ReadSelect(language, region)
 	if !readStatus {
 		return ""
 	}
