@@ -160,7 +160,7 @@ func RunBasicTests(ctx context.Context, preCheck utils.NetCheckResult, config *p
 			}
 			if config.BasicStatus {
 				fmt.Printf("%s", *basicInfo)
-			} else if (config.Choice == "6" || config.Choice == "9") && config.SecurityTestStatus {
+			} else if shouldPrintBriefIPLinesInBasicStage(config) {
 				scanner := bufio.NewScanner(strings.NewReader(*basicInfo))
 				for scanner.Scan() {
 					line := scanner.Text()
@@ -171,6 +171,36 @@ func RunBasicTests(ctx context.Context, preCheck utils.NetCheckResult, config *p
 			}
 		}
 	}, tempOutput, output)
+}
+
+// shouldPrintBriefIPLinesInBasicStage decides whether to print brief IPV lines
+// from basic info when basic system info is disabled.
+func shouldPrintBriefIPLinesInBasicStage(config *params.Config) bool {
+	if config == nil {
+		return false
+	}
+	if !config.SecurityTestStatus || config.BasicStatus {
+		return false
+	}
+	// IP-only profiles print a dedicated "IP信息" section later.
+	if config.OnlyIpInfoCheck {
+		return false
+	}
+	return config.Choice == "6" || config.Choice == "9"
+}
+
+func shouldPrintPingInfoSection(config *params.Config, info string) bool {
+	if config == nil {
+		return false
+	}
+	return info != "" && (config.OnlyChinaTest || config.PingTestStatus)
+}
+
+func shouldPrintPingExtraSectionWithoutInfo(config *params.Config) bool {
+	if config == nil {
+		return false
+	}
+	return !config.OnlyChinaTest && !config.PingTestStatus && (config.TgdcTestStatus || config.WebTestStatus)
 }
 
 // RunCPUTest runs CPU test
@@ -333,12 +363,7 @@ func RunNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitG
 		infoMutex.Lock()
 		info := *ptInfo
 		infoMutex.Unlock()
-		if config.OnlyChinaTest && info != "" {
-			wg3.Wait()
-			utils.PrintCenteredTitle("PING值检测", config.Width)
-			fmt.Println(info)
-		}
-		if config.PingTestStatus && info != "" {
+		if shouldPrintPingInfoSection(config, info) {
 			wg3.Wait()
 			utils.PrintCenteredTitle("PING值检测", config.Width)
 			fmt.Println(info)
@@ -349,7 +374,7 @@ func RunNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitG
 				fmt.Println(pt.WebsiteTest())
 			}
 		}
-		if !config.OnlyChinaTest && !config.PingTestStatus && (config.TgdcTestStatus || config.WebTestStatus) {
+		if shouldPrintPingExtraSectionWithoutInfo(config) {
 			utils.PrintCenteredTitle("PING值检测", config.Width)
 			if config.TgdcTestStatus {
 				fmt.Println(pt.TelegramDCTest())
