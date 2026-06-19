@@ -158,9 +158,7 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 	}
 }
 
-// HandleMenuMode handles menu selection using the interactive TUI
-func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
-	savedParams := config.SaveUserSetParams()
+func resetMenuSelectedStatuses(config *params.Config) {
 	config.BasicStatus = false
 	config.CpuTestStatus = false
 	config.MemoryTestStatus = false
@@ -171,57 +169,73 @@ func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
 	config.BacktraceStatus = false
 	config.Nt3Status = false
 	config.SpeedTestStatus = false
+	config.PingTestStatus = false
 	config.TgdcTestStatus = false
 	config.WebTestStatus = false
+	config.OnlyIpInfoCheck = false
+	config.OnlyChinaTest = false
 	config.AutoChangeDiskMethod = true
+}
 
-	result := RunTuiMenu(preCheck, config)
-	if result.quit {
-		os.Exit(0)
-	}
-
-	// Update language if changed by TUI selection
+func applyMenuResult(preCheck utils.NetCheckResult, config *params.Config, result tuiResult, savedParams map[string]interface{}) {
 	config.Language = result.language
+	resetMenuSelectedStatuses(config)
 
 	if result.custom {
+		config.RestoreUserSetParams(savedParams)
 		config.Choice = "custom"
 		applyCustomResult(result, preCheck, config)
 		if config.SpeedTestStatus {
 			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
 		}
-	} else {
-		config.Choice = result.choice
-		switch result.choice {
-		case "0":
-			os.Exit(0)
-		case "1":
-			SetFullTestStatus(preCheck, config)
-			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
-		case "2":
-			SetMinimalTestStatus(preCheck, config)
-		case "3":
-			SetStandardTestStatus(preCheck, config)
-		case "4":
-			SetNetworkFocusedTestStatus(preCheck, config)
-		case "5":
-			SetUnlockFocusedTestStatus(preCheck, config)
-		case "6":
-			SetNetworkOnlyTestStatus(config)
-		case "7":
-			SetUnlockOnlyTestStatus(config)
-		case "8":
-			SetHardwareOnlyTestStatus(preCheck, config)
-		case "9":
-			SetIPQualityTestStatus(config)
-		case "10":
-			config.Nt3Location = "ALL"
-			SetRouteTestStatus(config)
-		}
-		// Apply quick options set on the main menu page
-		config.AnalyzeResult = result.mainAnalyze
-		config.EnableUpload = result.mainUpload
+		config.ValidateParams()
+		return
+	}
+
+	config.Choice = result.choice
+	switch result.choice {
+	case "0":
+		os.Exit(0)
+	case "1":
+		SetFullTestStatus(preCheck, config)
+	case "2":
+		SetMinimalTestStatus(preCheck, config)
+	case "3":
+		SetStandardTestStatus(preCheck, config)
+	case "4":
+		SetNetworkFocusedTestStatus(preCheck, config)
+	case "5":
+		SetUnlockFocusedTestStatus(preCheck, config)
+	case "6":
+		SetNetworkOnlyTestStatus(config)
+	case "7":
+		SetUnlockOnlyTestStatus(config)
+	case "8":
+		SetHardwareOnlyTestStatus(preCheck, config)
+	case "9":
+		SetIPQualityTestStatus(config)
+	case "10":
+		config.Nt3Location = "ALL"
+		SetRouteTestStatus(config)
 	}
 	config.RestoreUserSetParams(savedParams)
+	config.AnalyzeResult = result.mainAnalyze
+	config.EnableUpload = result.mainUpload
+	if result.choice == "1" && config.SpeedTestStatus {
+		config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
+	}
+	config.ValidateParams()
+}
+
+// HandleMenuMode handles menu selection using the interactive TUI
+func HandleMenuMode(preCheck utils.NetCheckResult, config *params.Config) {
+	savedParams := config.SaveUserSetParams()
+	result := RunTuiMenu(preCheck, config)
+	if result.quit {
+		os.Exit(0)
+	}
+
+	applyMenuResult(preCheck, config, result, savedParams)
 }
 
 // SetFullTestStatus enables all tests

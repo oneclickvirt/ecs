@@ -29,6 +29,14 @@ import (
 
 var networkCheckFn = network.NetworkCheck
 
+// IsNonInteractive reports whether goecs should avoid prompts and blocking
+// terminal waits. The lower-case env var matches goecs.sh documentation.
+func IsNonInteractive() bool {
+	return strings.EqualFold(os.Getenv("noninteractive"), "true") ||
+		strings.EqualFold(os.Getenv("NONINTERACTIVE"), "true") ||
+		strings.EqualFold(os.Getenv("CI"), "true")
+}
+
 // IsAndroid 检测当前是否在 Android (Termux) 环境下运行
 func IsAndroid() bool {
 	// Termux 会设置 TERMUX_VERSION 或 PREFIX 环境变量
@@ -189,9 +197,20 @@ func CheckChina(enableLogger bool, language string) bool {
 		var input string
 		if language == "zh" {
 			fmt.Println("根据 ipapi.co 提供的信息，当前IP可能在中国")
-			fmt.Print("是否选用中国专项测试(无平台解锁测试，有三网Ping值测试)? ([y]/n) ")
 		} else {
 			fmt.Println("According to ipapi.co, this IP may be located in China")
+		}
+		if IsNonInteractive() {
+			if language == "zh" {
+				fmt.Println("非交互模式下默认不使用中国专项测试")
+			} else {
+				fmt.Println("Non-interactive mode: China-specific test is disabled by default")
+			}
+			return false
+		}
+		if language == "zh" {
+			fmt.Print("是否选用中国专项测试(无平台解锁测试，有三网Ping值测试)? ([y]/n) ")
+		} else {
 			fmt.Print("Use China-specific test (no platform unlock test, includes 3-network ping test)? ([y]/n) ")
 		}
 		fmt.Scanln(&input)

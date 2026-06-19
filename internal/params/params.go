@@ -3,6 +3,7 @@ package params
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -167,6 +168,8 @@ func normalizeBoolArgs(args []string) []string {
 // ParseFlags parses command line flags
 func (c *Config) ParseFlags(args []string) {
 	args = normalizeBoolArgs(args)
+	c.GoecsFlag = flag.NewFlagSet("goecs", flag.ContinueOnError)
+	c.UserSetFlags = make(map[string]bool)
 	c.GoecsFlag.BoolVar(&c.Help, "h", false, "Show help information")
 	c.GoecsFlag.BoolVar(&c.Help, "help", false, "Show help information")
 	c.GoecsFlag.BoolVar(&c.ShowVersion, "v", false, "Display version information")
@@ -214,12 +217,14 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.Visit(func(f *flag.Flag) {
 		c.UserSetFlags[f.Name] = true
 	})
+	c.ValidateParams()
 }
 
 // HandleHelpAndVersion handles help and version flags
 func (c *Config) HandleHelpAndVersion(programName string) bool {
 	if c.Help {
 		fmt.Printf("Usage: %s [options]\n", programName)
+		c.GoecsFlag.SetOutput(os.Stdout)
 		c.GoecsFlag.PrintDefaults()
 		return true
 	}
@@ -456,6 +461,16 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 
 // ValidateParams validates parameter values
 func (c *Config) ValidateParams() {
+	c.Language = strings.ToLower(strings.TrimSpace(c.Language))
+	c.CpuTestMethod = strings.ToLower(strings.TrimSpace(c.CpuTestMethod))
+	c.CpuTestThreadMode = strings.ToLower(strings.TrimSpace(c.CpuTestThreadMode))
+	c.MemoryTestMethod = strings.ToLower(strings.TrimSpace(c.MemoryTestMethod))
+	c.DiskTestMethod = strings.ToLower(strings.TrimSpace(c.DiskTestMethod))
+	c.Nt3CheckType = strings.ToLower(strings.TrimSpace(c.Nt3CheckType))
+	c.Nt3Location = strings.ToUpper(strings.TrimSpace(c.Nt3Location))
+	c.UnlockTestIPVersion = strings.ToLower(strings.TrimSpace(c.UnlockTestIPVersion))
+	c.UnlockTestRegion = strings.TrimSpace(c.UnlockTestRegion)
+
 	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}
 	if !validCpuMethods[c.CpuTestMethod] {
 		if c.Language == "zh" {
@@ -516,7 +531,7 @@ func (c *Config) ValidateParams() {
 		c.Nt3CheckType = "ipv4"
 	}
 
-	if c.SpNum < 0 {
+	if c.SpNum <= 0 {
 		if c.Language == "zh" {
 			fmt.Printf("警告: 测速节点数量 '%d' 无效，使用默认值 2\n", c.SpNum)
 		} else {

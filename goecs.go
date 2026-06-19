@@ -28,9 +28,8 @@ import (
 )
 
 var (
-	ecsVersion   = "v0.1.139"                   // 融合怪版本号
-	configs      = params.NewConfig(ecsVersion) // 全局配置实例
-	userSetFlags = make(map[string]bool)        // 用于跟踪哪些参数是用户显式设置的
+	ecsVersion = "v0.1.140"                   // 融合怪版本号
+	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
 func initLogger() {
@@ -58,8 +57,19 @@ func handleLanguageSpecificSettings() {
 	}
 }
 
+func applyEnvironmentDefaults(config *params.Config) {
+	if utils.IsNonInteractive() && !config.UserSetFlags["menu"] {
+		config.MenuMode = false
+	}
+}
+
+func shouldWaitForExitInput() bool {
+	return (runtime.GOOS == "windows" || runtime.GOOS == "darwin") && !utils.IsNonInteractive()
+}
+
 func main() {
 	configs.ParseFlags(os.Args[1:])
+	applyEnvironmentDefaults(configs)
 	if configs.HandleHelpAndVersion("goecs") {
 		return
 	}
@@ -68,7 +78,10 @@ func main() {
 	preCheck := utils.CheckPublicAccess(3 * time.Second)
 	go func() {
 		if preCheck.Connected {
-			http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+			resp, err := http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+			if err == nil && resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
 		}
 	}()
 	if configs.MenuMode {
@@ -111,7 +124,7 @@ func main() {
 		}
 	}
 	configs.Finish = true
-	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+	if shouldWaitForExitInput() {
 		fmt.Println("Press Enter to exit...")
 		fmt.Scanln()
 	}

@@ -282,8 +282,14 @@ func WithChoice(choice string) ConfigOption {
 
 // ApplyOptions 应用配置选项
 func ApplyOptions(config *Config, options ...ConfigOption) *Config {
-	for _, opt := range options {
-		opt(config)
+	if config == nil {
+		return nil
 	}
+	for _, opt := range options {
+		if opt != nil {
+			opt(config)
+		}
+	}
+	config.ValidateParams()
 	return config
 }

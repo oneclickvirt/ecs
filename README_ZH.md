@@ -188,12 +188,22 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ```bash
 Usage: goecs [options]
+  -analysis
+        Enable/Disable post-test concise summary analysis
+  -analyze
+        Enable/Disable post-test concise summary analysis
   -backtrace
         Enable/Disable backtrace test (in 'en' language or on windows it always false) (default true)
   -basic
         Enable/Disable basic test (default true)
   -ut
         Enable/Disable unlock media test (default true)
+  -utipver string
+        Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only) (default "auto")
+  -utregion string
+        Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All) (default "0")
+  -utshowip
+        Show IPV4:/IPV6: section labels in unlock test output (may reveal sensitive network info)
   -cpu
         Enable/Disable CPU test (default true)
   -cpum string
@@ -341,7 +351,7 @@ curl -L https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/o
 
 3. 编译
 ```bash
-go build -o goecs
+go build -ldflags="-checklinkname=0" -o goecs
 ```
 
 4. 运行测试
@@ -356,9 +366,9 @@ go build -o goecs
 跨平台编译示例：
 ```bash
 # 编译 Windows 版本
-GOOS=windows GOARCH=amd64 go build -o goecs.exe
+GOOS=windows GOARCH=amd64 go build -ldflags="-checklinkname=0" -o goecs.exe
 # 编译 MacOS 版本
-GOOS=darwin GOARCH=amd64 go build -o goecs_darwin
+GOOS=darwin GOARCH=amd64 go build -ldflags="-checklinkname=0" -o goecs_darwin
 ```
 </details>
 

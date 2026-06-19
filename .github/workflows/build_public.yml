@@ -77,7 +77,7 @@ jobs:
         echo "README files already updated by create_public_branch.py"
     - name: Build and Test
       run: |
-        go build -o maintest
+        go build -ldflags="-checklinkname=0" -o maintest
         ./maintest -menu=false -l en -security=false -upload=false || exit 1
         rm -rf maintest
         

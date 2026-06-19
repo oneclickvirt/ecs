@@ -41,9 +41,10 @@ func UpstreamsCheck(language string) {
 			fmt.Fprintf(os.Stderr, "[WARN] Upstream check panic: %v\n", r)
 		}
 	}()
-	
+
 	results := ConcurrentResults{}
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	if IPV4 != "" {
 		wg.Add(1)
 		go func() {
@@ -55,11 +56,14 @@ func UpstreamsCheck(language string) {
 			}()
 			for i := 0; i < 2; i++ {
 				result, err := bgptools.GetPoPInfo(IPV4)
+				mu.Lock()
 				results.bgpError = err
 				if err == nil && result.Result != "" {
 					results.bgpResult = result.Result
+					mu.Unlock()
 					return
 				}
+				mu.Unlock()
 				if i == 0 {
 					time.Sleep(3 * time.Second)
 				}
@@ -75,14 +79,19 @@ func UpstreamsCheck(language string) {
 			}
 		}()
 		result := backtrace.BackTrace(executor.IPV6)
+		mu.Lock()
 		results.backtraceResult = result
+		mu.Unlock()
 	}()
 	wg.Wait()
-	if results.bgpResult != "" {
-		fmt.Print(results.bgpResult)
+	mu.Lock()
+	finalResults := results
+	mu.Unlock()
+	if finalResults.bgpResult != "" {
+		fmt.Print(finalResults.bgpResult)
 	}
-	if results.backtraceResult != "" {
-		fmt.Printf("%s\n", results.backtraceResult)
+	if finalResults.backtraceResult != "" {
+		fmt.Printf("%s\n", finalResults.backtraceResult)
 	}
 	if language == "zh" {
 		fmt.Println(Yellow("准确线路自行查看详细路由，本测试结果仅作参考"))

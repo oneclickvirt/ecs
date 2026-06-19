@@ -1,7 +1,11 @@
 package runner
 
 import (
+	"context"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/oneclickvirt/ecs/internal/params"
 )
@@ -135,5 +139,61 @@ func TestShouldPrintPingExtraSectionWithoutInfo(t *testing.T) {
 				t.Fatalf("shouldPrintPingExtraSectionWithoutInfo() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestRunNetworkTestsWaitsBeforeReadingPingInfo(t *testing.T) {
+	cfg := &params.Config{
+		Language:       "zh",
+		Width:          40,
+		PingTestStatus: true,
+	}
+	var (
+		wg          sync.WaitGroup
+		ptInfo      string
+		outputMutex sync.Mutex
+		infoMutex   sync.Mutex
+	)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(10 * time.Millisecond)
+		infoMutex.Lock()
+		ptInfo = "late ping result"
+		infoMutex.Unlock()
+	}()
+
+	output := RunNetworkTests(context.Background(), cfg, &wg, &ptInfo, "", "", &outputMutex, &infoMutex)
+
+	if !strings.Contains(output, "late ping result") {
+		t.Fatalf("expected delayed ping info in output, got %q", output)
+	}
+}
+
+func TestRunEnglishNetworkTestsPrintsPingInfo(t *testing.T) {
+	cfg := &params.Config{
+		Language:       "en",
+		Width:          40,
+		PingTestStatus: true,
+	}
+	var (
+		wg          sync.WaitGroup
+		ptInfo      string
+		outputMutex sync.Mutex
+		infoMutex   sync.Mutex
+	)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(10 * time.Millisecond)
+		infoMutex.Lock()
+		ptInfo = "english ping result"
+		infoMutex.Unlock()
+	}()
+
+	output := RunEnglishNetworkTests(context.Background(), cfg, &wg, &ptInfo, "", "", &outputMutex, &infoMutex)
+
+	if !strings.Contains(output, "english ping result") {
+		t.Fatalf("expected English ping info in output, got %q", output)
 	}
 }

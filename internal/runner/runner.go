@@ -101,10 +101,20 @@ func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 				infoMutex.Unlock()
 			}()
 		}
+		if config.PingTestStatus {
+			wg3.Add(1)
+			go func() {
+				defer wg3.Done()
+				result := pt.PingTest()
+				infoMutex.Lock()
+				*ptInfo = result
+				infoMutex.Unlock()
+			}()
+		}
 		*output = RunStreamingTests(ctx, config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
 		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunEnglishNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex)
+		*output = RunEnglishNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunEnglishSpeedTests(ctx, config, *output, tempOutput, outputMutex)
 	}
 	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
@@ -360,17 +370,29 @@ func RunNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitG
 			utils.PrintCenteredTitle("三网回程路由检测", config.Width)
 			tests.NextTrace3Check(config.Language, config.Nt3Location, config.Nt3CheckType)
 		}
-		infoMutex.Lock()
-		info := *ptInfo
-		infoMutex.Unlock()
-		if shouldPrintPingInfoSection(config, info) {
+		printedPingTitle := false
+		if config.OnlyChinaTest || config.PingTestStatus {
 			wg3.Wait()
-			utils.PrintCenteredTitle("PING值检测", config.Width)
-			fmt.Println(info)
+			infoMutex.Lock()
+			info := *ptInfo
+			infoMutex.Unlock()
+			if shouldPrintPingInfoSection(config, info) {
+				utils.PrintCenteredTitle("PING值检测", config.Width)
+				printedPingTitle = true
+				fmt.Println(info)
+			}
 			if config.TgdcTestStatus {
+				if !printedPingTitle {
+					utils.PrintCenteredTitle("PING值检测", config.Width)
+					printedPingTitle = true
+				}
 				fmt.Println(pt.TelegramDCTest())
 			}
 			if config.WebTestStatus {
+				if !printedPingTitle {
+					utils.PrintCenteredTitle("PING值检测", config.Width)
+					printedPingTitle = true
+				}
 				fmt.Println(pt.WebsiteTest())
 			}
 		}
@@ -433,15 +455,29 @@ func RunSpeedTests(ctx context.Context, config *params.Config, output, tempOutpu
 }
 
 // RunEnglishNetworkTests runs network tests (English mode)
-func RunEnglishNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex) string {
+func RunEnglishNetworkTests(ctx context.Context, config *params.Config, wg3 *sync.WaitGroup, ptInfo *string, output, tempOutput string, outputMutex *sync.Mutex, infoMutex *sync.Mutex) string {
 	if ctx.Err() != nil {
 		return output
 	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
+		printedPingTitle := false
+		if config.PingTestStatus {
+			wg3.Wait()
+			infoMutex.Lock()
+			info := *ptInfo
+			infoMutex.Unlock()
+			if strings.TrimSpace(info) != "" {
+				utils.PrintCenteredTitle("PING-Test", config.Width)
+				printedPingTitle = true
+				fmt.Println(info)
+			}
+		}
 		if config.TgdcTestStatus || config.WebTestStatus {
-			utils.PrintCenteredTitle("PING-Test", config.Width)
+			if !printedPingTitle {
+				utils.PrintCenteredTitle("PING-Test", config.Width)
+			}
 			if config.TgdcTestStatus {
 				fmt.Println(pt.TelegramDCTest())
 			}
@@ -636,7 +672,7 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 				}
 			}
 		}
-		if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		if (runtime.GOOS == "windows" || runtime.GOOS == "darwin") && !utils.IsNonInteractive() {
 			fmt.Println("Press Enter to exit...")
 			fmt.Scanln()
 		}

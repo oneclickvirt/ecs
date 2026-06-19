@@ -35,6 +35,7 @@ func applyLanguageAndUploadRules(preCheck utils.NetCheckResult, config *Config) 
 // config: 配置对象
 // 返回: 运行结果
 func RunAllTests(preCheck utils.NetCheckResult, config *Config) *RunResult {
+	config.ValidateParams()
 	var (
 		wg1, wg2, wg3                                         sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
@@ -177,8 +178,9 @@ func RunEnglishNetworkTests(config *Config, ptInfo string) string {
 		wg3                sync.WaitGroup
 		output, tempOutput string
 		outputMutex        sync.Mutex
+		infoMutex          sync.Mutex
 	)
-	return runner.RunEnglishNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex)
+	return runner.RunEnglishNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex)
 }
 
 // RunEnglishSpeedTests 运行测速测试（英文模式）
