@@ -11,7 +11,8 @@ import (
 
 // MediaTest runs streaming unlock tests.
 // ipVersion controls which IP stacks to probe: "auto" (both), "ipv4", or "ipv6".
-// showIP controls whether to prepend "IPV4:" / "IPV6:" section labels in the output.
+// showIP is kept for API compatibility; labels are always shown when the
+// corresponding IP stack is available and tested.
 // Unavailable IP versions are silently skipped regardless of the ipVersion setting.
 func MediaTest(language, region, ipVersion string, showIP bool) string {
 	defer func() {
@@ -28,15 +29,11 @@ func MediaTest(language, region, ipVersion string, showIP bool) string {
 	testV4 := ipVersion == "auto" || ipVersion == "" || ipVersion == "ipv4"
 	testV6 := ipVersion == "auto" || ipVersion == "" || ipVersion == "ipv6"
 	if testV4 && IPV4 != "" {
-		if showIP {
-			res += defaultset.Blue("IPV4:") + "\n"
-		}
+		res += defaultset.Blue("IPV4:") + "\n"
 		res += executor.RunTests(utils.Ipv4HttpClient, "ipv4", language, false)
 	}
 	if testV6 && IPV6 != "" {
-		if showIP {
-			res += defaultset.Blue("IPV6:") + "\n"
-		}
+		res += defaultset.Blue("IPV6:") + "\n"
 		res += executor.RunTests(utils.Ipv6HttpClient, "ipv6", language, false)
 	}
 	return res

@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.140"                   // 融合怪版本号
+	ecsVersion = "v0.1.141"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -58,9 +58,9 @@ func handleLanguageSpecificSettings() {
 }
 
 func applyEnvironmentDefaults(config *params.Config) {
-	if utils.IsNonInteractive() && !config.UserSetFlags["menu"] {
-		config.MenuMode = false
-	}
+	// noninteractive env var only affects blocking prompts (Press Enter to exit, etc.)
+	// Menu mode should only be disabled via explicit CLI flag -menu=false,
+	// not by the noninteractive env var which may leak from install scripts.
 }
 
 func shouldWaitForExitInput() bool {
