@@ -223,7 +223,7 @@ func WithUnlockTestRegion(region string) ConfigOption {
 	}
 }
 
-// WithUnlockTestShowIP 设置流媒体测试输出是否显示 IPV4:/IPV6: 标签
+// WithUnlockTestShowIP 保留旧 API 兼容；IP 版本会自动显示在 UnlockTests 小节标题中
 func WithUnlockTestShowIP(enable bool) ConfigOption {
 	return func(c *Config) {
 		c.UnlockTestShowIP = enable

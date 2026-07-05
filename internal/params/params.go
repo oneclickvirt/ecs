@@ -206,7 +206,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All)")
-	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Show IPV4:/IPV6: section labels in unlock test output (may reveal sensitive network info)")
+	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Deprecated compatibility flag; unlock output shows IP version in section headers automatically")
 	c.GoecsFlag.StringVar(&c.UnlockTestIPVersion, "utipver", "auto", "Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only)")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")

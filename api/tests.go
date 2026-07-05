@@ -44,7 +44,7 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck, autoChange bo
 // language: 语言 ("zh" 或 "en")
 // region: 检测地区 ("0"=跨国平台, ..., "20"=全部平台)
 // ipVersion: 测试的IP版本 ("auto"=全测, "ipv4", "ipv6")
-// showIP: 是否在输出中显示 IPV4:/IPV6: 标签
+// showIP: 兼容旧 API，IP 版本会自动显示在 UnlockTests 小节标题中
 // 返回: 测试结果
 func MediaTest(language, region, ipVersion string, showIP bool) string {
 	return tests.MediaTest(language, region, ipVersion, showIP)

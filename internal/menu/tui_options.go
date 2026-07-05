@@ -215,9 +215,9 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			},
 		},
 		{
-			key: "unlockshowip", nameZh: "显示解锁测试IP标签", nameEn: "Show IP Labels in Unlock Test", kind: "bool",
-			descZh:  "启用后在解锁测试输出中显示 IPV4:/IPV6: 标签（可能涉及敏感信息）。默认不显示。",
-			descEn:  "Show IPV4:/IPV6: section labels in unlock test output (may reveal sensitive network info). Disabled by default.",
+			key: "unlockshowip", nameZh: "解锁IP标签兼容开关", nameEn: "Legacy IP Label Switch", kind: "bool",
+			descZh:  "兼容旧配置；当前解锁输出会自动在小节标题中标注 IPV4/IPV6。",
+			descEn:  "Legacy compatibility; unlock output now marks IPV4/IPV6 in section headers automatically.",
 			boolVal: config.UnlockTestShowIP,
 		},
 		{
