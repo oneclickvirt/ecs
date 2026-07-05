@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.59.0
-	github.com/oneclickvirt/UnlockTests v0.0.39-20260705043354
+	github.com/oneclickvirt/UnlockTests v0.0.40-20260705091135
 	github.com/oneclickvirt/backtrace v0.0.10-20260702203359
 	github.com/oneclickvirt/basics v0.0.19-20260702203359
 	github.com/oneclickvirt/cputest v0.0.12-20260509135512
