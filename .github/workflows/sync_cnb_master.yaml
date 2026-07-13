@@ -1,0 +1,40 @@
+name: Sync Source to CNB Master
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  CNB_REPOSITORY: https://cnb.cool/oneclickvirt/ecs.git
+
+concurrency:
+  group: sync-cnb-master
+  cancel-in-progress: true
+
+jobs:
+  sync-source:
+    if: github.repository == 'oneclickvirt/ecs'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push source to CNB master
+        env:
+          CNB_USERNAME: ${{ secrets.CNB_PUSH_USERNAME }}
+          CNB_TOKEN: ${{ secrets.CNB_PUSH_TOKEN }}
+        run: |
+          set -euo pipefail
+          trap 'rm -f "$HOME/.netrc"' EXIT
+          printf 'machine cnb.cool\nlogin %s\npassword %s\n' \
+            "$CNB_USERNAME" "$CNB_TOKEN" > "$HOME/.netrc"
+          chmod 600 "$HOME/.netrc"
+          git remote add cnb "$CNB_REPOSITORY"
+          git push --force cnb HEAD:refs/heads/master
