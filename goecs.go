@@ -127,6 +127,7 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 }
 
 func main() {
+	runner.IsolateProcessGroup()
 	configs.ParseFlags(os.Args[1:])
 	applyEnvironmentDefaults(configs)
 	if configs.HandleHelpAndVersion("goecs") {
