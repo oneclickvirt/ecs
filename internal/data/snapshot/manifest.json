@@ -1,6 +1,6 @@
 {
-  "schema": "ecs-data/v1",
-  "generated_at": "2026-07-20T08:03:32.511042Z",
+  "schema": "goecs-data/v1",
+  "generated_at": "2026-07-20T15:36:14.130282Z",
   "files": {
     "bgp-asn-map.json": {
       "sha256": "f934baba2ec5ae25fd09c900b9688fb93a9f42d35bddf13dcc235f59feff3ebd",
@@ -18,7 +18,7 @@
       "source": "https://raw.githubusercontent.com/HsukqiLee/MediaUnlockTest/main/pkg/providers/lists.go"
     },
     "openspeedtest-servers.json": {
-      "sha256": "6c04e010c336704f2d39043df84c44d62956435dae3c4d3ec04884c38ea22694",
+      "sha256": "6811da5888be1c00632db432a71bbc23fd27f7f79f8c8ed149d0e1cbfbc5fe50",
       "count": 10,
       "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/iperf.json"
     },

@@ -150,6 +150,7 @@ func TestClassifyTCPError(t *testing.T) {
 func TestSectionReportsMarksOfflineNetworkUnavailable(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.PingTestStatus = true
+	cfg.TCPProbeStatus = true
 	sections := sectionReports(cfg, NetCheckResult{Connected: false, StackType: "None"}, structuredExtras{}, ReportStatusOK, "")
 	statuses := make(map[string]ReportStatus)
 	for _, section := range sections {

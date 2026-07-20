@@ -22,9 +22,14 @@ import (
 var embedded embed.FS
 
 const (
-	manifestPath   = "snapshot/manifest.json"
-	dataBaseURL    = "https://raw.githubusercontent.com/oneclickvirt/ecs-data/main/data/"
-	expectedSchema = "ecs-data/v1"
+	manifestPath = "snapshot/manifest.json"
+	// The canonical snapshot lives with the Go fusion entrypoint. Keeping the
+	// data beside the code avoids a separate public registry and preserves the
+	// existing private component repositories. Each release embeds the same
+	// snapshot, while normal runs prefer the current raw file and then the CDN.
+	dataBaseURL    = "https://raw.githubusercontent.com/oneclickvirt/ecs/master/internal/data/snapshot/"
+	expectedSchema = "goecs-data/v1"
+	legacySchema   = "ecs-data/v1"
 	requestTimeout = 12 * time.Second
 	maxPayloadSize = 16 << 20
 )
@@ -42,7 +47,7 @@ var knownFiles = []string{
 	"tcp-targets.json",
 }
 
-// KnownFiles returns a stable copy of all supported ecs-data payload names.
+// KnownFiles returns a stable copy of all supported goecs snapshot payloads.
 func KnownFiles() []string {
 	return append([]string(nil), knownFiles...)
 }
@@ -113,7 +118,7 @@ func (l *Loader) LoadMany(ctx context.Context, names []string) (map[string]Resul
 			lastErr = fmt.Errorf("decode remote manifest from %s: %w", manifestBase, err)
 			continue
 		}
-		if m.Schema != expectedSchema || m.GeneratedAt.IsZero() || m.Files == nil {
+		if !supportedSchema(m.Schema) || m.GeneratedAt.IsZero() || m.Files == nil {
 			lastErr = fmt.Errorf("invalid remote manifest from %s", manifestBase)
 			continue
 		}
@@ -146,7 +151,7 @@ func (l *Loader) LoadMany(ctx context.Context, names []string) (map[string]Resul
 				}
 				dataSource := sourceForBase(l.CDNBase, l.RawBase, dataBase)
 				fallback := ""
-				if dataSource == "raw" {
+				if dataSource == "raw" && strings.TrimRight(l.CDNBase, "/") != "" && strings.TrimRight(l.CDNBase, "/") != strings.TrimRight(l.RawBase, "/") {
 					fallback = "raw"
 				} else if manifestFallback {
 					fallback = "cdn_manifest"
@@ -192,7 +197,7 @@ func (l *Loader) loadEmbeddedMany(names []string) (map[string]Result, error) {
 	if err := json.Unmarshal(manifestData, &m); err != nil {
 		return nil, fmt.Errorf("decode embedded manifest: %w", err)
 	}
-	if m.Schema != expectedSchema || m.GeneratedAt.IsZero() || m.Files == nil {
+	if !supportedSchema(m.Schema) || m.GeneratedAt.IsZero() || m.Files == nil {
 		return nil, errors.New("embedded manifest is missing schema or files")
 	}
 	results := make(map[string]Result, len(names))
@@ -217,6 +222,10 @@ func (l *Loader) loadEmbeddedMany(names []string) (map[string]Result, error) {
 		results[name] = Result{Name: name, Data: data, Manifest: m, Fallback: "embedded", Source: "embedded"}
 	}
 	return results, nil
+}
+
+func supportedSchema(schema string) bool {
+	return schema == expectedSchema || schema == legacySchema
 }
 
 func normalizedDataNames(names []string) ([]string, error) {

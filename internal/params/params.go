@@ -89,7 +89,7 @@ func NewConfig(version string) *Config {
 		DiskTestMethod:        "fio",
 		DiskTestPath:          "",
 		DiskMultiCheck:        false,
-		Nt3CheckType:          "both",
+		Nt3CheckType:          "ipv4",
 		Nt3Location:           "GZ",
 		SpNum:                 2,
 		Width:                 80,
@@ -112,12 +112,12 @@ func NewConfig(version string) *Config {
 		AnalyzeResult:         false,
 		DeepMode:              false,
 		PrivacyMode:           false,
-		TCPProbeStatus:        true,
+		TCPProbeStatus:        false,
 		MaxDuration:           15 * time.Minute,
 		HardwareBudget:        2 * time.Minute,
 		DeepBurnDuration:      0,
 		JSONPath:              "",
-		DataCDNBase:           "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs-data/main/data",
+		DataCDNBase:           "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/internal/data/snapshot",
 		DataOffline:           false,
 		OnlyIpInfoCheck:       false,
 		UnlockTestRegion:      "0",
@@ -232,8 +232,8 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.DiskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
 	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
 	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3-location", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
-	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "both", "Set NT3 test type (supported: both, ipv4, ipv6)")
-	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "both", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
 	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All, 21=AI only)")
 	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Deprecated compatibility flag; unlock output shows IP version in section headers automatically")
@@ -249,7 +249,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analyze", false, "Enable/Disable post-test concise summary analysis")
 	c.GoecsFlag.BoolVar(&c.DeepMode, "deep", false, "Enable deep test matrix within the global deadline")
 	c.GoecsFlag.BoolVar(&c.PrivacyMode, "privacy", false, "Disable result sharing and hide sensitive hardware identifiers")
-	c.GoecsFlag.BoolVar(&c.TCPProbeStatus, "tcp", true, "Enable/Disable structured TCP handshake probes")
+	c.GoecsFlag.BoolVar(&c.TCPProbeStatus, "tcp", false, "Enable/Disable the additional TCP handshake probe section")
 	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 15*time.Minute, "Set the global test deadline")
 	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 2*time.Minute, "Set the standard hardware test budget")
 	c.GoecsFlag.StringVar(&c.DeepDiskPaths, "deep-disk-paths", "", "Comma-separated mounted directories for the explicit deep multi-disk matrix")
@@ -257,9 +257,12 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.DurationVar(&c.DeepBurnDuration, "deep-burn-duration", 0, "Explicit deep CPU burn duration (disabled when zero)")
 	c.GoecsFlag.StringVar(&c.DeepGPUDevice, "deep-gpu-device", "", "Explicit GPU device selector for deep compute")
 	c.GoecsFlag.StringVar(&c.JSONPath, "json", "", "Write the versioned JSON report to this path, or '-' for stdout")
-	c.GoecsFlag.StringVar(&c.DataCDNBase, "data-cdn", c.DataCDNBase, "Set the ecs-data CDN base URL")
-	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force the embedded ecs-data snapshot without remote requests")
-	c.GoecsFlag.Parse(args)
+	c.GoecsFlag.StringVar(&c.DataCDNBase, "data-cdn", c.DataCDNBase, "Set the Go ECS snapshot CDN base URL")
+	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force the embedded Go ECS snapshot without remote requests")
+	if err := c.GoecsFlag.Parse(args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
 
 	c.GoecsFlag.Visit(func(f *flag.Flag) {
 		c.UserSetFlags[f.Name] = true
@@ -324,6 +327,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["web"] {
 		saved["web"] = c.WebTestStatus
+	}
+	if c.UserSetFlags["tcp"] {
+		saved["tcp"] = c.TCPProbeStatus
 	}
 	if c.UserSetFlags["cpum"] || c.UserSetFlags["cpu-method"] {
 		saved["cpum"] = c.CpuTestMethod
@@ -457,6 +463,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 	if val, ok := saved["web"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.WebTestStatus = boolVal
+		}
+	}
+	if val, ok := saved["tcp"]; ok {
+		if boolVal, ok := val.(bool); ok {
+			c.TCPProbeStatus = boolVal
 		}
 	}
 	if val, ok := saved["cpum"]; ok {
@@ -658,11 +669,11 @@ func (c *Config) ValidateParams() {
 	validNt3Types := map[string]bool{"both": true, "ipv4": true, "ipv6": true}
 	if !validNt3Types[c.Nt3CheckType] {
 		if c.Language == "zh" {
-			fmt.Printf("警告: NT3测试类型 '%s' 无效，使用默认值 'both'\n", c.Nt3CheckType)
+			fmt.Printf("警告: NT3测试类型 '%s' 无效，使用默认值 'ipv4'\n", c.Nt3CheckType)
 		} else {
-			fmt.Printf("Warning: Invalid NT3 check type '%s', using default 'both'\n", c.Nt3CheckType)
+			fmt.Printf("Warning: Invalid NT3 check type '%s', using default 'ipv4'\n", c.Nt3CheckType)
 		}
-		c.Nt3CheckType = "both"
+		c.Nt3CheckType = "ipv4"
 	}
 
 	if c.SpNum <= 0 {

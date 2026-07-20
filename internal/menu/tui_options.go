@@ -273,10 +273,10 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			textVal: config.FilePath,
 		},
 		{key: "privacy", nameZh: "隐私模式", nameEn: "Privacy Mode", kind: "bool", descZh: "隐藏敏感硬件标识并禁止上传。", descEn: "Hide sensitive hardware identifiers and disable upload.", boolVal: config.PrivacyMode},
-		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "启用结构化TCP握手延迟与错误分类。", descEn: "Enable structured TCP latency and error classification.", boolVal: config.TCPProbeStatus},
+		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "追加TCP握手延迟与错误分类单项。", descEn: "Append the TCP latency and error classification section.", boolVal: config.TCPProbeStatus},
 		{key: "jsonpath", nameZh: "JSON结果路径", nameEn: "JSON Result Path", kind: "text", descZh: "留空关闭；使用-输出到标准输出。", descEn: "Empty disables; use - for stdout.", textVal: config.JSONPath},
 		{key: "dataoffline", nameZh: "仅使用内置数据", nameEn: "Embedded Data Only", kind: "bool", descZh: "禁止远程数据请求并使用内置最新有效快照。", descEn: "Disable remote data requests and use the embedded valid snapshot.", boolVal: config.DataOffline},
-		{key: "datacdn", nameZh: "数据CDN地址", nameEn: "Data CDN Base", kind: "text", descZh: "ecs-data目录的CDN基础地址。", descEn: "CDN base URL for the ecs-data directory.", textVal: config.DataCDNBase},
+		{key: "datacdn", nameZh: "数据CDN地址", nameEn: "Data CDN Base", kind: "text", descZh: "Go ECS内置快照目录的CDN基础地址。", descEn: "CDN base URL for the Go ECS snapshot directory.", textVal: config.DataCDNBase},
 	}
 
 	for i := range adv {

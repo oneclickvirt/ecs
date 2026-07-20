@@ -17,3 +17,7 @@ func forceExit(code int) {
 	}
 	os.Exit(code)
 }
+
+// ForceExit terminates this process and any benchmark subprocesses at the
+// global hard deadline.
+func ForceExit(code int) { forceExit(code) }

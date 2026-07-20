@@ -18,15 +18,6 @@ import (
 	"github.com/oneclickvirt/portchecker/email"
 )
 
-// DeadlineSignal distinguishes the internally scheduled global deadline from
-// a user-generated SIGINT/SIGTERM. It is sent only through the in-process
-// signal channel and is never registered with signal.Notify.
-type DeadlineSignal struct{}
-
-func (DeadlineSignal) Signal() {}
-
-func (DeadlineSignal) String() string { return "global deadline" }
-
 type identityReadyContextKey struct{}
 
 // WithIdentityReady lets the orchestration layer wait until the legacy basic
@@ -103,6 +94,7 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 		*output = RunNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
 	}
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
+		*output = RunTCPTests(ctx, config, *output, tempOutput, outputMutex)
 		*output = RunSpeedTests(ctx, config, *output, tempOutput, outputMutex)
 	}
 	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
@@ -153,9 +145,31 @@ func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
 		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
 		*output = RunEnglishNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
+		*output = RunTCPTests(ctx, config, *output, tempOutput, outputMutex)
 		*output = RunEnglishSpeedTests(ctx, config, *output, tempOutput, outputMutex)
 	}
 	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
+}
+
+// RunTCPTests appends the new handshake diagnostics as an explicit standalone
+// section. It is disabled by default so existing suites retain their original
+// real-time output and duration.
+func RunTCPTests(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil || config == nil || !config.TCPProbeStatus {
+		return output
+	}
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
+	return utils.PrintAndCapture(func() {
+		if config.Language == "zh" {
+			utils.PrintCenteredTitle("TCP握手延迟", config.Width)
+		} else {
+			utils.PrintCenteredTitle("TCP-Handshake-Latency", config.Width)
+		}
+		probeConfig := pt.DefaultTCPProbeConfig()
+		results := pt.RunTCPRegistry(ctx, probeConfig)
+		fmt.Println(pt.FormatTCPResults(results))
+	}, tempOutput, output)
 }
 
 // RunIpInfoCheck performs IP info check
@@ -604,10 +618,9 @@ func printTimeInfo(config *params.Config, minutes, seconds int, currentTime stri
 // Second Ctrl+C (or if cleanup takes > 30 s) → kill the process group so that
 // any child subprocess (stream, fio, dd, sysbench, geekbench …) is also
 // terminated immediately, then os.Exit(1).
-func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex, writeStructuredReport func()) {
+func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
-	case receivedSignal := <-sig:
-		_, deadlineReached := receivedSignal.(DeadlineSignal)
+	case <-sig:
 		// ── First Ctrl+C ────────────────────────────────────────────────────────
 		// Cancel context so that tests that have not yet started are skipped.
 		cancel()
@@ -672,10 +685,6 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 			// accumulated so far (best-effort, no data race protection here).
 			finalOutput = *output
 		}
-		if deadlineReached && writeStructuredReport != nil {
-			writeStructuredReport()
-		}
-
 		// ── Upload and exit ──────────────────────────────────────────────────────
 		if config.EnableUpload {
 			uploadCtx, uploadCancel := context.WithTimeout(context.Background(), 20*time.Second)

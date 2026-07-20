@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"github.com/oneclickvirt/ecs/internal/params"
 )
@@ -44,5 +45,45 @@ func TestApplyEnvironmentDefaultsRespectsExplicitMenuFalse(t *testing.T) {
 
 	if cfg.MenuMode {
 		t.Fatalf("explicit -menu=false should be respected")
+	}
+}
+
+func TestStructuredCLIRequiresExplicitJSONOutput(t *testing.T) {
+	cfg := params.NewConfig("test")
+	if shouldRunStructuredCLI(cfg) {
+		t.Fatal("structured adapters must not replace the default streaming text runner")
+	}
+	for _, path := range []string{"-", "report.json"} {
+		cfg.JSONPath = path
+		if !shouldRunStructuredCLI(cfg) {
+			t.Fatalf("JSON path %q did not select structured CLI mode", path)
+		}
+	}
+}
+
+func TestLegacyDeadlineKeepsOneCleanupWindow(t *testing.T) {
+	for _, test := range []struct {
+		maximum, soft time.Duration
+	}{
+		{maximum: 15 * time.Second, soft: 12 * time.Second},
+		{maximum: 15 * time.Minute, soft: 14*time.Minute + 30*time.Second},
+	} {
+		soft, hard := legacyDeadlineWindows(test.maximum)
+		if soft != test.soft || hard != test.maximum {
+			t.Fatalf("legacyDeadlineWindows(%s) = %s, %s", test.maximum, soft, hard)
+		}
+	}
+}
+
+func TestUploadDisabledDoesNotDisableSecuritySection(t *testing.T) {
+	previous := configs
+	defer func() { configs = previous }()
+	configs = params.NewConfig("test")
+	configs.Language = "zh"
+	configs.EnableUpload = false
+	configs.SecurityTestStatus = true
+	handleLanguageSpecificSettings()
+	if !configs.SecurityTestStatus {
+		t.Fatal("security section was disabled when only result upload was disabled")
 	}
 }

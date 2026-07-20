@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.147"                   // 融合怪版本号
+	ecsVersion = "v0.1.148"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -63,6 +63,19 @@ func applyEnvironmentDefaults(config *params.Config) {
 
 func shouldWaitForExitInput() bool {
 	return (runtime.GOOS == "windows" || runtime.GOOS == "darwin") && !utils.IsNonInteractive()
+}
+
+func shouldRunStructuredCLI(config *params.Config) bool {
+	return config != nil && config.JSONPath != ""
+}
+
+func legacyDeadlineWindows(maxDuration time.Duration) (time.Duration, time.Duration) {
+	cleanupGrace := min(30*time.Second, maxDuration/5)
+	softDeadline := maxDuration - cleanupGrace
+	if softDeadline <= 0 {
+		softDeadline = maxDuration
+	}
+	return softDeadline, maxDuration
 }
 
 func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
@@ -117,7 +130,11 @@ func main() {
 	if !preCheck.Connected {
 		configs.EnableUpload = false
 	}
-	if configs.JSONPath != "" || ecsapi.UsesStructuredComponents() {
+	// Keep the established interactive/text runner as the default user-facing
+	// path. Structured orchestration is an explicit JSON/API mode; it must not
+	// replace the legacy streaming sections merely because structured adapters
+	// are compiled into this build.
+	if shouldRunStructuredCLI(configs) {
 		runStructuredCLI(preCheck, configs)
 		configs.Finish = true
 		if shouldWaitForExitInput() {
@@ -139,54 +156,12 @@ func main() {
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	cleanupGrace := 30 * time.Second
-	softDeadline := configs.MaxDuration - cleanupGrace
-	if softDeadline <= 0 {
-		softDeadline = configs.MaxDuration / 2
-	}
-	deadlineTimer := time.AfterFunc(softDeadline, func() {
-		select {
-		case sig <- runner.DeadlineSignal{}:
-		default:
-		}
-	})
-	defer deadlineTimer.Stop()
-	// Keep a stable copy for the deadline callback. The legacy runner mutates
-	// a few menu fields while tests are running, so reading configs directly
-	// from the signal goroutine would introduce a race.
-	deadlineConfig := *configs
-	writeDeadlineReport := func() {
-		if deadlineConfig.JSONPath == "" {
-			return
-		}
-		reportConfig := deadlineConfig
-		reportConfig.BasicStatus = false
-		reportConfig.CpuTestStatus = false
-		reportConfig.MemoryTestStatus = false
-		reportConfig.DiskTestStatus = false
-		reportConfig.TCPProbeStatus = false
-		reportConfig.DeepMode = false
-		reportCtx, reportCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer reportCancel()
-		report := ecsapi.CollectStructuredReport(reportCtx, preCheck, &reportConfig, "", startTime, time.Now())
-		report.Status = ecsapi.ReportStatusTimeout
-		for index := range report.Sections {
-			if report.Sections[index].Enabled {
-				report.Sections[index].Status = ecsapi.ReportStatusTimeout
-				report.Sections[index].Reason = "global deadline exceeded"
-			}
-		}
-		encoded, err := report.JSON()
-		if err != nil {
-			return
-		}
-		if reportConfig.JSONPath == "-" {
-			fmt.Println(string(encoded))
-			return
-		}
-		_ = os.WriteFile(reportConfig.JSONPath, append(encoded, '\n'), 0o600)
-	}
-	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex, writeDeadlineReport)
+	softDeadline, hardDeadline := legacyDeadlineWindows(configs.MaxDuration)
+	softDeadlineTimer := time.AfterFunc(softDeadline, cancel)
+	hardDeadlineTimer := time.AfterFunc(hardDeadline, func() { runner.ForceExit(1) })
+	defer softDeadlineTimer.Stop()
+	defer hardDeadlineTimer.Stop()
+	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch configs.Language {
 	case "zh":
 		runner.RunChineseTests(ctx, preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)
@@ -195,13 +170,14 @@ func main() {
 	default:
 		fmt.Println("Unsupported language")
 	}
-	if ctx.Err() == nil {
-		if configs.AnalyzeResult {
-			output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
-		}
-		if preCheck.Connected {
-			runner.HandleUploadResults(configs, output)
-		}
+	if ctx.Err() == nil && configs.AnalyzeResult {
+		output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
+	}
+	// HandleUploadResults always writes the local result file. Keep that
+	// behavior after a deadline/cancellation; EnableUpload alone controls the
+	// optional remote share.
+	if preCheck.Connected || output != "" {
+		runner.HandleUploadResults(configs, output)
 	}
 	configs.Finish = true
 	if shouldWaitForExitInput() {

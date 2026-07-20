@@ -7,20 +7,20 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.59.0
-	github.com/oneclickvirt/UnlockTests v0.0.41-20260720103959
-	github.com/oneclickvirt/backtrace v0.0.11-20260720103959
-	github.com/oneclickvirt/basics v0.0.20-20260720103959
-	github.com/oneclickvirt/cputest v0.0.13-20260720103959
+	github.com/oneclickvirt/UnlockTests v0.0.42
+	github.com/oneclickvirt/backtrace v0.0.12
+	github.com/oneclickvirt/basics v0.0.21
+	github.com/oneclickvirt/cputest v0.0.14
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.12-20260720103959
-	github.com/oneclickvirt/gostun v0.0.7-20260720103959
-	github.com/oneclickvirt/memorytest v0.0.11-20260720103959
-	github.com/oneclickvirt/nt3 v0.0.15-20260720103959
-	github.com/oneclickvirt/pingtest v0.0.12-20260720103959
-	github.com/oneclickvirt/portchecker v0.0.4-20260720103959
-	github.com/oneclickvirt/privatespeedtest v0.0.2-20260720103959
-	github.com/oneclickvirt/security v0.0.11-20260720103959
-	github.com/oneclickvirt/speedtest v0.0.14-20260720103959
+	github.com/oneclickvirt/disktest v0.0.13
+	github.com/oneclickvirt/gostun v0.0.8
+	github.com/oneclickvirt/memorytest v0.0.12
+	github.com/oneclickvirt/nt3 v0.0.16
+	github.com/oneclickvirt/pingtest v0.0.13
+	github.com/oneclickvirt/portchecker v0.0.5
+	github.com/oneclickvirt/privatespeedtest v0.0.3
+	github.com/oneclickvirt/security v0.0.12
+	github.com/oneclickvirt/speedtest v0.0.15
 )
 
 require (
@@ -122,7 +122,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/net v0.56.0
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/term v0.44.0 // indirect

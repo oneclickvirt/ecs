@@ -9,3 +9,6 @@ import "os"
 func forceExit(code int) {
 	os.Exit(code)
 }
+
+// ForceExit terminates the process at the global hard deadline.
+func ForceExit(code int) { forceExit(code) }

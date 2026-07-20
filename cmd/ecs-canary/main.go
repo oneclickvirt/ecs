@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	cdn := flag.String("data-cdn", "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs-data/main/data", "ecs-data CDN base")
+	cdn := flag.String("data-cdn", "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/internal/data/snapshot", "Go ECS snapshot CDN base")
 	offline := flag.Bool("offline", false, "force embedded snapshot fallback")
 	standard := flag.Bool("standard", false, "run the complete standard structured profile")
 	tcp := flag.Bool("tcp", false, "run structured TCP probes")

@@ -40,7 +40,7 @@ type DataVersion struct {
 	Count       int       `json:"count"`
 }
 
-// DataFileVersion describes one validated ecs-data payload. DataVersion is
+// DataFileVersion describes one validated Go ECS snapshot payload. DataVersion is
 // intentionally kept unchanged for callers that historically consumed the
 // primary TCP target file; StructuredReport.DataFiles carries the complete
 // manifest view for newer callers.

@@ -67,11 +67,11 @@ func TestParseFlagsCanBeCalledRepeatedly(t *testing.T) {
 	}
 }
 
-func TestNT3DefaultsToBothAndAllowsExplicitSingleStack(t *testing.T) {
-	if got := NewConfig("test").Nt3CheckType; got != "both" {
-		t.Fatalf("default Nt3CheckType = %q, want both", got)
+func TestNT3PreservesIPv4DefaultAndAllowsExplicitStackModes(t *testing.T) {
+	if got := NewConfig("test").Nt3CheckType; got != "ipv4" {
+		t.Fatalf("default Nt3CheckType = %q, want ipv4", got)
 	}
-	for _, value := range []string{"ipv4", "ipv6"} {
+	for _, value := range []string{"both", "ipv4", "ipv6"} {
 		cfg := NewConfig("test")
 		cfg.ParseFlags([]string{"-nt3-type=" + value})
 		if cfg.Nt3CheckType != value {
@@ -81,8 +81,19 @@ func TestNT3DefaultsToBothAndAllowsExplicitSingleStack(t *testing.T) {
 	invalid := NewConfig("test")
 	invalid.Nt3CheckType = "invalid"
 	invalid.ValidateParams()
-	if invalid.Nt3CheckType != "both" {
-		t.Fatalf("invalid Nt3CheckType fallback = %q, want both", invalid.Nt3CheckType)
+	if invalid.Nt3CheckType != "ipv4" {
+		t.Fatalf("invalid Nt3CheckType fallback = %q, want ipv4", invalid.Nt3CheckType)
+	}
+}
+
+func TestAdditionalTCPSectionIsExplicit(t *testing.T) {
+	cfg := NewConfig("test")
+	if cfg.TCPProbeStatus {
+		t.Fatal("TCP diagnostics changed the established default suite")
+	}
+	cfg.ParseFlags([]string{"-tcp"})
+	if !cfg.TCPProbeStatus {
+		t.Fatal("explicit -tcp did not enable the additional section")
 	}
 }
 
