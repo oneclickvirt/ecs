@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.148"                   // 融合怪版本号
+	ecsVersion = "v0.1.149"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -137,7 +137,7 @@ func main() {
 	if shouldRunStructuredCLI(configs) {
 		runStructuredCLI(preCheck, configs)
 		configs.Finish = true
-		if shouldWaitForExitInput() {
+		if shouldWaitForExitInput() && configs.JSONPath != "-" {
 			fmt.Println("Press Enter to exit...")
 			fmt.Scanln()
 		}
