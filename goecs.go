@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.149"                   // 融合怪版本号
+	ecsVersion = "v0.1.150"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -84,7 +84,29 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	result := ecsapi.RunAllTestsContext(ctx, preCheck, config)
+	softDeadline, hardDeadline := legacyDeadlineWindows(config.MaxDuration)
+	softTimer := time.NewTimer(softDeadline)
+	defer softTimer.Stop()
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		<-softTimer.C
+		cancel()
+	}()
+	resultCh := make(chan *ecsapi.RunResult, 1)
+	go func() {
+		resultCh <- ecsapi.RunAllTestsContext(runCtx, preCheck, config)
+	}()
+	hardTimer := time.NewTimer(hardDeadline)
+	defer hardTimer.Stop()
+	var result *ecsapi.RunResult
+	select {
+	case result = <-resultCh:
+	case <-hardTimer.C:
+		fmt.Fprintln(os.Stderr, "global structured deadline exceeded; terminating benchmark process group")
+		runner.ForceExit(1)
+		return
+	}
 	if result == nil {
 		fmt.Fprintln(os.Stderr, "failed to run structured ECS tests")
 		return
