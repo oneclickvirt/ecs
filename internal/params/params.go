@@ -5,100 +5,129 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 // Config holds all configuration parameters
 type Config struct {
-	EcsVersion           string
-	MenuMode             bool
-	OnlyChinaTest        bool
-	Input                string
-	Choice               string
-	ShowVersion          bool
-	EnableLogger         bool
-	Language             string
-	CpuTestMethod        string
-	CpuTestThreadMode    string
-	MemoryTestMethod     string
-	DiskTestMethod       string
-	DiskTestPath         string
-	DiskMultiCheck       bool
-	Nt3CheckType         string
-	Nt3Location          string
-	SpNum                int
-	Width                int
-	BasicStatus          bool
-	CpuTestStatus        bool
-	MemoryTestStatus     bool
-	DiskTestStatus       bool
-	UtTestStatus         bool
-	SecurityTestStatus   bool
-	EmailTestStatus      bool
-	BacktraceStatus      bool
-	Nt3Status            bool
-	SpeedTestStatus      bool
-	PingTestStatus       bool
-	TgdcTestStatus       bool
-	WebTestStatus        bool
-	AutoChangeDiskMethod bool
-	FilePath             string
-	EnableUpload         bool
-	AnalyzeResult        bool
-	OnlyIpInfoCheck      bool
-	UnlockTestRegion     string
-	UnlockTestShowIP     bool
-	UnlockTestIPVersion  string
-	Help                 bool
-	Finish               bool
-	UserSetFlags         map[string]bool
-	GoecsFlag            *flag.FlagSet
+	EcsVersion            string
+	MenuMode              bool
+	OnlyChinaTest         bool
+	Input                 string
+	Choice                string
+	ShowVersion           bool
+	EnableLogger          bool
+	Language              string
+	CpuTestMethod         string
+	CpuTestThreadMode     string
+	MemoryTestMethod      string
+	DiskTestMethod        string
+	DiskTestPath          string
+	DiskMultiCheck        bool
+	Nt3CheckType          string
+	Nt3Location           string
+	SpNum                 int
+	Width                 int
+	BasicStatus           bool
+	CpuTestStatus         bool
+	MemoryTestStatus      bool
+	DiskTestStatus        bool
+	UtTestStatus          bool
+	SecurityTestStatus    bool
+	EmailTestStatus       bool
+	BacktraceStatus       bool
+	Nt3Status             bool
+	SpeedTestStatus       bool
+	PingTestStatus        bool
+	TgdcTestStatus        bool
+	WebTestStatus         bool
+	AutoChangeDiskMethod  bool
+	FilePath              string
+	EnableUpload          bool
+	AnalyzeResult         bool
+	DeepMode              bool
+	PrivacyMode           bool
+	TCPProbeStatus        bool
+	MaxDuration           time.Duration
+	HardwareBudget        time.Duration
+	DeepDiskPaths         string
+	DeepSMARTDevices      string
+	DeepBurnDuration      time.Duration
+	DeepGPUDevice         string
+	JSONPath              string
+	DataCDNBase           string
+	DataOffline           bool
+	OnlyIpInfoCheck       bool
+	UnlockTestRegion      string
+	UnlockTestShowIP      bool
+	UnlockTestIPVersion   string
+	UnlockTestInterface   string
+	UnlockTestDNSServers  string
+	UnlockTestHTTPProxy   string
+	UnlockTestSOCKSProxy  string
+	UnlockTestConcurrency int
+	Help                  bool
+	Finish                bool
+	UserSetFlags          map[string]bool
+	GoecsFlag             *flag.FlagSet
 }
 
 // NewConfig creates a new Config with default values
 func NewConfig(version string) *Config {
 	return &Config{
-		EcsVersion:           version,
-		MenuMode:             true,
-		OnlyChinaTest:        false,
-		Input:                "",
-		Choice:               "",
-		ShowVersion:          false,
-		EnableLogger:         false,
-		Language:             "zh",
-		CpuTestMethod:        "sysbench",
-		CpuTestThreadMode:    "multi",
-		MemoryTestMethod:     "stream",
-		DiskTestMethod:       "fio",
-		DiskTestPath:         "",
-		DiskMultiCheck:       false,
-		Nt3CheckType:         "ipv4",
-		SpNum:                2,
-		Width:                80,
-		BasicStatus:          true,
-		CpuTestStatus:        true,
-		MemoryTestStatus:     true,
-		DiskTestStatus:       true,
-		UtTestStatus:         true,
-		SecurityTestStatus:   true,
-		EmailTestStatus:      true,
-		BacktraceStatus:      true,
-		Nt3Status:            true,
-		SpeedTestStatus:      true,
-		PingTestStatus:       false,
-		TgdcTestStatus:       false,
-		WebTestStatus:        false,
-		AutoChangeDiskMethod: true,
-		FilePath:             "goecs.txt",
-		EnableUpload:         true,
-		AnalyzeResult:        false,
-		OnlyIpInfoCheck:      false,
-		UnlockTestRegion:     "0",
-		UnlockTestShowIP:     false,
-		UnlockTestIPVersion:  "auto",
-		Help:                 false,
-		Finish:               false,
-		UserSetFlags:         make(map[string]bool),
-		GoecsFlag:            flag.NewFlagSet("goecs", flag.ContinueOnError),
+		EcsVersion:            version,
+		MenuMode:              true,
+		OnlyChinaTest:         false,
+		Input:                 "",
+		Choice:                "",
+		ShowVersion:           false,
+		EnableLogger:          false,
+		Language:              "zh",
+		CpuTestMethod:         "sysbench",
+		CpuTestThreadMode:     "multi",
+		MemoryTestMethod:      "stream",
+		DiskTestMethod:        "fio",
+		DiskTestPath:          "",
+		DiskMultiCheck:        false,
+		Nt3CheckType:          "both",
+		Nt3Location:           "GZ",
+		SpNum:                 2,
+		Width:                 80,
+		BasicStatus:           true,
+		CpuTestStatus:         true,
+		MemoryTestStatus:      true,
+		DiskTestStatus:        true,
+		UtTestStatus:          true,
+		SecurityTestStatus:    true,
+		EmailTestStatus:       true,
+		BacktraceStatus:       true,
+		Nt3Status:             true,
+		SpeedTestStatus:       true,
+		PingTestStatus:        false,
+		TgdcTestStatus:        false,
+		WebTestStatus:         false,
+		AutoChangeDiskMethod:  true,
+		FilePath:              "goecs.txt",
+		EnableUpload:          true,
+		AnalyzeResult:         false,
+		DeepMode:              false,
+		PrivacyMode:           false,
+		TCPProbeStatus:        true,
+		MaxDuration:           15 * time.Minute,
+		HardwareBudget:        2 * time.Minute,
+		DeepBurnDuration:      0,
+		JSONPath:              "",
+		DataCDNBase:           "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs-data/main/data",
+		DataOffline:           false,
+		OnlyIpInfoCheck:       false,
+		UnlockTestRegion:      "0",
+		UnlockTestShowIP:      false,
+		UnlockTestIPVersion:   "auto",
+		UnlockTestConcurrency: 20,
+		Help:                  false,
+		Finish:                false,
+		UserSetFlags:          make(map[string]bool),
+		GoecsFlag:             flag.NewFlagSet("goecs", flag.ContinueOnError),
 	}
 }
 
@@ -116,6 +145,7 @@ func normalizeBoolArgs(args []string) []string {
 		"backtrace": true, "nt3": true, "speed": true, "ping": true,
 		"tgdc": true, "web": true, "log": true, "upload": true,
 		"analysis": true, "analyze": true,
+		"deep": true, "privacy": true, "tcp": true,
 		"diskmc": true, "utshowip": true,
 	}
 
@@ -202,16 +232,33 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.DiskMultiCheck, "diskmc", false, "Enable/Disable multiple disk checks, e.g., -diskmc=false")
 	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3loc", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
 	c.GoecsFlag.StringVar(&c.Nt3Location, "nt3-location", "GZ", "Specify NT3 test location (supported: GZ, SH, BJ, CD, ALL for Guangzhou, Shanghai, Beijing, Chengdu and all)")
-	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
-	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "both", "Set NT3 test type (supported: both, ipv4, ipv6)")
+	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "both", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
-	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All)")
+	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All, 21=AI only)")
 	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Deprecated compatibility flag; unlock output shows IP version in section headers automatically")
 	c.GoecsFlag.StringVar(&c.UnlockTestIPVersion, "utipver", "auto", "Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only)")
+	c.GoecsFlag.StringVar(&c.UnlockTestInterface, "ut-interface", "", "Bind unlock tests to an IP address or network interface")
+	c.GoecsFlag.StringVar(&c.UnlockTestDNSServers, "ut-dns", "", "Use explicit DNS servers for unlock tests")
+	c.GoecsFlag.StringVar(&c.UnlockTestHTTPProxy, "ut-http-proxy", "", "Use an explicit HTTP proxy for unlock tests")
+	c.GoecsFlag.StringVar(&c.UnlockTestSOCKSProxy, "ut-socks-proxy", "", "Use an explicit SOCKS5 proxy for unlock tests")
+	c.GoecsFlag.IntVar(&c.UnlockTestConcurrency, "ut-concurrency", 20, "Maximum concurrent unlock tests")
 	c.GoecsFlag.BoolVar(&c.EnableLogger, "log", false, "Enable/Disable logging in the current path")
 	c.GoecsFlag.BoolVar(&c.EnableUpload, "upload", true, "Enable/Disable upload the result")
 	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analysis", false, "Enable/Disable post-test concise summary analysis")
 	c.GoecsFlag.BoolVar(&c.AnalyzeResult, "analyze", false, "Enable/Disable post-test concise summary analysis")
+	c.GoecsFlag.BoolVar(&c.DeepMode, "deep", false, "Enable deep test matrix within the global deadline")
+	c.GoecsFlag.BoolVar(&c.PrivacyMode, "privacy", false, "Disable result sharing and hide sensitive hardware identifiers")
+	c.GoecsFlag.BoolVar(&c.TCPProbeStatus, "tcp", true, "Enable/Disable structured TCP handshake probes")
+	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 15*time.Minute, "Set the global test deadline")
+	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 2*time.Minute, "Set the standard hardware test budget")
+	c.GoecsFlag.StringVar(&c.DeepDiskPaths, "deep-disk-paths", "", "Comma-separated mounted directories for the explicit deep multi-disk matrix")
+	c.GoecsFlag.StringVar(&c.DeepSMARTDevices, "deep-smart-devices", "", "Comma-separated devices explicitly allowed for deep SMART self-tests")
+	c.GoecsFlag.DurationVar(&c.DeepBurnDuration, "deep-burn-duration", 0, "Explicit deep CPU burn duration (disabled when zero)")
+	c.GoecsFlag.StringVar(&c.DeepGPUDevice, "deep-gpu-device", "", "Explicit GPU device selector for deep compute")
+	c.GoecsFlag.StringVar(&c.JSONPath, "json", "", "Write the versioned JSON report to this path, or '-' for stdout")
+	c.GoecsFlag.StringVar(&c.DataCDNBase, "data-cdn", c.DataCDNBase, "Set the ecs-data CDN base URL")
+	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force the embedded ecs-data snapshot without remote requests")
 	c.GoecsFlag.Parse(args)
 
 	c.GoecsFlag.Visit(func(f *flag.Flag) {
@@ -314,8 +361,32 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	if c.UserSetFlags["utipver"] {
 		saved["utipver"] = c.UnlockTestIPVersion
 	}
+	for flagName, value := range map[string]string{
+		"ut-interface":   c.UnlockTestInterface,
+		"ut-dns":         c.UnlockTestDNSServers,
+		"ut-http-proxy":  c.UnlockTestHTTPProxy,
+		"ut-socks-proxy": c.UnlockTestSOCKSProxy,
+	} {
+		if c.UserSetFlags[flagName] {
+			saved[flagName] = value
+		}
+	}
+	if c.UserSetFlags["ut-concurrency"] {
+		saved["ut-concurrency"] = c.UnlockTestConcurrency
+	}
 	if c.UserSetFlags["analysis"] || c.UserSetFlags["analyze"] {
 		saved["analysis"] = c.AnalyzeResult
+	}
+	for flagName, value := range map[string]string{
+		"deep-disk-paths": c.DeepDiskPaths, "deep-smart-devices": c.DeepSMARTDevices,
+		"deep-gpu-device": c.DeepGPUDevice,
+	} {
+		if c.UserSetFlags[flagName] {
+			saved[flagName] = value
+		}
+	}
+	if c.UserSetFlags["deep-burn-duration"] {
+		saved["deep-burn-duration"] = c.DeepBurnDuration
 	}
 
 	return saved
@@ -450,9 +521,41 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.UnlockTestIPVersion = strVal
 		}
 	}
+	for key, target := range map[string]*string{
+		"ut-interface":   &c.UnlockTestInterface,
+		"ut-dns":         &c.UnlockTestDNSServers,
+		"ut-http-proxy":  &c.UnlockTestHTTPProxy,
+		"ut-socks-proxy": &c.UnlockTestSOCKSProxy,
+	} {
+		if val, ok := saved[key]; ok {
+			if stringValue, valid := val.(string); valid {
+				*target = stringValue
+			}
+		}
+	}
+	if val, ok := saved["ut-concurrency"]; ok {
+		if intValue, valid := val.(int); valid {
+			c.UnlockTestConcurrency = intValue
+		}
+	}
 	if val, ok := saved["analysis"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.AnalyzeResult = boolVal
+		}
+	}
+	for key, target := range map[string]*string{
+		"deep-disk-paths": &c.DeepDiskPaths, "deep-smart-devices": &c.DeepSMARTDevices,
+		"deep-gpu-device": &c.DeepGPUDevice,
+	} {
+		if val, ok := saved[key]; ok {
+			if stringValue, valid := val.(string); valid {
+				*target = stringValue
+			}
+		}
+	}
+	if val, ok := saved["deep-burn-duration"]; ok {
+		if duration, valid := val.(time.Duration); valid {
+			c.DeepBurnDuration = duration
 		}
 	}
 
@@ -470,6 +573,37 @@ func (c *Config) ValidateParams() {
 	c.Nt3Location = strings.ToUpper(strings.TrimSpace(c.Nt3Location))
 	c.UnlockTestIPVersion = strings.ToLower(strings.TrimSpace(c.UnlockTestIPVersion))
 	c.UnlockTestRegion = strings.TrimSpace(c.UnlockTestRegion)
+	c.UnlockTestInterface = strings.TrimSpace(c.UnlockTestInterface)
+	c.UnlockTestDNSServers = strings.TrimSpace(c.UnlockTestDNSServers)
+	c.UnlockTestHTTPProxy = strings.TrimSpace(c.UnlockTestHTTPProxy)
+	c.UnlockTestSOCKSProxy = strings.TrimSpace(c.UnlockTestSOCKSProxy)
+	c.JSONPath = strings.TrimSpace(c.JSONPath)
+	c.DataCDNBase = strings.TrimRight(strings.TrimSpace(c.DataCDNBase), "/")
+	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
+	c.DeepSMARTDevices = strings.TrimSpace(c.DeepSMARTDevices)
+	c.DeepGPUDevice = strings.TrimSpace(c.DeepGPUDevice)
+	if c.MaxDuration <= 0 || c.MaxDuration > 15*time.Minute {
+		c.MaxDuration = 15 * time.Minute
+	}
+	standardHardwareBudget := min(2*time.Minute, c.MaxDuration)
+	hardwareBudgetLimit := standardHardwareBudget
+	if c.DeepMode {
+		hardwareBudgetLimit = c.MaxDuration
+	}
+	if c.HardwareBudget <= 0 || c.HardwareBudget > hardwareBudgetLimit {
+		c.HardwareBudget = hardwareBudgetLimit
+	}
+	if !c.DeepMode {
+		c.DeepDiskPaths = ""
+		c.DeepSMARTDevices = ""
+		c.DeepBurnDuration = 0
+		c.DeepGPUDevice = ""
+	} else if c.DeepBurnDuration < 0 || c.DeepBurnDuration > c.HardwareBudget {
+		c.DeepBurnDuration = c.HardwareBudget
+	}
+	if c.PrivacyMode {
+		c.EnableUpload = false
+	}
 
 	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}
 	if !validCpuMethods[c.CpuTestMethod] {
@@ -524,11 +658,11 @@ func (c *Config) ValidateParams() {
 	validNt3Types := map[string]bool{"both": true, "ipv4": true, "ipv6": true}
 	if !validNt3Types[c.Nt3CheckType] {
 		if c.Language == "zh" {
-			fmt.Printf("警告: NT3测试类型 '%s' 无效，使用默认值 'ipv4'\n", c.Nt3CheckType)
+			fmt.Printf("警告: NT3测试类型 '%s' 无效，使用默认值 'both'\n", c.Nt3CheckType)
 		} else {
-			fmt.Printf("Warning: Invalid NT3 check type '%s', using default 'ipv4'\n", c.Nt3CheckType)
+			fmt.Printf("Warning: Invalid NT3 check type '%s', using default 'both'\n", c.Nt3CheckType)
 		}
-		c.Nt3CheckType = "ipv4"
+		c.Nt3CheckType = "both"
 	}
 
 	if c.SpNum <= 0 {
@@ -551,7 +685,7 @@ func (c *Config) ValidateParams() {
 		"5": true, "6": true, "7": true, "8": true, "9": true,
 		"10": true, "11": true, "12": true, "13": true, "14": true,
 		"15": true, "16": true, "17": true, "18": true, "19": true,
-		"20": true,
+		"20": true, "21": true,
 	}
 	if !validUnlockRegions[c.UnlockTestRegion] {
 		if c.Language == "zh" {
@@ -570,5 +704,11 @@ func (c *Config) ValidateParams() {
 			fmt.Printf("Warning: Invalid unlock test IP version '%s', using default 'auto'\n", c.UnlockTestIPVersion)
 		}
 		c.UnlockTestIPVersion = "auto"
+	}
+	if c.UnlockTestConcurrency <= 0 {
+		c.UnlockTestConcurrency = 20
+	}
+	if c.UnlockTestConcurrency > 100 {
+		c.UnlockTestConcurrency = 100
 	}
 }

@@ -2,6 +2,7 @@ package menu
 
 import (
 	"testing"
+	"time"
 
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/utils"
@@ -126,5 +127,55 @@ func TestMainQuickOptionsSyncToCustomAdvanced(t *testing.T) {
 	}
 	if findAdvanced(t, model.advanced, "upload").boolVal {
 		t.Fatalf("upload advanced setting should follow main quick option")
+	}
+}
+
+func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
+	cfg := params.NewConfig("test")
+	advanced := defaultAdvSettings(cfg)
+	for index := range advanced {
+		switch advanced[index].key {
+		case "deep":
+			advanced[index].boolVal = true
+		case "deepdiskpaths":
+			advanced[index].textVal = "/mnt/data"
+		case "deepburnduration":
+			advanced[index].textVal = "30s"
+		case "timeout":
+			advanced[index].textVal = "10m"
+		case "hardwarebudget":
+			advanced[index].textVal = "3m"
+		case "utinterface":
+			advanced[index].textVal = "eth0"
+		case "utdns":
+			advanced[index].textVal = "1.1.1.1"
+		case "utconcurrency":
+			advanced[index].textVal = "12"
+		case "dataoffline":
+			advanced[index].boolVal = true
+		case "privacy":
+			advanced[index].boolVal = true
+		}
+	}
+	applyCustomResult(tuiResult{toggles: defaultTestToggles(), advanced: advanced}, utils.NetCheckResult{Connected: true}, cfg)
+	cfg.ValidateParams()
+	if !cfg.DeepMode || cfg.DeepDiskPaths != "/mnt/data" || cfg.DeepBurnDuration != 30*time.Second {
+		t.Fatalf("deep parameters were not applied: %#v", cfg)
+	}
+	if cfg.MaxDuration != 10*time.Minute || cfg.HardwareBudget != 3*time.Minute {
+		t.Fatalf("budgets were not applied: max=%s hardware=%s", cfg.MaxDuration, cfg.HardwareBudget)
+	}
+	if cfg.UnlockTestInterface != "eth0" || cfg.UnlockTestDNSServers != "1.1.1.1" || cfg.UnlockTestConcurrency != 12 {
+		t.Fatalf("unlock network parameters were not applied: %#v", cfg)
+	}
+	if !cfg.DataOffline || !cfg.PrivacyMode || cfg.EnableUpload {
+		t.Fatalf("data/privacy parameters were not applied: %#v", cfg)
+	}
+}
+
+func TestCustomAdvancedIncludesAIOnlyUnlockRegion(t *testing.T) {
+	setting := findAdvanced(t, defaultAdvSettings(params.NewConfig("test")), "unlockregion")
+	if optionIndexByValue(setting.options, "21") == 0 {
+		t.Fatalf("AI-only unlock region is missing: %#v", setting.options)
 	}
 }

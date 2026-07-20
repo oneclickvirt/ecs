@@ -292,12 +292,6 @@ def main():
     modify_go_mod('go.mod')
     print()
         
-    # Modify README files
-    print("Modifying README files...")
-    modify_readme('README_ZH.md', is_english=False)
-    modify_readme('README.md', is_english=True)
-    print()
-    
     print("✓ All modifications completed successfully!")
     print()
     print("Next steps:")

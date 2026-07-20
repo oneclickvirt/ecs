@@ -378,6 +378,18 @@ func PrintAndCapture(f func(), tempOutput, output string) string {
 
 // UploadText 上传文本内容到指定URL
 func UploadText(absPath string) (string, string, error) {
+	return UploadTextContext(context.Background(), absPath)
+}
+
+// UploadTextContext uploads a result file while honoring cancellation and the
+// caller's global deadline.
+func UploadTextContext(ctx context.Context, absPath string) (string, string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return "", "", err
+	}
 	primaryURL := "http://hpaste.spiritlhl.net/api/UL/upload"
 	backupURL := "https://paste.spiritlhl.net/api/UL/upload"
 	token := network.SecurityUploadToken
@@ -402,6 +414,9 @@ func UploadText(absPath string) (string, string, error) {
 	}
 	// 上传逻辑
 	upload := func(url string) (string, string, error) {
+		if err := ctx.Err(); err != nil {
+			return "", "", err
+		}
 		file, err := os.Open(absPath)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to re-open file for %s: %w", url, err)
@@ -412,6 +427,7 @@ func UploadText(absPath string) (string, string, error) {
 			return "", "", fmt.Errorf("failed to read file content for %s: %w", url, err)
 		}
 		resp, err := client.R().
+			SetContext(ctx).
 			SetHeader("Authorization", token).
 			SetFileBytes("file", filepath.Base(absPath), content).
 			Post(url)

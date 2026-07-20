@@ -11,6 +11,7 @@ env:
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     
     steps:
@@ -23,41 +24,6 @@ jobs:
         go-version-file: go.mod
         check-latest: true
         
-    - name: Update master branch README files
-      run: |
-        git config --global user.name 'GitHub Actions'
-        git config --global user.email 'actions@github.com'
-        
-        if [ -f "go.mod" ]; then
-          GO_VERSION=$(grep "^go " go.mod | head -n 1 | awk '{print $2}')
-          echo "提取到的 Go 版本: $GO_VERSION"
-          if [ -n "$GO_VERSION" ] && [[ "$GO_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "版本验证成功，开始替换..."
-            if [ -f "README.md" ]; then
-              sed -i "s/选择 go [0-9]\+\.[0-9]\+\.[0-9]\+ 的版本进行安装/选择 go $GO_VERSION 的版本进行安装/g" README.md
-              sed -i 's|但二进制文件编译至 \[securityCheck\].*)|但已开源|g' README.md
-              sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README.md
-              echo "已更新 README.md"
-            fi
-            if [ -f "README_EN.md" ]; then
-              sed -i "s/Select go [0-9]\+\.[0-9]\+\.[0-9]\+ version to install/Select go $GO_VERSION version to install/g" README_EN.md
-              sed -i 's|but binary files compiled in \[securityCheck\].*)|but open sourced|g' README_EN.md
-              sed -i 's|security.*Enable/Disable security test (default true)|security        Enable/Disable security test (default false)|g' README_EN.md
-              echo "已更新 README_EN.md"
-            fi
-            git add README.md
-            [ -f "README_EN.md" ] && git add README_EN.md || true
-            git commit -m "Auto update README files" || echo "No changes to commit"
-            git push origin ${{ github.ref_name }}
-          else
-            echo "错误：未能提取到有效的 Go 版本号或版本号格式不正确"
-            exit 1
-          fi
-        else
-          echo "错误：未找到 go.mod 文件"
-          exit 1
-        fi
-        
     - name: Create public branch
       run: |
         # 删除本地 public 分支（如果存在）
@@ -66,17 +32,14 @@ jobs:
         git checkout -b public
         
     - name: Remove security package references
+      env:
+        GOFLAGS: -tags=ecs_public
       run: |
         python3 .back/create_public_branch.py
-        rm -f go.sum
-        go clean -modcache
         go clean -cache -testcache -fuzzcache
-        go mod tidy
-    - name: Update Go version in README files
-      run: |
-        # This step is now handled by the Python script
-        echo "README files already updated by create_public_branch.py"
     - name: Build and Test
+      env:
+        GOFLAGS: -tags=ecs_public
       run: |
         go build -ldflags="-checklinkname=0" -o maintest
         ./maintest -menu=false -l en -security=false -upload=false || exit 1

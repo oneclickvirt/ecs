@@ -12,7 +12,7 @@ builds:
     env:
       - CGO_ENABLED=0
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+      - -s -w -X main.ecsVersion={{.Tag}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - linux
       - windows
@@ -55,7 +55,7 @@ builds:
       - CC=o64-clang
       - CXX=o64-clang++
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+      - -s -w -X main.ecsVersion={{.Tag}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - darwin
     goarch:
@@ -69,7 +69,7 @@ builds:
       - CC=oa64-clang
       - CXX=oa64-clang++
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.arch={{.Arch}} -checklinkname=0
+      - -s -w -X main.ecsVersion={{.Tag}} -X main.arch={{.Arch}} -checklinkname=0
     goos:
       - darwin
     goarch:

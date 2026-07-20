@@ -1,0 +1,1330 @@
+[
+  {
+    "id": "10-play",
+    "name": "10 Play",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "4gtv",
+    "name": "4GTV",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "7plus",
+    "name": "7Plus",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "a-e-tv",
+    "name": "A\u0026E TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "abc-iview",
+    "name": "ABC iView",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "abema",
+    "name": "Abema",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "acorn-tv",
+    "name": "Acorn TV",
+    "groups": [
+      "na",
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "ais-play",
+    "name": "AIS Play",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "amazon-prime-video",
+    "name": "Amazon Prime Video",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "amc",
+    "name": "AMC+",
+    "groups": [
+      "na",
+      "oceania"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "amediateka",
+    "name": "Amediateka",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "animefesta",
+    "name": "AnimeFesta",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "anthropic-claude",
+    "name": "Anthropic Claude",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "apple",
+    "name": "Apple",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "bahamut-anime",
+    "name": "Bahamut Anime",
+    "groups": [
+      "hk",
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "bbc-iplayer",
+    "name": "BBC iPlayer",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "bilibili-anime",
+    "name": "Bilibili Anime",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "bing",
+    "name": "Bing",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "britbox",
+    "name": "BritBox",
+    "groups": [
+      "eu",
+      "na",
+      "oceania"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "bytedance-coze",
+    "name": "ByteDance Coze",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "canal",
+    "name": "Canal+",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "catchplay",
+    "name": "CatchPlay+",
+    "groups": [
+      "sea",
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "cbc-gem",
+    "name": "CBC Gem",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "channel-4",
+    "name": "Channel 4",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "channel-5",
+    "name": "Channel 5",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "channel-9",
+    "name": "Channel 9",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "coupang-play",
+    "name": "Coupang Play",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "crave",
+    "name": "Crave",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "crunchyroll",
+    "name": "Crunchyroll",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "cw-tv",
+    "name": "CW TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "d-anime-store",
+    "name": "D Anime Store",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "dazn",
+    "name": "Dazn",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "deepseek",
+    "name": "DeepSeek",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "directv-go",
+    "name": "DirecTV GO",
+    "groups": [
+      "sa"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "directv-stream",
+    "name": "DirecTV Stream",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "discovery",
+    "name": "Discovery+",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "discovery-uk",
+    "name": "Discovery+ UK",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "disney",
+    "name": "Disney+",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "dmm",
+    "name": "DMM",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "doc-play",
+    "name": "Doc Play",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "dola-ai",
+    "name": "Dola AI",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "dstv",
+    "name": "DSTV",
+    "groups": [
+      "africa"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "encoretvb",
+    "name": "encoreTVB",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "erogamescape",
+    "name": "ErogameScape",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "espn",
+    "name": "ESPN+",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "eurosport-ro",
+    "name": "Eurosport RO",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "fod-fuji-tv",
+    "name": "FOD (Fuji TV)",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "fox",
+    "name": "FOX",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "france-tv",
+    "name": "France TV",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "friday-video",
+    "name": "Friday Video",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "fubo-tv",
+    "name": "Fubo TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "fxnow",
+    "name": "FXNOW",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "galaxy-play",
+    "name": "Galaxy Play",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "google-gemini",
+    "name": "Google Gemini",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "google-play-store",
+    "name": "Google Play Store",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "hami-video",
+    "name": "Hami Video",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "hotstar",
+    "name": "Hotstar",
+    "groups": [
+      "na",
+      "sea"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "hoy-tv",
+    "name": "Hoy TV",
+    "groups": [
+      "hk"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "hulu",
+    "name": "Hulu",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "hulu-japan",
+    "name": "Hulu Japan",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "iqiyi",
+    "name": "iQiYi",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "itvx",
+    "name": "ITVX",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "j-com-on-demand",
+    "name": "J:COM On Demand",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "joyn",
+    "name": "Joyn",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "k",
+    "name": "K+",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "kancolle",
+    "name": "Kancolle",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "karaoke-dam",
+    "name": "Karaoke@DAM",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "kayo-sports",
+    "name": "Kayo Sports",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "kbs",
+    "name": "KBS",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "kktv",
+    "name": "KKTV",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "kocowa",
+    "name": "KOCOWA+",
+    "groups": [
+      "eu",
+      "na",
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "lemino",
+    "name": "Lemino",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "linetv",
+    "name": "LineTV",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "litv",
+    "name": "LiTV",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "maori-tv",
+    "name": "Maori TV",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "max",
+    "name": "Max",
+    "groups": [
+      "eu",
+      "hk",
+      "na",
+      "sa",
+      "sea",
+      "tw"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "mewatch",
+    "name": "MeWatch",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "mgm",
+    "name": "MGM+",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "mgstage",
+    "name": "MGStage",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "microsoft-copilot",
+    "name": "Microsoft Copilot",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "mistral-ai",
+    "name": "Mistral AI",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "molotov",
+    "name": "Molotov",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "moonshot-kimi",
+    "name": "Moonshot Kimi",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "mora",
+    "name": "Mora",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "movistar-plus",
+    "name": "Movistar Plus+",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "music-jp",
+    "name": "Music.jp",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "mx-player",
+    "name": "MX Player",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "mytvsuper",
+    "name": "MyTVSuper",
+    "groups": [
+      "hk"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "myvideo",
+    "name": "MyVideo",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "naver-tv",
+    "name": "Naver TV",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "nba-tv",
+    "name": "NBA TV",
+    "groups": [
+      "hk",
+      "na",
+      "oceania",
+      "sea"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "nbc-tv",
+    "name": "NBC TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "neon-tv",
+    "name": "Neon TV",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "netflix",
+    "name": "Netflix",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "netflix-cdn",
+    "name": "Netflix CDN",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "nfl",
+    "name": "NFL+",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "nhk",
+    "name": "NHK+",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "niconico",
+    "name": "Niconico",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "nlziet",
+    "name": "NLZIET",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "npo-start-plus",
+    "name": "NPO Start Plus",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "ofiii",
+    "name": "Ofiii",
+    "groups": [
+      "tw"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "openai-chatgpt",
+    "name": "OpenAI ChatGPT",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "panda-tv",
+    "name": "Panda TV",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "paramountplus",
+    "name": "ParamountPlus",
+    "groups": [
+      "na",
+      "oceania"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "peacock-tv",
+    "name": "Peacock TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "perplexity-ai",
+    "name": "Perplexity AI",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "philo",
+    "name": "Philo",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "pluto-tv",
+    "name": "Pluto TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "pretty-derby-japan",
+    "name": "Pretty Derby Japan",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "princess-connect-re-dive-japan",
+    "name": "Princess Connect Re:Dive Japan",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "project-sekai-colorful-stage",
+    "name": "Project Sekai: Colorful Stage",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "quora-poe",
+    "name": "Quora Poe",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "radiko",
+    "name": "Radiko",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "rai-play",
+    "name": "Rai Play",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "rakuten-magazine",
+    "name": "Rakuten Magazine",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "rakuten-tv-eu",
+    "name": "Rakuten TV EU",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "rakuten-tv-jp",
+    "name": "Rakuten TV JP",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "reddit",
+    "name": "Reddit",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "sbs-on-demand",
+    "name": "SBS on Demand",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "setanta-sports",
+    "name": "Setanta Sports",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "shudder",
+    "name": "Shudder",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "sky-ch",
+    "name": "Sky CH",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "sky-de",
+    "name": "Sky DE",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "sky-go",
+    "name": "Sky Go",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "sky-go-nz",
+    "name": "Sky Go NZ",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "sky-show-time",
+    "name": "Sky Show Time",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "sling-tv",
+    "name": "Sling TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "sonyliv",
+    "name": "SonyLiv",
+    "groups": [
+      "eu",
+      "hk",
+      "na",
+      "oceania",
+      "sea"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "sooka",
+    "name": "Sooka",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "soop",
+    "name": "SOOP",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "spotify-registration",
+    "name": "Spotify Registration",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "spotv-now",
+    "name": "Spotv Now",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "stan",
+    "name": "Stan",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "starz",
+    "name": "Starz",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "steam",
+    "name": "Steam",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tata-play",
+    "name": "Tata Play",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "telasa",
+    "name": "Telasa",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "three-now",
+    "name": "Three Now",
+    "groups": [
+      "oceania"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tiktok",
+    "name": "TikTok",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tlc-go",
+    "name": "TLC GO",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "tntsports",
+    "name": "TNTSports",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "trueid",
+    "name": "TrueID",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tubi-tv",
+    "name": "Tubi TV",
+    "groups": [
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "tvbanywhere",
+    "name": "TVBAnywhere+",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tver",
+    "name": "TVer",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "tving",
+    "name": "Tving",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "u-next",
+    "name": "U-NEXT",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "viaplay",
+    "name": "Viaplay",
+    "groups": [
+      "eu",
+      "na"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "video-land",
+    "name": "Video Land",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "videomarket",
+    "name": "VideoMarket",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "viu-com",
+    "name": "Viu.com",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "viu-tv",
+    "name": "Viu.TV",
+    "groups": [
+      "hk"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "watcha",
+    "name": "Watcha",
+    "groups": [
+      "jp",
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "wavve",
+    "name": "Wavve",
+    "groups": [
+      "kr"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "wetv",
+    "name": "WeTV",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "wikipedia-editability",
+    "name": "Wikipedia Editability",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "wowow",
+    "name": "Wowow",
+    "groups": [
+      "jp"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "x-ai-grok",
+    "name": "x.AI Grok",
+    "groups": [
+      "ai"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "x-formerly-twitter",
+    "name": "X (formerly Twitter)",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "youtube-cdn",
+    "name": "Youtube CDN",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "youtube-premium",
+    "name": "Youtube Premium",
+    "groups": [
+      "global"
+    ],
+    "supports_ipv6": true
+  },
+  {
+    "id": "zdf",
+    "name": "ZDF",
+    "groups": [
+      "eu"
+    ],
+    "supports_ipv6": false
+  },
+  {
+    "id": "zee5",
+    "name": "Zee5",
+    "groups": [
+      "sea"
+    ],
+    "supports_ipv6": true
+  }
+]

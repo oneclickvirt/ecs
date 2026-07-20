@@ -79,6 +79,103 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
+      - name: Checkout structured component sources
+        uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/UnlockTests
+          ref: v0.0.41-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/UnlockTests
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/backtrace
+          ref: v0.0.11-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/backtrace
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/basics
+          ref: v0.0.20-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/basics
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/cputest
+          ref: v0.0.13-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/cputest
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/defaultset
+          ref: v0.0.2-20240624082446
+          token: ${{ secrets.GHT }}
+          path: deps/defaultset
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/disktest
+          ref: v0.0.12-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/disktest
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/gostun
+          ref: v0.0.7-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/gostun
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/memorytest
+          ref: v0.0.11-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/memorytest
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/nt3
+          ref: v0.0.15-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/nt3
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/pingtest
+          ref: v0.0.12-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/pingtest
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/portchecker
+          ref: v0.0.4-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/portchecker
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/privatespeedtest
+          ref: v0.0.2-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/privatespeedtest
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/security
+          ref: v0.0.11-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/security
+      - uses: actions/checkout@v4
+        with:
+          repository: oneclickvirt/speedtest
+          ref: v0.0.14-20260720103959
+          token: ${{ secrets.GHT }}
+          path: deps/speedtest
+
+      - name: Configure structured component workspace
+        run: |
+          printf '/deps/\n/go.work\n/go.work.sum\n' >> .git/info/exclude
+          go work init .
+          for module in UnlockTests backtrace basics cputest defaultset disktest gostun memorytest nt3 pingtest portchecker privatespeedtest security speedtest; do
+            go work use "deps/${module}"
+          done
+          go test -race ./...
+          go vet ./...
+          git diff --exit-code -- go.mod go.sum
+
       # - name: Install UPX
       #   run: |
       #     apk add --no-cache upx

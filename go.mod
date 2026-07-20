@@ -7,20 +7,20 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/imroc/req/v3 v3.59.0
-	github.com/oneclickvirt/UnlockTests v0.0.40-20260705091135
-	github.com/oneclickvirt/backtrace v0.0.10-20260702203359
-	github.com/oneclickvirt/basics v0.0.19-20260702203359
-	github.com/oneclickvirt/cputest v0.0.12-20260509135512
+	github.com/oneclickvirt/UnlockTests v0.0.41-20260720103959
+	github.com/oneclickvirt/backtrace v0.0.11-20260720103959
+	github.com/oneclickvirt/basics v0.0.20-20260720103959
+	github.com/oneclickvirt/cputest v0.0.13-20260720103959
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.11-20260521162552
-	github.com/oneclickvirt/gostun v0.0.6-20260509043509
-	github.com/oneclickvirt/memorytest v0.0.10-20251218032900
-	github.com/oneclickvirt/nt3 v0.0.14-20260702203359
-	github.com/oneclickvirt/pingtest v0.0.11-20260702203359
-	github.com/oneclickvirt/portchecker v0.0.3-20250728015900
-	github.com/oneclickvirt/privatespeedtest v0.0.1-20260112130218
-	github.com/oneclickvirt/security v0.0.10-20260706141019
-	github.com/oneclickvirt/speedtest v0.0.13-20260702203359
+	github.com/oneclickvirt/disktest v0.0.12-20260720103959
+	github.com/oneclickvirt/gostun v0.0.7-20260720103959
+	github.com/oneclickvirt/memorytest v0.0.11-20260720103959
+	github.com/oneclickvirt/nt3 v0.0.15-20260720103959
+	github.com/oneclickvirt/pingtest v0.0.12-20260720103959
+	github.com/oneclickvirt/portchecker v0.0.4-20260720103959
+	github.com/oneclickvirt/privatespeedtest v0.0.2-20260720103959
+	github.com/oneclickvirt/security v0.0.11-20260720103959
+	github.com/oneclickvirt/speedtest v0.0.14-20260720103959
 )
 
 require (

@@ -42,7 +42,7 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck, autoChange bo
 
 // MediaTest 流媒体解锁测试公共接口
 // language: 语言 ("zh" 或 "en")
-// region: 检测地区 ("0"=跨国平台, ..., "20"=全部平台)
+// region: 检测地区 ("0"=跨国平台, ..., "20"=全部平台, "21"=仅 AI 平台)
 // ipVersion: 测试的IP版本 ("auto"=全测, "ipv4", "ipv6")
 // showIP: 兼容旧 API，IP 版本会自动显示在 UnlockTests 小节标题中
 // 返回: 测试结果

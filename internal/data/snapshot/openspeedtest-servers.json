@@ -1,0 +1,102 @@
+[
+  {
+    "id": "11-hongkong",
+    "host": "speedtest.hkg12.hk.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "HK",
+    "city": "HongKong",
+    "status": "available"
+  },
+  {
+    "id": "12-tokyo",
+    "host": "speedtest.tyo11.jp.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "JP",
+    "city": "Tokyo",
+    "status": "available"
+  },
+  {
+    "id": "13-singapore",
+    "host": "speedtest.sin1.sg.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "SG",
+    "city": "Singapore",
+    "status": "available"
+  },
+  {
+    "id": "21-sydney",
+    "host": "speedtest.syd12.au.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "AU",
+    "city": "Sydney",
+    "status": "available"
+  },
+  {
+    "id": "31-losangeles",
+    "host": "speedtest.lax12.us.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "US",
+    "city": "LosAngeles",
+    "status": "available"
+  },
+  {
+    "id": "32-newyork",
+    "host": "nyc.speedtest.clouvider.net",
+    "port_from": 5200,
+    "port_to": 5209,
+    "provider": "Clouvider",
+    "country": "US",
+    "city": "NewYork",
+    "status": "unavailable"
+  },
+  {
+    "id": "41-frankfurk",
+    "host": "fra.speedtest.clouvider.net",
+    "port_from": 5200,
+    "port_to": 5209,
+    "provider": "Clouvider",
+    "country": "DE",
+    "city": "Frankfurk",
+    "status": "unavailable"
+  },
+  {
+    "id": "42-london",
+    "host": "speedtest.lon1.uk.leaseweb.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Leaseweb",
+    "country": "GB",
+    "city": "London",
+    "status": "available"
+  },
+  {
+    "id": "43-armsterdam",
+    "host": "iperf-ams-nl.eranium.net",
+    "port_from": 5201,
+    "port_to": 5210,
+    "provider": "Eranium",
+    "country": "NL",
+    "city": "Armsterdam",
+    "status": "available"
+  },
+  {
+    "id": "51-s-opaulo",
+    "host": "speedtest.sao1.edgoo.net",
+    "port_from": 9205,
+    "port_to": 9240,
+    "provider": "Edgoo",
+    "country": "BR",
+    "city": "SãoPaulo",
+    "status": "unavailable"
+  }
+]

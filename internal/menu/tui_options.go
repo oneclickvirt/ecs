@@ -148,6 +148,18 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			boolVal: config.AutoChangeDiskMethod,
 		},
 		{
+			key: "deep", nameZh: "深度测试", nameEn: "Deep Mode", kind: "bool",
+			descZh:  "仅运行下方明确填写目标的高负载深度项目。",
+			descEn:  "Run high-load deep tests only for explicitly configured targets.",
+			boolVal: config.DeepMode,
+		},
+		{key: "deepdiskpaths", nameZh: "深度多盘目录", nameEn: "Deep Disk Paths", kind: "text", descZh: "逗号分隔的已挂载普通目录；留空关闭。", descEn: "Comma-separated mounted directories; empty disables.", textVal: config.DeepDiskPaths},
+		{key: "deepsmartdevices", nameZh: "SMART自检设备", nameEn: "SMART Devices", kind: "text", descZh: "逗号分隔的显式设备；留空关闭。", descEn: "Comma-separated explicit devices; empty disables.", textVal: config.DeepSMARTDevices},
+		{key: "deepburnduration", nameZh: "CPU烤机时长", nameEn: "CPU Burn Duration", kind: "text", descZh: "例如30s或2m；留空关闭。", descEn: "For example 30s or 2m; empty disables.", textVal: config.DeepBurnDuration.String()},
+		{key: "deepgpudevice", nameZh: "GPU设备选择器", nameEn: "GPU Device", kind: "text", descZh: "显式GPU设备；留空关闭。", descEn: "Explicit GPU selector; empty disables.", textVal: config.DeepGPUDevice},
+		{key: "timeout", nameZh: "全局截止时间", nameEn: "Global Deadline", kind: "text", descZh: "最长15m，例如10m。", descEn: "Up to 15m, for example 10m.", textVal: config.MaxDuration.String()},
+		{key: "hardwarebudget", nameZh: "硬件阶段预算", nameEn: "Hardware Budget", kind: "text", descZh: "标准模式最长2m；深度模式不超过全局截止时间。", descEn: "Up to 2m in standard mode; deep mode is capped by the global deadline.", textVal: config.HardwareBudget.String()},
+		{
 			key: "nt3loc", nameZh: "NT3测试地区", nameEn: "NT3 Location", kind: "option",
 			descZh: "选择路由追踪地区。显示中文全称，内部仍使用标准参数值。",
 			descEn: "Choose route trace region. Full names are shown while preserving standard values.",
@@ -212,6 +224,7 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 				option("18", "仅大洋洲", "Oceania Only", "仅检测大洋洲本地平台。", "Oceania local platforms only."),
 				option("19", "仅体育", "Sports Only", "仅检测体育类平台。", "Sports platforms only."),
 				option("20", "全部平台", "All Platforms", "检测所有地区全部平台（耗时最长）。", "Check all platforms across all regions (longest runtime)."),
+				option("21", "仅 AI 平台", "AI Only", "仅检测 AI 平台。", "Check AI platforms only."),
 			},
 		},
 		{
@@ -230,6 +243,11 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 				option("ipv6", "仅 IPv6", "IPv6 Only", "仅使用 IPv6 进行解锁测试。", "Only test using IPv6."),
 			},
 		},
+		{key: "utinterface", nameZh: "解锁源接口或IP", nameEn: "Unlock Source Interface/IP", kind: "text", descZh: "留空使用默认路由。", descEn: "Empty uses the default route.", textVal: config.UnlockTestInterface},
+		{key: "utdns", nameZh: "解锁DNS服务器", nameEn: "Unlock DNS Servers", kind: "text", descZh: "多个DNS用逗号分隔；留空使用系统DNS。", descEn: "Comma-separated DNS servers; empty uses system DNS.", textVal: config.UnlockTestDNSServers},
+		{key: "uthttpproxy", nameZh: "解锁HTTP代理", nameEn: "Unlock HTTP Proxy", kind: "text", descZh: "留空关闭。", descEn: "Empty disables.", textVal: config.UnlockTestHTTPProxy},
+		{key: "utsocksproxy", nameZh: "解锁SOCKS5代理", nameEn: "Unlock SOCKS5 Proxy", kind: "text", descZh: "留空关闭。", descEn: "Empty disables.", textVal: config.UnlockTestSOCKSProxy},
+		{key: "utconcurrency", nameZh: "解锁并发数", nameEn: "Unlock Concurrency", kind: "text", descZh: "范围1到100。", descEn: "Range 1 to 100.", textVal: strconv.Itoa(config.UnlockTestConcurrency)},
 		{
 			key: "log", nameZh: "调试日志", nameEn: "Debug Logger", kind: "bool",
 			descZh:  "启用后输出更多调试日志，便于排障。",
@@ -254,6 +272,11 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			descEn:  "Local result filename used before upload.",
 			textVal: config.FilePath,
 		},
+		{key: "privacy", nameZh: "隐私模式", nameEn: "Privacy Mode", kind: "bool", descZh: "隐藏敏感硬件标识并禁止上传。", descEn: "Hide sensitive hardware identifiers and disable upload.", boolVal: config.PrivacyMode},
+		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "启用结构化TCP握手延迟与错误分类。", descEn: "Enable structured TCP latency and error classification.", boolVal: config.TCPProbeStatus},
+		{key: "jsonpath", nameZh: "JSON结果路径", nameEn: "JSON Result Path", kind: "text", descZh: "留空关闭；使用-输出到标准输出。", descEn: "Empty disables; use - for stdout.", textVal: config.JSONPath},
+		{key: "dataoffline", nameZh: "仅使用内置数据", nameEn: "Embedded Data Only", kind: "bool", descZh: "禁止远程数据请求并使用内置最新有效快照。", descEn: "Disable remote data requests and use the embedded valid snapshot.", boolVal: config.DataOffline},
+		{key: "datacdn", nameZh: "数据CDN地址", nameEn: "Data CDN Base", kind: "text", descZh: "ecs-data目录的CDN基础地址。", descEn: "CDN base URL for the ecs-data directory.", textVal: config.DataCDNBase},
 	}
 
 	for i := range adv {

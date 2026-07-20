@@ -16,6 +16,7 @@ import (
 	basicmodel "github.com/oneclickvirt/basics/model"
 	cputestmodel "github.com/oneclickvirt/cputest/model"
 	disktestmodel "github.com/oneclickvirt/disktest/disk"
+	ecsapi "github.com/oneclickvirt/ecs/api"
 	menu "github.com/oneclickvirt/ecs/internal/menu"
 	params "github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/runner"
@@ -28,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.146"                   // 融合怪版本号
+	ecsVersion = "v0.1.147"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -52,9 +53,6 @@ func handleLanguageSpecificSettings() {
 		configs.BacktraceStatus = false
 		configs.Nt3Status = false
 	}
-	if !configs.EnableUpload {
-		configs.SecurityTestStatus = false
-	}
 }
 
 func applyEnvironmentDefaults(config *params.Config) {
@@ -67,6 +65,32 @@ func shouldWaitForExitInput() bool {
 	return (runtime.GOOS == "windows" || runtime.GOOS == "darwin") && !utils.IsNonInteractive()
 }
 
+func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
+	if config == nil {
+		return
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	result := ecsapi.RunAllTestsContext(ctx, preCheck, config)
+	if result == nil {
+		fmt.Fprintln(os.Stderr, "failed to run structured ECS tests")
+		return
+	}
+	if config.JSONPath != "-" && result.StructuredOutput != "" {
+		fmt.Print(result.StructuredOutput)
+	}
+	finalized, err := ecsapi.FinalizeRunResultContext(ctx, preCheck, (*ecsapi.Config)(config), result)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to finalize result: %v\n", err)
+	}
+	if finalized.HTTPURL != "" || finalized.HTTPSURL != "" {
+		fmt.Printf("Http URL:  %s\nHttps URL: %s\n", finalized.HTTPURL, finalized.HTTPSURL)
+	}
+	if config.JSONPath == "-" {
+		fmt.Println(string(result.JSON))
+	}
+}
+
 func main() {
 	configs.ParseFlags(os.Args[1:])
 	applyEnvironmentDefaults(configs)
@@ -77,7 +101,7 @@ func main() {
 	utils.CheckAndFixAndroidDNS(configs.Language)
 	preCheck := utils.CheckPublicAccess(3 * time.Second)
 	go func() {
-		if preCheck.Connected {
+		if preCheck.Connected && !configs.PrivacyMode {
 			resp, err := http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
 			if err == nil && resp != nil && resp.Body != nil {
 				resp.Body.Close()
@@ -93,6 +117,15 @@ func main() {
 	if !preCheck.Connected {
 		configs.EnableUpload = false
 	}
+	if configs.JSONPath != "" || ecsapi.UsesStructuredComponents() {
+		runStructuredCLI(preCheck, configs)
+		configs.Finish = true
+		if shouldWaitForExitInput() {
+			fmt.Println("Press Enter to exit...")
+			fmt.Scanln()
+		}
+		return
+	}
 	var (
 		wg1, wg2, wg3                                         sync.WaitGroup
 		basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
@@ -106,7 +139,54 @@ func main() {
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
+	cleanupGrace := 30 * time.Second
+	softDeadline := configs.MaxDuration - cleanupGrace
+	if softDeadline <= 0 {
+		softDeadline = configs.MaxDuration / 2
+	}
+	deadlineTimer := time.AfterFunc(softDeadline, func() {
+		select {
+		case sig <- runner.DeadlineSignal{}:
+		default:
+		}
+	})
+	defer deadlineTimer.Stop()
+	// Keep a stable copy for the deadline callback. The legacy runner mutates
+	// a few menu fields while tests are running, so reading configs directly
+	// from the signal goroutine would introduce a race.
+	deadlineConfig := *configs
+	writeDeadlineReport := func() {
+		if deadlineConfig.JSONPath == "" {
+			return
+		}
+		reportConfig := deadlineConfig
+		reportConfig.BasicStatus = false
+		reportConfig.CpuTestStatus = false
+		reportConfig.MemoryTestStatus = false
+		reportConfig.DiskTestStatus = false
+		reportConfig.TCPProbeStatus = false
+		reportConfig.DeepMode = false
+		reportCtx, reportCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer reportCancel()
+		report := ecsapi.CollectStructuredReport(reportCtx, preCheck, &reportConfig, "", startTime, time.Now())
+		report.Status = ecsapi.ReportStatusTimeout
+		for index := range report.Sections {
+			if report.Sections[index].Enabled {
+				report.Sections[index].Status = ecsapi.ReportStatusTimeout
+				report.Sections[index].Reason = "global deadline exceeded"
+			}
+		}
+		encoded, err := report.JSON()
+		if err != nil {
+			return
+		}
+		if reportConfig.JSONPath == "-" {
+			fmt.Println(string(encoded))
+			return
+		}
+		_ = os.WriteFile(reportConfig.JSONPath, append(encoded, '\n'), 0o600)
+	}
+	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex, writeDeadlineReport)
 	switch configs.Language {
 	case "zh":
 		runner.RunChineseTests(ctx, preCheck, configs, &wg1, &wg2, &wg3, &basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo, &output, tempOutput, startTime, &outputMutex, &infoMutex)

@@ -1,0 +1,41 @@
+{
+  "schema": "ecs-data/v1",
+  "generated_at": "2026-07-20T08:03:32.511042Z",
+  "files": {
+    "bgp-asn-map.json": {
+      "sha256": "f934baba2ec5ae25fd09c900b9688fb93a9f42d35bddf13dcc235f59feff3ebd",
+      "count": 84,
+      "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/AS_Mapping.txt"
+    },
+    "dnsbl-zones.json": {
+      "sha256": "7b9126bd4b300499adc57ede9c1a2aa00aec5902cc825c38274c694e080488f6",
+      "count": 370,
+      "source": "https://raw.githubusercontent.com/xykt/IPQuality/main/ref/dnsbl.list"
+    },
+    "media-providers.json": {
+      "sha256": "d6f52bf6de2776c0baa4937dee73b780dbf58e834dc82b1284ac5b47af8634de",
+      "count": 163,
+      "source": "https://raw.githubusercontent.com/HsukqiLee/MediaUnlockTest/main/pkg/providers/lists.go"
+    },
+    "openspeedtest-servers.json": {
+      "sha256": "6c04e010c336704f2d39043df84c44d62956435dae3c4d3ec04884c38ea22694",
+      "count": 10,
+      "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/iperf.json"
+    },
+    "province-routes.json": {
+      "sha256": "263794adb358975ca10008cd817b2c63b5129085ef138205f888dc6bab357ed5",
+      "count": 31,
+      "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/province.json"
+    },
+    "speedtest-servers.json": {
+      "sha256": "bbec4b8000e53322a528d4f2a6dbd27871320b5eabd591be857bdbb73a30d718",
+      "count": 15,
+      "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/speedtest_cn.json"
+    },
+    "tcp-targets.json": {
+      "sha256": "fc9b959cf1f75e609b3f35c5842ab71024fa829994f1f11bc79dd0ad696adf49",
+      "count": 64,
+      "source": "https://raw.githubusercontent.com/se-tang/TCPbench/main/backend/scripts/run.sh"
+    }
+  }
+}

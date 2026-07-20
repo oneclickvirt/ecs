@@ -1,6 +1,8 @@
 package api
 
 import (
+	"time"
+
 	"github.com/oneclickvirt/ecs/internal/params"
 )
 
@@ -106,6 +108,73 @@ func WithEnableUpload(enable bool) ConfigOption {
 func WithAnalyzeResult(enable bool) ConfigOption {
 	return func(c *Config) {
 		c.AnalyzeResult = enable
+	}
+}
+
+// WithMaxDuration sets the global deadline. Values above 15 minutes are
+// clamped by Config.ValidateParams.
+func WithMaxDuration(duration time.Duration) ConfigOption {
+	return func(c *Config) {
+		c.MaxDuration = duration
+	}
+}
+
+// WithHardwareBudget sets the standard hardware stage budget.
+func WithHardwareBudget(duration time.Duration) ConfigOption {
+	return func(c *Config) {
+		c.HardwareBudget = duration
+	}
+}
+
+func WithDeepMode(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.DeepMode = enable
+	}
+}
+
+func WithDeepDiskPaths(paths string) ConfigOption {
+	return func(c *Config) { c.DeepDiskPaths = paths }
+}
+
+func WithDeepSMARTDevices(devices string) ConfigOption {
+	return func(c *Config) { c.DeepSMARTDevices = devices }
+}
+
+func WithDeepBurnDuration(duration time.Duration) ConfigOption {
+	return func(c *Config) { c.DeepBurnDuration = duration }
+}
+
+func WithDeepGPUDevice(device string) ConfigOption {
+	return func(c *Config) { c.DeepGPUDevice = device }
+}
+
+func WithPrivacyMode(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.PrivacyMode = enable
+	}
+}
+
+func WithTCPProbe(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.TCPProbeStatus = enable
+	}
+}
+
+func WithJSONPath(path string) ConfigOption {
+	return func(c *Config) {
+		c.JSONPath = path
+	}
+}
+
+func WithDataCDNBase(base string) ConfigOption {
+	return func(c *Config) {
+		c.DataCDNBase = base
+	}
+}
+
+func WithDataOffline(enable bool) ConfigOption {
+	return func(c *Config) {
+		c.DataOffline = enable
 	}
 }
 
@@ -216,7 +285,7 @@ func WithNt3CheckType(checkType string) ConfigOption {
 }
 
 // WithUnlockTestRegion 设置流媒体解锁检测地区
-// region: "0" 到 "20"
+// region: "0" 到 "21"，其中 "21" 为仅 AI 平台
 func WithUnlockTestRegion(region string) ConfigOption {
 	return func(c *Config) {
 		c.UnlockTestRegion = region
@@ -235,6 +304,18 @@ func WithUnlockTestShowIP(enable bool) ConfigOption {
 func WithUnlockTestIPVersion(ipVersion string) ConfigOption {
 	return func(c *Config) {
 		c.UnlockTestIPVersion = ipVersion
+	}
+}
+
+// WithUnlockTestNetwork sets explicit network inputs for structured media probes.
+// Empty values select system DNS, the default route and no proxy.
+func WithUnlockTestNetwork(interfaceOrIP, dnsServers, httpProxy, socksProxy string, concurrency int) ConfigOption {
+	return func(c *Config) {
+		c.UnlockTestInterface = interfaceOrIP
+		c.UnlockTestDNSServers = dnsServers
+		c.UnlockTestHTTPProxy = httpProxy
+		c.UnlockTestSOCKSProxy = socksProxy
+		c.UnlockTestConcurrency = concurrency
 	}
 }
 

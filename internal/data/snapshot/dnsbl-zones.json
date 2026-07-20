@@ -1,0 +1,1852 @@
+[
+  {
+    "zone": "0outspam.fusionzero.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "0spam-killlist.fusionzero.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "0spam.fusionzero.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "0spamtrust.fusionzero.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "0spamurl.fusionzero.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "3y.spam.mrs.kithrup.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "abuse.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "abuse.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "access.redhawk.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "accredit.habeas.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "admin.bl.kundenserver.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.ascc.dnsbl.bit.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.dnsbl.bit.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.s5h.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.spam-rbl.fr",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.spamrats.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "all.v6.ascc.dnsbl.bit.nl",
+    "ipv4": false,
+    "ipv6": true
+  },
+  {
+    "zone": "assholes.madscience.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "auth.spamrats.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "autowork.drbl.ks.cz",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "b.barracudacentral.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "backscatter.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "badnets.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ban.zebl.zoneedit.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bandwidth-pigs.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bb.barracudacentral.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bitonly.dnsbl.bit.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.blocklist.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.blueshore.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.borderworlds.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.deadbeef.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.drmx.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.fmb.la",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.ipv6.spameatingmonkey.net",
+    "ipv4": false,
+    "ipv6": true
+  },
+  {
+    "zone": "bl.konstant.no",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.mailspike.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.mailspike.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.mav.com.br",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.mipspace.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.nszones.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.scientificspam.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.score.senderscore.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.spamcannibal.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.spamcop.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.spamstinks.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.student.pw.edu.pl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.suomispam.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bl.tolkien.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "black.junkemailfilter.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blackhole.compu.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blackholes.brainerd.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blackholes.easynet.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blackholes.five-ten-sg.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.fpsn.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.hostkarma.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.informationwave.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.mail.ops.asp.att.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.mailrelay.att.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.sci.kun.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.sci.ru.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blacklist.sequoia.ops.asp.att.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "block.ascams.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "block.blars.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blocked.asgardnet.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blocked.hilli.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blocklist.squawk.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "blocklist2.squawk.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bogon.lbl.lagengymnastik.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bogons.cymru.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bogusmx.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bogusmx.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bsb.empty.us",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "bsb.spamlookup.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "cart00ney.surriel.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "catchspam.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "china.rominet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "client-domain.sjesl.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "combined.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "combined.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "communicado.fmb.la",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "csi.cloudmark.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "czdynamic.drbl.ks.cz",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "db.wpbl.info",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dbl.suomispam.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dev.null.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dialup.blacklist.jippg.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dialup.drbl.sandy.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dialups.mail-abuse.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl-0.uceprotect.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl-1.uceprotect.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl-2.uceprotect.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl-3.uceprotect.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.anticaptcha.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.calivent.com.pe",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.cbn.net.id",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.clue-by-4.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.cobion.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.cyberlogic.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.delink.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.dronebl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.forefront.microsoft.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.httpbl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.inps.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.ioerror.us",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.justspam.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.kempt.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.madavi.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.mags.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.mailshell.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.mcu.edu.tw",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.pagedirect.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.rizon.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.rv-soft.info",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.rymsho.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.technoirc.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.tornevall.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.webequipped.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.wpbl.pc9.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl.zapbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsbl6.anticaptcha.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsblchile.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnsrbl.swinog.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnswl.inps.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dnswl.leisi.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dob.sibl.support-intelligence.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "drone.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dronebl.noderebellion.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dsn.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dsn.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dssl.imrss.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "duinv.aupads.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dul.pacifier.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dul.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dyna.spamrats.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dynablock.easynet.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dynamic.dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dyndns.rbl.jp",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "dynip.rothen.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "elitist.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "endn.bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "eswlrev.dnsbl.rediris.es",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ex.dnsbl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "feb.spamlab.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fnrbl.fast.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "formmail.relays.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fresh.dict.rbl.arix.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fresh.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fresh10.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fresh15.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "fulldom.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "geobl.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "gl.suomispam.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "helo-domain.sjesl.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "hil.habeas.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "hong-kong.rominet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "hostkarma.junkemailfilter.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "httpbl.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "hul.habeas.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "iadb.isipp.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "iadb2.isipp.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "iddb.isipp.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "images.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "in.dnsbl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "intercept.datapacket.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "intruders.docs.uu.se",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ipbl.zeustracker.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ips.backscatterer.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ipv6.all.dnsbl.bit.nl",
+    "ipv4": false,
+    "ipv6": true
+  },
+  {
+    "zone": "ipv6.all.s5h.net",
+    "ipv4": false,
+    "ipv6": true
+  },
+  {
+    "zone": "ipwhois.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ispmx.pofon.foobar.hu",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ix.dnsbl.manitu.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "korea.rominet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "korea.services.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "l1.apews.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "lame.dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "lbl.lagengymnastik.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "list.anonwhois.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "list.blogspambl.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "list.dnswl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "list.quorum.to",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "mail-abuse.blacklist.jippg.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "mail.people.it",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "manual.orbz.gst-group.co.uk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "mr-out.imrss.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "msgid.bl.gweep.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "mtawlrev.dnsbl.rediris.es",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "multi.surbl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "netbl.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "netblock.pedantic.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "netblockbl.spamgrouper.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "netscan.rbl.blockedservers.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "nml.mail-abuse.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "no-more-funn.moensted.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "nobl.junkemailfilter.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "noptr.spamrats.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "nospam.ant.pl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "nsbl.fmb.la",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "opm.tornevall.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "orbs.dorkslayers.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "orbz.gst-group.co.uk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "origin6.asn.cymru.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "orvedb.aupads.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "pacbelldsl.compu.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "pdl.bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "phishing.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "plus.bondedsender.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "pm0-no-more.compu.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "pofon.foobar.hu",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "policy.lbl.lagengymnastik.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "postmaster.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "postmaster.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "proxies.blackholes.easynet.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "proxies.exsilia.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "proxy.bl.gweep.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "proxy.block.transip.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "proxy.drbl.be.net.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "psbl.surriel.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "q.mail-abuse.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "query.bondedsender.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "query.senderbase.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "r.mail-abuse.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rabl.nuclearelephant.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "random.bl.gweep.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.abuse.ro",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.blakjak.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.blockedservers.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.cbn.net.id",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.dns-servicios.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.echelon.pl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.efnet.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.efnethelp.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.efnetrbl.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.eznettools.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.fasthosts.co.uk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.firstbase.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.init1.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.interserver.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.jp",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.lugh.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.ma.krakow.pl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.mail-abuse.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.ntvinet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.pil.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.polarcomm.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.rope.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.schulte.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.snark.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.spamlab.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.suresupport.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.talkactive.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl.triumf.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rbl2.triumf.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rdts.bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relayips.rbl.shub-inter.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relays.bl.gweep.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relays.bl.kundenserver.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relays.dorkslayers.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relays.nether.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relays.radparker.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "relaywatcher.n13mbl.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rep.mailspike.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "reputation-domain.rbl.scrolloutf1.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "reputation-ip.rbl.scrolloutf1.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "reputation-ns.rbl.scrolloutf1.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "residential.block.transip.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rf.senderbase.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rhsbl.rymsho.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rhsbl.scientificspam.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rhsbl.zapbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "rsbl.aupads.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sa-accredit.habeas.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sa.senderbase.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sbl.nszones.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "schizo-bl.kundenserver.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "score.senderscore.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sender-address.sjesl.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sender-domain-validate.sjesl.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sender-domain.sjesl.monkeys.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "short.fmb.la",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "short.rbl.jp",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "singular.ttk.pte.hu",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "sohul.habeas.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.dnsbl.anonmails.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.exsilia.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.lbl.lagengymnastik.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.olsentech.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.pedantic.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.rbl.blockedservers.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.shri.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.spamrats.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.wonk.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spam.wytnij.to",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamblock.kundenserver.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spambot.bls.digibase.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamdomain.block.transip.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamdomains.blackholes.easynet.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamguard.leadmon.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamips.rbl.shub-inter.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamrbl.imp.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamsource.block.transip.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamsources.fabel.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spamsupport.dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spbl.bl.winbots.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "spews.block.transip.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "st.technovision.dk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "stale.dict.rbl.arix.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "superblock.ascams.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "taiwan.rominet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "tor.dan.me.uk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "tor.efnet.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "torexit.dan.me.uk",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "truncate.gbudb.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "trusted.nether.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ubl.lashback.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ubl.nszones.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ubl.unsubscore.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "unsure.nether.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "uribl.abuse.ro",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "uribl.pofon.foobar.hu",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "uribl.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "uribl.swinog.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "uribl.zeustracker.abuse.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "urired.spameatingmonkey.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "url.rbl.jp",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vbl.mookystick.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "virbl.bit.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "virbl.dnsbl.bit.nl",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "virus.rbl.jp",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "virus.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.be.net.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.caravan.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.croco.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.dataforce.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.gremlin.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.drbl.host.kz",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vote.rbl.ntvinet.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "vouch.dwl.spamhaus.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wadb.isipp.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wbl.triumf.ca",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wdl.bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "web.rbl.msrbl.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "whois.rfc-clueless.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "whois.rfc-ignorant.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wl.mailspike.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wl.nszones.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wl.summersault.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wl.trusted-forwarder.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "work.drbl.caravan.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "work.drbl.croco.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "work.drbl.dataforce.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "work.drbl.gremlin.ru",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "work.drbl.host.kz",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "worm.dnsbl.rangers.eu.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wormrbl.imp.ch",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "worms-bl.kundenserver.de",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "wpb.bl.reynolds.net.au",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "xbl.selwerd.cx",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ybl.megacity.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "z.mailspike.net",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "zebl.zoneedit.com",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "zta.birdsong.org",
+    "ipv4": true,
+    "ipv6": false
+  },
+  {
+    "zone": "ztl.dorkslayers.com",
+    "ipv4": true,
+    "ipv6": false
+  }
+]

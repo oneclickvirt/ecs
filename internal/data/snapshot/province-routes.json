@@ -1,0 +1,715 @@
+[
+  {
+    "code": "BJ",
+    "name": "北京市",
+    "province": 11,
+    "short": "京",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "bj-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "bj-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "bj-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "bj-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "bj-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "bj-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "TJ",
+    "name": "天津市",
+    "province": 12,
+    "short": "津",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "tj-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "tj-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "tj-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "tj-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "tj-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "tj-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HE",
+    "name": "河北省",
+    "province": 13,
+    "short": "冀",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "he-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "he-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "he-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "he-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "he-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "he-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "SX",
+    "name": "山西省",
+    "province": 14,
+    "short": "晋",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "sx-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "sx-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "sx-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "sx-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "sx-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "sx-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "NM",
+    "name": "内蒙古自治区",
+    "province": 15,
+    "short": "蒙",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "nm-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "nm-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "nm-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "nm-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "nm-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "nm-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "LN",
+    "name": "辽宁省",
+    "province": 21,
+    "short": "辽",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "ln-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "ln-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "ln-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "ln-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "ln-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "ln-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "JL",
+    "name": "吉林省",
+    "province": 22,
+    "short": "吉",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "jl-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "jl-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "jl-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "jl-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "jl-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "jl-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HL",
+    "name": "黑龙江省",
+    "province": 23,
+    "short": "黑",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "hl-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "hl-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "hl-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "hl-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "hl-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "hl-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "SH",
+    "name": "上海市",
+    "province": 31,
+    "short": "沪",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "sh-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "sh-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "sh-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "sh-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "sh-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "sh-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "JS",
+    "name": "江苏省",
+    "province": 32,
+    "short": "苏",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "js-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "js-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "js-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "js-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "js-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "js-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "ZJ",
+    "name": "浙江省",
+    "province": 33,
+    "short": "浙",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "zj-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "zj-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "zj-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "zj-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "zj-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "zj-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "AH",
+    "name": "安徽省",
+    "province": 34,
+    "short": "皖",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "ah-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "ah-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "ah-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "ah-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "ah-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "ah-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "FJ",
+    "name": "福建省",
+    "province": 35,
+    "short": "闽",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "fj-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "fj-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "fj-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "fj-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "fj-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "fj-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "JX",
+    "name": "江西省",
+    "province": 36,
+    "short": "赣",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "jx-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "jx-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "jx-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "jx-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "jx-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "jx-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "SD",
+    "name": "山东省",
+    "province": 37,
+    "short": "鲁",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "sd-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "sd-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "sd-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "sd-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "sd-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "sd-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HA",
+    "name": "河南省",
+    "province": 41,
+    "short": "豫",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "ha-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "ha-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "ha-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "ha-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "ha-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "ha-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HB",
+    "name": "湖北省",
+    "province": 42,
+    "short": "鄂",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "hb-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "hb-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "hb-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "hb-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "hb-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "hb-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HN",
+    "name": "湖南省",
+    "province": 43,
+    "short": "湘",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "hn-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "hn-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "hn-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "hn-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "hn-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "hn-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "GD",
+    "name": "广东省",
+    "province": 44,
+    "short": "粤",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "gd-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "gd-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "gd-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "gd-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "gd-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "gd-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "GX",
+    "name": "广西壮族自治区",
+    "province": 45,
+    "short": "桂",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "gx-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "gx-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "gx-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "gx-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "gx-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "gx-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "HI",
+    "name": "海南省",
+    "province": 46,
+    "short": "琼",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "hi-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "hi-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "hi-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "hi-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "hi-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "hi-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "CQ",
+    "name": "重庆市",
+    "province": 50,
+    "short": "渝",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "cq-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "cq-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "cq-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "cq-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "cq-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "cq-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "SC",
+    "name": "四川省",
+    "province": 51,
+    "short": "川",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "sc-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "sc-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "sc-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "sc-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "sc-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "sc-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "GZ",
+    "name": "贵州省",
+    "province": 52,
+    "short": "贵",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "gz-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "gz-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "gz-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "gz-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "gz-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "gz-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "YN",
+    "name": "云南省",
+    "province": 53,
+    "short": "云",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "yn-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "yn-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "yn-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "yn-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "yn-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "yn-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "XZ",
+    "name": "西藏自治区",
+    "province": 54,
+    "short": "藏",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "xz-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "xz-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "xz-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "xz-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "xz-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "xz-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "SN",
+    "name": "陕西省",
+    "province": 61,
+    "short": "陕",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "sn-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "sn-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "sn-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "sn-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "sn-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "sn-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "GS",
+    "name": "甘肃省",
+    "province": 62,
+    "short": "甘",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "gs-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "gs-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "gs-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "gs-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "gs-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "gs-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "QH",
+    "name": "青海省",
+    "province": 63,
+    "short": "青",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "qh-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "qh-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "qh-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "qh-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "qh-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "qh-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "NX",
+    "name": "宁夏回族自治区",
+    "province": 64,
+    "short": "宁",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "nx-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "nx-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "nx-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "nx-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "nx-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "nx-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  },
+  {
+    "code": "XJ",
+    "name": "新疆维吾尔自治区",
+    "province": 65,
+    "short": "新",
+    "targets": [
+      {
+        "carrier": "ct",
+        "ipv4": "xj-ct-v4.ip.zstaticcdn.com",
+        "ipv6": "xj-ct-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cu",
+        "ipv4": "xj-cu-v4.ip.zstaticcdn.com",
+        "ipv6": "xj-cu-v6.ip.zstaticcdn.com"
+      },
+      {
+        "carrier": "cm",
+        "ipv4": "xj-cm-v4.ip.zstaticcdn.com",
+        "ipv6": "xj-cm-v6.ip.zstaticcdn.com"
+      }
+    ]
+  }
+]

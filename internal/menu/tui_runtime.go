@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mattn/go-runewidth"
@@ -263,6 +264,28 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.DiskMultiCheck = a.boolVal
 		case "autodiskm":
 			config.AutoChangeDiskMethod = a.boolVal
+		case "deep":
+			config.DeepMode = a.boolVal
+		case "deepdiskpaths":
+			config.DeepDiskPaths = strings.TrimSpace(a.textVal)
+		case "deepsmartdevices":
+			config.DeepSMARTDevices = strings.TrimSpace(a.textVal)
+		case "deepburnduration":
+			if value := strings.TrimSpace(a.textVal); value == "" {
+				config.DeepBurnDuration = 0
+			} else if duration, err := time.ParseDuration(value); err == nil {
+				config.DeepBurnDuration = duration
+			}
+		case "deepgpudevice":
+			config.DeepGPUDevice = strings.TrimSpace(a.textVal)
+		case "timeout":
+			if duration, err := time.ParseDuration(strings.TrimSpace(a.textVal)); err == nil {
+				config.MaxDuration = duration
+			}
+		case "hardwarebudget":
+			if duration, err := time.ParseDuration(strings.TrimSpace(a.textVal)); err == nil {
+				config.HardwareBudget = duration
+			}
 		case "nt3loc":
 			config.Nt3Location = a.options[a.current].value
 		case "nt3t":
@@ -277,6 +300,18 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.UnlockTestShowIP = a.boolVal
 		case "unlockipver":
 			config.UnlockTestIPVersion = a.options[a.current].value
+		case "utinterface":
+			config.UnlockTestInterface = strings.TrimSpace(a.textVal)
+		case "utdns":
+			config.UnlockTestDNSServers = strings.TrimSpace(a.textVal)
+		case "uthttpproxy":
+			config.UnlockTestHTTPProxy = strings.TrimSpace(a.textVal)
+		case "utsocksproxy":
+			config.UnlockTestSOCKSProxy = strings.TrimSpace(a.textVal)
+		case "utconcurrency":
+			if value, err := strconv.Atoi(strings.TrimSpace(a.textVal)); err == nil {
+				config.UnlockTestConcurrency = value
+			}
 		case "log":
 			config.EnableLogger = a.boolVal
 		case "upload":
@@ -287,6 +322,16 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			if strings.TrimSpace(a.textVal) != "" {
 				config.FilePath = strings.TrimSpace(a.textVal)
 			}
+		case "privacy":
+			config.PrivacyMode = a.boolVal
+		case "tcp":
+			config.TCPProbeStatus = a.boolVal
+		case "jsonpath":
+			config.JSONPath = strings.TrimSpace(a.textVal)
+		case "dataoffline":
+			config.DataOffline = a.boolVal
+		case "datacdn":
+			config.DataCDNBase = strings.TrimSpace(a.textVal)
 		}
 	}
 

@@ -18,6 +18,42 @@ import (
 	"github.com/oneclickvirt/portchecker/email"
 )
 
+// DeadlineSignal distinguishes the internally scheduled global deadline from
+// a user-generated SIGINT/SIGTERM. It is sent only through the in-process
+// signal channel and is never registered with signal.Notify.
+type DeadlineSignal struct{}
+
+func (DeadlineSignal) Signal() {}
+
+func (DeadlineSignal) String() string { return "global deadline" }
+
+type identityReadyContextKey struct{}
+
+// WithIdentityReady lets the orchestration layer wait until the legacy basic
+// stage has finished publishing its IP identity. This prevents structured
+// security/backtrace probes from racing the legacy global identity fields.
+// The channel should be buffered with capacity one.
+func WithIdentityReady(ctx context.Context, ready chan struct{}) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, identityReadyContextKey{}, ready)
+}
+
+func signalIdentityReady(ctx context.Context) {
+	if ctx == nil {
+		return
+	}
+	ready, _ := ctx.Value(identityReadyContextKey{}).(chan struct{})
+	if ready == nil {
+		return
+	}
+	select {
+	case ready <- struct{}{}:
+	default:
+	}
+}
+
 // RunChineseTests runs all tests in Chinese mode
 func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
@@ -27,6 +63,7 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
 	}
+	signalIdentityReady(ctx)
 	if config.UtTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" && !config.OnlyChinaTest {
 		wg1.Add(1)
 		go func() {
@@ -80,6 +117,7 @@ func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
 	}
+	signalIdentityReady(ctx)
 	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
 		if config.UtTestStatus {
 			wg1.Add(1)
@@ -566,9 +604,10 @@ func printTimeInfo(config *params.Config, minutes, seconds int, currentTime stri
 // Second Ctrl+C (or if cleanup takes > 30 s) → kill the process group so that
 // any child subprocess (stream, fio, dd, sysbench, geekbench …) is also
 // terminated immediately, then os.Exit(1).
-func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
+func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex, writeStructuredReport func()) {
 	select {
-	case <-sig:
+	case receivedSignal := <-sig:
+		_, deadlineReached := receivedSignal.(DeadlineSignal)
 		// ── First Ctrl+C ────────────────────────────────────────────────────────
 		// Cancel context so that tests that have not yet started are skipped.
 		cancel()
@@ -589,7 +628,6 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 		if config.Finish {
 			os.Exit(0)
 		}
-
 		// ── Snapshot timing information ──────────────────────────────────────────
 		endTime := time.Now()
 		duration := endTime.Sub(*startTime)
@@ -633,6 +671,9 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 			// We don't have a clean finalOutput for upload; use whatever was
 			// accumulated so far (best-effort, no data race protection here).
 			finalOutput = *output
+		}
+		if deadlineReached && writeStructuredReport != nil {
+			writeStructuredReport()
 		}
 
 		// ── Upload and exit ──────────────────────────────────────────────────────
