@@ -1,6 +1,6 @@
 {
   "schema": "goecs-data/v1",
-  "generated_at": "2026-07-20T15:36:14.130282Z",
+  "generated_at": "2026-07-21T06:06:45.398225049Z",
   "files": {
     "bgp-asn-map.json": {
       "sha256": "f934baba2ec5ae25fd09c900b9688fb93a9f42d35bddf13dcc235f59feff3ebd",
@@ -18,7 +18,7 @@
       "source": "https://raw.githubusercontent.com/HsukqiLee/MediaUnlockTest/main/pkg/providers/lists.go"
     },
     "openspeedtest-servers.json": {
-      "sha256": "6811da5888be1c00632db432a71bbc23fd27f7f79f8c8ed149d0e1cbfbc5fe50",
+      "sha256": "eb888ce74f55778b37944ff64137bf5b714d9d7d0c1d6a1c3ee1cc91d968053d",
       "count": 10,
       "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/iperf.json"
     },
@@ -28,7 +28,7 @@
       "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/province.json"
     },
     "speedtest-servers.json": {
-      "sha256": "bbec4b8000e53322a528d4f2a6dbd27871320b5eabd591be857bdbb73a30d718",
+      "sha256": "cb1783f3c601ff2cdb4da6c24d0fd15294cea77df64cf72ec0c0b605dcf00f0b",
       "count": 15,
       "source": "https://raw.githubusercontent.com/xykt/NetQuality/main/ref/speedtest_cn.json"
     },
