@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/utils"
@@ -244,6 +245,12 @@ func SetFullTestStatus(preCheck utils.NetCheckResult, config *params.Config) {
 	config.CpuTestStatus = true
 	config.MemoryTestStatus = true
 	config.DiskTestStatus = true
+	config.DiskMultiCheck = true
+	config.DeepMode = true
+	config.DeepBurnDuration = 20 * time.Second
+	config.TCPProbeStatus = true
+	config.UnlockTestShowIP = true
+	config.PingTestStatus = true
 	if preCheck.Connected {
 		config.UtTestStatus = true
 		config.SecurityTestStatus = true

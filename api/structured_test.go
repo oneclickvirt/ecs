@@ -163,6 +163,7 @@ func TestSectionReportsMarksOfflineNetworkUnavailable(t *testing.T) {
 
 func TestSectionReportsDoesNotClaimMissingStructuredComponentsAreOK(t *testing.T) {
 	cfg := NewDefaultConfig()
+	cfg.SecurityTestStatus = true
 	sections := sectionReports(cfg, NetCheckResult{Connected: true}, structuredExtras{}, ReportStatusOK, "")
 	for _, name := range []string{"media", "security", "backtrace", "speed", "disk"} {
 		var found *SectionReport

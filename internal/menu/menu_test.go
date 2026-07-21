@@ -72,6 +72,34 @@ func TestApplyMenuResultRestoresExplicitTestFlagForPreset(t *testing.T) {
 	}
 }
 
+func TestFullPresetEnablesEnhancedChecks(t *testing.T) {
+	cfg := params.NewConfig("test")
+	applyMenuResult(utils.NetCheckResult{Connected: true, StackType: "IPv4"}, cfg, tuiResult{
+		choice:     "1",
+		language:   "zh",
+		mainUpload: cfg.EnableUpload,
+	}, nil)
+
+	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || !cfg.UnlockTestShowIP || !cfg.PingTestStatus {
+		t.Fatalf("full preset did not enable enhanced checks: disk_multi=%t deep=%t burn=%s tcp=%t show_ip=%t ping=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.UnlockTestShowIP, cfg.PingTestStatus)
+	}
+}
+
+func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
+	cfg := params.NewConfig("test")
+	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=false", "-utshowip=false", "-deep-burn-duration=0s"})
+	saved := cfg.SaveUserSetParams()
+	applyMenuResult(utils.NetCheckResult{Connected: true, StackType: "IPv4"}, cfg, tuiResult{
+		choice:     "1",
+		language:   "zh",
+		mainUpload: cfg.EnableUpload,
+	}, saved)
+
+	if cfg.DiskMultiCheck || cfg.DeepMode || cfg.DeepBurnDuration != 0 || cfg.TCPProbeStatus || cfg.UnlockTestShowIP {
+		t.Fatalf("explicit enhanced flag overrides were ignored: disk_multi=%t deep=%t burn=%s tcp=%t show_ip=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.UnlockTestShowIP)
+	}
+}
+
 func TestApplyMenuResultCustomUsesTuiResultAfterSavedParams(t *testing.T) {
 	cfg := params.NewConfig("test")
 	cfg.CpuTestStatus = false

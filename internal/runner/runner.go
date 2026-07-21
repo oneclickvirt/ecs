@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/oneclickvirt/cputest/cpu"
 	"github.com/oneclickvirt/ecs/internal/analysis"
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/tests"
@@ -19,6 +20,8 @@ import (
 )
 
 type identityReadyContextKey struct{}
+
+var runLegacyCPUBurn = cpu.RunBurn
 
 // WithIdentityReady lets the orchestration layer wait until the legacy basic
 // stage has finished publishing its IP identity. This prevents structured
@@ -49,6 +52,7 @@ func signalIdentityReady(ctx context.Context) {
 func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunCPUBurnTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
@@ -104,6 +108,7 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
+	*output = RunCPUBurnTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
@@ -281,6 +286,39 @@ func RunCPUTest(ctx context.Context, config *params.Config, output, tempOutput s
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", realTestMethod), config.Width)
 			}
 			fmt.Print(res)
+		}
+	}, tempOutput, output)
+}
+
+// RunCPUBurnTest adds the explicit deep CPU pressure pass selected by the
+// full menu preset. It uses the same compact section/capture path as the
+// existing legacy chapters and remains dormant for ordinary CLI defaults.
+func RunCPUBurnTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
+	if ctx.Err() != nil || config == nil || !config.DeepMode || config.DeepBurnDuration <= 0 {
+		return output
+	}
+	outputMutex.Lock()
+	defer outputMutex.Unlock()
+	return utils.PrintAndCapture(func() {
+		result := runLegacyCPUBurn(ctx, cpu.BurnConfig{
+			Threads:  runtime.NumCPU(),
+			Duration: config.DeepBurnDuration,
+			MaxPrime: 50000,
+		})
+		if config.Language == "zh" {
+			utils.PrintCenteredTitle("CPU压力测试", config.Width)
+			fmt.Printf("状态          : %s\n", result.Status)
+			fmt.Printf("有效线程      : %d\n", result.EffectiveThreads)
+			fmt.Printf("持续时间      : %d 秒\n", result.DurationMS/1000)
+			fmt.Printf("运算次数      : %d\n", result.Events)
+			fmt.Printf("每秒运算      : %.2f\n", result.EventsPerSecond)
+		} else {
+			utils.PrintCenteredTitle("CPU-Pressure-Test", config.Width)
+			fmt.Printf("Status         : %s\n", result.Status)
+			fmt.Printf("Effective Threads: %d\n", result.EffectiveThreads)
+			fmt.Printf("Duration       : %d s\n", result.DurationMS/1000)
+			fmt.Printf("Events         : %d\n", result.Events)
+			fmt.Printf("Events/Sec     : %.2f\n", result.EventsPerSecond)
 		}
 	}, tempOutput, output)
 }

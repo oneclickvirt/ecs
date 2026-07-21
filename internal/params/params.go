@@ -331,6 +331,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	if c.UserSetFlags["tcp"] {
 		saved["tcp"] = c.TCPProbeStatus
 	}
+	if c.UserSetFlags["deep"] {
+		saved["deep"] = c.DeepMode
+	}
 	if c.UserSetFlags["cpum"] || c.UserSetFlags["cpu-method"] {
 		saved["cpum"] = c.CpuTestMethod
 	}
@@ -468,6 +471,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 	if val, ok := saved["tcp"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.TCPProbeStatus = boolVal
+		}
+	}
+	if val, ok := saved["deep"]; ok {
+		if boolVal, ok := val.(bool); ok {
+			c.DeepMode = boolVal
 		}
 	}
 	if val, ok := saved["cpum"]; ok {

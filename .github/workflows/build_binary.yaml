@@ -79,98 +79,162 @@ jobs:
           go-version-file: go.mod
           check-latest: true
 
+      - name: Resolve component refs from go.mod
+        id: component_refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          modules = {
+              "unlocktests": "github.com/oneclickvirt/UnlockTests",
+              "backtrace": "github.com/oneclickvirt/backtrace",
+              "basics": "github.com/oneclickvirt/basics",
+              "cputest": "github.com/oneclickvirt/cputest",
+              "defaultset": "github.com/oneclickvirt/defaultset",
+              "disktest": "github.com/oneclickvirt/disktest",
+              "gostun": "github.com/oneclickvirt/gostun",
+              "memorytest": "github.com/oneclickvirt/memorytest",
+              "nt3": "github.com/oneclickvirt/nt3",
+              "pingtest": "github.com/oneclickvirt/pingtest",
+              "portchecker": "github.com/oneclickvirt/portchecker",
+              "privatespeedtest": "github.com/oneclickvirt/privatespeedtest",
+              "security": "github.com/oneclickvirt/security",
+              "speedtest": "github.com/oneclickvirt/speedtest",
+          }
+          go_mod = json.loads(subprocess.check_output(
+              ["go", "mod", "edit", "-json"], text=True
+          ))
+          required = {
+              item["Path"]: item["Version"]
+              for item in go_mod.get("Require", [])
+          }
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              for key, path in modules.items():
+                  version = required.get(path, "")
+                  if not version:
+                      raise SystemExit(f"{path} is not pinned in go.mod")
+                  print(f"{key}={version}", file=output)
+                  print(f"{path} -> {version}")
+          PY
+
       - name: Checkout structured component sources
         uses: actions/checkout@v4
         with:
           repository: oneclickvirt/UnlockTests
-          ref: v0.0.41-20260720103959
+          ref: ${{ steps.component_refs.outputs.unlocktests }}
           token: ${{ secrets.GHT }}
           path: deps/UnlockTests
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/backtrace
-          ref: v0.0.11-20260720103959
+          ref: ${{ steps.component_refs.outputs.backtrace }}
           token: ${{ secrets.GHT }}
           path: deps/backtrace
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/basics
-          ref: v0.0.20-20260720103959
+          ref: ${{ steps.component_refs.outputs.basics }}
           token: ${{ secrets.GHT }}
           path: deps/basics
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/cputest
-          ref: v0.0.13-20260720103959
+          ref: ${{ steps.component_refs.outputs.cputest }}
           token: ${{ secrets.GHT }}
           path: deps/cputest
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/defaultset
-          ref: v0.0.2-20240624082446
+          ref: ${{ steps.component_refs.outputs.defaultset }}
           token: ${{ secrets.GHT }}
           path: deps/defaultset
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/disktest
-          ref: v0.0.12-20260720103959
+          ref: ${{ steps.component_refs.outputs.disktest }}
           token: ${{ secrets.GHT }}
           path: deps/disktest
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/gostun
-          ref: v0.0.7-20260720103959
+          ref: ${{ steps.component_refs.outputs.gostun }}
           token: ${{ secrets.GHT }}
           path: deps/gostun
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/memorytest
-          ref: v0.0.11-20260720103959
+          ref: ${{ steps.component_refs.outputs.memorytest }}
           token: ${{ secrets.GHT }}
           path: deps/memorytest
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/nt3
-          ref: v0.0.15-20260720103959
+          ref: ${{ steps.component_refs.outputs.nt3 }}
           token: ${{ secrets.GHT }}
           path: deps/nt3
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/pingtest
-          ref: v0.0.12-20260720103959
+          ref: ${{ steps.component_refs.outputs.pingtest }}
           token: ${{ secrets.GHT }}
           path: deps/pingtest
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/portchecker
-          ref: v0.0.4-20260720103959
+          ref: ${{ steps.component_refs.outputs.portchecker }}
           token: ${{ secrets.GHT }}
           path: deps/portchecker
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/privatespeedtest
-          ref: v0.0.2-20260720103959
+          ref: ${{ steps.component_refs.outputs.privatespeedtest }}
           token: ${{ secrets.GHT }}
           path: deps/privatespeedtest
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/security
-          ref: v0.0.11-20260720103959
+          ref: ${{ steps.component_refs.outputs.security }}
           token: ${{ secrets.GHT }}
           path: deps/security
       - uses: actions/checkout@v4
         with:
           repository: oneclickvirt/speedtest
-          ref: v0.0.14-20260720103959
+          ref: ${{ steps.component_refs.outputs.speedtest }}
           token: ${{ secrets.GHT }}
           path: deps/speedtest
 
-      - name: Configure structured component workspace
+      - name: Configure Git for Private Modules
         run: |
+          git config --global --unset-all url."git@github.com:".insteadOf || true
+          git config --global --replace-all url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Configure structured component workspace
+        shell: bash
+        run: |
+          set -euo pipefail
           printf '/deps/\n/go.work\n/go.work.sum\n' >> .git/info/exclude
           go work init .
           for module in UnlockTests backtrace basics cputest defaultset disktest gostun memorytest nt3 pingtest portchecker privatespeedtest security speedtest; do
+            expected="github.com/oneclickvirt/${module}"
+            actual="$(awk '$1 == "module" { print $2; exit }' "deps/${module}/go.mod")"
+            if [[ "$actual" != "$expected" ]]; then
+              echo "Module path mismatch for ${module}: expected ${expected}, got ${actual:-<empty>}" >&2
+              exit 1
+            fi
             go work use "deps/${module}"
+          done
+          export GOWORK="$PWD/go.work"
+          for module in UnlockTests backtrace basics cputest defaultset disktest gostun memorytest nt3 pingtest portchecker privatespeedtest security speedtest; do
+            resolved="$(go list -m -f '{{.Dir}}' "github.com/oneclickvirt/${module}")"
+            expected="$PWD/deps/${module}"
+            if [[ "$resolved" != "$expected" ]]; then
+              echo "Workspace did not select ${module}: expected ${expected}, got ${resolved:-<empty>}" >&2
+              exit 1
+            fi
           done
           go test -race ./...
           go vet ./...
@@ -180,13 +244,6 @@ jobs:
       #   run: |
       #     apk add --no-cache upx
       
-      - name: Configure Git for Private Modules
-        run: |
-          git config --global url."https://${{ secrets.GHT }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."git@github.com:".insteadOf "https://github.com/"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHT }}
-
       - name: Clean Go build cache before build
         run: |
           rm -rf "$TMPDIR" "$GOTMPDIR"

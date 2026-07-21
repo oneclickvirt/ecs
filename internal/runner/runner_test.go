@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oneclickvirt/cputest/cpu"
 	"github.com/oneclickvirt/ecs/internal/params"
 )
 
@@ -195,5 +196,40 @@ func TestRunEnglishNetworkTestsPrintsPingInfo(t *testing.T) {
 
 	if !strings.Contains(output, "english ping result") {
 		t.Fatalf("expected English ping info in output, got %q", output)
+	}
+}
+
+func TestRunCPUBurnTestUsesConfiguredDeepDuration(t *testing.T) {
+	previous := runLegacyCPUBurn
+	defer func() { runLegacyCPUBurn = previous }()
+	var captured cpu.BurnConfig
+	runLegacyCPUBurn = func(_ context.Context, config cpu.BurnConfig) cpu.BurnResult {
+		captured = config
+		return cpu.BurnResult{Status: "ok", EffectiveThreads: 2, DurationMS: 20000, Events: 42, EventsPerSecond: 2.1}
+	}
+
+	cfg := &params.Config{Language: "zh", Width: 40, DeepMode: true, DeepBurnDuration: 20 * time.Second}
+	var outputMutex sync.Mutex
+	output := RunCPUBurnTest(context.Background(), cfg, "", "", &outputMutex)
+	if captured.Duration != 20*time.Second || captured.MaxPrime != 50000 || captured.Threads <= 0 {
+		t.Fatalf("unexpected burn config: %+v", captured)
+	}
+	if !strings.Contains(output, "CPU压力测试") || !strings.Contains(output, "有效线程") || !strings.Contains(output, "20 秒") {
+		t.Fatalf("burn output lost compact legacy fields: %q", output)
+	}
+}
+
+func TestRunCPUBurnTestSkipsOrdinaryDefaults(t *testing.T) {
+	called := false
+	previous := runLegacyCPUBurn
+	defer func() { runLegacyCPUBurn = previous }()
+	runLegacyCPUBurn = func(context.Context, cpu.BurnConfig) cpu.BurnResult {
+		called = true
+		return cpu.BurnResult{}
+	}
+	cfg := &params.Config{Language: "zh", Width: 40}
+	var outputMutex sync.Mutex
+	if output := RunCPUBurnTest(context.Background(), cfg, "existing", "", &outputMutex); output != "existing" || called {
+		t.Fatalf("ordinary CLI default unexpectedly ran deep burn: output=%q called=%t", output, called)
 	}
 }
