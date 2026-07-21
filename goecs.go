@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.156"                   // 融合怪版本号
+	ecsVersion = "v0.1.157"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 
@@ -177,6 +177,7 @@ func main() {
 	uploadDone := make(chan bool, 1)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sig)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	softDeadline, hardDeadline := legacyDeadlineWindows(configs.MaxDuration)

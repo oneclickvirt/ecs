@@ -680,14 +680,20 @@ func printTimeInfo(config *params.Config, minutes, seconds int, currentTime stri
 // HandleSignalInterrupt handles interrupt signals
 //
 // First Ctrl+C  → cancel the context (no new tests start) and wait for the
-// currently-running test to finish, then upload & exit gracefully.
+// currently-running test to finish, then upload & exit gracefully. Once the
+// soft deadline has fired, the next signal is treated as a hard stop.
 //
-// Second Ctrl+C (or if cleanup takes > 30 s) → kill the process group so that
-// any child subprocess (stream, fio, dd, sysbench, geekbench …) is also
-// terminated immediately, then os.Exit(1).
+// Second Ctrl+C (or if cleanup cannot make progress) → kill the process group
+// so that any child subprocess (stream, fio, dd, sysbench, geekbench …) is
+// also terminated immediately, then os.Exit(1).
 func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig chan os.Signal, config *params.Config, startTime *time.Time, output *string, tempOutput string, uploadDone chan bool, outputMutex *sync.Mutex) {
 	select {
 	case <-sig:
+		if ctx.Err() != nil {
+			forceExit(1)
+			return
+		}
+
 		// ── First Ctrl+C ────────────────────────────────────────────────────────
 		// Cancel context so that tests that have not yet started are skipped.
 		cancel()
@@ -744,13 +750,12 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 			outputMutex.Unlock()
 
 		case <-time.After(10 * time.Second):
-			// Could not get the lock in 10 s (test subprocess still running).
-			// Print directly without mutex; interleaving with test output is OK.
+			// A plain os.Exit could orphan a benchmark that still holds the SSH
+			// stdout pipe open, so an exhausted cleanup window is a hard stop.
 			fmt.Println()
 			printTimeInfo(config, minutes, seconds, currentTime)
-			// We don't have a clean finalOutput for upload; use whatever was
-			// accumulated so far (best-effort, no data race protection here).
-			finalOutput = *output
+			forceExit(1)
+			return
 		}
 		// ── Upload and exit ──────────────────────────────────────────────────────
 		if config.EnableUpload {
@@ -795,7 +800,10 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 		}
 		os.Exit(0)
 	case <-ctx.Done():
-		return
+		// Keep signal delivery armed after the soft deadline. Returning while
+		// signal.Notify is active would swallow a later timeout SIGTERM.
+		<-sig
+		forceExit(1)
 	}
 }
 
