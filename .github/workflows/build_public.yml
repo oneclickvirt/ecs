@@ -35,18 +35,33 @@ jobs:
       env:
         GOFLAGS: -tags=ecs_public
       run: |
+        set -euo pipefail
         python3 .back/create_public_branch.py
         go clean -cache -testcache -fuzzcache
+        if grep -R -n -E 'github\.com/oneclickvirt/(security|privatespeedtest)' \
+          go.mod internal api utils goecs.go --include='*.go'; then
+          echo "Public branch still contains private module references" >&2
+          exit 1
+        fi
     - name: Build and Test
       env:
         GOFLAGS: -tags=ecs_public
       run: |
+        set -euo pipefail
+        go test ./...
         go build -ldflags="-checklinkname=0" -o maintest
         ./maintest -menu=false -l en -security=false -upload=false || exit 1
         rm -rf maintest
         
     - name: Commit and push changes
       run: |
-        git add .
-        git commit -m "Auto update public version (no security package)" || echo "No changes to commit"
+        set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A
+        if git diff --cached --quiet; then
+          echo "Public branch generator produced no changes" >&2
+          exit 1
+        fi
+        git commit -m "Auto update public version (no private packages)"
         git push -f origin public
