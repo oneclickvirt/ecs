@@ -23,11 +23,50 @@ func renderStructuredRunText(config *Config, dataFiles []DataFileVersion, compon
 	renderer := newStructuredTextRenderer(config)
 	renderer.header(config)
 	renderer.dataFiles(dataFiles)
-	for _, component := range components {
-		renderer.component(component)
-	}
+	renderer.components(components)
 	renderer.tcp(tcp)
 	return renderer.builder.String()
+}
+
+func (renderer *structuredTextRenderer) components(components []ComponentReport) {
+	var cpuBenchmark, cpuBurn *ComponentReport
+	for index := range components {
+		switch components[index].Name {
+		case "cputest":
+			cpuBenchmark = &components[index]
+		case "cputest.burn":
+			cpuBurn = &components[index]
+		}
+	}
+	for index := range components {
+		component := components[index]
+		switch component.Name {
+		case "cputest":
+			renderer.cpuComponents(cpuBenchmark, cpuBurn)
+		case "cputest.burn":
+			if cpuBenchmark == nil {
+				renderer.cpuComponents(nil, cpuBurn)
+			}
+		default:
+			renderer.component(component)
+		}
+	}
+}
+
+func (renderer *structuredTextRenderer) cpuComponents(benchmark, burn *ComponentReport) {
+	renderer.section(renderer.pick("CPU性能测试", "CPU Benchmark"))
+	if benchmark != nil {
+		renderer.componentState(*benchmark)
+		if len(benchmark.Payload) > 0 {
+			renderer.cpuPayload(benchmark.Payload, renderer.pick("性能测试", "Benchmark"))
+		}
+	}
+	if burn != nil && burn.Status != ReportStatusSkipped {
+		renderer.componentState(*burn)
+		if len(burn.Payload) > 0 {
+			renderer.cpuPayload(burn.Payload, renderer.pick("压力测试", "Pressure Test"))
+		}
+	}
 }
 
 func appendStructuredTimeText(output string, config *Config, started, finished time.Time) string {
@@ -201,20 +240,13 @@ func (renderer *structuredTextRenderer) component(component ComponentReport) {
 		return
 	}
 	renderer.section(title)
-	if component.Status != ReportStatusOK {
-		renderer.row(renderer.pick("状态", "Status"), renderer.status(component.Status))
-	}
-	if component.Reason != "" {
-		renderer.row(renderer.pick("说明", "Reason"), component.Reason)
-	}
+	renderer.componentState(component)
 	if len(component.Payload) == 0 {
 		return
 	}
 	switch component.Name {
 	case "basics":
 		renderer.basicPayload(component.Payload)
-	case "cputest", "cputest.burn":
-		renderer.cpuPayload(component.Payload)
 	case "memorytest":
 		renderer.memoryPayload(component.Payload)
 	case "disktest":
@@ -246,6 +278,15 @@ func (renderer *structuredTextRenderer) component(component ComponentReport) {
 	}
 }
 
+func (renderer *structuredTextRenderer) componentState(component ComponentReport) {
+	if component.Status != ReportStatusOK && component.Status != ReportStatusSkipped {
+		renderer.row(renderer.pick("状态", "Status"), renderer.status(component.Status))
+	}
+	if component.Reason != "" && component.Status != ReportStatusSkipped {
+		renderer.row(renderer.pick("说明", "Reason"), component.Reason)
+	}
+}
+
 func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	root := payloadObject(payload)
 	cpu := objectValue(root, "cpu")
@@ -254,12 +295,22 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	virtualization := objectValue(root, "virtualization")
 	network := objectValue(root, "network")
 	firmware := objectValue(root, "firmware")
-	renderer.row("CPU", joinNonEmpty(stringValue(cpu, "model"), countLabel(intValue(cpu, "logical_cpus"), renderer.pick("线程", "threads"))))
+	cpuDetails := []string{stringValue(cpu, "model")}
+	if value := floatValue(cpu, "frequency_mhz"); value > 0 {
+		cpuDetails = append(cpuDetails, fmt.Sprintf("%.0f MHz", value))
+	}
+	if value := intValue(cpu, "physical_cores"); value > 0 {
+		cpuDetails = append(cpuDetails, countLabel(value, renderer.pick("核", "cores")))
+	}
+	if value := intValue(cpu, "logical_cpus"); value > 0 {
+		cpuDetails = append(cpuDetails, countLabel(value, renderer.pick("线程", "threads")))
+	}
+	renderer.row("CPU", joinNonEmpty(cpuDetails...))
 	renderer.row(renderer.pick("内存", "Memory"), fmt.Sprintf("%s / %s", formatBytes(int64Value(memory, "available_bytes")), formatBytes(int64Value(memory, "total_bytes"))))
-	renderer.row("Cgroup", joinNonEmpty(stringValue(cgroup, "version"), quotaLabel(floatValue(cgroup, "cpu_quota_cores"))))
+	renderer.row("Cgroup", joinNonEmpty(stringValue(cgroup, "version"), quotaLabel(floatValue(cgroup, "cpu_quota_cores")), stringValue(cgroup, "cpuset"), memoryLimitLabel(int64Value(cgroup, "memory_current_bytes"), int64Value(cgroup, "memory_limit_bytes"))))
 	renderer.row(renderer.pick("虚拟化", "Virtualization"), joinNonEmpty(stringValue(virtualization, "type"), stringValue(virtualization, "container_runtime")))
-	renderer.row(renderer.pick("网络调优", "Network Tuning"), joinNonEmpty(stringValue(network, "congestion_control"), stringValue(network, "default_qdisc")))
-	renderer.row(renderer.pick("主板/BIOS", "Board / BIOS"), joinNonEmpty(stringValue(firmware, "board_vendor"), stringValue(firmware, "board_name"), stringValue(firmware, "bios_vendor")))
+	renderer.row(renderer.pick("网络调优", "Network Tuning"), joinNonEmpty(stringValue(network, "congestion_control"), qdiscLabel(stringValue(network, "default_qdisc")), tuningTupleLabel("rmem", int64ArrayValue(network, "tcp_rmem")), tuningTupleLabel("wmem", int64ArrayValue(network, "tcp_wmem"))))
+	renderer.row(renderer.pick("主板/BIOS", "Board / BIOS"), joinNonEmpty(joinValuesWithSpace(stringValue(firmware, "board_vendor"), stringValue(firmware, "board_name"), stringValue(firmware, "board_version")), "BIOS "+joinValuesWithSpace(stringValue(firmware, "bios_vendor"), stringValue(firmware, "bios_version"), stringValue(firmware, "bios_date"))))
 	disks := arrayValue(root, "disks")
 	if len(disks) > 0 {
 		rows := make([][]string, 0, len(disks))
@@ -277,23 +328,38 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	}
 	topology := objectValue(root, "memory_topology")
 	raid := objectValue(root, "raid")
-	renderer.row(renderer.pick("硬件拓扑", "Hardware Topology"), fmt.Sprintf("GPU %d / PCI %d / NUMA %d / DIMM %d / RAID %d",
-		len(arrayValue(root, "gpus")), len(arrayValue(objectValue(root, "pci"), "devices")), len(arrayValue(topology, "nodes")), len(arrayValue(topology, "dimms")), len(arrayValue(raid, "arrays"))))
+	renderer.row(renderer.pick("硬件拓扑", "Hardware Topology"), hardwareTopologyLabel(root, topology, raid))
 }
 
-func (renderer *structuredTextRenderer) cpuPayload(payload json.RawMessage) {
-	root := payloadObject(payload)
-	renderer.row(renderer.pick("有效线程", "Effective Threads"), fmt.Sprintf("%d / %d", intValue(root, "effective_threads"), intValue(root, "requested_threads")))
-	renderer.row(renderer.pick("计算速率", "Compute Rate"), fmt.Sprintf("%.2f events/s", floatValue(root, "events_per_second")))
-	if value := int64Value(root, "duration_ms"); value > 0 {
-		renderer.row(renderer.pick("测试时长", "Duration"), formatMilliseconds(value))
+func hardwareTopologyLabel(root, topology, raid map[string]any) string {
+	parts := []string{
+		fmt.Sprintf("GPU %d", len(arrayValue(root, "gpus"))),
+		fmt.Sprintf("PCI %d", len(arrayValue(objectValue(root, "pci"), "devices"))),
+		fmt.Sprintf("NUMA %d", len(arrayValue(topology, "nodes"))),
+		fmt.Sprintf("DIMM %d", len(arrayValue(topology, "dimms"))),
+		fmt.Sprintf("RAID %d", len(arrayValue(raid, "arrays"))),
 	}
+	if total := int64Value(topology, "hugepages_total"); total > 0 {
+		parts = append(parts, fmt.Sprintf("HugePages %d/%d", int64Value(topology, "hugepages_free"), total))
+	}
+	return strings.Join(parts, " / ")
+}
+
+func (renderer *structuredTextRenderer) cpuPayload(payload json.RawMessage, label string) {
+	root := payloadObject(payload)
+	effective, requested := intValue(root, "effective_threads"), intValue(root, "requested_threads")
+	threads := strconv.Itoa(effective)
+	if requested > 0 && requested != effective {
+		threads = fmt.Sprintf("%d/%d", effective, requested)
+	}
+	value := fmt.Sprintf("%s / %s %s / %.2f events/s / %d events",
+		formatMilliseconds(int64Value(root, "duration_ms")), threads, renderer.pick("线程", "threads"),
+		floatValue(root, "events_per_second"), int64Value(root, "events"))
 	temperature := objectValue(root, "temperature")
 	if boolValue(temperature, "available") {
-		renderer.row(renderer.pick("CPU温度", "CPU Temperature"), fmt.Sprintf("%.1f C -> %.1f C (Delta %.1f C)", floatValue(temperature, "baseline_c"), floatValue(temperature, "max_c"), floatValue(temperature, "delta_c")))
-	} else {
-		renderer.row(renderer.pick("CPU温度", "CPU Temperature"), renderer.pick("不可用", "unavailable"))
+		value += fmt.Sprintf(" / %.1f->%.1f C (+%.1f C)", floatValue(temperature, "baseline_c"), floatValue(temperature, "max_c"), floatValue(temperature, "delta_c"))
 	}
+	renderer.row(label, value)
 }
 
 func (renderer *structuredTextRenderer) memoryPayload(payload json.RawMessage) {
@@ -593,14 +659,75 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 		return
 	}
 	renderer.section(renderer.pick("TCP连接质量", "TCP Connection Quality"))
+	summary := summarizeStructuredTCP(reports)
+	renderer.row(renderer.pick("汇总", "Summary"), fmt.Sprintf(renderer.pick("%d 个目标 / %d/%d 次成功 / %.1f%%", "%d targets / %d/%d succeeded / %.1f%%"), len(reports), summary.successful, summary.attempts, summary.successRate))
+	renderer.row(renderer.pick("失败", "Failures"), fmt.Sprintf("DNS:%d R:%d T:%d O:%d", summary.dns, summary.refused, summary.timeout, summary.other))
 	rows := make([][]string, 0, len(reports))
 	for _, report := range reports {
 		rows = append(rows, []string{
 			fallback(report.Target.Name, report.Target.ID), fmt.Sprintf("%d/%d", report.Successful, report.Attempts),
-			fmt.Sprintf("%.2f ms", report.MeanMS), fmt.Sprintf("%.2f ms", report.P95MS), fmt.Sprintf("%.0f%%", report.LossPercent), formatIntCounts(report.Errors),
+			formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors),
 		})
 	}
-	renderer.table([]string{renderer.pick("目标", "Target"), renderer.pick("成功", "Success"), renderer.pick("平均", "Mean"), "P95", renderer.pick("丢包", "Loss"), renderer.pick("错误", "Errors")}, rows, []int{24, 10, 10, 10, 10, 18})
+	renderer.table([]string{renderer.pick("目标", "Target"), renderer.pick("成功", "Success"), "Min/Avg/P50/P95/Max", "D/R/T/O"}, rows, []int{20, 8, 38, 11})
+}
+
+type structuredTCPSummary struct {
+	attempts, successful, dns, refused, timeout, other int
+	successRate                                        float64
+}
+
+func summarizeStructuredTCP(reports []TCPReport) structuredTCPSummary {
+	var summary structuredTCPSummary
+	for _, report := range reports {
+		summary.attempts += report.Attempts
+		summary.successful += report.Successful
+		for class, count := range report.Errors {
+			switch class {
+			case "dns":
+				summary.dns += count
+			case "refused":
+				summary.refused += count
+			case "timeout":
+				summary.timeout += count
+			default:
+				summary.other += count
+			}
+		}
+	}
+	if summary.attempts > 0 {
+		summary.successRate = float64(summary.successful) * 100 / float64(summary.attempts)
+	}
+	return summary
+}
+
+func formatTCPMilliseconds(values ...float64) string {
+	parts := make([]string, len(values))
+	for index, value := range values {
+		if value <= 0 {
+			parts[index] = "-"
+		} else {
+			parts[index] = strconv.FormatFloat(value, 'f', 1, 64)
+		}
+	}
+	return strings.Join(parts, "/") + " ms"
+}
+
+func formatTCPErrorCounts(errors map[string]int) string {
+	counts := [4]int{}
+	for class, count := range errors {
+		switch class {
+		case "dns":
+			counts[0] += count
+		case "refused":
+			counts[1] += count
+		case "timeout":
+			counts[2] += count
+		default:
+			counts[3] += count
+		}
+	}
+	return fmt.Sprintf("%d/%d/%d/%d", counts[0], counts[1], counts[2], counts[3])
 }
 
 func (renderer *structuredTextRenderer) componentTitle(name string) string {
@@ -613,8 +740,8 @@ func (renderer *structuredTextRenderer) componentTitle(name string) string {
 		"gostun.nat": {"NAT类型检测", "NAT Type Check"}, "speed.registry": {"就近节点测速", "Speed Test"},
 		"ping.icmp": {"PING值检测", "PING Test"}, "ping.telegram": {"Telegram DC延迟", "Telegram DC Latency"},
 		"ping.web_tcp": {"网站连接延迟", "Website TCP Latency"}, "disktest.deep_multi": {"多目录深度磁盘测试", "Deep Multi-Path Disk Test"},
-		"basics.smart_selftest": {"SMART自检", "SMART Self-Test"}, "cputest.burn": {"CPU压力测试", "CPU Burn Test"},
-		"basics.gpu_compute": {"GPU计算测试", "GPU Compute Test"},
+		"basics.smart_selftest": {"SMART自检", "SMART Self-Test"},
+		"basics.gpu_compute":    {"GPU计算测试", "GPU Compute Test"},
 	}
 	value, ok := titles[name]
 	if !ok {
@@ -659,6 +786,17 @@ func stringArrayValue(value map[string]any, key string) []string {
 	for _, item := range raw {
 		if text, ok := item.(string); ok && strings.TrimSpace(text) != "" {
 			result = append(result, text)
+		}
+	}
+	return result
+}
+
+func int64ArrayValue(value map[string]any, key string) []int64 {
+	raw := arrayValue(value, key)
+	result := make([]int64, 0, len(raw))
+	for _, item := range raw {
+		if number, ok := item.(float64); ok {
+			result = append(result, int64(number))
 		}
 	}
 	return result
@@ -855,6 +993,34 @@ func quotaLabel(value float64) string {
 	return fmt.Sprintf("%.2f CPU", value)
 }
 
+func memoryLimitLabel(current, limit int64) string {
+	if limit <= 0 {
+		return ""
+	}
+	if current > 0 {
+		return "memory " + formatBytes(current) + "/" + formatBytes(limit)
+	}
+	return "memory " + formatBytes(limit)
+}
+
+func qdiscLabel(value string) string {
+	if value == "" {
+		return ""
+	}
+	return "qdisc " + value
+}
+
+func tuningTupleLabel(name string, values []int64) string {
+	if len(values) == 0 {
+		return ""
+	}
+	parts := make([]string, len(values))
+	for index, value := range values {
+		parts[index] = formatBytes(value)
+	}
+	return name + " " + strings.Join(parts, "/")
+}
+
 func fallback(values ...string) string {
 	for _, value := range values {
 		if strings.TrimSpace(value) != "" {
@@ -872,6 +1038,16 @@ func joinNonEmpty(values ...string) string {
 		}
 	}
 	return strings.Join(result, " / ")
+}
+
+func joinValuesWithSpace(values ...string) string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		if value = strings.TrimSpace(value); value != "" && value != "-" {
+			result = append(result, value)
+		}
+	}
+	return strings.Join(result, " ")
 }
 
 func humanizeKey(value string) string {

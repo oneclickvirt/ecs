@@ -269,9 +269,7 @@ func appendStructuredHardwareText(output string, config *Config, components []Co
 	if strings.TrimSpace(output) == "" && len(components) > 0 {
 		renderer.header(config)
 	}
-	for _, component := range components {
-		renderer.component(component)
-	}
+	renderer.components(components)
 	return output + renderer.builder.String()
 }
 

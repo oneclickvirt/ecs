@@ -102,7 +102,7 @@ func TestRenderStructuredRunTextCoversEveryStructuredSection(t *testing.T) {
 	for _, want := range []string{
 		"系统基础信息", "磁盘性能测试", "跨国平台解锁", "IP质量检测", "上游及注册信息", "邮件端口检测",
 		"全国三网延迟", "全国三网详细路由", "PING值检测", "Telegram DC延迟", "网站连接延迟", "NAT类型检测",
-		"多目录深度磁盘测试", "SMART自检", "CPU压力测试", "GPU计算测试",
+		"多目录深度磁盘测试", "SMART自检", "压力测试", "GPU计算测试",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("all-section render missing %q:\n%s", want, text)
@@ -110,6 +110,61 @@ func TestRenderStructuredRunTextCoversEveryStructuredSection(t *testing.T) {
 	}
 	if strings.Contains(text, "schema_version") || strings.Contains(text, "\"results\"") || strings.Contains(text, "{") {
 		t.Fatalf("all-section render exposed raw JSON:\n%s", text)
+	}
+}
+
+func TestRenderStructuredCPUCombinesBenchmarkAndBurn(t *testing.T) {
+	config := NewConfig("v-test")
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "cputest", ReportStatusOK, `{"requested_threads":4,"effective_threads":2,"events":100,"events_per_second":20,"duration_ms":5000,"temperature":{"available":true,"baseline_c":40,"max_c":55,"delta_c":15}}`),
+		componentFixture(t, "cputest.burn", ReportStatusOK, `{"effective_threads":2,"events":300,"events_per_second":15,"duration_ms":20000}`),
+	}, nil)
+	if strings.Count(text, "CPU性能测试") != 1 || !strings.Contains(text, "性能测试") || !strings.Contains(text, "压力测试") {
+		t.Fatalf("CPU benchmark and burn were not combined:\n%s", text)
+	}
+	if strings.Contains(text, "状态") || strings.Contains(text, "正常") || strings.Contains(text, "CPU压力测试") {
+		t.Fatalf("combined CPU output contains redundant success state or section:\n%s", text)
+	}
+}
+
+func TestRenderStructuredBasicsShowsCollectedHardwareDetails(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Width = 100
+	text := renderStructuredRunText(config, nil, []ComponentReport{componentFixture(t, "basics", ReportStatusOK, `{
+		"cpu":{"model":"Fixture CPU","frequency_mhz":2400,"physical_cores":2,"logical_cpus":4},
+		"memory":{"available_bytes":536870912,"total_bytes":1073741824},
+		"cgroup":{"version":"v2","cpu_quota_cores":2,"cpuset":"0-1","memory_current_bytes":268435456,"memory_limit_bytes":536870912},
+		"virtualization":{"type":"kvm"},
+		"network":{"congestion_control":"bbr","default_qdisc":"fq","tcp_rmem":[4096,131072,6291456],"tcp_wmem":[4096,16384,4194304]},
+		"firmware":{"board_vendor":"Vendor","board_name":"Board","bios_vendor":"BIOS","bios_version":"1.0"},
+		"pci":{"devices":[{}]},"gpus":[{}],
+		"memory_topology":{"nodes":[{}],"dimms":[{},{}],"hugepages_total":16,"hugepages_free":8},
+		"raid":{"arrays":[{}]},"disks":[]
+	}`)}, nil)
+	for _, want := range []string{"2400 MHz", "2 核", "4 线程", "memory 256.00 MiB/512.00 MiB", "qdisc fq", "rmem", "BIOS BIOS 1.0", "GPU 1 / PCI 1 / NUMA 1 / DIMM 2 / RAID 1 / HugePages 8/16"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("structured basics missing %q:\n%s", want, text)
+		}
+	}
+}
+
+func TestRenderStructuredTCPKeepsCompleteMetricsOnOneLine(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Width = 80
+	text := renderStructuredRunText(config, nil, nil, []TCPReport{{
+		Target: TCPTarget{Name: "Fixture"}, Attempts: 3, Successful: 2,
+		MinMS: 1, MeanMS: 2, P50MS: 2, P95MS: 2.9, MaxMS: 3,
+		Errors: map[string]int{"timeout": 1},
+	}})
+	for _, want := range []string{"1 个目标 / 2/3 次成功", "Min/Avg/P50/P95/Max", "1.0/2.0/2.0/2.9/3.0 ms", "0/0/1/0"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("compact TCP output missing %q:\n%s", want, text)
+		}
+	}
+	for _, line := range strings.Split(text, "\n") {
+		if runewidth.StringWidth(line) > config.Width {
+			t.Fatalf("TCP line exceeds width: %q", line)
+		}
 	}
 }
 

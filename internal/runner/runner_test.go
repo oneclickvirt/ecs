@@ -199,7 +199,7 @@ func TestRunEnglishNetworkTestsPrintsPingInfo(t *testing.T) {
 	}
 }
 
-func TestRunCPUBurnTestUsesConfiguredDeepDuration(t *testing.T) {
+func TestRunCPUTestMergesConfiguredBurnIntoCPUSection(t *testing.T) {
 	previous := runLegacyCPUBurn
 	defer func() { runLegacyCPUBurn = previous }()
 	var captured cpu.BurnConfig
@@ -208,14 +208,31 @@ func TestRunCPUBurnTestUsesConfiguredDeepDuration(t *testing.T) {
 		return cpu.BurnResult{Status: "ok", EffectiveThreads: 2, DurationMS: 20000, Events: 42, EventsPerSecond: 2.1}
 	}
 
-	cfg := &params.Config{Language: "zh", Width: 40, DeepMode: true, DeepBurnDuration: 20 * time.Second}
+	cfg := &params.Config{Language: "zh", Width: 80, DeepMode: true, DeepBurnDuration: 20 * time.Second}
 	var outputMutex sync.Mutex
-	output := RunCPUBurnTest(context.Background(), cfg, "", "", &outputMutex)
+	output := RunCPUTest(context.Background(), cfg, "", "", &outputMutex)
 	if captured.Duration != 20*time.Second || captured.MaxPrime != 50000 || captured.Threads <= 0 {
 		t.Fatalf("unexpected burn config: %+v", captured)
 	}
-	if !strings.Contains(output, "CPU压力测试") || !strings.Contains(output, "有效线程") || !strings.Contains(output, "20 秒") {
-		t.Fatalf("burn output lost compact legacy fields: %q", output)
+	if !strings.Contains(output, "CPU测试") || !strings.Contains(output, "压力测试") || !strings.Contains(output, "20s / 2 线程 / 2.10 次/秒 / 42 次") {
+		t.Fatalf("burn output was not merged into compact CPU section: %q", output)
+	}
+	if strings.Contains(output, "CPU压力测试") || strings.Contains(output, "状态") || strings.Contains(output, "ok") {
+		t.Fatalf("burn output retained a redundant section or status row: %q", output)
+	}
+}
+
+func TestRunCPUBurnTestOnlyPrintsFailureReason(t *testing.T) {
+	previous := runLegacyCPUBurn
+	defer func() { runLegacyCPUBurn = previous }()
+	runLegacyCPUBurn = func(context.Context, cpu.BurnConfig) cpu.BurnResult {
+		return cpu.BurnResult{Status: "canceled", Error: "deadline exceeded"}
+	}
+	cfg := &params.Config{Language: "zh", DeepMode: true, DeepBurnDuration: time.Second}
+	var outputMutex sync.Mutex
+	output := RunCPUBurnTest(context.Background(), cfg, "", "", &outputMutex)
+	if output != "压力测试            : deadline exceeded\n" {
+		t.Fatalf("unexpected failed burn output: %q", output)
 	}
 }
 

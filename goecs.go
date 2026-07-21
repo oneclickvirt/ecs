@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	ecsVersion = "v0.1.154"                   // 融合怪版本号
+	ecsVersion = "v0.1.155"                   // 融合怪版本号
 	configs    = params.NewConfig(ecsVersion) // 全局配置实例
 )
 

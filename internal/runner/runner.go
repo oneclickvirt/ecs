@@ -52,7 +52,6 @@ func signalIdentityReady(ctx context.Context) {
 func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunCPUBurnTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
@@ -108,7 +107,6 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
 	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunCPUBurnTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
 	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
 	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
@@ -272,12 +270,13 @@ func shouldPrintPingExtraSectionWithoutInfo(config *params.Config) bool {
 
 // RunCPUTest runs CPU test
 func RunCPUTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
-	if ctx.Err() != nil {
+	if ctx.Err() != nil || config == nil {
 		return output
 	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
+		printedSection := false
 		if config.CpuTestStatus {
 			realTestMethod, res := tests.CpuTest(config.Language, config.CpuTestMethod, config.CpuTestThreadMode)
 			if config.Language == "zh" {
@@ -286,13 +285,26 @@ func RunCPUTest(ctx context.Context, config *params.Config, output, tempOutput s
 				utils.PrintCenteredTitle(fmt.Sprintf("CPU-Test--%s-Method", realTestMethod), config.Width)
 			}
 			fmt.Print(res)
+			printedSection = true
+		}
+		if config.DeepMode && config.DeepBurnDuration > 0 && ctx.Err() == nil {
+			if !printedSection {
+				if config.Language == "zh" {
+					utils.PrintCenteredTitle("CPU测试", config.Width)
+				} else {
+					utils.PrintCenteredTitle("CPU-Test", config.Width)
+				}
+			}
+			result := runLegacyCPUBurn(ctx, cpu.BurnConfig{
+				Threads: runtime.NumCPU(), Duration: config.DeepBurnDuration, MaxPrime: 50000,
+			})
+			printCPUBurnResult(config.Language, result)
 		}
 	}, tempOutput, output)
 }
 
-// RunCPUBurnTest adds the explicit deep CPU pressure pass selected by the
-// full menu preset. It uses the same compact section/capture path as the
-// existing legacy chapters and remains dormant for ordinary CLI defaults.
+// RunCPUBurnTest is retained for API compatibility. The full workflow calls
+// RunCPUTest, which renders this result inside the existing CPU section.
 func RunCPUBurnTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
 	if ctx.Err() != nil || config == nil || !config.DeepMode || config.DeepBurnDuration <= 0 {
 		return output
@@ -301,26 +313,43 @@ func RunCPUBurnTest(ctx context.Context, config *params.Config, output, tempOutp
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
 		result := runLegacyCPUBurn(ctx, cpu.BurnConfig{
-			Threads:  runtime.NumCPU(),
-			Duration: config.DeepBurnDuration,
-			MaxPrime: 50000,
+			Threads: runtime.NumCPU(), Duration: config.DeepBurnDuration, MaxPrime: 50000,
 		})
-		if config.Language == "zh" {
-			utils.PrintCenteredTitle("CPU压力测试", config.Width)
-			fmt.Printf("状态          : %s\n", result.Status)
-			fmt.Printf("有效线程      : %d\n", result.EffectiveThreads)
-			fmt.Printf("持续时间      : %d 秒\n", result.DurationMS/1000)
-			fmt.Printf("运算次数      : %d\n", result.Events)
-			fmt.Printf("每秒运算      : %.2f\n", result.EventsPerSecond)
-		} else {
-			utils.PrintCenteredTitle("CPU-Pressure-Test", config.Width)
-			fmt.Printf("Status         : %s\n", result.Status)
-			fmt.Printf("Effective Threads: %d\n", result.EffectiveThreads)
-			fmt.Printf("Duration       : %d s\n", result.DurationMS/1000)
-			fmt.Printf("Events         : %d\n", result.Events)
-			fmt.Printf("Events/Sec     : %.2f\n", result.EventsPerSecond)
-		}
+		printCPUBurnResult(config.Language, result)
 	}, tempOutput, output)
+}
+
+func printCPUBurnResult(language string, result cpu.BurnResult) {
+	duration := time.Duration(result.DurationMS) * time.Millisecond
+	if result.Status == "ok" {
+		if language == "zh" {
+			fmt.Printf("压力测试            : %s / %d 线程 / %.2f 次/秒 / %d 次\n",
+				formatCompactDuration(duration), result.EffectiveThreads, result.EventsPerSecond, result.Events)
+		} else {
+			fmt.Printf("Pressure Test        : %s / %d threads / %.2f events/s / %d events\n",
+				formatCompactDuration(duration), result.EffectiveThreads, result.EventsPerSecond, result.Events)
+		}
+		return
+	}
+	reason := strings.TrimSpace(result.Error)
+	if reason == "" {
+		reason = strings.TrimSpace(result.Status)
+	}
+	if language == "zh" {
+		fmt.Printf("压力测试            : %s\n", reason)
+	} else {
+		fmt.Printf("Pressure Test        : %s\n", reason)
+	}
+}
+
+func formatCompactDuration(duration time.Duration) string {
+	if duration <= 0 {
+		return "0s"
+	}
+	if duration%time.Second == 0 {
+		return fmt.Sprintf("%ds", int64(duration/time.Second))
+	}
+	return duration.Round(time.Millisecond).String()
 }
 
 // RunMemoryTest runs memory test
