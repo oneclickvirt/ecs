@@ -9,8 +9,8 @@ require (
 	github.com/imroc/req/v3 v3.59.0
 	github.com/oneclickvirt/UnlockTests v0.0.45
 	github.com/oneclickvirt/backtrace v0.0.15
-	github.com/oneclickvirt/basics v0.0.23
-	github.com/oneclickvirt/cputest v0.0.14
+	github.com/oneclickvirt/basics v0.0.24
+	github.com/oneclickvirt/cputest v0.0.15
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.13
 	github.com/oneclickvirt/gostun v0.0.8
