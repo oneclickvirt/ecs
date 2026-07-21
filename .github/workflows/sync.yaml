@@ -22,7 +22,7 @@ jobs:
       - name: Get latest release
         id: get_release
         run: |
-          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$(git describe --tags --abbrev=0)" >> "$GITHUB_ENV"
           
       - name: Create temporary directory
         run: |
@@ -43,7 +43,7 @@ jobs:
       - name: Download release assets
         run: |
           cd temp_repo
-          gh release download ${{ env.RELEASE_TAG }} --repo ${{ github.repository }} --dir .
+          gh release download "${{ env.RELEASE_TAG }}" --repo "${{ github.repository }}" --dir .
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           

@@ -174,12 +174,6 @@ func WithJSONPath(path string) ConfigOption {
 	}
 }
 
-func WithDataCDNBase(base string) ConfigOption {
-	return func(c *Config) {
-		c.DataCDNBase = base
-	}
-}
-
 func WithDataOffline(enable bool) ConfigOption {
 	return func(c *Config) {
 		c.DataOffline = enable

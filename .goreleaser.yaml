@@ -39,6 +39,10 @@ builds:
     binary: goecs
     hooks:
       pre:
+        # The cross image starts with limited free disk. Since release targets
+        # are serialized, retaining build caches for earlier architectures only
+        # consumes space and caused v0.1.158 to fail with ENOSPC.
+        - cmd: go clean -cache
         # Populate geekbench_bins in the cputest module cache with the
         # platform-specific Geekbench binary so it gets embedded via
         # //go:embed all:geekbench_bins in cputest's geekbench_embed.go.
@@ -62,6 +66,9 @@ builds:
       - amd64
     main: ./
     binary: goecs
+    hooks:
+      pre:
+        - cmd: go clean -cache
 
   - id: darwin-arm64
     env:
@@ -76,6 +83,9 @@ builds:
       - arm64
     main: ./
     binary: goecs
+    hooks:
+      pre:
+        - cmd: go clean -cache
 
 universal_binaries:
   - name_template: "goecs"
@@ -85,11 +95,12 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "goecs"
+  version_template: "goecs"
 
 archives:
   - name_template: "goecs_{{ .Os }}_{{ .Arch }}"
-    format: zip
+    formats:
+      - zip
     files:
       - none*
 
@@ -104,17 +115,3 @@ changelog:
       - Merge branch
       - go mod tidy
       - New translations
-
-upx:
-  - enabled: true
-    brute: true
-    goos:
-      - linux
-      - windows
-    goarch:
-      - amd64
-      - 386
-      - arm64
-      - ppc64le
-      - s390x
-      - riscv64

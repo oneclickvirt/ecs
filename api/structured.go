@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	datarepo "github.com/oneclickvirt/ecs/internal/data"
 	"github.com/oneclickvirt/ecs/utils"
 )
 
@@ -194,59 +193,18 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 }
 
 func collectStructuredExtras(ctx context.Context, preCheck utils.NetCheckResult, config *Config) structuredExtras {
-	loader := datarepo.NewLoader(nil, config.DataCDNBase)
-	if config.DataOffline {
-		loader.CDNBase = ""
-		loader.RawBase = ""
-	}
-	loadedFiles, dataFiles, loadErr := loadKnownDataFiles(ctx, loader)
-	extras := structuredExtras{dataFiles: dataFiles, err: loadErr}
-	loaded, ok := loadedFiles["tcp-targets.json"]
-	if !ok {
-		return extras
-	}
-	meta, ok := loaded.Manifest.Files["tcp-targets.json"]
-	if !ok {
-		return extras
-	}
-	extras.data = &DataVersion{
-		Schema: loaded.Manifest.Schema, GeneratedAt: loaded.Manifest.GeneratedAt,
-		Source: loaded.Source, Fallback: loaded.Fallback, File: loaded.Name, Count: meta.Count,
-	}
-	var targets []TCPTarget
-	if err := json.Unmarshal(loaded.Data, &targets); err != nil {
-		extras.err = errors.Join(extras.err, fmt.Errorf("decode TCP targets: %w", err))
-		return extras
-	}
-	targets = mergeComponentTCPTargets(targets)
+	inputs, dataFiles, primary, loadErr := loadComponentData(ctx, config.DataOffline)
+	extras := structuredExtras{data: primary, dataFiles: dataFiles, err: loadErr}
+	targets := inputs.TCPTargets
 	publicIPv4, publicIPv6 := GetIPv4Address(), GetIPv6Address()
 	if preCheck.Connected && publicIPv4 == "" && publicIPv6 == "" {
 		publicIPv4, publicIPv6 = structuredIdentity(ctx)
 	}
-	inputs := componentInputs{
-		TCPTargets: targets, Network: preCheck.Connected && ctx.Err() == nil,
-		PublicIPv4: publicIPv4, PublicIPv6: publicIPv6,
-	}
-	if province, exists := loadedFiles["province-routes.json"]; exists {
-		inputs.ProvinceRoutes = province.Data
-	}
-	if speedtest, exists := loadedFiles["speedtest-servers.json"]; exists {
-		inputs.SpeedtestServers = speedtest.Data
-	}
-	if openspeedtest, exists := loadedFiles["openspeedtest-servers.json"]; exists {
-		inputs.OpenSpeedtestServer = openspeedtest.Data
-	}
-	if dnsbl, exists := loadedFiles["dnsbl-zones.json"]; exists {
-		inputs.DNSBLZones = dnsbl.Data
-	}
-	if media, exists := loadedFiles["media-providers.json"]; exists {
-		inputs.MediaProviders = media.Data
-	}
-	if bgp, exists := loadedFiles["bgp-asn-map.json"]; exists {
-		inputs.BGPASNMap = bgp.Data
-	}
+	inputs.Network = preCheck.Connected && ctx.Err() == nil
+	inputs.PublicIPv4 = publicIPv4
+	inputs.PublicIPv6 = publicIPv6
 	extras.components = collectComponentReports(ctx, config, inputs)
-	if !config.TCPProbeStatus || !preCheck.Connected || ctx.Err() != nil {
+	if !config.TCPProbeStatus || !preCheck.Connected || ctx.Err() != nil || len(targets) == 0 {
 		return extras
 	}
 	progressStarted(ctx, "tcp")
@@ -270,45 +228,6 @@ func contextProgressStatus(ctx context.Context) (ReportStatus, bool) {
 		return ReportStatusCanceled, true
 	}
 	return "", false
-}
-
-// loadKnownDataFiles validates every payload understood by this build. Each
-// file is verified against one manifest candidate, preventing a report from
-// mixing payload generations when a CDN is only partially updated.
-func loadKnownDataFiles(ctx context.Context, loader *datarepo.Loader) (map[string]datarepo.Result, []DataFileVersion, error) {
-	names := datarepo.KnownFiles()
-	loaded, loadErr := loader.LoadMany(ctx, names)
-	versions := make([]DataFileVersion, len(names))
-	if loadErr != nil {
-		for index, name := range names {
-			versions[index] = DataFileVersion{
-				File: name, Status: dataFileStatus(ctx, loadErr),
-				Reason: loadErr.Error(),
-			}
-		}
-		return nil, versions, loadErr
-	}
-	for index, name := range names {
-		result, ok := loaded[name]
-		if !ok {
-			loadErr = errors.Join(loadErr, fmt.Errorf("load %s: result missing", name))
-			versions[index] = DataFileVersion{File: name, Status: ReportStatusError, Reason: "result missing"}
-			continue
-		}
-		meta, ok := result.Manifest.Files[name]
-		if !ok {
-			err := fmt.Errorf("manifest metadata missing")
-			loadErr = errors.Join(loadErr, fmt.Errorf("load %s: %w", name, err))
-			versions[index] = DataFileVersion{File: name, Status: ReportStatusError, Reason: err.Error()}
-			continue
-		}
-		versions[index] = DataFileVersion{
-			File: name, Schema: result.Manifest.Schema,
-			GeneratedAt: result.Manifest.GeneratedAt, Source: result.Source,
-			Fallback: result.Fallback, Count: meta.Count, Status: ReportStatusOK,
-		}
-	}
-	return loaded, versions, loadErr
 }
 
 func dataFileStatus(ctx context.Context, err error) ReportStatus {

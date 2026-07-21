@@ -5,6 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	unlockexecutor "github.com/oneclickvirt/UnlockTests/executor"
+	bgptools "github.com/oneclickvirt/backtrace/bgptools"
+	nt3model "github.com/oneclickvirt/nt3/model"
+	speedmodel "github.com/oneclickvirt/speedtest/model"
 )
 
 // structuredHardwareContextKey marks a structured collection that follows an
@@ -38,16 +43,35 @@ func UsesStructuredComponents() bool {
 // tag lets ecs be built from published module versions while component repos
 // are being released in the documented order.
 type componentInputs struct {
-	TCPTargets          []TCPTarget
-	ProvinceRoutes      []byte
-	SpeedtestServers    []byte
-	OpenSpeedtestServer []byte
-	DNSBLZones          []byte
-	MediaProviders      []byte
-	BGPASNMap           []byte
-	PublicIPv4          string
-	PublicIPv6          string
-	Network             bool
+	TCPTargets       []TCPTarget
+	ProvinceRoutes   []nt3model.ProvinceRoute
+	SpeedtestServers []speedmodel.ServerMetadata
+	TransferTargets  []transferTargetInput
+	DNSBLZones       []dnsblZoneInput
+	MediaProviders   []unlockexecutor.ProviderMetadata
+	BGPASNMap        []bgptools.ASNMetadata
+	PublicIPv4       string
+	PublicIPv6       string
+	Network          bool
+}
+
+type transferTargetInput struct {
+	ID       string `json:"id"`
+	Host     string `json:"host"`
+	PortFrom int    `json:"port_from"`
+	PortTo   int    `json:"port_to"`
+	Provider string `json:"provider,omitempty"`
+	Country  string `json:"country,omitempty"`
+	City     string `json:"city,omitempty"`
+	Status   string `json:"status"`
+}
+
+// dnsblZoneInput keeps the public build independent from the private security
+// module while preserving the family-aware registry contract.
+type dnsblZoneInput struct {
+	Zone string `json:"zone"`
+	IPv4 bool   `json:"ipv4"`
+	IPv6 bool   `json:"ipv6"`
 }
 
 func collectComponentReports(ctx context.Context, config *Config, inputs componentInputs) []ComponentReport {

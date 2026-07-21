@@ -53,8 +53,41 @@ jobs:
         set -euo pipefail
         go test ./...
         go build -ldflags="-checklinkname=0" -o maintest
-        ./maintest -menu=false -l en -security=false -upload=false || exit 1
-        rm -rf maintest
+        ./maintest -h >/dev/null
+        go run ./cmd/ecs-canary -offline -canary-deadline 30s > public-canary.json
+        python3 - <<'PY'
+        import json
+
+        with open("public-canary.json", "r", encoding="utf-8") as handle:
+            report = json.load(handle)
+        if report.get("schema_version") != "goecs.report/v1":
+            raise SystemExit("public canary returned an unexpected schema")
+        files = {item.get("file"): item for item in report.get("data_files") or []}
+        expected_public = {
+            "bgp-asn-map.json",
+            "media-providers.json",
+            "province-routes.json",
+            "speedtest-servers.json",
+            "tcp-targets.json",
+        }
+        expected_private = {
+            "dnsbl-zones.json",
+            "openspeedtest-servers.json",
+            "private-speedtest-servers.json",
+        }
+        if set(files) != expected_public | expected_private:
+            raise SystemExit(f"public canary returned unexpected registry states: {sorted(files)}")
+        failed = [
+            name for name in expected_public
+            if files[name].get("status") != "ok" or files[name].get("source") != "embedded"
+        ]
+        if failed:
+            raise SystemExit(f"public registries failed embedded validation: {sorted(failed)}")
+        exposed = [name for name in expected_private if files[name].get("status") == "ok"]
+        if exposed:
+            raise SystemExit(f"public build unexpectedly exposed private registries: {sorted(exposed)}")
+        PY
+        rm -f maintest public-canary.json
         
     - name: Commit and push changes
       run: |

@@ -12,19 +12,16 @@ import (
 )
 
 func main() {
-	cdn := flag.String("data-cdn", "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/internal/data/snapshot", "Go ECS snapshot CDN base")
-	offline := flag.Bool("offline", false, "force embedded snapshot fallback")
-	standard := flag.Bool("standard", false, "run the complete standard structured profile")
-	tcp := flag.Bool("tcp", false, "run structured TCP probes")
-	hardware := flag.Bool("hardware", false, "run the bounded structured hardware stage")
-	deepDiskPath := flag.String("deep-disk-path", "", "run the deep fio matrix on one explicit mounted directory")
-	deepBurnDuration := flag.Duration("deep-burn-duration", 0, "run an explicit bounded CPU burn")
-	maxDuration := flag.Duration("canary-deadline", 30*time.Second, "canary deadline")
-	flag.Parse()
-	if *offline {
-		*cdn = "http://127.0.0.1:1"
-	}
-	config := canaryConfig(*cdn, *offline, *standard, *tcp, *hardware, *deepDiskPath, *deepBurnDuration, *maxDuration)
+	flags := flag.NewFlagSet("ecs-canary", flag.ExitOnError)
+	offline := flags.Bool("offline", false, "force every component to use its embedded registry")
+	standard := flags.Bool("standard", false, "run the complete standard structured profile")
+	tcp := flags.Bool("tcp", false, "run structured TCP probes")
+	hardware := flags.Bool("hardware", false, "run the bounded structured hardware stage")
+	deepDiskPath := flags.String("deep-disk-path", "", "run the deep fio matrix on one explicit mounted directory")
+	deepBurnDuration := flags.Duration("deep-burn-duration", 0, "run an explicit bounded CPU burn")
+	maxDuration := flags.Duration("canary-deadline", 30*time.Second, "canary deadline")
+	_ = flags.Parse(os.Args[1:])
+	config := canaryConfig(*offline, *standard, *tcp, *hardware, *deepDiskPath, *deepBurnDuration, *maxDuration)
 	preCheck := api.NetCheckResult{Connected: !*offline, StackType: "IPv4", HasIPv4: true}
 	ctx, cancel := context.WithTimeout(context.Background(), *maxDuration)
 	defer cancel()
@@ -46,7 +43,7 @@ func main() {
 	fmt.Println(string(encoded))
 }
 
-func canaryConfig(cdn string, offline, standard, tcp, hardware bool, deepDiskPath string, deepBurnDuration, maxDuration time.Duration) *api.Config {
+func canaryConfig(offline, standard, tcp, hardware bool, deepDiskPath string, deepBurnDuration, maxDuration time.Duration) *api.Config {
 	config := api.NewConfig("canary")
 	config.BasicStatus = hardware || standard
 	config.CpuTestStatus = hardware || standard
@@ -61,7 +58,6 @@ func canaryConfig(cdn string, offline, standard, tcp, hardware bool, deepDiskPat
 	config.SpeedTestStatus = standard
 	config.TgdcTestStatus = standard
 	config.WebTestStatus = standard
-	config.DataCDNBase = cdn
 	config.DataOffline = offline
 	config.TCPProbeStatus = tcp || standard
 	config.DeepMode = deepDiskPath != "" || deepBurnDuration > 0

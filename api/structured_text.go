@@ -223,15 +223,16 @@ func (renderer *structuredTextRenderer) dataFiles(files []DataFileVersion) {
 				source += " -> " + file.Fallback
 			}
 		}
-		rows = append(rows, []string{strings.TrimSuffix(file.File, ".json"), source, strconv.Itoa(file.Count), renderer.status(file.Status)})
+		updated := "-"
+		if !file.GeneratedAt.IsZero() {
+			updated = file.GeneratedAt.Local().Format("01-02 15:04")
+		}
+		rows = append(rows, []string{strings.TrimSuffix(file.File, ".json"), source, strconv.Itoa(file.Count), updated, renderer.status(file.Status)})
 	}
 	renderer.table(
-		[]string{renderer.pick("数据", "Data"), renderer.pick("来源", "Source"), renderer.pick("数量", "Count"), renderer.pick("状态", "Status")},
-		rows, []int{26, 20, 10, 14},
+		[]string{renderer.pick("数据", "Data"), renderer.pick("来源", "Source"), renderer.pick("数量", "Count"), renderer.pick("更新时间", "Updated"), renderer.pick("状态", "Status")},
+		rows, []int{20, 13, 7, 12, 11},
 	)
-	if !files[0].GeneratedAt.IsZero() {
-		renderer.row(renderer.pick("同步时间", "Synced At"), files[0].GeneratedAt.Local().Format("2006-01-02 15:04:05"))
-	}
 }
 
 func (renderer *structuredTextRenderer) component(component ComponentReport) {

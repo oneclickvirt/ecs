@@ -57,27 +57,12 @@ jobs:
           mkdir -p "$TMPDIR" "$GOTMPDIR" "$GOCACHE" "$GOMODCACHE"
           df -h
 
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-          
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: false
-          swap-storage: false
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           check-latest: true
+          cache: false
 
       - name: Resolve component refs from go.mod
         id: component_refs
@@ -240,6 +225,29 @@ jobs:
           go vet ./...
           git diff --exit-code -- go.mod go.sum
 
+      - name: Run embedded-registry canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          export GOWORK="$PWD/go.work"
+          output="$TMPDIR/offline-canary.json"
+          go run ./cmd/ecs-canary -offline -canary-deadline 30s > "$output"
+          python3 - "$output" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], "r", encoding="utf-8") as handle:
+              report = json.load(handle)
+          if report.get("schema_version") != "goecs.report/v1":
+              raise SystemExit("offline canary returned an unexpected schema")
+          files = report.get("data_files") or []
+          if len(files) < 8:
+              raise SystemExit(f"offline canary returned only {len(files)} component registries")
+          failed = [item for item in files if item.get("status") != "ok" or item.get("source") != "embedded"]
+          if failed:
+              raise SystemExit(f"offline component registry validation failed: {failed}")
+          PY
+
       # - name: Install UPX
       #   run: |
       #     apk add --no-cache upx
@@ -249,6 +257,11 @@ jobs:
           rm -rf "$TMPDIR" "$GOTMPDIR"
           mkdir -p "$TMPDIR" "$GOTMPDIR"
           go clean -cache -testcache
+          available_kb="$(df -Pk / | awk 'NR == 2 { print $4 }')"
+          if [[ -z "$available_kb" || "$available_kb" -lt 5242880 ]]; then
+            echo "Insufficient release disk space: ${available_kb:-unknown} KiB available" >&2
+            exit 1
+          fi
           df -h
 
       - name: Download Go modules

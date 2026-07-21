@@ -284,8 +284,7 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			},
 		},
 		{key: "jsonpath", nameZh: "JSON结果路径", nameEn: "JSON Result Path", kind: "text", descZh: "留空关闭；使用-输出到标准输出。", descEn: "Empty disables; use - for stdout.", textVal: config.JSONPath},
-		{key: "dataoffline", nameZh: "仅使用内置数据", nameEn: "Embedded Data Only", kind: "bool", descZh: "禁止远程数据请求并使用内置最新有效快照。", descEn: "Disable remote data requests and use the embedded valid snapshot.", boolVal: config.DataOffline},
-		{key: "datacdn", nameZh: "数据CDN地址", nameEn: "Data CDN Base", kind: "text", descZh: "Go ECS内置快照目录的CDN基础地址。", descEn: "CDN base URL for the Go ECS snapshot directory.", textVal: config.DataCDNBase},
+		{key: "dataoffline", nameZh: "仅使用组件内置数据", nameEn: "Embedded Component Data Only", kind: "bool", descZh: "禁止组件远程数据请求并分别使用各组件内置的最近有效快照。", descEn: "Disable component remote requests and use each component's embedded valid snapshot.", boolVal: config.DataOffline},
 	}
 
 	for i := range adv {

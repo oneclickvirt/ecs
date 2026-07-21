@@ -105,10 +105,16 @@ func TestDataOfflineForcesEmbeddedSnapshot(t *testing.T) {
 	if report.Data == nil || report.Data.Source != "embedded" || report.Data.Fallback != "embedded" {
 		t.Fatalf("unexpected offline data source: %#v", report.Data)
 	}
-	if len(report.DataFiles) != 7 {
+	if len(report.DataFiles) != 8 {
 		t.Fatalf("expected all known data files, got %#v", report.DataFiles)
 	}
 	for index, file := range report.DataFiles {
+		if !hasPrivateComponentData() && (file.File == dnsblDataFile || file.File == privateDataFile || file.File == transferDataFile) {
+			if file.Status != ReportStatusError || file.Reason == "" {
+				t.Fatalf("public-only file %d has unexpected state: %#v", index, file)
+			}
+			continue
+		}
 		if file.Status != ReportStatusOK || file.Source != "embedded" || file.Fallback != "embedded" {
 			t.Fatalf("file %d has unexpected state: %#v", index, file)
 		}

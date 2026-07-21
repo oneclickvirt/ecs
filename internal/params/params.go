@@ -56,7 +56,6 @@ type Config struct {
 	DeepBurnDuration      time.Duration
 	DeepGPUDevice         string
 	JSONPath              string
-	DataCDNBase           string
 	DataOffline           bool
 	OnlyIpInfoCheck       bool
 	UnlockTestRegion      string
@@ -119,7 +118,6 @@ func NewConfig(version string) *Config {
 		HardwareBudget:        2 * time.Minute,
 		DeepBurnDuration:      0,
 		JSONPath:              "",
-		DataCDNBase:           "https://cdn.spiritlhl.net/https://raw.githubusercontent.com/oneclickvirt/ecs/master/internal/data/snapshot",
 		DataOffline:           false,
 		OnlyIpInfoCheck:       false,
 		UnlockTestRegion:      "0",
@@ -260,8 +258,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.DurationVar(&c.DeepBurnDuration, "deep-burn-duration", 0, "Explicit deep CPU burn duration (disabled when zero)")
 	c.GoecsFlag.StringVar(&c.DeepGPUDevice, "deep-gpu-device", "", "Explicit GPU device selector for deep compute")
 	c.GoecsFlag.StringVar(&c.JSONPath, "json", "", "Write the versioned JSON report to this path, or '-' for stdout")
-	c.GoecsFlag.StringVar(&c.DataCDNBase, "data-cdn", c.DataCDNBase, "Set the Go ECS snapshot CDN base URL")
-	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force the embedded Go ECS snapshot without remote requests")
+	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force every component to use its embedded registry without remote requests")
 	if err := c.GoecsFlag.Parse(args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
@@ -609,7 +606,6 @@ func (c *Config) ValidateParams() {
 	c.UnlockTestSOCKSProxy = strings.TrimSpace(c.UnlockTestSOCKSProxy)
 	c.TCPTextFormat = strings.ToLower(strings.TrimSpace(c.TCPTextFormat))
 	c.JSONPath = strings.TrimSpace(c.JSONPath)
-	c.DataCDNBase = strings.TrimRight(strings.TrimSpace(c.DataCDNBase), "/")
 	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
 	c.DeepSMARTDevices = strings.TrimSpace(c.DeepSMARTDevices)
 	c.DeepGPUDevice = strings.TrimSpace(c.DeepGPUDevice)

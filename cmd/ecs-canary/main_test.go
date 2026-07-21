@@ -6,7 +6,7 @@ import (
 )
 
 func TestCanaryConfigDefaultsToDataOnly(t *testing.T) {
-	config := canaryConfig("fixture", false, false, false, false, "", 0, 30*time.Second)
+	config := canaryConfig(false, false, false, false, "", 0, 30*time.Second)
 	if config.BasicStatus || config.CpuTestStatus || config.MemoryTestStatus || config.DiskTestStatus ||
 		config.UtTestStatus || config.SecurityTestStatus || config.EmailTestStatus || config.BacktraceStatus ||
 		config.Nt3Status || config.PingTestStatus || config.TgdcTestStatus || config.WebTestStatus ||
@@ -19,7 +19,7 @@ func TestCanaryConfigDefaultsToDataOnly(t *testing.T) {
 }
 
 func TestCanaryConfigAllowsOnlyExplicitSafeDeepTargets(t *testing.T) {
-	config := canaryConfig("fixture", true, false, false, false, "/tmp", 5*time.Second, 20*time.Second)
+	config := canaryConfig(true, false, false, false, "/tmp", 5*time.Second, 20*time.Second)
 	if !config.DeepMode || config.DeepDiskPaths != "/tmp" || config.DeepBurnDuration != 5*time.Second || !canaryRunsHardware(config) {
 		t.Fatalf("explicit deep canary was not configured: %#v", config)
 	}
@@ -29,7 +29,7 @@ func TestCanaryConfigAllowsOnlyExplicitSafeDeepTargets(t *testing.T) {
 }
 
 func TestCanaryStandardProfileEnablesEveryStandardSection(t *testing.T) {
-	config := canaryConfig("fixture", false, true, false, false, "", 0, 10*time.Minute)
+	config := canaryConfig(false, true, false, false, "", 0, 10*time.Minute)
 	if !config.BasicStatus || !config.CpuTestStatus || !config.MemoryTestStatus || !config.DiskTestStatus ||
 		!config.UtTestStatus || !config.SecurityTestStatus || !config.EmailTestStatus || !config.BacktraceStatus ||
 		!config.Nt3Status || !config.PingTestStatus || !config.TgdcTestStatus || !config.WebTestStatus ||

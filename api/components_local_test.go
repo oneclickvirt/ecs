@@ -127,9 +127,13 @@ func TestLocalComponentAdapterBuildsProvinceLatencyPayload(t *testing.T) {
 			{Carrier: "cm", IPv4: prefix + "-cm.example", IPv6: prefix + "-cm-v6.example"},
 		}}
 	}
-	data, err := json.Marshal(routes)
-	if err != nil {
-		t.Fatal(err)
+	typedRoutes := make([]nt3model.ProvinceRoute, 0, len(routes))
+	for _, route := range routes {
+		targets := make([]nt3model.ProvinceCarrierTarget, 0, len(route.Targets))
+		for _, target := range route.Targets {
+			targets = append(targets, nt3model.ProvinceCarrierTarget{Carrier: target.Carrier, IPv4: target.IPv4, IPv6: target.IPv6})
+		}
+		typedRoutes = append(typedRoutes, nt3model.ProvinceRoute{Code: route.Code, Name: route.Name, Province: route.Province, Short: route.Short, Targets: targets})
 	}
 	cfg := NewDefaultConfig()
 	cfg.BasicStatus = false
@@ -142,7 +146,7 @@ func TestLocalComponentAdapterBuildsProvinceLatencyPayload(t *testing.T) {
 	cfg.Nt3CheckType = "ipv4"
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	components := collectComponentReports(ctx, cfg, componentInputs{ProvinceRoutes: data, Network: true})
+	components := collectComponentReports(ctx, cfg, componentInputs{ProvinceRoutes: typedRoutes, Network: true})
 	var provinceComponent *ComponentReport
 	for index := range components {
 		if components[index].Name == "nt3.province_latency" {
@@ -371,6 +375,29 @@ func TestLocalSpeedComponentDoesNotTreatTCPAsThroughputSuccess(t *testing.T) {
 		})
 	if report.Status != ReportStatusUnavailable || !strings.Contains(report.Reason, "0/1") {
 		t.Fatalf("TCP-only node incorrectly marked speed available: %#v", report)
+	}
+}
+
+func TestTypedSpeedRegistryKeepsLogicalSourceSelectable(t *testing.T) {
+	report := collectSpeedComponentFromRegistryWithDependencies(context.Background(), []speedmodel.ServerMetadata{{
+		ID: "typed", Name: "Typed", Host: "typed.test:8080", URL: "https://typed.test/upload",
+		Source: "embedded", Availability: speedmodel.ServerCandidate,
+	}}, []transferTargetInput{{ID: "transfer", Host: "transfer.test", PortFrom: 5201, PortTo: 5210, Status: "available"}}, 1, func(context.Context, string, string) (net.Conn, error) {
+		client, server := net.Pipe()
+		go server.Close()
+		return client, nil
+	}, func(_ context.Context, server speedmodel.ServerMetadata) speedmodel.ThroughputResult {
+		return speedmodel.ThroughputResult{ID: server.ID, Status: speedmodel.ThroughputAvailable, DownloadMbps: 100}
+	}, nil)
+	if report.Status != ReportStatusOK {
+		t.Fatalf("typed registry was not selectable: %#v", report)
+	}
+	var payload speedComponentPayload
+	if err := json.Unmarshal(report.Payload, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if len(payload.Selected) != 1 || payload.Selected[0].Source != "speedtest" || len(payload.Nodes) != 2 || payload.Nodes[1].Source != "openspeedtest" {
+		t.Fatalf("typed source was not normalized: %+v", payload.Selected)
 	}
 }
 

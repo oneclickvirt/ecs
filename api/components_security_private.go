@@ -30,22 +30,50 @@ type securityComponentPayload struct {
 
 type securityProviderFactory func(string) []securitynetwork.ProviderProbe
 
-func collectSecurityComponent(ctx context.Context, ipv4, ipv6 string, zonesData []byte) ComponentReport {
-	return collectSecurityComponentWithDeps(ctx, ipv4, ipv6, zonesData, securitynetwork.DefaultProviderProbes, nil)
+func loadSecurityComponentData(ctx context.Context, offline bool) componentDataResult {
+	var zones []securitynetwork.DNSBLZone
+	var source securitynetwork.DNSBLDataSource
+	var err error
+	if offline {
+		zones, source, err = securitynetwork.EmbeddedDNSBLZoneRegistrySnapshot()
+	} else {
+		zones, source, err = securitynetwork.LoadDNSBLZoneRegistry(ctx, nil)
+	}
+	if err != nil {
+		return failedComponentData(ctx, dnsblDataFile, err)
+	}
+	file := timeMetadataFile(dnsblDataFile, source.Schema, source.GeneratedAt, source.Source, source.Fallback, source.Count)
+	inputs := make([]dnsblZoneInput, 0, len(zones))
+	for _, zone := range zones {
+		inputs = append(inputs, dnsblZoneInput{Zone: zone.Zone, IPv4: zone.IPv4, IPv6: zone.IPv6})
+	}
+	return componentDataResult{file: file, apply: func(component *componentInputs) { component.DNSBLZones = inputs }}
+}
+
+func collectSecurityComponent(ctx context.Context, ipv4, ipv6 string, zones []dnsblZoneInput) ComponentReport {
+	converted := make([]securitynetwork.DNSBLZone, 0, len(zones))
+	for _, zone := range zones {
+		converted = append(converted, securitynetwork.DNSBLZone{Zone: zone.Zone, IPv4: zone.IPv4, IPv6: zone.IPv6})
+	}
+	return collectSecurityComponentWithTypedDeps(ctx, ipv4, ipv6, converted, securitynetwork.DefaultProviderProbes, nil)
 }
 
 func collectSecurityComponentWithDeps(ctx context.Context, ipv4, ipv6 string, zonesData []byte, providerFactory securityProviderFactory, resolver securitynetwork.DNSBLResolver) ComponentReport {
+	var zones []securitynetwork.DNSBLZone
+	if len(zonesData) > 0 {
+		if err := json.Unmarshal(zonesData, &zones); err != nil {
+			return componentPayload("security.evidence", "goecs.security/v1", ReportStatusError, time.Now(), nil, fmt.Errorf("decode DNSBL zones: %w", err))
+		}
+	}
+	return collectSecurityComponentWithTypedDeps(ctx, ipv4, ipv6, zones, providerFactory, resolver)
+}
+
+func collectSecurityComponentWithTypedDeps(ctx context.Context, ipv4, ipv6 string, zones []securitynetwork.DNSBLZone, providerFactory securityProviderFactory, resolver securitynetwork.DNSBLResolver) ComponentReport {
 	started := time.Now()
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	payload := securityComponentPayload{SchemaVersion: "goecs.security/v1"}
-	var zones []securitynetwork.DNSBLZone
-	if len(zonesData) > 0 {
-		if err := json.Unmarshal(zonesData, &zones); err != nil {
-			return componentPayload("security.evidence", payload.SchemaVersion, ReportStatusError, started, payload, fmt.Errorf("decode DNSBL zones: %w", err))
-		}
-	}
 	if providerFactory == nil {
 		providerFactory = securitynetwork.DefaultProviderProbes
 	}

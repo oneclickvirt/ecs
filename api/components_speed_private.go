@@ -8,7 +8,47 @@ import (
 	"time"
 
 	privatepst "github.com/oneclickvirt/privatespeedtest/pst"
+	privatetransfer "github.com/oneclickvirt/privatespeedtest/transfer"
 )
+
+func hasPrivateComponentData() bool { return true }
+
+func loadPrivateSpeedComponentData(ctx context.Context, offline bool) componentDataResult {
+	var loaded privatepst.RegistryLoadResult
+	var err error
+	if offline {
+		loaded, err = privatepst.LoadEmbeddedServerList()
+	} else {
+		loaded, err = privatepst.LoadServerListWithMetadataContext(ctx)
+	}
+	if err != nil {
+		return failedComponentData(ctx, privateDataFile, err)
+	}
+	file := stringMetadataFile(privateDataFile, loaded.Metadata.Schema, loaded.Metadata.GeneratedAt, loaded.Source, loaded.Fallback, loaded.Metadata.Count)
+	return componentDataResult{file: file}
+}
+
+func loadTransferComponentData(ctx context.Context, offline bool) componentDataResult {
+	var loaded privatetransfer.RegistryLoadResult
+	var err error
+	if offline {
+		loaded, err = privatetransfer.LoadEmbeddedRegistry()
+	} else {
+		loaded, err = privatetransfer.LoadRegistry(ctx, nil, privatetransfer.DefaultRegistrySources(), 5)
+	}
+	if err != nil {
+		return failedComponentData(ctx, transferDataFile, err)
+	}
+	file := stringMetadataFile(transferDataFile, loaded.Metadata.Schema, loaded.Metadata.GeneratedAt, loaded.Source, loaded.Fallback, loaded.Metadata.Count)
+	targets := make([]transferTargetInput, 0, len(loaded.Targets))
+	for _, target := range loaded.Targets {
+		targets = append(targets, transferTargetInput{
+			ID: target.ID, Host: target.Host, PortFrom: target.PortFrom, PortTo: target.PortTo,
+			Provider: target.Provider, Country: target.Country, City: target.City, Status: target.Status,
+		})
+	}
+	return componentDataResult{file: file, apply: func(inputs *componentInputs) { inputs.TransferTargets = targets }}
+}
 
 func runPrivateSpeedBenchmarks(ctx context.Context, limit int) (any, int, []privateSpeedBenchmark) {
 	return runPrivateSpeedBenchmarksWithLoader(ctx, limit, privatepst.LoadServerListWithMetadataContext)

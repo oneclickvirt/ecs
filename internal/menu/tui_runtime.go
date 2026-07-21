@@ -332,8 +332,6 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.JSONPath = strings.TrimSpace(a.textVal)
 		case "dataoffline":
 			config.DataOffline = a.boolVal
-		case "datacdn":
-			config.DataCDNBase = strings.TrimSpace(a.textVal)
 		}
 	}
 

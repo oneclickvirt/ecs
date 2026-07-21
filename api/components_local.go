@@ -60,10 +60,8 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 		progressStarted(ctx, "routes")
 		firstRouteComponent := len(result)
 		started := time.Now()
-		routes, err := nt3model.ParseProvinceRoutes(inputs.ProvinceRoutes)
-		if err != nil {
-			result = append(result, componentPayload("nt3.province_latency", "goecs.nt3/province-latency-v1", ReportStatusError, started, nil, err))
-		} else {
+		routes := inputs.ProvinceRoutes
+		{
 			targets := nt3model.BuildProvinceLatencyTargets(routes, config.Nt3CheckType)
 			probeConfig := nt3.StandardProvinceLatencyConfig()
 			if config.DeepMode {
@@ -100,11 +98,7 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 	if config.PingTestStatus && inputs.Network && len(inputs.ProvinceRoutes) > 0 {
 		result = append(result, collectComponentStep(ctx, "ping", func() ComponentReport {
 			started := time.Now()
-			routes, err := nt3model.ParseProvinceRoutes(inputs.ProvinceRoutes)
-			if err != nil {
-				return componentPayload("ping.icmp", "goecs.ping/icmp-v1", ReportStatusError, started, nil, err)
-			}
-			targets := representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(routes, config.Nt3CheckType), config.DeepMode)
+			targets := representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(inputs.ProvinceRoutes, config.Nt3CheckType), config.DeepMode)
 			pingCtx, cancel := componentContext(ctx, 30*time.Second)
 			defer cancel()
 			probes := pingprobe.RunICMPProbes(pingCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
@@ -140,7 +134,7 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 			started := time.Now()
 			mediaCtx, cancel := componentContext(ctx, 60*time.Second)
 			defer cancel()
-			return withComponentDuration(collectMediaComponentWithRegistry(mediaCtx, config, inputs.MediaProviders), started)
+			return withComponentDuration(collectMediaComponentWithMetadata(mediaCtx, config, inputs.MediaProviders), started)
 		}))
 	}
 	if config.SecurityTestStatus && inputs.Network {
@@ -156,7 +150,7 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 			started := time.Now()
 			backtraceCtx, cancel := componentContext(ctx, 45*time.Second)
 			defer cancel()
-			return withComponentDuration(collectBacktraceComponentWithData(backtraceCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
+			return withComponentDuration(collectBacktraceComponentWithRegistry(backtraceCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
 		}))
 	}
 	if config.EmailTestStatus && inputs.Network {
@@ -188,7 +182,7 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 			started := time.Now()
 			speedCtx, cancel := componentContext(ctx, 75*time.Second)
 			defer cancel()
-			return withComponentDuration(collectSpeedComponentWithOffline(speedCtx, inputs.SpeedtestServers, inputs.OpenSpeedtestServer, config.SpNum, config.DataOffline), started)
+			return withComponentDuration(collectSpeedComponentFromRegistry(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.SpNum, config.DataOffline), started)
 		}))
 	}
 	return result
@@ -713,6 +707,16 @@ func collectBacktraceComponentWithData(ctx context.Context, ipv4, ipv6 string, a
 	return collectBacktraceComponentWithRunnerAndData(ctx, ipv4, ipv6, asnData, bgptools.QueryIPBGPReport)
 }
 
+func collectBacktraceComponentWithRegistry(ctx context.Context, ipv4, ipv6 string, entries []bgptools.ASNMetadata) ComponentReport {
+	registry := make(map[string]string, len(entries))
+	for _, entry := range entries {
+		if entry.ASN != 0 && strings.TrimSpace(entry.Name) != "" {
+			registry[strconv.FormatUint(uint64(entry.ASN), 10)] = strings.TrimSpace(entry.Name)
+		}
+	}
+	return collectBacktraceComponentWithRegistryAndDependencies(ctx, ipv4, ipv6, registry, bgptools.QueryIPBGPReport, nil)
+}
+
 type asnMetadata struct {
 	ASN  string `json:"asn"`
 	Name string `json:"name"`
@@ -728,13 +732,17 @@ func collectBacktraceComponentWithRunnerAndData(ctx context.Context, ipv4, ipv6 
 }
 
 func collectBacktraceComponentWithDependencies(ctx context.Context, ipv4, ipv6 string, asnData []byte, runner backtraceRunner, configFactory backtraceConfigFactory) ComponentReport {
+	asnRegistry, registryErr := parseASNRegistry(asnData)
+	if registryErr != nil {
+		return componentPayload("backtrace.ip_bgp", "goecs.backtrace/v1", ReportStatusError, time.Now(), nil, registryErr)
+	}
+	return collectBacktraceComponentWithRegistryAndDependencies(ctx, ipv4, ipv6, asnRegistry, runner, configFactory)
+}
+
+func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, ipv4, ipv6 string, asnRegistry map[string]string, runner backtraceRunner, configFactory backtraceConfigFactory) ComponentReport {
 	started := time.Now()
 	if ctx == nil {
 		ctx = context.Background()
-	}
-	asnRegistry, registryErr := parseASNRegistry(asnData)
-	if registryErr != nil {
-		return componentPayload("backtrace.ip_bgp", "goecs.backtrace/v1", ReportStatusError, started, nil, registryErr)
 	}
 	if runner == nil {
 		runner = bgptools.QueryIPBGPReport
@@ -882,6 +890,8 @@ type mediaProviderMetadata struct {
 	Name         string   `json:"name"`
 	Groups       []string `json:"groups"`
 	SupportsIPv6 bool     `json:"supports_ipv6"`
+	Category     string   `json:"category,omitempty"`
+	Aliases      []string `json:"aliases,omitempty"`
 }
 
 type mediaRegistryUsage struct {
@@ -906,6 +916,32 @@ func collectMediaComponentWithRegistry(ctx context.Context, config *Config, meta
 	}, metadata, unlockexecutor.RunStructured)
 }
 
+func collectMediaComponentWithMetadata(ctx context.Context, config *Config, metadata []unlockexecutor.ProviderMetadata) ComponentReport {
+	if config == nil {
+		config = NewDefaultConfig()
+	}
+	registry := make(map[string]mediaProviderMetadata, len(metadata))
+	for _, entry := range metadata {
+		converted := mediaProviderMetadata{Name: strings.TrimSpace(entry.Name), Category: strings.TrimSpace(entry.Category), Aliases: append([]string(nil), entry.Aliases...)}
+		if converted.Name == "" {
+			continue
+		}
+		registry[strings.ToLower(converted.Name)] = converted
+		for _, alias := range converted.Aliases {
+			alias = strings.ToLower(strings.TrimSpace(alias))
+			if alias != "" {
+				registry[alias] = converted
+			}
+		}
+	}
+	return collectMediaComponentWithParsedRegistryRunner(ctx, unlockexecutor.RunOptions{
+		Selection: config.UnlockTestRegion, IPVersion: config.UnlockTestIPVersion,
+		Interface: config.UnlockTestInterface, DNSServers: config.UnlockTestDNSServers,
+		HTTPProxy: config.UnlockTestHTTPProxy, SOCKSProxy: config.UnlockTestSOCKSProxy,
+		Concurrency: config.UnlockTestConcurrency, IncludeHeads: false,
+	}, registry, unlockexecutor.RunStructured)
+}
+
 type mediaRunner func(context.Context, unlockexecutor.RunOptions) ([]unlockexecutor.StructuredResult, error)
 
 func collectMediaComponentWithRunner(ctx context.Context, options unlockexecutor.RunOptions, runner mediaRunner) ComponentReport {
@@ -913,13 +949,17 @@ func collectMediaComponentWithRunner(ctx context.Context, options unlockexecutor
 }
 
 func collectMediaComponentWithRegistryRunner(ctx context.Context, options unlockexecutor.RunOptions, metadata []byte, runner mediaRunner) ComponentReport {
+	registry, registryErr := parseMediaRegistry(metadata)
+	if registryErr != nil {
+		return componentPayload("unlocktests.media", "goecs.unlocktests/media-v1", ReportStatusError, time.Now(), nil, registryErr)
+	}
+	return collectMediaComponentWithParsedRegistryRunner(ctx, options, registry, runner)
+}
+
+func collectMediaComponentWithParsedRegistryRunner(ctx context.Context, options unlockexecutor.RunOptions, registry map[string]mediaProviderMetadata, runner mediaRunner) ComponentReport {
 	started := time.Now()
 	if ctx == nil {
 		ctx = context.Background()
-	}
-	registry, registryErr := parseMediaRegistry(metadata)
-	if registryErr != nil {
-		return componentPayload("unlocktests.media", "goecs.unlocktests/media-v1", ReportStatusError, started, nil, registryErr)
 	}
 	if status, canceled := contextComponentStatus(ctx); canceled {
 		return componentPayload("unlocktests.media", "goecs.unlocktests/media-v1", status, started, mediaComponentPayload{
@@ -977,7 +1017,11 @@ func buildMediaRegistryUsage(registry map[string]mediaProviderMetadata, results 
 			continue
 		}
 		if entry, exists := registry[strings.ToLower(name)]; exists {
-			matched[entry.ID] = entry
+			key := strings.TrimSpace(entry.ID)
+			if key == "" {
+				key = strings.ToLower(strings.TrimSpace(entry.Name))
+			}
+			matched[key] = entry
 		} else {
 			missing[name] = struct{}{}
 		}
@@ -988,7 +1032,12 @@ func buildMediaRegistryUsage(registry map[string]mediaProviderMetadata, results 
 	for name := range missing {
 		usage.Missing = append(usage.Missing, name)
 	}
-	sort.Slice(usage.Matched, func(i, j int) bool { return usage.Matched[i].ID < usage.Matched[j].ID })
+	sort.Slice(usage.Matched, func(i, j int) bool {
+		if usage.Matched[i].ID != usage.Matched[j].ID {
+			return usage.Matched[i].ID < usage.Matched[j].ID
+		}
+		return usage.Matched[i].Name < usage.Matched[j].Name
+	})
 	sort.Strings(usage.Missing)
 	return usage
 }
@@ -1116,6 +1165,49 @@ type privateSpeedBenchmark struct {
 
 type privateSpeedRunner func(context.Context, int) (any, int, []privateSpeedBenchmark)
 
+func collectSpeedComponentFromRegistry(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, offline bool) ComponentReport {
+	privateRunner := runPrivateSpeedBenchmarks
+	if offline {
+		privateRunner = runEmbeddedPrivateSpeedBenchmarks
+	}
+	return collectSpeedComponentFromRegistryWithDependencies(ctx, servers, transfers, limit, nil, nil, privateRunner)
+}
+
+func collectSpeedComponentFromRegistryWithDependencies(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
+	started := time.Now()
+	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(servers))}
+	for _, server := range servers {
+		host := strings.TrimSpace(server.Host)
+		port := 0
+		if _, parsedPort, err := net.SplitHostPort(host); err == nil {
+			fmt.Sscanf(parsedPort, "%d", &port)
+		}
+		availability := string(server.Availability)
+		if availability == "" {
+			availability = "candidate"
+		}
+		payload.Nodes = append(payload.Nodes, speedNodeResult{
+			ID: server.ID, Host: host, Port: port, Provider: server.Provider,
+			Country: server.Country, City: server.City, Source: "speedtest",
+			Availability: availability, LatencyMS: server.LatencyMS,
+			Error: server.Error, URL: server.URL,
+		})
+	}
+	for _, target := range transfers {
+		availability := strings.ToLower(strings.TrimSpace(target.Status))
+		if availability == "" || availability == "available" {
+			availability = "candidate"
+		}
+		host := net.JoinHostPort(strings.Trim(target.Host, "[]"), strconv.Itoa(target.PortFrom))
+		payload.Nodes = append(payload.Nodes, speedNodeResult{
+			ID: target.ID, Host: host, Port: target.PortFrom, Provider: target.Provider,
+			Country: target.Country, City: target.City, Source: "openspeedtest",
+			Availability: availability,
+		})
+	}
+	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, started)
+}
+
 func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData, openData []byte, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
 	started := time.Now()
 	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1"}
@@ -1154,6 +1246,10 @@ func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData
 			payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: host, Port: port, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "candidate", URL: input.URL})
 		}
 	}
+	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, started)
+}
+
+func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentPayload, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, started time.Time) ComponentReport {
 	probeSpeedNodes(ctx, payload.Nodes, dial)
 	available := make([]speedNodeResult, 0, len(payload.Nodes))
 	for _, node := range payload.Nodes {
