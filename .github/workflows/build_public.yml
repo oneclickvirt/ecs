@@ -38,9 +38,12 @@ jobs:
         set -euo pipefail
         python3 .back/create_public_branch.py
         go clean -cache -testcache -fuzzcache
-        if grep -R -n -E 'github\.com/oneclickvirt/(security|privatespeedtest)' \
-          go.mod internal api utils goecs.go --include='*.go'; then
-          echo "Public branch still contains private module references" >&2
+        if grep -n -E 'github\.com/oneclickvirt/(security|privatespeedtest)' go.mod; then
+          echo "Public go.mod still requires private modules" >&2
+          exit 1
+        fi
+        if go list -deps ./... | grep -E '^github\.com/oneclickvirt/(security|privatespeedtest)(/|$)'; then
+          echo "Public build dependency graph still loads private modules" >&2
           exit 1
         fi
     - name: Build and Test
