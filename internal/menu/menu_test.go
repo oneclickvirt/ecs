@@ -80,14 +80,14 @@ func TestFullPresetEnablesEnhancedChecks(t *testing.T) {
 		mainUpload: cfg.EnableUpload,
 	}, nil)
 
-	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || !cfg.UnlockTestShowIP || !cfg.PingTestStatus {
-		t.Fatalf("full preset did not enable enhanced checks: disk_multi=%t deep=%t burn=%s tcp=%t show_ip=%t ping=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.UnlockTestShowIP, cfg.PingTestStatus)
+	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || cfg.TCPTextFormat != "compact" || !cfg.UnlockTestShowIP || !cfg.PingTestStatus {
+		t.Fatalf("full preset did not enable enhanced checks: disk_multi=%t deep=%t burn=%s tcp=%t tcp_format=%s show_ip=%t ping=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.TCPTextFormat, cfg.UnlockTestShowIP, cfg.PingTestStatus)
 	}
 }
 
 func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
 	cfg := params.NewConfig("test")
-	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=false", "-utshowip=false", "-deep-burn-duration=0s"})
+	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=false", "-tcp-format=full", "-utshowip=false", "-deep-burn-duration=0s"})
 	saved := cfg.SaveUserSetParams()
 	applyMenuResult(utils.NetCheckResult{Connected: true, StackType: "IPv4"}, cfg, tuiResult{
 		choice:     "1",
@@ -95,8 +95,8 @@ func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
 		mainUpload: cfg.EnableUpload,
 	}, saved)
 
-	if cfg.DiskMultiCheck || cfg.DeepMode || cfg.DeepBurnDuration != 0 || cfg.TCPProbeStatus || cfg.UnlockTestShowIP {
-		t.Fatalf("explicit enhanced flag overrides were ignored: disk_multi=%t deep=%t burn=%s tcp=%t show_ip=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.UnlockTestShowIP)
+	if cfg.DiskMultiCheck || cfg.DeepMode || cfg.DeepBurnDuration != 0 || cfg.TCPProbeStatus || cfg.TCPTextFormat != "full" || cfg.UnlockTestShowIP {
+		t.Fatalf("explicit enhanced flag overrides were ignored: disk_multi=%t deep=%t burn=%s tcp=%t tcp_format=%s show_ip=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.TCPTextFormat, cfg.UnlockTestShowIP)
 	}
 }
 
@@ -183,6 +183,8 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 			advanced[index].boolVal = true
 		case "privacy":
 			advanced[index].boolVal = true
+		case "tcpformat":
+			advanced[index].current = optionIndexByValue(advanced[index].options, "full")
 		}
 	}
 	applyCustomResult(tuiResult{toggles: defaultTestToggles(), advanced: advanced}, utils.NetCheckResult{Connected: true}, cfg)
@@ -198,6 +200,9 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 	}
 	if !cfg.DataOffline || !cfg.PrivacyMode || cfg.EnableUpload {
 		t.Fatalf("data/privacy parameters were not applied: %#v", cfg)
+	}
+	if cfg.TCPTextFormat != "full" {
+		t.Fatalf("TCP text format was not applied: %q", cfg.TCPTextFormat)
 	}
 }
 

@@ -160,6 +160,14 @@ func WithTCPProbe(enable bool) ConfigOption {
 	}
 }
 
+// WithTCPTextFormat selects compact category summaries or the complete
+// per-target TCP table for legacy text output.
+func WithTCPTextFormat(format string) ConfigOption {
+	return func(c *Config) {
+		c.TCPTextFormat = format
+	}
+}
+
 func WithJSONPath(path string) ConfigOption {
 	return func(c *Config) {
 		c.JSONPath = path

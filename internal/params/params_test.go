@@ -95,6 +95,19 @@ func TestAdditionalTCPSectionIsExplicit(t *testing.T) {
 	if !cfg.TCPProbeStatus {
 		t.Fatal("explicit -tcp did not enable the additional section")
 	}
+	if cfg.TCPTextFormat != "compact" {
+		t.Fatalf("default TCPTextFormat = %q, want compact", cfg.TCPTextFormat)
+	}
+
+	cfg.ParseFlags([]string{"-tcp", "-tcp-format=FULL"})
+	if cfg.TCPTextFormat != "full" {
+		t.Fatalf("explicit TCPTextFormat = %q, want full", cfg.TCPTextFormat)
+	}
+	cfg.TCPTextFormat = "verbose"
+	cfg.ValidateParams()
+	if cfg.TCPTextFormat != "compact" {
+		t.Fatalf("invalid TCPTextFormat fallback = %q, want compact", cfg.TCPTextFormat)
+	}
 }
 
 func TestValidateParamsCapsStandardHardwareBudget(t *testing.T) {

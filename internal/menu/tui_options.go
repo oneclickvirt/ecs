@@ -274,6 +274,15 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		},
 		{key: "privacy", nameZh: "隐私模式", nameEn: "Privacy Mode", kind: "bool", descZh: "隐藏敏感硬件标识并禁止上传。", descEn: "Hide sensitive hardware identifiers and disable upload.", boolVal: config.PrivacyMode},
 		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "追加TCP握手延迟与错误分类单项。", descEn: "Append the TCP latency and error classification section.", boolVal: config.TCPProbeStatus},
+		{
+			key: "tcpformat", nameZh: "TCP输出明细", nameEn: "TCP Output Detail", kind: "option",
+			descZh: "紧凑模式显示全局与分类汇总及少量异常/最慢目标；完整模式逐目标显示。",
+			descEn: "Compact shows overall/category summaries and selected exceptions; full lists every target.",
+			options: []advOption{
+				option("compact", "紧凑汇总", "Compact", "默认，保留完整统计且减少屏幕占用。", "Default; complete aggregate coverage with fewer rows."),
+				option("full", "完整逐项", "Full", "显示全部目标明细。", "Show every target row."),
+			},
+		},
 		{key: "jsonpath", nameZh: "JSON结果路径", nameEn: "JSON Result Path", kind: "text", descZh: "留空关闭；使用-输出到标准输出。", descEn: "Empty disables; use - for stdout.", textVal: config.JSONPath},
 		{key: "dataoffline", nameZh: "仅使用内置数据", nameEn: "Embedded Data Only", kind: "bool", descZh: "禁止远程数据请求并使用内置最新有效快照。", descEn: "Disable remote data requests and use the embedded valid snapshot.", boolVal: config.DataOffline},
 		{key: "datacdn", nameZh: "数据CDN地址", nameEn: "Data CDN Base", kind: "text", descZh: "Go ECS内置快照目录的CDN基础地址。", descEn: "CDN base URL for the Go ECS snapshot directory.", textVal: config.DataCDNBase},
@@ -299,6 +308,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestRegion)
 		case "unlockipver":
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestIPVersion)
+		case "tcpformat":
+			adv[i].current = optionIndexByValue(adv[i].options, config.TCPTextFormat)
 		}
 	}
 

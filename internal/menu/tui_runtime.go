@@ -326,6 +326,8 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.PrivacyMode = a.boolVal
 		case "tcp":
 			config.TCPProbeStatus = a.boolVal
+		case "tcpformat":
+			config.TCPTextFormat = a.options[a.current].value
 		case "jsonpath":
 			config.JSONPath = strings.TrimSpace(a.textVal)
 		case "dataoffline":

@@ -171,7 +171,9 @@ func RunTCPTests(ctx context.Context, config *params.Config, output, tempOutput 
 		}
 		probeConfig := pt.DefaultTCPProbeConfig()
 		results := pt.RunTCPRegistry(ctx, probeConfig)
-		fmt.Println(pt.FormatTCPResults(results))
+		fmt.Println(pt.FormatTCPResultsWithOptions(results, pt.TCPFormatOptions{
+			Format: pt.TCPTextFormat(config.TCPTextFormat),
+		}))
 	}, tempOutput, output)
 }
 

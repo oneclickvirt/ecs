@@ -10,6 +10,7 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 		WithSpeedTestNum(0),
 		WithNt3Location("all"),
 		WithUnlockTestIPVersion("IPV6"),
+		WithTCPTextFormat("FULL"),
 		nil,
 	)
 
@@ -24,6 +25,9 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 	}
 	if cfg.UnlockTestIPVersion != "ipv6" {
 		t.Fatalf("UnlockTestIPVersion = %q, want ipv6", cfg.UnlockTestIPVersion)
+	}
+	if cfg.TCPTextFormat != "full" {
+		t.Fatalf("TCPTextFormat = %q, want full", cfg.TCPTextFormat)
 	}
 }
 

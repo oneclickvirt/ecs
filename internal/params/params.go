@@ -48,6 +48,7 @@ type Config struct {
 	DeepMode              bool
 	PrivacyMode           bool
 	TCPProbeStatus        bool
+	TCPTextFormat         string
 	MaxDuration           time.Duration
 	HardwareBudget        time.Duration
 	DeepDiskPaths         string
@@ -113,6 +114,7 @@ func NewConfig(version string) *Config {
 		DeepMode:              false,
 		PrivacyMode:           false,
 		TCPProbeStatus:        false,
+		TCPTextFormat:         "compact",
 		MaxDuration:           15 * time.Minute,
 		HardwareBudget:        2 * time.Minute,
 		DeepBurnDuration:      0,
@@ -250,6 +252,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.DeepMode, "deep", false, "Enable deep test matrix within the global deadline")
 	c.GoecsFlag.BoolVar(&c.PrivacyMode, "privacy", false, "Disable result sharing and hide sensitive hardware identifiers")
 	c.GoecsFlag.BoolVar(&c.TCPProbeStatus, "tcp", false, "Enable/Disable the additional TCP handshake probe section")
+	c.GoecsFlag.StringVar(&c.TCPTextFormat, "tcp-format", "compact", "Set TCP text output format (supported: compact, full)")
 	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 15*time.Minute, "Set the global test deadline")
 	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 2*time.Minute, "Set the standard hardware test budget")
 	c.GoecsFlag.StringVar(&c.DeepDiskPaths, "deep-disk-paths", "", "Comma-separated mounted directories for the explicit deep multi-disk matrix")
@@ -330,6 +333,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["tcp"] {
 		saved["tcp"] = c.TCPProbeStatus
+	}
+	if c.UserSetFlags["tcp-format"] {
+		saved["tcp-format"] = c.TCPTextFormat
 	}
 	if c.UserSetFlags["deep"] {
 		saved["deep"] = c.DeepMode
@@ -473,6 +479,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.TCPProbeStatus = boolVal
 		}
 	}
+	if val, ok := saved["tcp-format"]; ok {
+		if stringValue, valid := val.(string); valid {
+			c.TCPTextFormat = stringValue
+		}
+	}
 	if val, ok := saved["deep"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.DeepMode = boolVal
@@ -596,6 +607,7 @@ func (c *Config) ValidateParams() {
 	c.UnlockTestDNSServers = strings.TrimSpace(c.UnlockTestDNSServers)
 	c.UnlockTestHTTPProxy = strings.TrimSpace(c.UnlockTestHTTPProxy)
 	c.UnlockTestSOCKSProxy = strings.TrimSpace(c.UnlockTestSOCKSProxy)
+	c.TCPTextFormat = strings.ToLower(strings.TrimSpace(c.TCPTextFormat))
 	c.JSONPath = strings.TrimSpace(c.JSONPath)
 	c.DataCDNBase = strings.TrimRight(strings.TrimSpace(c.DataCDNBase), "/")
 	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
@@ -622,6 +634,14 @@ func (c *Config) ValidateParams() {
 	}
 	if c.PrivacyMode {
 		c.EnableUpload = false
+	}
+	if c.TCPTextFormat != "compact" && c.TCPTextFormat != "full" {
+		if c.Language == "zh" {
+			fmt.Printf("警告: TCP输出格式 '%s' 无效，使用默认值 'compact'\n", c.TCPTextFormat)
+		} else {
+			fmt.Printf("Warning: Invalid TCP output format '%s', using default 'compact'\n", c.TCPTextFormat)
+		}
+		c.TCPTextFormat = "compact"
 	}
 
 	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}
