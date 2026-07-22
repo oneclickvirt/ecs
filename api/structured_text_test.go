@@ -38,7 +38,7 @@ func TestRenderStructuredRunTextKeepsCompactProjectStyle(t *testing.T) {
 		File: "tcp-targets.json", Source: "embedded", Fallback: "embedded", Count: 64,
 		Status: ReportStatusOK, GeneratedAt: time.Date(2026, 7, 20, 0, 0, 0, 0, time.UTC),
 	}}, components, reports)
-	for _, want := range []string{"VPS融合怪测试", "数据源状态", "CPU性能测试", "内存性能测试", "就近节点测速", "TCP连接质量", "Example TCP"} {
+	for _, want := range []string{"VPS融合怪测试", "数据源状态", "CPU性能测试", "内存性能测试", "就近节点测速", "TCP握手延迟", "Example TCP"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("rendered text missing %q:\n%s", want, text)
 		}
@@ -164,6 +164,44 @@ func TestRenderStructuredTCPKeepsCompleteMetricsOnOneLine(t *testing.T) {
 	for _, line := range strings.Split(text, "\n") {
 		if runewidth.StringWidth(line) > config.Width {
 			t.Fatalf("TCP line exceeds width: %q", line)
+		}
+	}
+}
+
+func TestStructuredNetworkTextUsesCompactColumnsAndKeepsPrivateLabels(t *testing.T) {
+	config := NewConfig("v-test")
+	config.PrivacyMode = true
+	report := &StructuredReport{
+		Components: []ComponentReport{componentFixture(t, "ping.icmp", ReportStatusOK, `[
+			{"target":{"name":"Alpha","host":"203.0.113.1"},"sent":3,"received":3,"mean":1000000,"p95":2000000},
+			{"target":{"name":"Beta","host":"203.0.113.2"},"sent":3,"received":2,"mean":3000000,"p95":4000000,"loss_percent":33.3},
+			{"target":{"name":"Gamma","host":"203.0.113.3"},"sent":3,"received":3,"mean":5000000,"p95":6000000}
+		]`)},
+		TCP: []TCPReport{
+			{Target: TCPTarget{Name: "AlphaTCP", Host: "203.0.113.4", Category: "ai"}, Attempts: 3, Successful: 3, MeanMS: 1, P95MS: 2},
+			{Target: TCPTarget{Name: "BetaTCP", Host: "203.0.113.5", Category: "cloud"}, Attempts: 3, Successful: 2, MeanMS: 3, P95MS: 4, Errors: map[string]int{"timeout": 1}},
+		},
+	}
+	applyStructuredPrivacy(report)
+	text := renderStructuredRunText(config, nil, report.Components, report.TCP)
+	for _, pair := range [][2]string{{"Alpha", "Beta"}, {"AlphaTCP", "BetaTCP"}} {
+		found := false
+		for _, line := range strings.Split(text, "\n") {
+			if strings.Contains(line, pair[0]) && strings.Contains(line, pair[1]) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("network targets were not paired in compact columns: %q/%q\n%s", pair[0], pair[1], text)
+		}
+	}
+	if strings.Contains(text, "203.0.113") {
+		t.Fatalf("privacy network text leaked target hosts:\n%s", text)
+	}
+	for _, line := range strings.Split(strings.TrimSpace(text), "\n") {
+		if line != "" && !strings.HasPrefix(line, "-") && !strings.HasPrefix(line, " ") {
+			t.Fatalf("content row does not reserve the first cell: %q", line)
 		}
 	}
 }

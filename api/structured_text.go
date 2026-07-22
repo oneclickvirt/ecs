@@ -111,16 +111,16 @@ func (renderer *structuredTextRenderer) header(config *Config) {
 	if renderer.zh {
 		renderer.section("VPS融合怪测试")
 		renderer.row("版本", version)
-		renderer.builder.WriteString("测评频道: https://t.me/+UHVoo2U4VyA5NTQ1\n")
-		renderer.builder.WriteString("Go项目地址：https://github.com/oneclickvirt/ecs\n")
-		renderer.builder.WriteString("Shell项目地址：https://github.com/spiritLHLS/ecs\n")
+		renderer.builder.WriteString(" 测评频道: https://t.me/+UHVoo2U4VyA5NTQ1\n")
+		renderer.builder.WriteString(" Go项目地址：https://github.com/oneclickvirt/ecs\n")
+		renderer.builder.WriteString(" Shell项目地址：https://github.com/spiritLHLS/ecs\n")
 		return
 	}
 	renderer.section("VPS Fusion Monster Test")
 	renderer.row("Version", version)
-	renderer.builder.WriteString("Review Channel: https://t.me/+UHVoo2U4VyA5NTQ1\n")
-	renderer.builder.WriteString("Go Project: https://github.com/oneclickvirt/ecs\n")
-	renderer.builder.WriteString("Shell Project: https://github.com/spiritLHLS/ecs\n")
+	renderer.builder.WriteString(" Review Channel: https://t.me/+UHVoo2U4VyA5NTQ1\n")
+	renderer.builder.WriteString(" Go Project: https://github.com/oneclickvirt/ecs\n")
+	renderer.builder.WriteString(" Shell Project: https://github.com/spiritLHLS/ecs\n")
 }
 
 func (renderer *structuredTextRenderer) section(title string) {
@@ -141,7 +141,7 @@ func (renderer *structuredTextRenderer) row(label, value string) {
 	if value == "" {
 		value = "-"
 	}
-	prefix := padDisplay(label, structuredLabelWidth) + " : "
+	prefix := " " + padDisplay(label, structuredLabelWidth) + " : "
 	continuation := strings.Repeat(" ", runewidth.StringWidth(prefix))
 	available := renderer.width - runewidth.StringWidth(prefix)
 	if available < 12 {
@@ -164,7 +164,7 @@ func (renderer *structuredTextRenderer) table(headers []string, rows [][]string,
 		return
 	}
 	gapWidth := (len(widths) - 1) * 2
-	total := gapWidth
+	total := gapWidth + 1
 	for _, width := range widths {
 		total += width
 	}
@@ -197,6 +197,7 @@ func (renderer *structuredTextRenderer) table(headers []string, rows [][]string,
 }
 
 func (renderer *structuredTextRenderer) tableLine(values []string, widths []int) {
+	renderer.builder.WriteByte(' ')
 	for index, value := range values {
 		if index > 0 {
 			renderer.builder.WriteString("  ")
@@ -262,8 +263,10 @@ func (renderer *structuredTextRenderer) component(component ComponentReport) {
 		renderer.backtracePayload(component.Payload)
 	case "portchecker.email":
 		renderer.mailPayload(component.Payload)
-	case "nt3.province_latency", "ping.icmp", "ping.telegram":
+	case "nt3.province_latency":
 		renderer.latencyPayload(component.Payload)
+	case "ping.icmp", "ping.telegram":
+		renderer.pingPayload(component.Payload)
 	case "ping.web_tcp":
 		renderer.tcpPayload(component.Payload)
 	case "nt3.province_routes":
@@ -547,6 +550,41 @@ func (renderer *structuredTextRenderer) latencyPayload(payload json.RawMessage) 
 	renderer.table([]string{renderer.pick("目标", "Target"), renderer.pick("状态", "Status"), renderer.pick("成功", "Success"), renderer.pick("平均", "Mean"), "P95", renderer.pick("丢包", "Loss")}, rows, []int{24, 14, 10, 10, 10, 10})
 }
 
+func (renderer *structuredTextRenderer) pingPayload(payload json.RawMessage) {
+	var values []map[string]any
+	if err := json.Unmarshal(payload, &values); err != nil {
+		return
+	}
+	const columns = 3
+	cellWidth := (renderer.width - 1 - (columns-1)*2) / columns
+	head := renderer.pick("平台 | 平均/P95 | 丢包", "Target | Mean/P95 | Loss")
+	headCells := []string{head, head, head}
+	renderer.compactColumns(headCells, cellWidth)
+	for index := 0; index < len(values); index += columns {
+		cells := make([]string, columns)
+		for offset := 0; offset < columns && index+offset < len(values); offset++ {
+			result := values[index+offset]
+			target := objectValue(result, "target")
+			name := fallback(stringValue(target, "name"), stringValue(target, "province_name"), stringValue(target, "id"))
+			carrier := strings.ToUpper(stringValue(target, "carrier"))
+			name = joinNonEmpty(name, carrier)
+			cells[offset] = fmt.Sprintf("%s | %s/%s | %.0f%%", name, formatJSONDuration(result["mean"]), formatJSONDuration(result["p95"]), floatValue(result, "loss_percent"))
+		}
+		renderer.compactColumns(cells, cellWidth)
+	}
+}
+
+func (renderer *structuredTextRenderer) compactColumns(values []string, width int) {
+	renderer.builder.WriteByte(' ')
+	for index, value := range values {
+		if index > 0 {
+			renderer.builder.WriteString("  ")
+		}
+		renderer.builder.WriteString(padDisplay(truncateDisplay(compactText(value), width), width))
+	}
+	renderer.builder.WriteByte('\n')
+}
+
 func (renderer *structuredTextRenderer) tcpPayload(payload json.RawMessage) {
 	var values []map[string]any
 	if err := json.Unmarshal(payload, &values); err != nil {
@@ -659,18 +697,42 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 	if len(reports) == 0 {
 		return
 	}
-	renderer.section(renderer.pick("TCP连接质量", "TCP Connection Quality"))
+	renderer.section(renderer.pick("TCP握手延迟", "TCP Handshake Latency"))
 	summary := summarizeStructuredTCP(reports)
 	renderer.row(renderer.pick("汇总", "Summary"), fmt.Sprintf(renderer.pick("%d 个目标 / %d/%d 次成功 / %.1f%%", "%d targets / %d/%d succeeded / %.1f%%"), len(reports), summary.successful, summary.attempts, summary.successRate))
 	renderer.row(renderer.pick("失败", "Failures"), fmt.Sprintf("DNS:%d R:%d T:%d O:%d", summary.dns, summary.refused, summary.timeout, summary.other))
-	rows := make([][]string, 0, len(reports))
-	for _, report := range reports {
-		rows = append(rows, []string{
-			fallback(report.Target.Name, report.Target.ID), fmt.Sprintf("%d/%d", report.Successful, report.Attempts),
-			formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors),
-		})
+	cellWidth := (renderer.width - 3) / 2
+	renderer.compactColumns([]string{renderer.pick("平台 | 成功/尝试 | 丢包", "Target | Success/Attempts | Loss"), renderer.pick("平台 | 成功/尝试 | 丢包", "Target | Success/Attempts | Loss")}, cellWidth)
+	renderer.compactColumns([]string{"Min/Avg/P50/P95/Max; D/R/T/O", "Min/Avg/P50/P95/Max; D/R/T/O"}, cellWidth)
+	for index := 0; index < len(reports); index += 2 {
+		left := structuredTCPReportLines(reports[index], renderer.zh)
+		right := []string{"", "", ""}
+		if index+1 < len(reports) {
+			right = structuredTCPReportLines(reports[index+1], renderer.zh)
+		}
+		for line := range left {
+			renderer.compactColumns([]string{left[line], right[line]}, cellWidth)
+		}
 	}
-	renderer.table([]string{renderer.pick("目标", "Target"), renderer.pick("成功", "Success"), "Min/Avg/P50/P95/Max", "D/R/T/O"}, rows, []int{20, 8, 38, 11})
+}
+
+func structuredTCPReportLines(report TCPReport, zh bool) []string {
+	categoryLabel := "Category"
+	if zh {
+		categoryLabel = "类别"
+	}
+	return []string{
+		fmt.Sprintf("%s | %d/%d | %.1f%%", fallback(report.Target.Name, report.Target.ID), report.Successful, report.Attempts, structuredTCPLoss(report)),
+		fmt.Sprintf("%s; %s", formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors)),
+		joinNonEmpty(categoryLabel, fallback(report.Target.Category, "-")),
+	}
+}
+
+func structuredTCPLoss(report TCPReport) float64 {
+	if report.LossPercent > 0 || report.Attempts <= 0 || report.Successful >= report.Attempts {
+		return report.LossPercent
+	}
+	return float64(report.Attempts-report.Successful) * 100 / float64(report.Attempts)
 }
 
 type structuredTCPSummary struct {

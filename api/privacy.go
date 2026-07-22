@@ -61,6 +61,16 @@ func redactJSONValue(value any, key string) {
 	case map[string]any:
 		for childKey, child := range typed {
 			if privacySensitiveKey(childKey) {
+				// Structured probe targets carry useful non-identifying labels
+				// alongside a host. Preserve the object shape and redact only its
+				// sensitive descendants; scalar device targets stay redacted.
+				if strings.EqualFold(strings.TrimSpace(childKey), "target") {
+					switch child.(type) {
+					case map[string]any, []any:
+						redactJSONValue(child, childKey)
+						continue
+					}
+				}
 				typed[childKey] = privacyRedacted
 				continue
 			}

@@ -80,6 +80,10 @@ func TestStructuredPrivacyRedactsComponentIdentity(t *testing.T) {
 			}`),
 		}},
 	}
+	report.Components = append(report.Components, ComponentReport{
+		Name:    "route-fixture",
+		Payload: json.RawMessage(`{"target":{"province_name":"Guangdong","carrier":"ct","host":"203.0.113.11"},"status":"ok"}`),
+	})
 	applyStructuredPrivacy(report)
 	encoded, err := report.JSON()
 	if err != nil {
@@ -92,6 +96,9 @@ func TestStructuredPrivacyRedactsComponentIdentity(t *testing.T) {
 	}
 	if !strings.Contains(string(encoded), `"ip_type": "ipv4"`) || !strings.Contains(string(encoded), `"schema_version": "fixture/v1"`) {
 		t.Fatalf("privacy filtering removed structural fields: %s", encoded)
+	}
+	if !strings.Contains(string(encoded), `"province_name": "Guangdong"`) || !strings.Contains(string(encoded), `"carrier": "ct"`) {
+		t.Fatalf("privacy filtering removed non-identifying target labels: %s", encoded)
 	}
 }
 
