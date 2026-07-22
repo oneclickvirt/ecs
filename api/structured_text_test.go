@@ -168,6 +168,28 @@ func TestRenderStructuredTCPKeepsCompleteMetricsOnOneLine(t *testing.T) {
 	}
 }
 
+func TestRenderStructuredTCPKeepsSlowMetricsAndCountersComplete(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Width = 80
+	text := renderStructuredRunText(config, nil, nil, []TCPReport{{
+		Target: TCPTarget{Name: "ProtonMail"}, Attempts: 3, Successful: 3,
+		MinMS: 237.1, MeanMS: 251.1, P50MS: 245.8, P95MS: 268, MaxMS: 270.5,
+	}})
+	for _, want := range []string{"237/251/246/268/271ms", "0/0/0/0"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("slow structured TCP output missing %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "...") {
+		t.Fatalf("slow structured TCP output was truncated:\n%s", text)
+	}
+	for _, line := range strings.Split(text, "\n") {
+		if width := runewidth.StringWidth(line); width > config.Width {
+			t.Fatalf("slow structured TCP line width %d exceeds %d: %q", width, config.Width, line)
+		}
+	}
+}
+
 func TestStructuredNetworkTextUsesCompactColumnsAndKeepsPrivateLabels(t *testing.T) {
 	config := NewConfig("v-test")
 	config.PrivacyMode = true

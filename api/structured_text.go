@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -767,15 +768,30 @@ func summarizeStructuredTCP(reports []TCPReport) structuredTCPSummary {
 }
 
 func formatTCPMilliseconds(values ...float64) string {
+	maximum := float64(0)
+	for _, value := range values {
+		if value > maximum {
+			maximum = value
+		}
+	}
+	precision := 1
+	suffix := " ms"
+	if maximum >= 100 {
+		precision = 0
+		suffix = "ms"
+	}
 	parts := make([]string, len(values))
 	for index, value := range values {
 		if value <= 0 {
 			parts[index] = "-"
 		} else {
-			parts[index] = strconv.FormatFloat(value, 'f', 1, 64)
+			if precision == 0 {
+				value = math.Round(value)
+			}
+			parts[index] = strconv.FormatFloat(value, 'f', precision, 64)
 		}
 	}
-	return strings.Join(parts, "/") + " ms"
+	return strings.Join(parts, "/") + suffix
 }
 
 func formatTCPErrorCounts(errors map[string]int) string {
