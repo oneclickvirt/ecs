@@ -69,3 +69,14 @@ func TestDescendantsFromParentsReturnsDeepestFirst(t *testing.T) {
 		t.Fatalf("descendantsFromParents() = %v, want %v", got, want)
 	}
 }
+
+func TestIsTerminalRejectsRegularFile(t *testing.T) {
+	file, err := os.CreateTemp(t.TempDir(), "terminal-check")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	if isTerminal(int(file.Fd())) {
+		t.Fatal("regular file detected as a terminal")
+	}
+}

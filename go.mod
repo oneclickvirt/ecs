@@ -21,6 +21,7 @@ require (
 	github.com/oneclickvirt/privatespeedtest v0.0.8
 	github.com/oneclickvirt/security v0.0.18
 	github.com/oneclickvirt/speedtest v0.0.18
+	golang.org/x/term v0.44.0
 )
 
 require (
@@ -125,7 +126,6 @@ require (
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

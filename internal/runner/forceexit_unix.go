@@ -9,14 +9,27 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
+	"golang.org/x/term"
 )
 
 // IsolateProcessGroup keeps hard-deadline cleanup from killing the invoking
 // shell while ensuring ordinary benchmark children inherit our process group.
 func IsolateProcessGroup() {
+	// Moving an interactive process out of the terminal's foreground process
+	// group causes the kernel to stop it with SIGTTIN as soon as Bubble Tea
+	// reads /dev/tty. Keep interactive invocations in the caller's foreground
+	// group; non-interactive runs still get an isolated group for hard cleanup.
+	if isTerminal(int(os.Stdin.Fd())) || isTerminal(int(os.Stdout.Fd())) || isTerminal(int(os.Stderr.Fd())) {
+		return
+	}
 	if syscall.Getpgrp() != os.Getpid() {
 		_ = syscall.Setpgid(0, 0)
 	}
+}
+
+func isTerminal(fd int) bool {
+	return term.IsTerminal(fd)
 }
 
 // forceExit kills both descendants and the process group. Some third-party
@@ -28,7 +41,7 @@ func forceExit(code int) {
 		_ = syscall.Kill(child, syscall.SIGKILL)
 	}
 	pgid, err := syscall.Getpgid(os.Getpid())
-	if err == nil {
+	if err == nil && pgid == pid {
 		_ = syscall.Kill(-pgid, syscall.SIGKILL)
 	}
 	os.Exit(code)
