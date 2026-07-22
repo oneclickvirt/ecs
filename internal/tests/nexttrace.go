@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 
+	ntraceutil "github.com/nxtrace/NTrace-core/util"
 	"github.com/oneclickvirt/nt3/nt"
 )
 
@@ -17,6 +18,13 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 // preserving deterministic section output.
 func NextTrace3CheckText(language, nt3Location, nt3CheckType string) (output string) {
 	var builder strings.Builder
+	// NTrace starts an internal websocket helper which can call GetFastIP with
+	// output enabled. Its package-level output otherwise bypasses our buffered
+	// TraceResult channel and can land in the preceding concurrently rendered
+	// chapter. The route section already receives the structured API selection
+	// line from TraceRoute, so suppress the helper's direct terminal write for
+	// the lifetime of this process.
+	ntraceutil.SuppressFastIPOutput = true
 	// 先检查 ICMP 权限
 	conn, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
