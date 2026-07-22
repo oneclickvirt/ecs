@@ -90,8 +90,9 @@ func privateSpeedTest(num int, operator string) (int, error) {
 	*pst.Quiet = true
 	*pst.NoHeader = true
 	*pst.NoProjectURL = true
-	// 加载服务器列表
-	serverList, err := pst.LoadServerList()
+	// A full run tests several carrier groups. Resolve the validated registry
+	// once and reuse it so one upstream failure cannot multiply retry delays.
+	serverList, err := privateSpeedServerList()
 	if err != nil {
 		return 0, fmt.Errorf("加载自定义服务器列表失败")
 	}
