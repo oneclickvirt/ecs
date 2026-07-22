@@ -168,6 +168,21 @@ func WithTCPTextFormat(format string) ConfigOption {
 	}
 }
 
+// WithPingSortOrder selects stable name or measured latency ordering.
+func WithPingSortOrder(order string) ConfigOption {
+	return func(c *Config) { c.PingSortOrder = order }
+}
+
+// WithPingScope selects automatic, Chinese, or international Ping targets.
+func WithPingScope(scope string) ConfigOption {
+	return func(c *Config) { c.PingScope = scope }
+}
+
+// WithTCPSortOrder selects stable platform-name or latency ordering.
+func WithTCPSortOrder(order string) ConfigOption {
+	return func(c *Config) { c.TCPSortOrder = order }
+}
+
 func WithJSONPath(path string) ConfigOption {
 	return func(c *Config) {
 		c.JSONPath = path

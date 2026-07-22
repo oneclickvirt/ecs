@@ -276,11 +276,27 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "追加TCP握手延迟与错误分类单项。", descEn: "Append the TCP latency and error classification section.", boolVal: config.TCPProbeStatus},
 		{
 			key: "tcpformat", nameZh: "TCP输出明细", nameEn: "TCP Output Detail", kind: "option",
-			descZh: "紧凑模式显示全局与分类汇总及少量异常/最慢目标；完整模式逐目标显示。",
-			descEn: "Compact shows overall/category summaries and selected exceptions; full lists every target.",
+			descZh: "兼容旧参数；两种模式均以双列形式显示全部平台。",
+			descEn: "Compatibility setting; both modes show every platform in two columns.",
 			options: []advOption{
 				option("compact", "紧凑汇总", "Compact", "默认，保留完整统计且减少屏幕占用。", "Default; complete aggregate coverage with fewer rows."),
 				option("full", "完整逐项", "Full", "显示全部目标明细。", "Show every target row."),
+			},
+		},
+		{
+			key: "pingsort", nameZh: "Ping排序", nameEn: "Ping Order", kind: "option",
+			descZh: "按延迟或平台名称稳定排序。", descEn: "Sort stably by latency or platform name.",
+			options: []advOption{
+				option("latency", "按延迟", "Latency", "保留原有延迟升序。", "Keep the original ascending-latency order."),
+				option("name", "按名称", "Name", "按平台名称稳定排序。", "Use stable platform-name order."),
+			},
+		},
+		{
+			key: "tcpsort", nameZh: "TCP排序", nameEn: "TCP Order", kind: "option",
+			descZh: "默认按平台名称，亦可按异常和延迟排序。", descEn: "Default to platform name; latency mode prioritizes failures and slower targets.",
+			options: []advOption{
+				option("name", "按名称", "Name", "方便固定位置查找平台。", "Keep platforms in a predictable lookup order."),
+				option("latency", "按延迟", "Latency", "优先显示失败、高丢包和高延迟平台。", "Prioritize failures, loss, and high latency."),
 			},
 		},
 		{key: "jsonpath", nameZh: "JSON结果路径", nameEn: "JSON Result Path", kind: "text", descZh: "留空关闭；使用-输出到标准输出。", descEn: "Empty disables; use - for stdout.", textVal: config.JSONPath},
@@ -309,6 +325,10 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestIPVersion)
 		case "tcpformat":
 			adv[i].current = optionIndexByValue(adv[i].options, config.TCPTextFormat)
+		case "pingsort":
+			adv[i].current = optionIndexByValue(adv[i].options, config.PingSortOrder)
+		case "tcpsort":
+			adv[i].current = optionIndexByValue(adv[i].options, config.TCPSortOrder)
 		}
 	}
 

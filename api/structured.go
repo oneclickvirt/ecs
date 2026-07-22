@@ -171,7 +171,7 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 	} else if errors.Is(ctx.Err(), context.Canceled) {
 		status, reason = ReportStatusCanceled, ctx.Err().Error()
 	} else if extras.err != nil {
-		status, reason = ReportStatusPartial, extras.err.Error()
+		status, reason = ReportStatusPartial, sanitizePublicText(extras.err.Error())
 	}
 	if config.PrivacyMode {
 		text = ""
@@ -212,12 +212,30 @@ func collectStructuredExtras(ctx context.Context, preCheck utils.NetCheckResult,
 		attempts: 3, timeout: 3 * time.Second, concurrency: 16,
 		dial: (&net.Dialer{}).DialContext,
 	})
+	sortTCPReports(extras.tcp, config.TCPSortOrder)
 	tcpStatus, tcpReason := tcpSectionStatus(extras.tcp)
 	if status, done := contextProgressStatus(ctx); done {
 		tcpStatus, tcpReason = status, ctx.Err().Error()
 	}
 	progressCompleted(ctx, "tcp", tcpStatus, tcpReason)
 	return extras
+}
+
+func sortTCPReports(reports []TCPReport, order string) {
+	sort.SliceStable(reports, func(i, j int) bool {
+		leftName := strings.ToLower(strings.TrimSpace(reports[i].Target.Name))
+		rightName := strings.ToLower(strings.TrimSpace(reports[j].Target.Name))
+		if order == "name" {
+			return leftName < rightName
+		}
+		if reports[i].LossPercent != reports[j].LossPercent {
+			return reports[i].LossPercent > reports[j].LossPercent
+		}
+		if reports[i].P95MS != reports[j].P95MS {
+			return reports[i].P95MS > reports[j].P95MS
+		}
+		return leftName < rightName
+	})
 }
 
 func contextProgressStatus(ctx context.Context) (ReportStatus, bool) {
@@ -405,7 +423,7 @@ func sectionReports(config *Config, preCheck utils.NetCheckResult, extras struct
 		} else if components := componentsBySection[section.name]; len(components) > 0 {
 			sectionStatus, sectionReason = aggregateComponentSectionStatus(components)
 		} else if section.name == "tcp" && extras.err != nil {
-			sectionStatus, sectionReason = ReportStatusError, extras.err.Error()
+			sectionStatus, sectionReason = ReportStatusError, sanitizePublicText(extras.err.Error())
 		} else if section.name == "tcp" && len(extras.tcp) == 0 {
 			sectionStatus, sectionReason = ReportStatusUnavailable, "no TCP results"
 		} else if section.name == "tcp" {

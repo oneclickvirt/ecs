@@ -52,6 +52,20 @@
 
 menu模式默认启用，执行时显示菜单可选择选项测试，在menu模式启用的情况下，默认额外提供的CI参数设置优先级高于选项本身的预设值，方便用户随时针对某个选项自行修改某些单项测试的参数设置。
 
+### **新增测试与输出约定**
+
+选项 1（全测）会在保留原有实时章节顺序和紧凑对齐风格的基础上，自动开启 Ping、TCP 握手探针、深度测试、多盘检测、CPU 20 秒压力采样和 IP 标签兼容显示。CPU 压力采样与 CPU 基准合并在同一章节，不单独输出无意义的 OK/失败行；多盘测试只使用系统发现的可写挂载点和临时普通文件。
+
+基础系统信息补充显示 cgroup/cpuset/quota、拥塞控制/qdisc/TCP rmem-wmem、主板与 BIOS、PCI/GPU、NUMA/DIMM/大页、物理盘/RAID/健康和温度。无法读取的字段会标记为不可用，不会伪造结果。
+
+TCP 握手章节保留每个平台的完整数据：成功/尝试、丢包、Min/Avg/P50/P95/Max，以及 D/R/T/O（DNS/拒绝/超时/其他）。文本首行给出字段含义，平台每行并排两列且不截断目标集合；默认按平台名称稳定排序，可使用 `-tcp-sort=latency` 按失败、丢包和高延迟优先显示。Ping 默认按延迟排序，也可使用 `-ping-sort=name` 按平台名称排序；`-ping-scope=auto|china|international` 可选择目标范围。
+
+英文模式自动使用国际 Ping 目标和国际测速节点，不测试中国大陆 Ping 地址或中国大陆测速节点；中文模式保留原有国内三网与国内测速选择。测速的静态节点失效时显示不可用，不会把失效节点伪装成成功。
+
+可变化的数据由组件自己的 Go registry loader 先加载远程最新 manifest，经 schema、数量和 SHA-256 校验后使用；远程不可用、数据异常或 `-data-offline` 时回退到组件编译期内置快照。用户可见错误只显示稳定的来源别名和状态，不显示私有源地址、查询参数、凭据或构建细节。
+
+常用新增参数：`-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-burn-duration=20s`。API 调用方可使用对应的 `WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` 配置项。
+
 ### **系统基础信息**
 
 依赖项目：[https://github.com/oneclickvirt/basics](https://github.com/oneclickvirt/basics) [https://github.com/oneclickvirt/gostun](https://github.com/oneclickvirt/gostun)
@@ -470,7 +484,7 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 
 依赖项目：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
 
-对于选项1：如果启用中国模式，将仅检测三网全国各省份的PING值延迟，从小到大排序。如果不启用中国模式，默认将不检测三网全国各省份的PING值延迟，仅检测TGDC和主流网站的延迟。
+选项1会运行 Ping 单项；中文默认检测三网省级目标并按延迟排序，英文自动切换到国际目标。输出支持按名称稳定排序，失败目标仍保留在完整结果中。
 
 对于选项6和选项10：默认都进行测试。
 
@@ -499,6 +513,20 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 ## English
 
 Menu mode is enabled by default, the menu is displayed to select the option test, in the case of menu mode enabled, the default additional CI parameter setting priority is higher than the preset value of the option itself, which is convenient for the user to modify the parameter settings of some single test for a certain option at any time by themselves.
+
+### New tests and output contract
+
+Option 1 (full test) keeps the original live chapter order and compact aligned style while enabling Ping, the TCP handshake probe, deep checks, multi-disk discovery, a 20-second CPU stress sample, and the IP-label compatibility switch. CPU stress is merged into the CPU chapter instead of producing a separate stream of meaningless OK/failure lines. Multi-disk checks use only writable mounts discovered by the system and ordinary temporary files.
+
+Basic system information now includes cgroup/cpuset/quota, congestion control/qdisc/TCP rmem-wmem, board and BIOS, PCI/GPU, NUMA/DIMM/huge pages, physical disks/RAID/health and temperature. Missing fields are reported as unavailable rather than fabricated.
+
+The TCP handshake chapter keeps complete per-platform data: successful/attempted handshakes, loss, Min/Avg/P50/P95/Max, and D/R/T/O (DNS/refused/timeout/other). The first detail line explains the fields; platforms are shown in two columns without hiding the target set. The default is stable platform-name order, with `-tcp-sort=latency` available to prioritize failures, loss and high latency. Ping defaults to latency order and supports `-ping-sort=name`; `-ping-scope=auto|china|international` selects the target family.
+
+English mode automatically uses international Ping targets and international speed-test nodes. It does not probe mainland-China Ping addresses or mainland-China speed nodes; Chinese mode keeps the existing domestic three-carrier choices. A failed speed node is reported as unavailable instead of being presented as a successful result.
+
+Changing data is loaded by each component's own Go registry loader from the newest remote manifest, then checked for schema, count and SHA-256. Network failure, invalid data or `-data-offline` falls back to the component's embedded snapshot. User-facing errors expose only stable source aliases and status, never private source URLs, query parameters, credentials or build details.
+
+Useful new parameters are `-tcp`, `-tcp-format=compact|full`, `-tcp-sort=name|latency`, `-ping`, `-ping-sort=latency|name`, `-ping-scope=auto|china|international`, `-deep`, `-diskmc`, and `-deep-burn-duration=20s`. API callers can use `WithPingSortOrder`, `WithPingScope`, and `WithTCPSortOrder`.
 
 ### Basic System Information
 
@@ -819,7 +847,7 @@ If the current host doesn't function as a mail server and doesn't send/receive e
 
 Dependency project: [https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
 
-Measure the latency from the current IP address to each TG data center and major websites.
+Measure latency using the language-appropriate target family. English uses representative international targets; Chinese mode uses the existing domestic province/carrier targets. Every target remains visible in the live result, with stable name or latency ordering selected by the configuration.
 
 All addresses that cannot be tested for failure, as well as those with latency greater than or equal to 9999ms, have their latency set to 9999. Latency exceeding this threshold also indicates excessive target latency that impairs usability. At this point, the target should be considered unavailable.
 
@@ -827,7 +855,7 @@ All addresses that cannot be tested for failure, as well as those with latency g
 
 Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 
-First test the officially recommended speed test points, then test representative international speed test points.
+Chinese mode tests nearby and domestic carrier points as before. English mode tests representative international registry nodes only; nearby selection is filtered so mainland-China nodes are not used. Registry health and fallback state are retained in structured results.
 
 Official speed test points can represent the local bandwidth baseline of the host machine being tested.
 
@@ -838,6 +866,20 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 ## 日本語
 
 メニューモードはデフォルトで有効化されており、実行時にメニューを表示してオプションテストを選択できます。メニューモードが有効な場合、デフォルトで追加提供されるCIパラメータ設定はオプション自体のプリセット値よりも優先度が高く、ユーザーが特定のオプションに対して随時個別のテストパラメータ設定を変更できるようにします。
+
+### 追加テストと出力仕様
+
+オプション1（全テスト）は、既存のリアルタイムな章の順序、コンパクトな整列表示を維持したまま、Ping、TCPハンドシェイク、深度テスト、複数ディスク検出、20秒のCPU負荷サンプル、IPラベル互換表示を自動的に有効にします。CPU負荷はCPUベンチマークの章に統合され、意味のないOK/失敗行を別に表示しません。複数ディスク検出は、システムが発見した書き込み可能なマウントポイントと通常の一時ファイルだけを使用します。
+
+基本システム情報には、cgroup/cpuset/quota、輻輳制御/qdisc/TCP rmem-wmem、マザーボードとBIOS、PCI/GPU、NUMA/DIMM/huge pages、物理ディスク/RAID/健康状態/温度が追加されています。取得できない値は利用不可として示し、推測値は表示しません。
+
+TCPハンドシェイク章では、プラットフォームごとの成功/試行、損失、Min/Avg/P50/P95/Max、D/R/T/O（DNS/拒否/タイムアウト/その他）をすべて表示します。最初の詳細行で項目の意味を示し、プラットフォームは2列で表示します。デフォルトはプラットフォーム名の安定順で、`-tcp-sort=latency` で失敗・損失・高遅延を優先できます。Pingは遅延順がデフォルトで、`-ping-sort=name` による名前順、`-ping-scope=auto|china|international` による対象範囲指定に対応します。
+
+英語モードは国際的なPing対象と国際的な速度測定ノードだけを使用し、中国大陸のPingアドレスや速度測定ノードを検査しません。中国語モードでは従来の国内三大キャリアと国内ノードを維持します。無効な速度ノードは成功として扱わず、利用不可として表示します。
+
+変化するデータは各コンポーネント自身のGo registry loaderが最新manifestを取得し、schema、件数、SHA-256を検証してから使用します。ネットワーク障害、不正データ、または `-data-offline` の場合はコンパイル時に埋め込まれたスナップショットへ戻ります。ユーザー向けエラーには安定したソース名と状態だけを表示し、非公開URL、クエリ、認証情報、ビルド情報は表示しません。
+
+主な追加パラメータは `-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-burn-duration=20s` です。APIからは `WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` を利用できます。
 
 ### システム基本情報
 
@@ -1158,7 +1200,7 @@ IPタイプの分類について詳しく説明する必要がある
 
 依存プロジェクト：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
 
-現在のIPアドレスからTGの各データセンターおよび主要ウェブサイトまでの遅延を測定します。
+言語に応じた対象範囲で遅延を測定します。英語では代表的な国際対象、中国語では従来の国内省・キャリア対象を使用します。設定した名前順または遅延順で並べ替え、すべての対象を結果に残します。
 
 検出不能な失敗アドレスおよび遅延が9999ms以上のものは、遅延を9999に設定する。この値を超える遅延は対象の遅延が過大で利用に影響することを示すため、この時点で対象は利用不可と判断すればよい。
 
@@ -1166,7 +1208,7 @@ IPタイプの分類について詳しく説明する必要がある
 
 依存プロジェクト：[https://github.com/oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 
-まず公式推奨の測定ポイントをテストし、次に代表的な国際測定ポイントをテストします。
+中国語モードでは従来どおり近隣および国内キャリアの測定ポイントを使用します。英語モードでは代表的な国際registryノードだけを使用し、近隣選択でも中国大陸のノードを除外します。registryの健全性とフォールバック状態は構造化結果に保持されます。
 
 公式測定ポイントは、テスト対象のホストマシンのローカル帯域幅ベースラインを表すことができます。
 

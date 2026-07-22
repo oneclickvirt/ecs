@@ -231,7 +231,7 @@ func TestRunCPUBurnTestOnlyPrintsFailureReason(t *testing.T) {
 	cfg := &params.Config{Language: "zh", DeepMode: true, DeepBurnDuration: time.Second}
 	var outputMutex sync.Mutex
 	output := RunCPUBurnTest(context.Background(), cfg, "", "", &outputMutex)
-	if output != "压力测试            : deadline exceeded\n" {
+	if output != " 压力测试            : deadline exceeded\n" {
 		t.Fatalf("unexpected failed burn output: %q", output)
 	}
 }

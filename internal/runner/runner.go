@@ -15,6 +15,7 @@ import (
 	"github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/tests"
 	"github.com/oneclickvirt/ecs/utils"
+	pingmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
 	"github.com/oneclickvirt/portchecker/email"
 )
@@ -82,7 +83,7 @@ func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 		wg3.Add(1)
 		go func() {
 			defer wg3.Done()
-			result := pt.PingTest()
+			result := runConfiguredPing(config)
 			infoMutex.Lock()
 			*ptInfo = result
 			infoMutex.Unlock()
@@ -138,7 +139,7 @@ func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config 
 			wg3.Add(1)
 			go func() {
 				defer wg3.Done()
-				result := pt.PingTest()
+				result := runConfiguredPing(config)
 				infoMutex.Lock()
 				*ptInfo = result
 				infoMutex.Unlock()
@@ -171,10 +172,24 @@ func RunTCPTests(ctx context.Context, config *params.Config, output, tempOutput 
 		}
 		probeConfig := pt.DefaultTCPProbeConfig()
 		results := pt.RunTCPRegistry(ctx, probeConfig)
+		if !config.DataOffline {
+			if loaded, _, err := pt.RunLoadedTCPRegistry(ctx, probeConfig); err == nil {
+				results = loaded
+			}
+		}
 		fmt.Println(pt.FormatTCPResultsWithOptions(results, pt.TCPFormatOptions{
 			Format: pt.TCPTextFormat(config.TCPTextFormat),
+			Sort:   pingmodel.TCPSort(config.TCPSortOrder),
 		}))
 	}, tempOutput, output)
+}
+
+func runConfiguredPing(config *params.Config) string {
+	return pt.PingTestWithOptions(pt.PingOptions{
+		Language: config.Language,
+		Scope:    pingmodel.PingScope(config.PingScope),
+		Sort:     pingmodel.PingSort(config.PingSortOrder),
+	})
 }
 
 // RunIpInfoCheck performs IP info check
@@ -622,8 +637,9 @@ func RunEnglishSpeedTests(ctx context.Context, config *params.Config, output, te
 		if config.SpeedTestStatus {
 			utils.PrintCenteredTitle("Speed-Test", config.Width)
 			tests.ShowHead(config.Language)
-			tests.NearbySP()
-			tests.CustomSP("net", "global", -1, config.Language)
+			// English mode deliberately excludes nearby/CN operator discovery;
+			// the global registry supplies representative international nodes.
+			tests.CustomSP("net", "global", max(4, config.SpNum), config.Language)
 			// 等待第三方库的输出完全刷新到标准输出
 			time.Sleep(500 * time.Millisecond)
 		}

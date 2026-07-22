@@ -49,6 +49,9 @@ type Config struct {
 	PrivacyMode           bool
 	TCPProbeStatus        bool
 	TCPTextFormat         string
+	PingSortOrder         string
+	PingScope             string
+	TCPSortOrder          string
 	MaxDuration           time.Duration
 	HardwareBudget        time.Duration
 	DeepDiskPaths         string
@@ -114,6 +117,9 @@ func NewConfig(version string) *Config {
 		PrivacyMode:           false,
 		TCPProbeStatus:        false,
 		TCPTextFormat:         "compact",
+		PingSortOrder:         "latency",
+		PingScope:             "auto",
+		TCPSortOrder:          "name",
 		MaxDuration:           15 * time.Minute,
 		HardwareBudget:        2 * time.Minute,
 		DeepBurnDuration:      0,
@@ -251,6 +257,9 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.BoolVar(&c.PrivacyMode, "privacy", false, "Disable result sharing and hide sensitive hardware identifiers")
 	c.GoecsFlag.BoolVar(&c.TCPProbeStatus, "tcp", false, "Enable/Disable the additional TCP handshake probe section")
 	c.GoecsFlag.StringVar(&c.TCPTextFormat, "tcp-format", "compact", "Set TCP text output format (supported: compact, full)")
+	c.GoecsFlag.StringVar(&c.PingSortOrder, "ping-sort", "latency", "Set Ping result order (supported: latency, name)")
+	c.GoecsFlag.StringVar(&c.PingScope, "ping-scope", "auto", "Set Ping targets (supported: auto, china, international; English auto is international)")
+	c.GoecsFlag.StringVar(&c.TCPSortOrder, "tcp-sort", "name", "Set TCP platform order (supported: name, latency)")
 	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 15*time.Minute, "Set the global test deadline")
 	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 2*time.Minute, "Set the standard hardware test budget")
 	c.GoecsFlag.StringVar(&c.DeepDiskPaths, "deep-disk-paths", "", "Comma-separated mounted directories for the explicit deep multi-disk matrix")
@@ -333,6 +342,11 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["tcp-format"] {
 		saved["tcp-format"] = c.TCPTextFormat
+	}
+	for flagName, value := range map[string]string{"ping-sort": c.PingSortOrder, "ping-scope": c.PingScope, "tcp-sort": c.TCPSortOrder} {
+		if c.UserSetFlags[flagName] {
+			saved[flagName] = value
+		}
 	}
 	if c.UserSetFlags["deep"] {
 		saved["deep"] = c.DeepMode
@@ -481,6 +495,13 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.TCPTextFormat = stringValue
 		}
 	}
+	for key, target := range map[string]*string{"ping-sort": &c.PingSortOrder, "ping-scope": &c.PingScope, "tcp-sort": &c.TCPSortOrder} {
+		if val, ok := saved[key]; ok {
+			if stringValue, valid := val.(string); valid {
+				*target = stringValue
+			}
+		}
+	}
 	if val, ok := saved["deep"]; ok {
 		if boolVal, ok := val.(bool); ok {
 			c.DeepMode = boolVal
@@ -605,6 +626,9 @@ func (c *Config) ValidateParams() {
 	c.UnlockTestHTTPProxy = strings.TrimSpace(c.UnlockTestHTTPProxy)
 	c.UnlockTestSOCKSProxy = strings.TrimSpace(c.UnlockTestSOCKSProxy)
 	c.TCPTextFormat = strings.ToLower(strings.TrimSpace(c.TCPTextFormat))
+	c.PingSortOrder = strings.ToLower(strings.TrimSpace(c.PingSortOrder))
+	c.PingScope = strings.ToLower(strings.TrimSpace(c.PingScope))
+	c.TCPSortOrder = strings.ToLower(strings.TrimSpace(c.TCPSortOrder))
 	c.JSONPath = strings.TrimSpace(c.JSONPath)
 	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
 	c.DeepSMARTDevices = strings.TrimSpace(c.DeepSMARTDevices)
@@ -638,6 +662,18 @@ func (c *Config) ValidateParams() {
 			fmt.Printf("Warning: Invalid TCP output format '%s', using default 'compact'\n", c.TCPTextFormat)
 		}
 		c.TCPTextFormat = "compact"
+	}
+	if c.PingSortOrder != "latency" && c.PingSortOrder != "name" {
+		c.PingSortOrder = "latency"
+	}
+	if c.PingScope != "auto" && c.PingScope != "china" && c.PingScope != "international" {
+		c.PingScope = "auto"
+	}
+	if c.Language == "en" && c.PingScope == "china" {
+		c.PingScope = "international"
+	}
+	if c.TCPSortOrder != "name" && c.TCPSortOrder != "latency" {
+		c.TCPSortOrder = "name"
 	}
 
 	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}

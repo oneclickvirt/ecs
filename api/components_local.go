@@ -95,13 +95,19 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 		routeStatus, routeReason := aggregateComponentSectionStatus(result[firstRouteComponent:])
 		progressCompleted(ctx, "routes", routeStatus, routeReason)
 	}
-	if config.PingTestStatus && inputs.Network && len(inputs.ProvinceRoutes) > 0 {
+	if config.PingTestStatus && inputs.Network && (len(inputs.ProvinceRoutes) > 0 || config.Language == "en" || config.PingScope == "international") {
 		result = append(result, collectComponentStep(ctx, "ping", func() ComponentReport {
 			started := time.Now()
-			targets := representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(inputs.ProvinceRoutes, config.Nt3CheckType), config.DeepMode)
+			var targets []pingprobe.ICMPTarget
+			if config.PingScope == "international" || (config.PingScope == "auto" && config.Language == "en") {
+				targets = pingprobe.InternationalICMPTargets()
+			} else {
+				targets = representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(inputs.ProvinceRoutes, config.Nt3CheckType), config.DeepMode)
+			}
 			pingCtx, cancel := componentContext(ctx, 30*time.Second)
 			defer cancel()
 			probes := pingprobe.RunICMPProbes(pingCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
+			sortICMPResults(probes, config.PingSortOrder)
 			report := componentPayload("ping.icmp", "goecs.ping/icmp-v1", pingComponentStatus(pingCtx, probes), started, probes, nil)
 			report.Reason = pingComponentReason(probes, report.Status)
 			return report
@@ -186,6 +192,25 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 		}))
 	}
 	return result
+}
+
+func sortICMPResults(results []pingprobe.ICMPResult, order string) {
+	sort.SliceStable(results, func(i, j int) bool {
+		leftName := strings.ToLower(strings.TrimSpace(results[i].Target.Name))
+		rightName := strings.ToLower(strings.TrimSpace(results[j].Target.Name))
+		if order == "name" {
+			return leftName < rightName
+		}
+		leftAvailable := results[i].Received > 0
+		rightAvailable := results[j].Received > 0
+		if leftAvailable != rightAvailable {
+			return leftAvailable
+		}
+		if results[i].Mean != results[j].Mean {
+			return results[i].Mean < results[j].Mean
+		}
+		return leftName < rightName
+	})
 }
 
 // structuredOwnsHardware reports whether this build has the structured
@@ -428,6 +453,9 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 			if config.DeepMode {
 				cpuConfig.Duration = 20 * time.Second
 				cpuConfig.MaxPrime = 50000
+				if config.DeepBurnDuration > 0 {
+					cpuConfig.Duration = config.DeepBurnDuration
+				}
 			}
 			benchmark := runners.CPU(hardwareCtx, cpuConfig)
 			reports = append(reports, hardwareComponentPayload(hardwareCtx, "cputest", benchmark.SchemaVersion, benchmark.Status, started, benchmark, nil))
@@ -522,6 +550,11 @@ func collectExplicitDeepHardwareReports(ctx context.Context, config *Config) []C
 
 	started := time.Now()
 	paths := splitExplicitTargets(config.DeepDiskPaths)
+	if len(paths) == 0 && config.DiskMultiCheck {
+		if discovered, err := disk.DiscoverTestPaths(); err == nil {
+			paths = discovered.MountPoints
+		}
+	}
 	if len(paths) == 0 {
 		result = append(result, skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started))
 	} else {
@@ -546,9 +579,7 @@ func collectExplicitDeepHardwareReports(ctx context.Context, config *Config) []C
 	}
 
 	started = time.Now()
-	if config.DeepBurnDuration <= 0 {
-		result = append(result, skippedDeepComponent("cputest.burn", "goecs.cpu/burn-v1", started))
-	} else {
+	if !config.CpuTestStatus && config.DeepBurnDuration > 0 {
 		burn := cpu.RunBurn(ctx, cpu.BurnConfig{Threads: runtime.NumCPU(), Duration: config.DeepBurnDuration, MaxPrime: 50000})
 		result = append(result, hardwareComponentPayload(ctx, "cputest.burn", burn.SchemaVersion, burn.Status, started, burn, nil))
 	}
@@ -1082,7 +1113,7 @@ func mediaComponentStatus(ctx context.Context, results []unlockexecutor.Structur
 
 func mediaComponentReason(results []unlockexecutor.StructuredResult, err error) string {
 	if err != nil {
-		return err.Error()
+		return sanitizePublicText(err.Error())
 	}
 	failed, limited := 0, 0
 	for _, result := range results {

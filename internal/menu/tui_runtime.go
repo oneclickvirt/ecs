@@ -328,6 +328,10 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.TCPProbeStatus = a.boolVal
 		case "tcpformat":
 			config.TCPTextFormat = a.options[a.current].value
+		case "pingsort":
+			config.PingSortOrder = a.options[a.current].value
+		case "tcpsort":
+			config.TCPSortOrder = a.options[a.current].value
 		case "jsonpath":
 			config.JSONPath = strings.TrimSpace(a.textVal)
 		case "dataoffline":

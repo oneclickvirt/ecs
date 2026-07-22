@@ -336,8 +336,10 @@ func CaptureOutput(f func()) string {
 	var stdoutBuf, stderrBuf bytes.Buffer
 	// 并发读取 stdout 和 stderr
 	done := make(chan struct{}, 2)
+	stdoutBufferWriter := &leadingCellWriter{writer: &stdoutBuf, lineStart: true}
+	stdoutDisplayWriter := &leadingCellWriter{writer: oldStdout, lineStart: true}
 	go func() {
-		multiWriter := io.MultiWriter(&stdoutBuf, oldStdout)
+		multiWriter := io.MultiWriter(stdoutBufferWriter, stdoutDisplayWriter)
 		io.Copy(multiWriter, stdoutPipeR)
 		done <- struct{}{}
 	}()
@@ -367,6 +369,41 @@ func CaptureOutput(f func()) string {
 	// 返回捕获的输出字符串
 	// stderrBuf.String()
 	return stdoutBuf.String()
+}
+
+// leadingCellWriter keeps the compact CLI contract used by the original
+// renderer: visible output starts in the second terminal cell. Existing
+// indentation is preserved, while top-aligned lines receive one leading
+// space. JSON and direct API output do not pass through this writer.
+type leadingCellWriter struct {
+	writer    io.Writer
+	lineStart bool
+}
+
+func (w *leadingCellWriter) Write(data []byte) (int, error) {
+	if len(data) == 0 {
+		return 0, nil
+	}
+	var transformed bytes.Buffer
+	transformed.Grow(len(data) + 8)
+	for _, value := range data {
+		// Section separators are already width-controlled by PrintCenteredTitle;
+		// leave them untouched while reserving the first cell for data rows.
+		if w.lineStart && value != '\n' && value != '\r' && value != ' ' && value != '\t' && value != '-' && value != '=' {
+			transformed.WriteByte(' ')
+		}
+		transformed.WriteByte(value)
+		switch value {
+		case '\n', '\r':
+			w.lineStart = true
+		default:
+			w.lineStart = false
+		}
+	}
+	if _, err := w.writer.Write(transformed.Bytes()); err != nil {
+		return 0, err
+	}
+	return len(data), nil
 }
 
 // PrintAndCapture 捕获函数输出的同时打印内容

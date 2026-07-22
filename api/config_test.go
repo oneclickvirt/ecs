@@ -11,6 +11,9 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 		WithNt3Location("all"),
 		WithUnlockTestIPVersion("IPV6"),
 		WithTCPTextFormat("FULL"),
+		WithPingSortOrder("NAME"),
+		WithPingScope("CHINA"),
+		WithTCPSortOrder("LATENCY"),
 		nil,
 	)
 
@@ -28,6 +31,9 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 	}
 	if cfg.TCPTextFormat != "full" {
 		t.Fatalf("TCPTextFormat = %q, want full", cfg.TCPTextFormat)
+	}
+	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" {
+		t.Fatalf("network ordering options were not normalized: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
 	}
 }
 

@@ -33,7 +33,7 @@ jobs:
         
     - name: Remove security package references
       env:
-        GOFLAGS: -tags=ecs_public
+        GOFLAGS: "-mod=mod -tags=ecs_public"
       run: |
         set -euo pipefail
         python3 .back/create_public_branch.py
@@ -48,7 +48,7 @@ jobs:
         fi
     - name: Build and Test
       env:
-        GOFLAGS: -tags=ecs_public
+        GOFLAGS: "-mod=mod -tags=ecs_public"
       run: |
         set -euo pipefail
         go test ./...

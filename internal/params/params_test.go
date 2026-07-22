@@ -110,6 +110,20 @@ func TestAdditionalTCPSectionIsExplicit(t *testing.T) {
 	}
 }
 
+func TestNetworkSortAndEnglishPingScopeFlags(t *testing.T) {
+	cfg := NewConfig("test")
+	cfg.ParseFlags([]string{"-l=en", "-ping-sort=name", "-ping-scope=china", "-tcp-sort=latency"})
+	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" {
+		t.Fatalf("network flags were not normalized: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
+	}
+
+	cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder = "invalid", "invalid", "invalid"
+	cfg.ValidateParams()
+	if cfg.PingSortOrder != "latency" || cfg.PingScope != "auto" || cfg.TCPSortOrder != "name" {
+		t.Fatalf("invalid network flags did not fall back: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
+	}
+}
+
 func TestValidateParamsCapsStandardHardwareBudget(t *testing.T) {
 	cfg := NewConfig("test")
 	cfg.MaxDuration = 15 * time.Minute

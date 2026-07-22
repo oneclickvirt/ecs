@@ -663,8 +663,8 @@ func TestHardwareStageSelectsDeepProfiles(t *testing.T) {
 		},
 	})
 
-	if len(reports) != 7 || standardDiskCalls != 0 {
-		t.Fatalf("reports=%d standard disk calls=%d, want 7 and 0", len(reports), standardDiskCalls)
+	if len(reports) != 6 || standardDiskCalls != 0 {
+		t.Fatalf("reports=%d standard disk calls=%d, want 6 and 0", len(reports), standardDiskCalls)
 	}
 	for _, report := range reports[3:] {
 		if report.Status != ReportStatusSkipped || report.Reason == "" {
@@ -686,7 +686,7 @@ func TestDeepDeviceOperationsRequireExplicitTargets(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.DeepMode = true
 	reports := collectExplicitDeepHardwareReports(context.Background(), cfg)
-	if len(reports) != 4 {
+	if len(reports) != 3 {
 		t.Fatalf("got %d deep placeholders", len(reports))
 	}
 	for _, report := range reports {

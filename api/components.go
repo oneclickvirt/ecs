@@ -87,7 +87,7 @@ func componentPayload(name, schema string, status ReportStatus, started time.Tim
 		if report.Status == ReportStatusOK {
 			report.Status = ReportStatusError
 		}
-		report.Reason = err.Error()
+		report.Reason = sanitizePublicText(err.Error())
 	}
 	if payload != nil {
 		encoded, marshalErr := json.Marshal(payload)

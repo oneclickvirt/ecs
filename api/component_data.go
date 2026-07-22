@@ -179,7 +179,7 @@ func timeMetadataFile(file, schema string, generatedAt time.Time, source string,
 
 func failedComponentData(ctx context.Context, file string, err error) componentDataResult {
 	return componentDataResult{
-		file: DataFileVersion{File: file, Status: dataFileStatus(ctx, err), Reason: err.Error()},
+		file: DataFileVersion{File: file, Status: dataFileStatus(ctx, err), Reason: sanitizePublicText(err.Error())},
 		err:  err,
 	}
 }

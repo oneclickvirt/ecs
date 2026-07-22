@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -8,6 +9,16 @@ import (
 
 	runewidth "github.com/mattn/go-runewidth"
 )
+
+func TestCaptureOutputReservesLeadingCell(t *testing.T) {
+	output := CaptureOutput(func() {
+		fmt.Print("header\nline\n existing\n\n")
+	})
+	want := " header\n line\n existing\n\n"
+	if output != want {
+		t.Fatalf("CaptureOutput() = %q, want %q", output, want)
+	}
+}
 
 // func TestCheckPublicAccess(t *testing.T) {
 // 	timeout := 3 * time.Second

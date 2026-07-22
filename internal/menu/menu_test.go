@@ -185,6 +185,10 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 			advanced[index].boolVal = true
 		case "tcpformat":
 			advanced[index].current = optionIndexByValue(advanced[index].options, "full")
+		case "pingsort":
+			advanced[index].current = optionIndexByValue(advanced[index].options, "name")
+		case "tcpsort":
+			advanced[index].current = optionIndexByValue(advanced[index].options, "latency")
 		}
 	}
 	applyCustomResult(tuiResult{toggles: defaultTestToggles(), advanced: advanced}, utils.NetCheckResult{Connected: true}, cfg)
@@ -203,6 +207,9 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 	}
 	if cfg.TCPTextFormat != "full" {
 		t.Fatalf("TCP text format was not applied: %q", cfg.TCPTextFormat)
+	}
+	if cfg.PingSortOrder != "name" || cfg.TCPSortOrder != "latency" {
+		t.Fatalf("network ordering settings were not applied: ping=%q tcp=%q", cfg.PingSortOrder, cfg.TCPSortOrder)
 	}
 }
 
