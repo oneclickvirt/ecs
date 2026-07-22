@@ -5,6 +5,7 @@ package api
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	privatepst "github.com/oneclickvirt/privatespeedtest/pst"
@@ -58,6 +59,36 @@ func runEmbeddedPrivateSpeedBenchmarks(ctx context.Context, limit int) (any, int
 	return runPrivateSpeedBenchmarksWithLoader(ctx, limit, func(context.Context) (privatepst.RegistryLoadResult, error) {
 		return privatepst.LoadEmbeddedServerList()
 	})
+}
+
+func runInternationalPrivateSpeedBenchmarks(ctx context.Context, limit int) (any, int, []privateSpeedBenchmark) {
+	return runPrivateSpeedBenchmarksWithLoader(ctx, limit, func(ctx context.Context) (privatepst.RegistryLoadResult, error) {
+		loaded, err := privatepst.LoadServerListWithMetadataContext(ctx)
+		return filterInternationalPrivateRegistry(loaded), err
+	})
+}
+
+func runEmbeddedInternationalPrivateSpeedBenchmarks(ctx context.Context, limit int) (any, int, []privateSpeedBenchmark) {
+	return runPrivateSpeedBenchmarksWithLoader(ctx, limit, func(context.Context) (privatepst.RegistryLoadResult, error) {
+		loaded, err := privatepst.LoadEmbeddedServerList()
+		return filterInternationalPrivateRegistry(loaded), err
+	})
+}
+
+func filterInternationalPrivateRegistry(loaded privatepst.RegistryLoadResult) privatepst.RegistryLoadResult {
+	if loaded.List == nil {
+		return loaded
+	}
+	copyList := *loaded.List
+	copyList.Servers = make([]privatepst.ServerConfig, 0, len(loaded.List.Servers))
+	for _, server := range loaded.List.Servers {
+		if strings.TrimSpace(server.Country) != "" && !isMainlandChinaCountry(server.Country) {
+			copyList.Servers = append(copyList.Servers, server)
+		}
+	}
+	copyList.TotalServers = len(copyList.Servers)
+	loaded.List = &copyList
+	return loaded
 }
 
 func runPrivateSpeedBenchmarksWithLoader(ctx context.Context, limit int, loader func(context.Context) (privatepst.RegistryLoadResult, error)) (any, int, []privateSpeedBenchmark) {

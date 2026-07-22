@@ -10,6 +10,7 @@
 
 ## 中文
 
+- [新增测试与输出约定](#新增测试与输出约定)
 - [系统基础信息](#系统基础信息)
 - [CPU测试](#CPU测试)
 - [内存测试](#内存测试)
@@ -24,6 +25,7 @@
 
 ## English
 
+- [New Tests and Output Contract](#new-tests-and-output-contract)
 - [Basic System Information](#Basic-System-Information)
 - [CPU Testing](#CPU-Testing)
 - [Memory Testing](#Memory-Testing)
@@ -36,6 +38,7 @@
 
 ## 日本語
 
+- [追加テストと出力仕様](#追加テストと出力仕様)
 - [システム基本情報](#システム基本情報)
 - [CPUテスト](#CPUテスト)
 - [メモリテスト](#メモリテスト)
@@ -54,17 +57,27 @@ menu模式默认启用，执行时显示菜单可选择选项测试，在menu模
 
 ### **新增测试与输出约定**
 
-选项 1（全测）会在保留原有实时章节顺序和紧凑对齐风格的基础上，自动开启 Ping、TCP 握手探针、深度测试、多盘检测、CPU 20 秒压力采样和 IP 标签兼容显示。CPU 压力采样与 CPU 基准合并在同一章节，不单独输出无意义的 OK/失败行；多盘测试只使用系统发现的可写挂载点和临时普通文件。
+以下说明区分两种路径：默认经典文本路径继续实时输出原有章节；`-json=<文件>`、`-json=-` 和 Go API 使用版本化结构化组件。结构化紧凑文本和 JSON 保留相同的状态、原因和指标，但不是每个操作系统都能提供每个字段。
 
-基础系统信息补充显示 cgroup/cpuset/quota、拥塞控制/qdisc/TCP rmem-wmem、主板与 BIOS、PCI/GPU、NUMA/DIMM/大页、物理盘/RAID/健康和温度。无法读取的字段会标记为不可用，不会伪造结果。
+**选项 1 的默认增强项：** 选择全测后会开启 Ping、TCP 握手探针、`deep`、多盘检测、CPU 20 秒压力测试和 IP 标签兼容显示；联网时再开启解锁、IP 质量、邮件、回程/路由、TGDC、网站延迟和测速。明确命令行参数的优先级高于菜单预设。CPU 压力结果合并在 CPU 章节，不单独输出无意义的 OK 行。多盘只在发现的可写挂载点中创建有上限的临时普通文件，不写裸盘。
 
-TCP 握手章节保留每个平台的完整数据：成功/尝试、丢包、Min/Avg/P50/P95/Max，以及 D/R/T/O（DNS/拒绝/超时/其他）。文本首行给出字段含义，平台每行并排两列且不截断目标集合；默认按平台名称稳定排序，可使用 `-tcp-sort=latency` 按失败、丢包和高延迟优先显示。Ping 默认按延迟排序，也可使用 `-ping-sort=name` 按平台名称排序；`-ping-scope=auto|china|international` 可选择目标范围。
+**硬件字段：** 增强系统报告包含 CPU 的逻辑线程/物理核/每核线程/插槽/cpuset，cgroup v1/v2 的 CPU quota/period/等效核数、内存 high/current/limit/swap 和 PID 上限，以及主板/BIOS、PCI 与驱动、GPU、NUMA、DIMM 容量/类型/速率、HugePages、物理盘、RAID 和控制器。Linux 网络调优字段包含当前/可用拥塞控制、默认 qdisc 和 TCP rmem/wmem。磁盘可在系统实际暴露时显示型号、固件、逻辑块、旋转/只读、NVMe/ATA 健康计数器和温度。字段受操作系统、权限、容器设备透传、驱动和硬件支持限制；读不到时是空值/不可用，不会推测伪造。DIMM 序列号不输出，`-privacy` 还会关闭分享并脱敏主机标识。
 
-英文模式自动使用国际 Ping 目标和国际测速节点，不测试中国大陆 Ping 地址或中国大陆测速节点；中文模式保留原有国内三网与国内测速选择。测速的静态节点失效时显示不可用，不会把失效节点伪装成成功。
+**CPU、内存和磁盘指标：** CPU 增强测试按 `GOMAXPROCS`、CPU affinity、cpuset 和 cgroup quota 取可用线程上限，显示请求/有效线程、时长、事件数和每秒事件数。测试期间会从 Linux sysfs 筛选 CPU 温度传感器，可用时显示基线、峰值和变化量；虚拟机或系统不暴露传感器时不显示温度。内存增强测试分别给出顺序读取、顺序写入、copy 带宽和随机依赖链延迟（ns），工作集与迭代次数有上限，不等同于内存规格的理论带宽。标准 fio 矩阵独立测量 4K Q1/Q32 随机读写和 1M Q1/Q8 顺序读写，显示 IOPS、带宽及 P50/P95/P99 完成延迟。`deep` 增加 ATTO 式 512B–64M 读写扫描；多盘矩阵对自动发现或 `-deep-disk-paths` 指定的挂载目录逐一执行。SMART self-test 和 GPU compute 具有修改设备状态或高负载的风险，因此即使开启 `deep` 也不会自动运行，必须显式提供 `-deep-smart-devices` 或 `-deep-gpu-device`。
 
-可变化的数据由组件自己的 Go registry loader 先加载远程最新 manifest，经 schema、数量和 SHA-256 校验后使用；远程不可用、数据异常或 `-data-offline` 时回退到组件编译期内置快照。用户可见错误只显示稳定的来源别名和状态，不显示私有源地址、查询参数、凭据或构建细节。
+**Ping 与 TCP：** ICMP Ping 保留发送/接收、丢包、Min/Avg/P50/P95/Max 和单次样本；紧凑文本优先显示 Avg/P95/丢包，完整值在 JSON 中保留。`-ping-sort=latency|name` 选择延迟或稳定名称顺序，`-ping-scope=auto|china|international` 选择三网或国际目标。TCP 每个目标默认尝试 3 次，保留成功/尝试、丢包、Min/Avg/P50/P95/Max 和失败样本；D/R/T/O 依次是 DNS 解析失败、连接被拒绝、超时和其他错误。`-tcp-sort=name|latency` 选择名称顺序或失败/丢包/高延迟优先；`-tcp-format=compact|full` 保留兼容参数，当前紧凑两列文本不会丢掉平台，每次握手样本仍在 JSON 中。
 
-常用新增参数：`-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-burn-duration=20s`。API 调用方可使用对应的 `WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` 配置项。
+**省级网络、BGP 和 STUN：** 省级 registry 固定校验 31 个省级目标，每省电信/Unicom/Mobile 三个运营商，支持 IPv4、IPv6 或 both。标准延迟报告使用短采样；`deep` 增加采样并执行 31 省三网的详细路由，同时受全局超时、每段超时和取消限制。IP/BGP 报告优先使用 RDAP，字段缺失或失败时可在有限超时内回退 WHOIS，并分开显示 prefix 及来源、RIR、注册日期、geofeed 取回状态、IXP、upstream、peer 和各来源的 partial/rate-limit/timeout/missing-fields。这些是多数据源证据，空值不代表确认不存在。STUN 报告分开 NAT 类型、mapping behavior、filtering behavior、port preservation 和 hairpin，并区分 available/unavailable/unsupported/timeout/error；服务器不提供必需属性时不会被误报为超时或失败。
+
+**IP 质量、DNSBL 与邮件：** 结构化 IP 质量按数据源保留 evidence、HTTP 状态、Retry-After、缺失字段和 available/rate_limited/authentication_required/timeout/error/unsupported 等状态，不会把限流或缺字段当成干净结果。DNSBL 对 IPv4 使用反向字节、对 IPv6 使用反向 nibble 查询，每个 zone 状态为 `clean`（无记录）、`listed`（常规 127.0.0.2）、`marked`（有记录但使用其他返回码）、`timeout`、`error` 或 `unsupported`（地址族不支持/输入无效）。邮件检测将本机监听、到固定 SMTP 端点的出站 25、域名动态解析后按优先级排列的 MX 25，以及 SMTP/SMTPS/POP3/POP3S/IMAP/IMAPS 固定端点分开，不再用一个“25 端口开放”结论代替所有能力。
+
+**流媒体与测速：** 解锁探针已包含 Dola AI 和 X (formerly Twitter)，并保留 `Yes`、`No`、`Restricted`、`Banned`、`RateLimited`、`Timeout`、`NetworkError`、`DNSResolveFailed`、`NoIPv6Support` 等状态；HTTP 429 显示为 `RateLimited`，不等于不解锁。可用 `-utregion=21` 运行 AI-only，并通过 `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy`、`-ut-concurrency` 明确控制协议栈、源接口、DNS、代理和并发。测速 registry 保留节点 ID/名称/主机/提供商/国家/城市/来源/状态/探活延迟，先探活和选点，再串行测量真实上下行；静态节点失效、缺少测速 URL 或吞吐为空时显示 unavailable/partial，不会伪装成成功。
+
+**组件数据与错误隐私：** TCP 目标、省级路由、测速节点、DNSBL、ASN 映射和媒体元数据均由对应组件自己的 Go loader 管理，不由 `goecs` 集中硬编码上游私有源。运行时优先加载组件远程最新快照，通过 manifest 的 schema、count、generated_at 和 SHA-256 校验后使用；CDN/Raw 不可用、数据无效或 `-data-offline` 时回退到组件编译期快照。结构化报告显示实际来源别名、数量、更新时间和 fallback；公开错误会清除远程 URL、查询参数、凭据样字和本地构建路径，仅保留稳定来源别名与错误分类。
+
+**英文模式的目标差异：** `-ping-scope=auto` 在英文下等于 `international`，即使显式给出 `china` 也会归一为国际目标。经典英文测速路径使用代表性国际节点，不执行大陆运营商就近发现；独立 `speedtest` 组件在英文下拒绝 `-pf cn` 和 `-opt cmcc|cu|ct`，并将默认/`nearby`/自动 registry 选择限定为非大陆节点。中文模式保留国内三网和显式国内节点能力。为避免英文用户误解国内专用数据，当前 `goecs` 经典英文路径也会关闭 Backtrace 和 NT3 省级路由章节；需要这两类中国网络数据时请使用中文模式。
+
+常用新增参数：`-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-disk-paths`、`-deep-smart-devices`、`-deep-burn-duration=20s`、`-deep-gpu-device`、`-hardware-budget`、`-timeout`、`-privacy`、`-data-offline` 和 `-json`。Go API 调用方可使用对应的 `WithDeepMode`、`WithDiskMultiCheck`、`WithTCPProbe`、`WithPingTest`、`WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` 等配置项。
 
 ### **系统基础信息**
 
@@ -516,17 +529,27 @@ Menu mode is enabled by default, the menu is displayed to select the option test
 
 ### New tests and output contract
 
-Option 1 (full test) keeps the original live chapter order and compact aligned style while enabling Ping, the TCP handshake probe, deep checks, multi-disk discovery, a 20-second CPU stress sample, and the IP-label compatibility switch. CPU stress is merged into the CPU chapter instead of producing a separate stream of meaningless OK/failure lines. Multi-disk checks use only writable mounts discovered by the system and ordinary temporary files.
+The following notes distinguish two execution paths. The default classic text path keeps the established chapters and prints them live. `-json=<file>`, `-json=-`, and the Go API use the versioned structured components. Compact structured text and JSON retain the same states, reasons, and metrics, but not every operating system can provide every field.
 
-Basic system information now includes cgroup/cpuset/quota, congestion control/qdisc/TCP rmem-wmem, board and BIOS, PCI/GPU, NUMA/DIMM/huge pages, physical disks/RAID/health and temperature. Missing fields are reported as unavailable rather than fabricated.
+**Option 1 defaults:** The full test enables Ping, the TCP handshake probe, `deep`, multi-disk discovery, a 20-second CPU pressure test, and IP-label compatibility. When connectivity is available it also enables unlock, IP quality, mail, backtrace/routing, TGDC, website latency, and speed tests. Explicit command-line settings override menu presets. CPU pressure results stay in the CPU chapter instead of producing a separate meaningless OK line. Multi-disk tests create only bounded temporary regular files on discovered writable mounts; they never write raw disks.
 
-The TCP handshake chapter keeps complete per-platform data: successful/attempted handshakes, loss, Min/Avg/P50/P95/Max, and D/R/T/O (DNS/refused/timeout/other). The first detail line explains the fields; platforms are shown in two columns without hiding the target set. The default is stable platform-name order, with `-tcp-sort=latency` available to prioritize failures, loss and high latency. Ping defaults to latency order and supports `-ping-sort=name`; `-ping-scope=auto|china|international` selects the target family.
+**Hardware fields:** The enhanced system report includes CPU logical threads, physical cores, threads per core, sockets and cpuset; cgroup v1/v2 CPU quota, period, effective core count, memory high/current/limit/swap, and PID limit; motherboard/BIOS; PCI devices and drivers; GPUs; NUMA; DIMM size, type, and speed; HugePages; physical disks; RAID arrays and controllers. Linux network tuning fields cover current and available congestion control, default qdisc, and TCP rmem/wmem. Where the system exposes them, disks include model, firmware, logical block size, rotational/read-only flags, NVMe/ATA health counters, and temperature. Availability depends on the OS, permissions, container device passthrough, drivers, and hardware. Missing data remains empty or unavailable rather than being guessed. DIMM serials are not emitted; `-privacy` also disables sharing and redacts host identifiers.
 
-English mode automatically uses international Ping targets and international speed-test nodes. It does not probe mainland-China Ping addresses or mainland-China speed nodes; Chinese mode keeps the existing domestic three-carrier choices. A failed speed node is reported as unavailable instead of being presented as a successful result.
+**CPU, memory, and disk metrics:** The enhanced CPU test limits requested workers by `GOMAXPROCS`, CPU affinity, cpuset, and cgroup quota, then reports requested/effective threads, duration, events, and events per second. During the test it samples CPU sensors exposed through Linux sysfs and, when available, shows baseline, peak, and delta temperature; a VM or OS without exposed sensors simply has no temperature result. The enhanced memory test reports sequential read, sequential write, copy bandwidth, and random dependent-chain latency in nanoseconds. Its bounded working set is a measured workload, not a claim about theoretical DIMM bandwidth. The standard fio matrix runs separate 4K Q1/Q32 random reads and writes and 1M Q1/Q8 sequential reads and writes, reporting IOPS, bandwidth, and P50/P95/P99 completion latency. `deep` adds an ATTO-style 512B-64M read/write sweep. The multi-path matrix runs on auto-discovered mounts or directories explicitly supplied with `-deep-disk-paths`. SMART self-tests and GPU compute are not started merely by enabling `deep`; because they can change device state or create sustained load, they require `-deep-smart-devices` or `-deep-gpu-device` explicitly.
 
-Changing data is loaded by each component's own Go registry loader from the newest remote manifest, then checked for schema, count and SHA-256. Network failure, invalid data or `-data-offline` falls back to the component's embedded snapshot. User-facing errors expose only stable source aliases and status, never private source URLs, query parameters, credentials or build details.
+**Ping and TCP:** ICMP results retain sent/received counts, loss, Min/Avg/P50/P95/Max, and individual samples. Compact text emphasizes Avg/P95/loss while JSON keeps all values. `-ping-sort=latency|name` selects latency or stable-name order, and `-ping-scope=auto|china|international` selects carrier or international targets. TCP attempts each target three times by default and retains success/attempt counts, loss, Min/Avg/P50/P95/Max, and failed samples. D/R/T/O means DNS resolution failure, connection refused, timeout, and other errors. `-tcp-sort=name|latency` selects stable name order or prioritizes failure, loss, and high latency. `-tcp-format=compact|full` remains a compatibility option; the current compact two-column text keeps every platform, and JSON keeps every handshake sample.
 
-Useful new parameters are `-tcp`, `-tcp-format=compact|full`, `-tcp-sort=name|latency`, `-ping`, `-ping-sort=latency|name`, `-ping-scope=auto|china|international`, `-deep`, `-diskmc`, and `-deep-burn-duration=20s`. API callers can use `WithPingSortOrder`, `WithPingScope`, and `WithTCPSortOrder`.
+**Province networking, BGP, and STUN:** The province registry validates exactly 31 province-level entries, with Telecom, Unicom, and Mobile targets for each province and IPv4, IPv6, or both. The standard latency profile uses short sampling; `deep` increases sampling and runs detailed routes for all 31 provinces and three carriers, subject to global, stage, and cancellation deadlines. The IP/BGP report prefers RDAP and can use bounded WHOIS when RDAP fails or required fields are missing. It reports prefixes and their source, RIR, registration date, geofeed fetch status, IXPs, upstreams, peers, and per-source partial/rate-limit/timeout/missing-field evidence. These are multi-source observations; an empty field does not prove that the relationship does not exist. STUN reports NAT type, mapping behavior, filtering behavior, port preservation, and hairpin separately, using available/unavailable/unsupported/timeout/error states. A server that lacks a required STUN attribute is not mislabeled as a timeout or a successful capability test.
+
+**IP quality, DNSBL, and mail:** Structured IP quality retains per-provider evidence, HTTP status, Retry-After, missing fields, and states such as available, rate_limited, authentication_required, timeout, error, and unsupported. A rate limit or missing field is not treated as a clean result. DNSBL uses reversed octets for IPv4 and reversed nibbles for IPv6. Each zone is `clean` (no record), `listed` (the conventional 127.0.0.2 response), `marked` (a record with another return code), `timeout`, `error`, or `unsupported` (invalid input or unsupported address family). Mail checks keep local listeners, outbound port 25 to fixed SMTP endpoints, dynamically resolved MX port 25 ordered by MX preference, and fixed SMTP/SMTPS/POP3/POP3S/IMAP/IMAPS endpoints separate. One generic "port 25 open" result is not used as a substitute for all mail capabilities.
+
+**Media and speed tests:** Unlock checks include Dola AI and X (formerly Twitter), and preserve states including `Yes`, `No`, `Restricted`, `Banned`, `RateLimited`, `Timeout`, `NetworkError`, `DNSResolveFailed`, and `NoIPv6Support`. HTTP 429 is `RateLimited`, not a negative unlock result. `-utregion=21` selects AI-only; `-utipver`, `-ut-interface`, `-ut-dns`, `-ut-http-proxy`, `-ut-socks-proxy`, and `-ut-concurrency` explicitly control IP family, source interface, DNS, proxy, and concurrency. Speed registries retain node ID/name/host/provider/country/city/source/availability and probe latency. Nodes are probed and selected before real upload/download tests run sequentially. A dead static node, a node without a usable test URL, or a run with no usable throughput is reported as unavailable or partial, never as success.
+
+**Component data and error privacy:** TCP targets, province routes, speed nodes, DNSBL zones, ASN mappings, and media metadata are managed by their owning component's Go loader; `goecs` does not centrally hard-code private upstream definitions. Runtime prefers the component's latest remote snapshot after validating manifest schema, count, `generated_at`, and SHA-256. It falls back to the component's compile-time snapshot when CDN/Raw data is unavailable or invalid, or when `-data-offline` is set. Structured reports show the actual stable source alias, count, update time, and fallback state. Public errors remove remote URLs, query strings, credential-like values, and local build paths, retaining only a stable source alias and error class.
+
+**English target differences:** In English, `-ping-scope=auto` means `international`; an explicit `china` scope is normalized back to international. The classic English speed path uses representative international nodes and does not perform mainland-carrier nearby discovery. The standalone `speedtest` component rejects `-pf cn` and `-opt cmcc|cu|ct` in English, and constrains its default, `nearby`, and automatic registry selection to non-mainland nodes. Chinese mode keeps domestic three-carrier and explicit domestic-node support. To avoid presenting China-specific data as a general English test, the current classic English `goecs` path also disables the Backtrace and NT3 province-routing chapters; use Chinese mode when those China-network sections are required.
+
+Useful parameters are `-tcp`, `-tcp-format=compact|full`, `-tcp-sort=name|latency`, `-ping`, `-ping-sort=latency|name`, `-ping-scope=auto|china|international`, `-deep`, `-diskmc`, `-deep-disk-paths`, `-deep-smart-devices`, `-deep-burn-duration=20s`, `-deep-gpu-device`, `-hardware-budget`, `-timeout`, `-privacy`, `-data-offline`, and `-json`. Go API callers can use the corresponding `WithDeepMode`, `WithDiskMultiCheck`, `WithTCPProbe`, `WithPingTest`, `WithPingSortOrder`, `WithPingScope`, and `WithTCPSortOrder` options.
 
 ### Basic System Information
 
@@ -869,17 +892,27 @@ In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed o
 
 ### 追加テストと出力仕様
 
-オプション1（全テスト）は、既存のリアルタイムな章の順序、コンパクトな整列表示を維持したまま、Ping、TCPハンドシェイク、深度テスト、複数ディスク検出、20秒のCPU負荷サンプル、IPラベル互換表示を自動的に有効にします。CPU負荷はCPUベンチマークの章に統合され、意味のないOK/失敗行を別に表示しません。複数ディスク検出は、システムが発見した書き込み可能なマウントポイントと通常の一時ファイルだけを使用します。
+以下の説明では2つの実行経路を区別します。デフォルトの従来テキスト経路は既存の章とリアルタイム出力を維持します。`-json=<file>`、`-json=-`、Go APIはバージョン化された構造化コンポーネントを使用します。コンパクトな構造化テキストとJSONは同じ状態、理由、測定値を保持しますが、すべてのOSがすべてのフィールドを提供できるわけではありません。
 
-基本システム情報には、cgroup/cpuset/quota、輻輳制御/qdisc/TCP rmem-wmem、マザーボードとBIOS、PCI/GPU、NUMA/DIMM/huge pages、物理ディスク/RAID/健康状態/温度が追加されています。取得できない値は利用不可として示し、推測値は表示しません。
+**オプション1のデフォルト:** 全テストはPing、TCPハンドシェイク、`deep`、複数ディスク検出、20秒のCPU負荷テスト、IPラベル互換表示を有効にします。ネットワーク利用時はロック解除、IP品質、メール、バックトレース/ルーティング、TGDC、Web遅延、速度テストも有効にします。明示的なCLI値はメニューのプリセットより優先されます。CPU負荷結果はCPU章に統合され、単独の無意味なOK行を出しません。複数ディスクテストは発見された書き込み可能なマウント上の上限付き一時通常ファイルだけを使い、ローディスクには書き込みません。
 
-TCPハンドシェイク章では、プラットフォームごとの成功/試行、損失、Min/Avg/P50/P95/Max、D/R/T/O（DNS/拒否/タイムアウト/その他）をすべて表示します。最初の詳細行で項目の意味を示し、プラットフォームは2列で表示します。デフォルトはプラットフォーム名の安定順で、`-tcp-sort=latency` で失敗・損失・高遅延を優先できます。Pingは遅延順がデフォルトで、`-ping-sort=name` による名前順、`-ping-scope=auto|china|international` による対象範囲指定に対応します。
+**ハードウェアフィールド:** 拡張システムレポートにはCPUの論理スレッド、物理コア、1コア当たりのスレッド、ソケット、cpuset、cgroup v1/v2のCPU quota/period/実効コア数、メモリhigh/current/limit/swap、PID上限、マザーボード/BIOS、PCIデバイスとドライバ、GPU、NUMA、DIMMの容量/種類/速度、HugePages、物理ディスク、RAIDアレイとコントローラが含まれます。Linuxでは現在/利用可能な輻輳制御、デフォルトqdisc、TCP rmem/wmemも報告します。システムが公開している場合、ディスクのモデル、ファームウェア、論理ブロックサイズ、回転/読み取り専用フラグ、NVMe/ATAヘルスカウンタ、温度も表示します。取得可否はOS、権限、コンテナのデバイスパススルー、ドライバ、ハードウェアに依存します。欠損値は推測せず空または利用不可とします。DIMMシリアルは出力せず、`-privacy` は結果共有も無効にし、ホスト識別子をマスクします。
 
-英語モードは国際的なPing対象と国際的な速度測定ノードだけを使用し、中国大陸のPingアドレスや速度測定ノードを検査しません。中国語モードでは従来の国内三大キャリアと国内ノードを維持します。無効な速度ノードは成功として扱わず、利用不可として表示します。
+**CPU、メモリ、ディスク指標:** 拡張CPUテストは要求ワーカ数を `GOMAXPROCS`、CPU affinity、cpuset、cgroup quotaで制限し、要求/実効スレッド、時間、イベント数、秒間イベント数を報告します。テスト中にLinux sysfsのCPUセンサーをサンプリングし、利用可能な場合は開始、最高、変化温度を示します。センサーが露出されないVM/OSでは温度結果はありません。拡張メモリテストはシーケンシャル読み取り、書き込み、copy帯域、ランダム依存チェーン遅延（ns）を個別に報告します。上限付きワーキングセットの測定値であり、DIMMの理論帯域ではありません。標準fioマトリクスは4K Q1/Q32ランダム読み/書きと1M Q1/Q8シーケンシャル読み/書きを分離し、IOPS、帯域、P50/P95/P99完了遅延を示します。`deep` はATTO式512B–64M読み/書きスイープを追加します。複数パスマトリクスは自動検出マウントまたは `-deep-disk-paths` で明示したディレクトリ上で実行します。SMART self-testとGPU computeは `deep` だけでは開始せず、デバイス状態の変更や継続負荷の可能性があるため `-deep-smart-devices` または `-deep-gpu-device` が必要です。
 
-変化するデータは各コンポーネント自身のGo registry loaderが最新manifestを取得し、schema、件数、SHA-256を検証してから使用します。ネットワーク障害、不正データ、または `-data-offline` の場合はコンパイル時に埋め込まれたスナップショットへ戻ります。ユーザー向けエラーには安定したソース名と状態だけを表示し、非公開URL、クエリ、認証情報、ビルド情報は表示しません。
+**PingとTCP:** ICMP結果は送信/受信数、損失、Min/Avg/P50/P95/Max、個別サンプルを保持します。コンパクトテキストはAvg/P95/損失を中心に表示し、JSONは全値を保持します。`-ping-sort=latency|name` は遅延順または安定した名前順、`-ping-scope=auto|china|international` は三大キャリアまたは国際対象を選択します。TCPはデフォルトで各対象を3回試行し、成功/試行、損失、Min/Avg/P50/P95/Max、失敗サンプルを保持します。D/R/T/OはDNS解決失敗、接続拒否、タイムアウト、その他のエラーです。`-tcp-sort=name|latency` は名前順、または失敗/損失/高遅延優先を選びます。`-tcp-format=compact|full` は互換オプションとして残り、現在の2列コンパクト表示はすべてのプラットフォームを保持し、JSONは全ハンドシェイクサンプルを保持します。
 
-主な追加パラメータは `-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-burn-duration=20s` です。APIからは `WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` を利用できます。
+**省級ネットワーク、BGP、STUN:** 省級registryは31の省級エントリを厳密に検証し、各省に中国電信、中国聯通、中国移動の対象を持ち、IPv4、IPv6、bothに対応します。標準遅延プロファイルは短いサンプリングを使い、`deep` はサンプルを増やし、31省×3キャリアの詳細ルートを実行します。すべて全体/ステージの期限とキャンセルの制約を受けます。IP/BGPレポートはRDAPを優先し、RDAP失敗または必須値の欠落時に有限時間のWHOISを使えます。prefixとそのソース、RIR、登録日、geofeed取得状態、IXP、upstream、peer、ソースごとのpartial/rate-limit/timeout/missing-fieldsを報告します。これらは複数ソースの観測値で、空値は関係が存在しないことの証明ではありません。STUNはNAT type、mapping behavior、filtering behavior、port preservation、hairpinを分離し、available/unavailable/unsupported/timeout/errorを使います。必要なSTUN属性を持たないサーバをタイムアウトや成功と誤表示しません。
+
+**IP品質、DNSBL、メール:** 構造化IP品質はプロバイダ別evidence、HTTP status、Retry-After、欠落フィールド、available/rate_limited/authentication_required/timeout/error/unsupportedなどの状態を保持します。レート制限や値の欠落をcleanとは扱いません。DNSBLはIPv4でオクテットを逆順にし、IPv6でnibbleを逆順にします。各zoneの状態は `clean`（記録なし）、`listed`（標準127.0.0.2）、`marked`（別の応答コードの記録あり）、`timeout`、`error`、`unsupported`（不正な入力/未対応のアドレスファミリ）です。メールテストはローカルリスナ、固定SMTPエンドポイントへの送信port 25、動的に解決しMX優先度順に並べたMX port 25、固定SMTP/SMTPS/POP3/POP3S/IMAP/IMAPSを個別に報告します。単一の「port 25 open」で全メール機能を代用しません。
+
+**メディアと速度テスト:** ロック解除テストはDola AIとX (formerly Twitter)を含み、`Yes`、`No`、`Restricted`、`Banned`、`RateLimited`、`Timeout`、`NetworkError`、`DNSResolveFailed`、`NoIPv6Support` などの状態を保持します。HTTP 429は `RateLimited` であり、ロック解除不可ではありません。`-utregion=21` はAI-onlyを選択し、`-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy`、`-ut-concurrency` でIPファミリ、送信元インターフェース、DNS、プロキシ、並列数を明示的に制御します。速度registryはノードID/名前/ホスト/プロバイダ/国/都市/ソース/利用可否/プローブ遅延を保持します。プローブと選択後、実際のダウンロード/アップロードを直列実行します。無効な静的ノード、使用可能なテストURLがないノード、または有効なスループットがない実行はunavailable/partialであり、successにはなりません。
+
+**コンポーネントデータとエラーのプライバシー:** TCP対象、省級ルート、速度ノード、DNSBL zone、ASNマッピング、メディアメタデータは所有コンポーネントのGo loaderが管理し、`goecs` に非公開upstream定義を集中ハードコードしません。実行時はmanifestのschema、count、`generated_at`、SHA-256を検証した最新リモートスナップショットを優先します。CDN/Rawが利用不可、データが不正、または `-data-offline` の場合はコンパイル時スナップショットにフォールバックします。構造化レポートは安定した実際のソース別名、件数、更新時刻、fallbackを示します。公開エラーからはリモートURL、クエリ、認証情報に似た値、ローカルビルドパスを削除し、安定ソース別名とエラー分類だけを残します。
+
+**英語モードの対象差:** 英語の `-ping-scope=auto` は `international` を意味し、明示的な `china` もinternationalに正規化されます。従来の英語速度経路は代表的な国際ノードを使い、中国大陸キャリアの近隣検出は行いません。単独の `speedtest` コンポーネントは英語で `-pf cn` と `-opt cmcc|cu|ct` を拒否し、デフォルト、`nearby`、自動registry選択を中国大陸外のノードに限定します。中国語モードは国内三大キャリアと明示的な国内ノードに対応し続けます。中国専用データを一般的な英語テストと誤解させないため、現在の従来英語 `goecs` 経路はBacktraceとNT3省級ルーティング章も無効にします。それらの中国ネットワーク章が必要な場合は中国語モードを使用してください。
+
+主なパラメータは `-tcp`、`-tcp-format=compact|full`、`-tcp-sort=name|latency`、`-ping`、`-ping-sort=latency|name`、`-ping-scope=auto|china|international`、`-deep`、`-diskmc`、`-deep-disk-paths`、`-deep-smart-devices`、`-deep-burn-duration=20s`、`-deep-gpu-device`、`-hardware-budget`、`-timeout`、`-privacy`、`-data-offline`、`-json` です。Go APIでは対応する `WithDeepMode`、`WithDiskMultiCheck`、`WithTCPProbe`、`WithPingTest`、`WithPingSortOrder`、`WithPingScope`、`WithTCPSortOrder` などを利用できます。
 
 ### システム基本情報
 

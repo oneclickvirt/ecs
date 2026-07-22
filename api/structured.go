@@ -156,9 +156,7 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if config == nil {
-		config = NewDefaultConfig()
-	}
+	config = validatedStructuredConfig(config)
 	// This API is used after the legacy text workflow by the CLI and GUI. The
 	// legacy path has already executed destructive/expensive hardware tests, so
 	// do not run a second benchmark just to populate a JSON envelope. Missing
@@ -190,6 +188,15 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 		applyStructuredPrivacy(report)
 	}
 	return report
+}
+
+func validatedStructuredConfig(config *Config) *Config {
+	if config == nil {
+		config = NewDefaultConfig()
+	}
+	normalized := *config
+	normalized.ValidateParams()
+	return &normalized
 }
 
 func collectStructuredExtras(ctx context.Context, preCheck utils.NetCheckResult, config *Config) structuredExtras {

@@ -98,12 +98,7 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 	if config.PingTestStatus && inputs.Network && (len(inputs.ProvinceRoutes) > 0 || config.Language == "en" || config.PingScope == "international") {
 		result = append(result, collectComponentStep(ctx, "ping", func() ComponentReport {
 			started := time.Now()
-			var targets []pingprobe.ICMPTarget
-			if config.PingScope == "international" || (config.PingScope == "auto" && config.Language == "en") {
-				targets = pingprobe.InternationalICMPTargets()
-			} else {
-				targets = representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(inputs.ProvinceRoutes, config.Nt3CheckType), config.DeepMode)
-			}
+			targets := structuredPingTargets(config, inputs.ProvinceRoutes)
 			pingCtx, cancel := componentContext(ctx, 30*time.Second)
 			defer cancel()
 			probes := pingprobe.RunICMPProbes(pingCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
@@ -188,10 +183,21 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 			started := time.Now()
 			speedCtx, cancel := componentContext(ctx, 75*time.Second)
 			defer cancel()
-			return withComponentDuration(collectSpeedComponentFromRegistry(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.SpNum, config.DataOffline), started)
+			privateRunner := privateSpeedRunnerForConfig(config.Language, config.DataOffline)
+			return withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithDependencies(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, nil, nil, privateRunner), started)
 		}))
 	}
 	return result
+}
+
+func structuredPingTargets(config *Config, routes []nt3model.ProvinceRoute) []pingprobe.ICMPTarget {
+	if config == nil {
+		config = NewDefaultConfig()
+	}
+	if config.Language == "en" || config.PingScope == "international" {
+		return pingprobe.InternationalICMPTargets()
+	}
+	return representativeICMPTargets(nt3model.BuildProvinceLatencyTargets(routes, config.Nt3CheckType), config.DeepMode)
 }
 
 func sortICMPResults(results []pingprobe.ICMPResult, order string) {
@@ -421,17 +427,35 @@ func pingTCPComponentReason(results []pingprobe.TCPResult, status ReportStatus) 
 }
 
 type hardwareComponentRunners struct {
-	CPU      func(context.Context, cpu.StructuredConfig) cpu.StructuredResult
-	Memory   func(context.Context, memory.BenchmarkConfig) (memory.BenchmarkResult, error)
-	Disk     func(context.Context, disk.MatrixConfig) disk.MatrixResult
-	DeepDisk func(context.Context, disk.MatrixConfig) disk.MatrixResult
+	CPU               func(context.Context, cpu.StructuredConfig) cpu.StructuredResult
+	Memory            func(context.Context, memory.BenchmarkConfig) (memory.BenchmarkResult, error)
+	Disk              func(context.Context, disk.MatrixConfig) disk.MatrixResult
+	DeepDisk          func(context.Context, disk.MatrixConfig) disk.MatrixResult
+	DiscoverDiskPaths func() (disk.TestPathInfo, error)
+	DeepMultiDisk     func(context.Context, []string, disk.MatrixConfig) disk.MultiPathResult
+	Burn              func(context.Context, cpu.BurnConfig) cpu.BurnResult
 }
 
 func defaultHardwareComponentRunners() hardwareComponentRunners {
 	return hardwareComponentRunners{
 		CPU: cpu.RunStructured, Memory: memory.RunBenchmark,
 		Disk: disk.RunStandardFioMatrix, DeepDisk: disk.RunDeepFioMatrix,
+		DiscoverDiskPaths: disk.DiscoverTestPaths, DeepMultiDisk: disk.RunDeepMultiPathMatrix,
+		Burn: cpu.RunBurn,
 	}
+}
+
+func withDeepHardwareRunnerDefaults(runners hardwareComponentRunners) hardwareComponentRunners {
+	if runners.DiscoverDiskPaths == nil {
+		runners.DiscoverDiskPaths = disk.DiscoverTestPaths
+	}
+	if runners.DeepMultiDisk == nil {
+		runners.DeepMultiDisk = disk.RunDeepMultiPathMatrix
+	}
+	if runners.Burn == nil {
+		runners.Burn = cpu.RunBurn
+	}
+	return runners
 }
 
 func collectHardwareComponentReports(parent context.Context, config *Config, runners hardwareComponentRunners) []ComponentReport {
@@ -440,6 +464,7 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 	}
 	hardwareCtx, cancel := hardwareStageContext(parent, config.HardwareBudget)
 	defer cancel()
+	runners = withDeepHardwareRunnerDefaults(runners)
 	reports := make([]ComponentReport, 0, 3)
 	if config.CpuTestStatus {
 		progressStarted(parent, "cpu")
@@ -517,7 +542,7 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 	}
 	if config.DeepMode {
 		progressStarted(parent, "deep_hardware")
-		deepReports := collectExplicitDeepHardwareReports(hardwareCtx, config)
+		deepReports := collectExplicitDeepHardwareReportsWithRunners(hardwareCtx, config, runners)
 		reports = append(reports, deepReports...)
 		deepStatus, deepReason := aggregateComponentSectionStatus(deepReports)
 		progressCompleted(parent, "deep_hardware", deepStatus, deepReason)
@@ -526,7 +551,7 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 }
 
 func hasExplicitDeepHardware(config *Config) bool {
-	return config != nil && config.DeepMode && (strings.TrimSpace(config.DeepDiskPaths) != "" ||
+	return config != nil && config.DeepMode && (config.DiskMultiCheck || strings.TrimSpace(config.DeepDiskPaths) != "" ||
 		strings.TrimSpace(config.DeepSMARTDevices) != "" || config.DeepBurnDuration > 0 || strings.TrimSpace(config.DeepGPUDevice) != "")
 }
 
@@ -543,22 +568,27 @@ type smartSelfTestPayload struct {
 }
 
 func collectExplicitDeepHardwareReports(ctx context.Context, config *Config) []ComponentReport {
+	return collectExplicitDeepHardwareReportsWithRunners(ctx, config, defaultHardwareComponentRunners())
+}
+
+func collectExplicitDeepHardwareReportsWithRunners(ctx context.Context, config *Config, runners hardwareComponentRunners) []ComponentReport {
 	if config == nil || !config.DeepMode {
 		return nil
 	}
+	runners = withDeepHardwareRunnerDefaults(runners)
 	result := make([]ComponentReport, 0, 4)
 
 	started := time.Now()
 	paths := splitExplicitTargets(config.DeepDiskPaths)
 	if len(paths) == 0 && config.DiskMultiCheck {
-		if discovered, err := disk.DiscoverTestPaths(); err == nil {
+		if discovered, err := runners.DiscoverDiskPaths(); err == nil {
 			paths = discovered.MountPoints
 		}
 	}
 	if len(paths) == 0 {
 		result = append(result, skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started))
 	} else {
-		matrix := disk.RunDeepMultiPathMatrix(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, Runtime: 2 * time.Second, MaxDuration: min(3*time.Minute, config.HardwareBudget)})
+		matrix := runners.DeepMultiDisk(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, Runtime: 2 * time.Second, MaxDuration: min(3*time.Minute, config.HardwareBudget)})
 		result = append(result, hardwareComponentPayload(ctx, "disktest.deep_multi", matrix.SchemaVersion, matrix.Status, started, matrix, nil))
 	}
 
@@ -580,7 +610,7 @@ func collectExplicitDeepHardwareReports(ctx context.Context, config *Config) []C
 
 	started = time.Now()
 	if !config.CpuTestStatus && config.DeepBurnDuration > 0 {
-		burn := cpu.RunBurn(ctx, cpu.BurnConfig{Threads: runtime.NumCPU(), Duration: config.DeepBurnDuration, MaxPrime: 50000})
+		burn := runners.Burn(ctx, cpu.BurnConfig{Threads: runtime.NumCPU(), Duration: config.DeepBurnDuration, MaxPrime: 50000})
 		result = append(result, hardwareComponentPayload(ctx, "cputest.burn", burn.SchemaVersion, burn.Status, started, burn, nil))
 	}
 
@@ -1196,6 +1226,44 @@ type privateSpeedBenchmark struct {
 
 type privateSpeedRunner func(context.Context, int) (any, int, []privateSpeedBenchmark)
 
+func privateSpeedRunnerForConfig(language string, offline bool) privateSpeedRunner {
+	if language == "en" {
+		if offline {
+			return runEmbeddedInternationalPrivateSpeedBenchmarks
+		}
+		return runInternationalPrivateSpeedBenchmarks
+	}
+	if offline {
+		return runEmbeddedPrivateSpeedBenchmarks
+	}
+	return runPrivateSpeedBenchmarks
+}
+
+func isMainlandChinaCountry(country string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(country))
+	normalized = strings.Join(strings.Fields(strings.NewReplacer(".", "", "_", " ", "-", " ").Replace(normalized)), " ")
+	switch normalized {
+	case "cn", "china", "mainland china", "china mainland", "prc", "people's republic of china", "peoples republic of china", "people s republic of china", "中国", "中国大陆", "中华人民共和国":
+		return true
+	default:
+		return strings.Contains(normalized, "mainland china")
+	}
+}
+
+func internationalSpeedServers(servers []speedmodel.ServerMetadata) []speedmodel.ServerMetadata {
+	return speedmodel.FilterServersForLanguage(servers, "en")
+}
+
+func internationalTransferTargets(targets []transferTargetInput) []transferTargetInput {
+	result := make([]transferTargetInput, 0, len(targets))
+	for _, target := range targets {
+		if strings.TrimSpace(target.Country) != "" && !isMainlandChinaCountry(target.Country) {
+			result = append(result, target)
+		}
+	}
+	return result
+}
+
 func collectSpeedComponentFromRegistry(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, offline bool) ComponentReport {
 	privateRunner := runPrivateSpeedBenchmarks
 	if offline {
@@ -1205,6 +1273,19 @@ func collectSpeedComponentFromRegistry(ctx context.Context, servers []speedmodel
 }
 
 func collectSpeedComponentFromRegistryWithDependencies(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
+	return collectSpeedComponentFromRegistryWithSelection(ctx, servers, transfers, limit, dial, throughput, privateRunner, false)
+}
+
+func collectSpeedComponentFromRegistryForLanguageWithDependencies(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, language string, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
+	international := strings.EqualFold(strings.TrimSpace(language), "en")
+	if international {
+		servers = internationalSpeedServers(servers)
+		transfers = internationalTransferTargets(transfers)
+	}
+	return collectSpeedComponentFromRegistryWithSelection(ctx, servers, transfers, limit, dial, throughput, privateRunner, international)
+}
+
+func collectSpeedComponentFromRegistryWithSelection(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, representative bool) ComponentReport {
 	started := time.Now()
 	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(servers))}
 	for _, server := range servers {
@@ -1236,7 +1317,7 @@ func collectSpeedComponentFromRegistryWithDependencies(ctx context.Context, serv
 			Availability: availability,
 		})
 	}
-	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, started)
+	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, representative, started)
 }
 
 func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData, openData []byte, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
@@ -1277,10 +1358,10 @@ func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData
 			payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: host, Port: port, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "candidate", URL: input.URL})
 		}
 	}
-	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, started)
+	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, false, started)
 }
 
-func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentPayload, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, started time.Time) ComponentReport {
+func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentPayload, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, representative bool, started time.Time) ComponentReport {
 	probeSpeedNodes(ctx, payload.Nodes, dial)
 	available := make([]speedNodeResult, 0, len(payload.Nodes))
 	for _, node := range payload.Nodes {
@@ -1297,7 +1378,9 @@ func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentP
 	if limit <= 0 {
 		limit = 2
 	}
-	if len(available) > limit {
+	if representative {
+		available = selectRepresentativeSpeedNodes(available, limit)
+	} else if len(available) > limit {
 		available = available[:limit]
 	}
 	payload.Selected = append(payload.Selected, available...)
@@ -1345,6 +1428,31 @@ func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentP
 		report.Reason = fmt.Sprintf("%d/%d selected nodes completed throughput", completed, totalSelected)
 	}
 	return report
+}
+
+func selectRepresentativeSpeedNodes(nodes []speedNodeResult, limit int) []speedNodeResult {
+	servers := make([]speedmodel.ServerMetadata, 0, len(nodes))
+	for _, node := range nodes {
+		servers = append(servers, speedmodel.ServerMetadata{
+			ID: node.ID, Name: node.City, Host: node.Host, URL: node.URL,
+			Provider: node.Provider, Country: node.Country, City: node.City,
+			Availability: speedmodel.ServerAvailable, LatencyMS: node.LatencyMS,
+		})
+	}
+	selected, err := speedmodel.SelectRepresentativeServers(servers, limit)
+	if err != nil {
+		return nil
+	}
+	result := make([]speedNodeResult, 0, len(selected))
+	for _, server := range selected {
+		for _, node := range nodes {
+			if node.ID == server.ID && node.Host == server.Host && node.URL == server.URL {
+				result = append(result, node)
+				break
+			}
+		}
+	}
+	return result
 }
 
 func speedContextStatus(err error) string {

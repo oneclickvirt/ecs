@@ -299,6 +299,19 @@ func TestSectionReportsUsesComponentStatus(t *testing.T) {
 	t.Fatal("CPU section missing")
 }
 
+func TestValidatedStructuredConfigNormalizesWithoutMutatingCaller(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.Language = "EN"
+	cfg.PingScope = "CHINA"
+	normalized := validatedStructuredConfig(cfg)
+	if normalized == cfg || normalized.Language != "en" || normalized.PingScope != "international" {
+		t.Fatalf("structured config was not independently normalized: original=%+v normalized=%+v", cfg, normalized)
+	}
+	if cfg.Language != "EN" || cfg.PingScope != "CHINA" {
+		t.Fatalf("structured normalization mutated caller config: %+v", cfg)
+	}
+}
+
 func TestSectionReportsUsesSuccessfulStructuredComponent(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.BasicStatus = false

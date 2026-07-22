@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -713,6 +714,186 @@ func TestExplicitDeepHardwareCanRunWithoutStandardHardwareFlags(t *testing.T) {
 	}
 	if reports[2].Name != "cputest.burn" || reports[2].Status != ReportStatusOK {
 		t.Fatalf("explicit burn did not run: %+v", reports[2])
+	}
+}
+
+func TestDeepMultiDiskAutoDiscoveryRunsWithoutStandardHardware(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.DeepMode = true
+	cfg.DiskMultiCheck = true
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = false
+	cfg.HardwareBudget = time.Minute
+
+	discoveredCalls, matrixCalls := 0, 0
+	var gotPaths []string
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		DiscoverDiskPaths: func() (disk.TestPathInfo, error) {
+			discoveredCalls++
+			return disk.TestPathInfo{MountPoints: []string{"/mnt/fixture-a", "/mnt/fixture-b"}}, nil
+		},
+		DeepMultiDisk: func(_ context.Context, paths []string, _ disk.MatrixConfig) disk.MultiPathResult {
+			matrixCalls++
+			gotPaths = append([]string(nil), paths...)
+			return disk.MultiPathResult{SchemaVersion: "goecs.disk/deep-multi-v1", Status: "ok"}
+		},
+	})
+
+	if discoveredCalls != 1 || matrixCalls != 1 || len(gotPaths) != 2 {
+		t.Fatalf("automatic multi-disk discovery was not used once: discover=%d matrix=%d paths=%v", discoveredCalls, matrixCalls, gotPaths)
+	}
+	if len(reports) != 3 || reports[0].Name != "disktest.deep_multi" || reports[0].Status != ReportStatusOK {
+		t.Fatalf("unexpected deep-only reports: %+v", reports)
+	}
+}
+
+func TestDeepCPUUsesStructuredRunnerOnceAndDoesNotRepeatBurn(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.DeepMode = true
+	cfg.DeepBurnDuration = 20 * time.Second
+	cfg.CpuTestStatus = true
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = false
+	cfg.HardwareBudget = time.Minute
+
+	structuredCalls, burnCalls := 0, 0
+	var gotConfig cpu.StructuredConfig
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		CPU: func(_ context.Context, config cpu.StructuredConfig) cpu.StructuredResult {
+			structuredCalls++
+			gotConfig = config
+			return cpu.StructuredResult{SchemaVersion: "goecs.cpu/v1", Status: "ok"}
+		},
+		Burn: func(context.Context, cpu.BurnConfig) cpu.BurnResult {
+			burnCalls++
+			return cpu.BurnResult{SchemaVersion: "goecs.cpu/burn-v1", Status: "ok"}
+		},
+	})
+
+	if structuredCalls != 1 || burnCalls != 0 || gotConfig.Duration != 20*time.Second {
+		t.Fatalf("deep CPU execution mismatch: structured=%d burn=%d config=%+v", structuredCalls, burnCalls, gotConfig)
+	}
+	for _, report := range reports {
+		if report.Name == "cputest.burn" {
+			t.Fatalf("CPU burn was emitted as a second component: %+v", reports)
+		}
+	}
+}
+
+func TestInternationalSpeedFiltersExcludeOnlyMainlandChina(t *testing.T) {
+	servers := []speedmodel.ServerMetadata{
+		{ID: "cn", Country: "CN"}, {ID: "china", Country: "Mainland China"},
+		{ID: "hk", Country: "Hong Kong"}, {ID: "jp", Country: "JP"}, {ID: "unknown"},
+	}
+	transfers := []transferTargetInput{
+		{ID: "prc", Country: "People's Republic of China"}, {ID: "us", Country: "US"}, {ID: "hk", Country: "Hong Kong"},
+	}
+	filteredServers := internationalSpeedServers(servers)
+	filteredTransfers := internationalTransferTargets(transfers)
+	if len(servers) != 5 || len(filteredServers) != 2 || filteredServers[0].ID != "hk" || filteredServers[1].ID != "jp" {
+		t.Fatalf("unexpected international speed servers: %+v", filteredServers)
+	}
+	if len(transfers) != 3 || len(filteredTransfers) != 2 || filteredTransfers[0].ID != "us" || filteredTransfers[1].ID != "hk" {
+		t.Fatalf("unexpected international transfer targets: %+v", filteredTransfers)
+	}
+}
+
+func TestInternationalPrivateRegistryDoesNotMutateLoadedSnapshot(t *testing.T) {
+	loaded := privatepst.RegistryLoadResult{List: &privatepst.ServerList{TotalServers: 4, Servers: []privatepst.ServerConfig{
+		{ID: "cn", Country: "China"}, {ID: "unknown"}, {ID: "hk", Country: "Hong Kong"}, {ID: "de", Country: "DE"},
+	}}}
+	filtered := filterInternationalPrivateRegistry(loaded)
+	if len(loaded.List.Servers) != 4 {
+		t.Fatalf("source registry was mutated: %+v", loaded.List.Servers)
+	}
+	if filtered.List.TotalServers != 2 || len(filtered.List.Servers) != 2 || filtered.List.Servers[0].ID != "hk" || filtered.List.Servers[1].ID != "de" {
+		t.Fatalf("unexpected filtered private registry: %+v", filtered.List)
+	}
+}
+
+func TestEnglishStructuredSpeedFiltersBeforeProbe(t *testing.T) {
+	servers := []speedmodel.ServerMetadata{
+		{ID: "cn", Host: "cn.test:80", URL: "https://cn.test/upload", Country: "CN", Availability: speedmodel.ServerCandidate},
+		{ID: "unknown", Host: "unknown.test:80", URL: "https://unknown.test/upload", Availability: speedmodel.ServerCandidate},
+		{ID: "jp", Host: "jp.test:80", URL: "https://jp.test/upload", Country: "JP", Availability: speedmodel.ServerCandidate},
+		{ID: "hk", Host: "hk.test:80", URL: "https://hk.test/upload", Country: "Hong Kong", Availability: speedmodel.ServerCandidate},
+	}
+	transfers := []transferTargetInput{
+		{ID: "transfer-cn", Host: "transfer-cn.test", PortFrom: 5201, Country: "China"},
+		{ID: "transfer-unknown", Host: "transfer-unknown.test", PortFrom: 5201},
+		{ID: "transfer-us", Host: "transfer-us.test", PortFrom: 5201, Country: "US"},
+	}
+	probed := make([]string, 0)
+	var probedMu sync.Mutex
+	report := collectSpeedComponentFromRegistryForLanguageWithDependencies(context.Background(), servers, transfers, "en", 2,
+		func(_ context.Context, _, address string) (net.Conn, error) {
+			probedMu.Lock()
+			probed = append(probed, address)
+			probedMu.Unlock()
+			client, server := net.Pipe()
+			go server.Close()
+			return client, nil
+		}, func(_ context.Context, server speedmodel.ServerMetadata) speedmodel.ThroughputResult {
+			return speedmodel.ThroughputResult{ID: server.ID, Status: speedmodel.ThroughputAvailable, DownloadMbps: 100}
+		}, nil)
+	var payload speedComponentPayload
+	if err := json.Unmarshal(report.Payload, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if len(payload.Nodes) != 3 || len(payload.Selected) != 2 {
+		t.Fatalf("unexpected English speed payload: %+v", payload)
+	}
+	for _, address := range probed {
+		if strings.Contains(address, "cn.test") || strings.Contains(address, "unknown.test") {
+			t.Fatalf("excluded target was probed: %q in %v", address, probed)
+		}
+	}
+}
+
+func TestRepresentativeSpeedSelectionSpreadsRegions(t *testing.T) {
+	nodes := []speedNodeResult{
+		{ID: "jp", Host: "jp.test:80", URL: "https://jp.test/upload", Country: "JP", Availability: "available", LatencyMS: 5},
+		{ID: "sg", Host: "sg.test:80", URL: "https://sg.test/upload", Country: "SG", Availability: "available", LatencyMS: 6},
+		{ID: "de", Host: "de.test:80", URL: "https://de.test/upload", Country: "DE", Availability: "available", LatencyMS: 100},
+	}
+	selected := selectRepresentativeSpeedNodes(nodes, 2)
+	if len(nodes) != 3 || len(selected) != 2 || selected[0].ID != "jp" || selected[1].ID != "de" {
+		t.Fatalf("unexpected representative selection: %+v", selected)
+	}
+}
+
+func TestStructuredPingTargetsAndOrdering(t *testing.T) {
+	routes := []nt3model.ProvinceRoute{{
+		Code: "BJ", Name: "Beijing", Province: 1, Short: "BJ",
+		Targets: []nt3model.ProvinceCarrierTarget{{Carrier: "ct", IPv4: "192.0.2.10"}},
+	}}
+	cfg := NewDefaultConfig()
+	cfg.Language = "zh"
+	cfg.PingScope = "auto"
+	chinaTargets := structuredPingTargets(cfg, routes)
+	if len(chinaTargets) != 1 || chinaTargets[0].Host != "192.0.2.10" {
+		t.Fatalf("Chinese automatic targets did not use province registry: %+v", chinaTargets)
+	}
+	cfg.Language = "en"
+	cfg.PingScope = "china"
+	internationalTargets := structuredPingTargets(cfg, routes)
+	if len(internationalTargets) == 0 || internationalTargets[0].Host == "192.0.2.10" {
+		t.Fatalf("English targets did not force international scope: %+v", internationalTargets)
+	}
+
+	results := []pingprobe.ICMPResult{
+		{Target: pingprobe.ICMPTarget{Name: "Zulu"}, Received: 1, Mean: 5 * time.Millisecond},
+		{Target: pingprobe.ICMPTarget{Name: "Alpha"}, Received: 1, Mean: 20 * time.Millisecond},
+		{Target: pingprobe.ICMPTarget{Name: "Offline"}, Received: 0},
+	}
+	sortICMPResults(results, "name")
+	if results[0].Target.Name != "Alpha" || results[2].Target.Name != "Zulu" {
+		t.Fatalf("name ordering was not applied: %+v", results)
+	}
+	sortICMPResults(results, "latency")
+	if results[0].Target.Name != "Zulu" || results[1].Target.Name != "Alpha" || results[2].Target.Name != "Offline" {
+		t.Fatalf("latency ordering was not applied: %+v", results)
 	}
 }
 

@@ -23,6 +23,13 @@ func NewDefaultConfig() *Config {
 // ConfigOption 配置选项函数类型
 type ConfigOption func(*Config)
 
+// WithFullTestPreset applies the same complete profile as menu option 1.
+func WithFullTestPreset(connected bool) ConfigOption {
+	return func(c *Config) {
+		c.ApplyFullTestPreset(connected)
+	}
+}
+
 // WithLanguage 设置语言
 func WithLanguage(lang string) ConfigOption {
 	return func(c *Config) {

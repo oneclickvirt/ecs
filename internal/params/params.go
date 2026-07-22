@@ -137,6 +137,39 @@ func NewConfig(version string) *Config {
 	}
 }
 
+// ApplyFullTestPreset configures the complete menu profile for CLI, API, and
+// interactive callers. Explicit CLI flags can still be restored afterwards.
+func (c *Config) ApplyFullTestPreset(connected bool) {
+	if c == nil {
+		return
+	}
+	c.Choice = "1"
+	c.OnlyChinaTest = false
+	c.OnlyIpInfoCheck = false
+	c.BasicStatus = true
+	c.CpuTestStatus = true
+	c.MemoryTestStatus = true
+	c.DiskTestStatus = true
+	c.DiskMultiCheck = true
+	c.DeepMode = true
+	c.DeepBurnDuration = 20 * time.Second
+	c.TCPProbeStatus = true
+	c.TCPTextFormat = "compact"
+	c.PingTestStatus = true
+	c.PingSortOrder = "latency"
+	c.PingScope = "auto"
+	c.TCPSortOrder = "name"
+	c.UnlockTestShowIP = true
+	c.UtTestStatus = connected
+	c.SecurityTestStatus = connected
+	c.EmailTestStatus = connected
+	c.BacktraceStatus = connected
+	c.Nt3Status = connected
+	c.SpeedTestStatus = connected
+	c.TgdcTestStatus = connected
+	c.WebTestStatus = connected
+}
+
 // normalizeBoolArgs preprocesses args so that bool flags written as
 // "-flag true" or "-flag false" (space-separated) are converted to
 // "-flag=true" / "-flag=false" that the standard flag package understands.

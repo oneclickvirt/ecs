@@ -187,6 +187,8 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 			advanced[index].current = optionIndexByValue(advanced[index].options, "full")
 		case "pingsort":
 			advanced[index].current = optionIndexByValue(advanced[index].options, "name")
+		case "pingscope":
+			advanced[index].current = optionIndexByValue(advanced[index].options, "international")
 		case "tcpsort":
 			advanced[index].current = optionIndexByValue(advanced[index].options, "latency")
 		}
@@ -208,8 +210,24 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 	if cfg.TCPTextFormat != "full" {
 		t.Fatalf("TCP text format was not applied: %q", cfg.TCPTextFormat)
 	}
-	if cfg.PingSortOrder != "name" || cfg.TCPSortOrder != "latency" {
-		t.Fatalf("network ordering settings were not applied: ping=%q tcp=%q", cfg.PingSortOrder, cfg.TCPSortOrder)
+	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" {
+		t.Fatalf("network ordering settings were not applied: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
+	}
+}
+
+func TestEnglishCustomPingScopeCannotSelectMainlandChina(t *testing.T) {
+	cfg := params.NewConfig("test")
+	cfg.Language = "en"
+	advanced := defaultAdvSettings(cfg)
+	for index := range advanced {
+		if advanced[index].key == "pingscope" {
+			advanced[index].current = optionIndexByValue(advanced[index].options, "china")
+		}
+	}
+	applyCustomResult(tuiResult{toggles: defaultTestToggles(), advanced: advanced}, utils.NetCheckResult{Connected: true}, cfg)
+	cfg.ValidateParams()
+	if cfg.PingScope != "international" {
+		t.Fatalf("English custom Ping scope = %q, want international", cfg.PingScope)
 	}
 }
 

@@ -38,3 +38,11 @@ func runPrivateSpeedBenchmarks(context.Context, int) (any, int, []privateSpeedBe
 func runEmbeddedPrivateSpeedBenchmarks(context.Context, int) (any, int, []privateSpeedBenchmark) {
 	return nil, 0, nil
 }
+
+func runInternationalPrivateSpeedBenchmarks(context.Context, int) (any, int, []privateSpeedBenchmark) {
+	return nil, 0, nil
+}
+
+func runEmbeddedInternationalPrivateSpeedBenchmarks(context.Context, int) (any, int, []privateSpeedBenchmark) {
+	return nil, 0, nil
+}

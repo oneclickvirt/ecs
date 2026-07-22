@@ -1,6 +1,9 @@
 package api
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestApplyOptionsValidatesConfig(t *testing.T) {
 	cfg := NewDefaultConfig()
@@ -40,5 +43,17 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 func TestApplyOptionsAllowsNilConfig(t *testing.T) {
 	if ApplyOptions(nil, WithLanguage("en")) != nil {
 		t.Fatalf("nil config should stay nil")
+	}
+}
+
+func TestWithFullTestPresetUsesMenuContract(t *testing.T) {
+	cfg := NewDefaultConfig()
+	ApplyOptions(cfg, WithFullTestPreset(true))
+
+	if cfg.Choice != "1" || !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second {
+		t.Fatalf("API full preset did not enable deep hardware defaults: %+v", cfg)
+	}
+	if !cfg.PingTestStatus || !cfg.TCPProbeStatus || !cfg.UnlockTestShowIP || !cfg.SpeedTestStatus {
+		t.Fatalf("API full preset did not enable network enhancements: %+v", cfg)
 	}
 }

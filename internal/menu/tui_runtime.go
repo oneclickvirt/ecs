@@ -330,6 +330,8 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.TCPTextFormat = a.options[a.current].value
 		case "pingsort":
 			config.PingSortOrder = a.options[a.current].value
+		case "pingscope":
+			config.PingScope = a.options[a.current].value
 		case "tcpsort":
 			config.TCPSortOrder = a.options[a.current].value
 		case "jsonpath":

@@ -47,6 +47,13 @@ def modify_go_mod(filepath):
     print(f"✓ Removed privatespeedtest/security from {filepath}")
 
 
+def remove_vendor_tree(path='vendor'):
+    """Remove the private-module vendor snapshot from the public branch."""
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+        print(f"✓ Removed {path}/ from public branch")
+
+
 def remove_code_block(lines, start_marker, end_condition='empty_line'):
     """
     Remove code block from lines starting with start_marker.
@@ -290,6 +297,7 @@ def main():
     # Modify go.mod
     print("Modifying go.mod...")
     modify_go_mod('go.mod')
+    remove_vendor_tree()
     print()
         
     print("✓ All modifications completed successfully!")

@@ -283,10 +283,12 @@ func (renderer *structuredTextRenderer) component(component ComponentReport) {
 }
 
 func (renderer *structuredTextRenderer) componentState(component ComponentReport) {
-	if component.Status != ReportStatusOK && component.Status != ReportStatusSkipped {
+	showState := component.Status != ReportStatusOK && component.Status != ReportStatusSkipped &&
+		(component.Status != ReportStatusPartial || len(component.Payload) == 0)
+	if showState {
 		renderer.row(renderer.pick("状态", "Status"), renderer.status(component.Status))
 	}
-	if component.Reason != "" && component.Status != ReportStatusSkipped {
+	if component.Reason != "" && showState {
 		renderer.row(renderer.pick("说明", "Reason"), component.Reason)
 	}
 }
@@ -706,7 +708,7 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 	renderer.compactColumns([]string{"Min/Avg/P50/P95/Max; D/R/T/O", "Min/Avg/P50/P95/Max; D/R/T/O"}, cellWidth)
 	for index := 0; index < len(reports); index += 2 {
 		left := structuredTCPReportLines(reports[index], renderer.zh)
-		right := []string{"", "", ""}
+		right := []string{"", ""}
 		if index+1 < len(reports) {
 			right = structuredTCPReportLines(reports[index+1], renderer.zh)
 		}
@@ -717,14 +719,14 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 }
 
 func structuredTCPReportLines(report TCPReport, zh bool) []string {
-	categoryLabel := "Category"
-	if zh {
-		categoryLabel = "类别"
+	_ = zh
+	name := fallback(report.Target.Name, report.Target.ID)
+	if strings.TrimSpace(report.Target.Category) != "" {
+		name += "/" + strings.TrimSpace(report.Target.Category)
 	}
 	return []string{
-		fmt.Sprintf("%s | %d/%d | %.1f%%", fallback(report.Target.Name, report.Target.ID), report.Successful, report.Attempts, structuredTCPLoss(report)),
+		fmt.Sprintf("%s | %d/%d | %.1f%%", name, report.Successful, report.Attempts, structuredTCPLoss(report)),
 		fmt.Sprintf("%s; %s", formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors)),
-		joinNonEmpty(categoryLabel, fallback(report.Target.Category, "-")),
 	}
 }
 

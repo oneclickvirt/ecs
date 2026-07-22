@@ -292,6 +292,16 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			},
 		},
 		{
+			key: "pingscope", nameZh: "Ping目标范围", nameEn: "Ping Target Scope", kind: "option",
+			descZh: "自动按语言选择，或显式选择中国大陆/国际目标。英文模式始终排除中国大陆目标。",
+			descEn: "Choose targets automatically or select mainland China/international targets. English mode always excludes mainland China.",
+			options: []advOption{
+				option("auto", "自动", "Auto", "中文使用中国大陆目标，英文使用国际目标。", "Use mainland China targets in Chinese and international targets in English."),
+				option("china", "中国大陆", "Mainland China", "使用中国大陆目标。", "Use mainland China targets."),
+				option("international", "国际", "International", "使用国际目标。", "Use international targets."),
+			},
+		},
+		{
 			key: "tcpsort", nameZh: "TCP排序", nameEn: "TCP Order", kind: "option",
 			descZh: "默认按平台名称，亦可按异常和延迟排序。", descEn: "Default to platform name; latency mode prioritizes failures and slower targets.",
 			options: []advOption{
@@ -327,6 +337,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, config.TCPTextFormat)
 		case "pingsort":
 			adv[i].current = optionIndexByValue(adv[i].options, config.PingSortOrder)
+		case "pingscope":
+			adv[i].current = optionIndexByValue(adv[i].options, config.PingScope)
 		case "tcpsort":
 			adv[i].current = optionIndexByValue(adv[i].options, config.TCPSortOrder)
 		}

@@ -124,6 +124,29 @@ func TestNetworkSortAndEnglishPingScopeFlags(t *testing.T) {
 	}
 }
 
+func TestApplyFullTestPresetIsCompleteAndConnectivityAware(t *testing.T) {
+	cfg := NewConfig("test")
+	cfg.ApplyFullTestPreset(false)
+
+	if cfg.Choice != "1" || !cfg.BasicStatus || !cfg.CpuTestStatus || !cfg.MemoryTestStatus || !cfg.DiskTestStatus {
+		t.Fatalf("full preset did not enable core tests: %+v", cfg)
+	}
+	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || !cfg.PingTestStatus || !cfg.UnlockTestShowIP {
+		t.Fatalf("full preset did not enable enhanced tests: %+v", cfg)
+	}
+	if cfg.UtTestStatus || cfg.SecurityTestStatus || cfg.EmailTestStatus || cfg.BacktraceStatus || cfg.Nt3Status || cfg.SpeedTestStatus || cfg.TgdcTestStatus || cfg.WebTestStatus {
+		t.Fatalf("disconnected full preset retained runnable network components: %+v", cfg)
+	}
+	if cfg.TCPTextFormat != "compact" || cfg.PingSortOrder != "latency" || cfg.PingScope != "auto" || cfg.TCPSortOrder != "name" {
+		t.Fatalf("full preset did not restore stable network defaults: %+v", cfg)
+	}
+
+	cfg.ApplyFullTestPreset(true)
+	if !cfg.UtTestStatus || !cfg.SecurityTestStatus || !cfg.EmailTestStatus || !cfg.BacktraceStatus || !cfg.Nt3Status || !cfg.SpeedTestStatus || !cfg.TgdcTestStatus || !cfg.WebTestStatus {
+		t.Fatalf("connected full preset did not enable all network components: %+v", cfg)
+	}
+}
+
 func TestValidateParamsCapsStandardHardwareBudget(t *testing.T) {
 	cfg := NewConfig("test")
 	cfg.MaxDuration = 15 * time.Minute
