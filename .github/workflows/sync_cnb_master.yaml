@@ -28,8 +28,8 @@ jobs:
 
       - name: Push source to CNB master
         env:
-          CNB_USERNAME: ${{ secrets.CNB_PUSH_USERNAME }}
-          CNB_TOKEN: ${{ secrets.CNB_PUSH_TOKEN }}
+          CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
         run: |
           set -euo pipefail
           trap 'rm -f "$HOME/.netrc"' EXIT
