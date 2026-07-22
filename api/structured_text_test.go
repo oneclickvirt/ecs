@@ -138,16 +138,16 @@ func TestRenderStructuredBasicsShowsCollectedHardwareDetails(t *testing.T) {
 		"network":{"congestion_control":"bbr","default_qdisc":"fq","tcp_rmem":[4096,131072,6291456],"tcp_wmem":[4096,16384,4194304]},
 		"firmware":{"board_vendor":"Vendor","board_name":"Board","bios_vendor":"BIOS","bios_version":"1.0"},
 		"pci":{"devices":[{}]},"gpus":[{}],
-		"memory_topology":{"nodes":[{}],"dimms":[{},{}],"hugepages_total":16,"hugepages_free":8},
+			"memory_topology":{"nodes":[{}],"dimms":[{},{}],"hugepages_total":16,"hugepages_free":8,"hugepage_bytes":2097152},
 		"raid":{"arrays":[{}]},"disks":[]
 	}`)}, nil)
 	for _, want := range []string{
 		"CPU频率", "2400 MHz", "CPU物理核心", "CPU逻辑线程",
 		"内存总量", "1.00 GiB", "可用内存", "512.00 MiB", "虚拟化类型", "kvm",
-		"TCP加速方式", "bbr", "TCP队列规则", "fq", "TCP接收缓冲", "TCP发送缓冲",
+		"TCP加速/队列", "bbr / fq", "TCP接收缓冲", "TCP发送缓冲",
 		"Cgroup内存使用", "256.00 MiB", "Cgroup内存上限", "512.00 MiB",
 		"主板厂商", "主板型号", "BIOS厂商", "BIOS版本", "PCI设备数量", "GPU设备数量",
-		"NUMA节点数量", "DIMM数量", "HugePages总数", "HugePages空闲", "RAID阵列数量",
+		"NUMA/DIMM", "1 / 2", "HugePages", "总数 16 / 空闲 8 / 大小 2.00 MiB", "RAID阵列数量",
 	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("structured basics missing %q:\n%s", want, text)
@@ -158,7 +158,7 @@ func TestRenderStructuredBasicsShowsCollectedHardwareDetails(t *testing.T) {
 			t.Fatalf("structured basics retained compound or duplicate field %q:\n%s", forbidden, text)
 		}
 	}
-	labels := []string{"TCP加速方式", "TCP队列规则", "TCP接收缓冲", "TCP发送缓冲"}
+	labels := []string{"TCP加速/队列", "TCP接收缓冲", "TCP发送缓冲"}
 	last := -1
 	for _, label := range labels {
 		index := strings.Index(text, label)
@@ -169,14 +169,14 @@ func TestRenderStructuredBasicsShowsCollectedHardwareDetails(t *testing.T) {
 	}
 }
 
-func TestRenderStructuredBasicsSplitsPhysicalDiskProperties(t *testing.T) {
+func TestRenderStructuredBasicsCombinesPhysicalDiskHealthProperties(t *testing.T) {
 	config := NewConfig("v-test")
 	config.Width = 100
 	text := renderStructuredRunText(config, nil, []ComponentReport{componentFixture(t, "basics", ReportStatusOK, `{
 		"disks":[{"name":"vda","vendor":"Fixture","model":"Disk","size_bytes":10737418240,
 			"health":{"protocol":"ata","status":"passed"},"temperature":{"celsius":42}}]
 	}`)}, nil)
-	labels := []string{"物理盘 1 型号", "物理盘 1 容量", "物理盘 1 协议", "物理盘 1 健康", "物理盘 1 温度"}
+	labels := []string{"物理盘 1 型号", "物理盘 1 容量"}
 	last := -1
 	for _, label := range labels {
 		index := strings.Index(text, label)
@@ -184,6 +184,9 @@ func TestRenderStructuredBasicsSplitsPhysicalDiskProperties(t *testing.T) {
 			t.Fatalf("disk properties are missing or out of order: %v\n%s", labels, text)
 		}
 		last = index
+	}
+	if !strings.Contains(text, "协议 ata / 健康 passed / 温度 42.0 C") {
+		t.Fatalf("disk protocol, health, and temperature were not combined:\n%s", text)
 	}
 	if strings.Contains(text, "磁盘  型号") || strings.Contains(text, "Disk  Model") {
 		t.Fatalf("structured basics retained the composite disk table:\n%s", text)
@@ -198,13 +201,15 @@ func TestRenderStructuredTCPKeepsCompleteMetricsOnOneLine(t *testing.T) {
 		MinMS: 1, MeanMS: 2, P50MS: 2, P95MS: 2.9, MaxMS: 3,
 		Errors: map[string]int{"timeout": 1},
 	}})
-	for _, want := range []string{"目标:1", "握手:2/3", "失败:1", "超:1", "Min/Avg/P50/P95/Max; D/R/T/O", "1.0/2.0/2.0/2.9/3.0 ms; 0/0/1/0"} {
+	for _, want := range []string{"目标:1", "握手:2/3", "失败:1", "超:1", "Min", "Avg", "P50", "P95", "Max", "D", "R", "T", "O", "1.0", "2.9", "3.0"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("compact TCP output missing %q:\n%s", want, text)
 		}
 	}
-	if strings.Count(text, "Min/Avg/P50/P95/Max; D/R/T/O") != 1 {
-		t.Fatalf("TCP output did not keep one four-column header:\n%s", text)
+	for _, forbidden := range []string{"Min/Avg", "D/R/T/O", ";"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("TCP output retained packed separator %q:\n%s", forbidden, text)
+		}
 	}
 	for _, line := range strings.Split(text, "\n") {
 		if runewidth.StringWidth(line) > config.Width {
@@ -233,9 +238,14 @@ func TestRenderStructuredTCPKeepsSlowMetricsAndCountersComplete(t *testing.T) {
 		Target: TCPTarget{Name: "ProtonMail"}, Attempts: 3, Successful: 3,
 		MinMS: 237.1, MeanMS: 251.1, P50MS: 245.8, P95MS: 268, MaxMS: 270.5,
 	}})
-	for _, want := range []string{"237/251/246/268/271ms", "0/0/0/0"} {
+	for _, want := range []string{"237", "251", "246", "268", "271", "ProtonMail"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("slow structured TCP output missing %q:\n%s", want, text)
+		}
+	}
+	for _, forbidden := range []string{"Min/Avg", "D/R/T/O", ";", "/251"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("slow structured TCP output retained packed separator %q:\n%s", forbidden, text)
 		}
 	}
 	if !strings.Contains(text, "失败:0") || strings.Contains(text, "DNS:") || strings.Contains(text, "拒:") || strings.Contains(text, "超:") || strings.Contains(text, "其:") {

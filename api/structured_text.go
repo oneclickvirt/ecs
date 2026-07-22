@@ -352,11 +352,7 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	renderer.basicRow(renderer.pick("虚拟化类型", "Virtualization Type"), stringValue(virtualization, "type"))
 	renderer.basicRow(renderer.pick("容器运行时", "Container Runtime"), stringValue(virtualization, "container_runtime"))
 
-	// Keep the four TCP tuning rows adjacent, matching the standalone basics
-	// component. Each row carries one setting so scanning does not require
-	// unpacking a compound value.
-	renderer.basicRow(renderer.pick("TCP加速方式", "TCP Acceleration"), stringValue(network, "congestion_control"))
-	renderer.basicRow(renderer.pick("TCP队列规则", "TCP Queue Discipline"), stringValue(network, "default_qdisc"))
+	renderer.basicRow(renderer.pick("TCP加速/队列", "TCP Acceleration/Queue"), joinNonEmpty(stringValue(network, "congestion_control"), stringValue(network, "default_qdisc")))
 	renderer.basicRow(renderer.pick("TCP接收缓冲", "TCP Receive Buffer"), tuningTupleValues(int64ArrayValue(network, "tcp_rmem")))
 	renderer.basicRow(renderer.pick("TCP发送缓冲", "TCP Send Buffer"), tuningTupleValues(int64ArrayValue(network, "tcp_wmem")))
 
@@ -398,18 +394,21 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	renderer.basicRow(renderer.pick("GPU驱动", "GPU Drivers"), structuredDriverList(gpus))
 
 	topology := objectValue(root, "memory_topology")
-	renderer.basicRow(renderer.pick("NUMA节点数量", "NUMA Node Count"), strconv.Itoa(len(arrayValue(topology, "nodes"))))
+	renderer.basicRow("NUMA/DIMM", fmt.Sprintf("%d / %d", len(arrayValue(topology, "nodes")), len(arrayValue(topology, "dimms"))))
 	// DIMM capacity intentionally is not summed here: the memory row already
 	// reports total memory, and virtualized DMI tables commonly repeat it.
-	renderer.basicRow(renderer.pick("DIMM数量", "DIMM Count"), strconv.Itoa(len(arrayValue(topology, "dimms"))))
-	if value := int64Value(topology, "hugepages_total"); value > 0 {
-		renderer.basicRow(renderer.pick("HugePages总数", "HugePages Total"), strconv.FormatInt(value, 10))
+	hugePages := make([]string, 0, 3)
+	if _, exists := topology["hugepages_total"]; exists {
+		hugePages = append(hugePages, renderer.pick("总数 ", "total ")+strconv.FormatInt(int64Value(topology, "hugepages_total"), 10))
 	}
-	if value := int64Value(topology, "hugepages_free"); value > 0 {
-		renderer.basicRow(renderer.pick("HugePages空闲", "HugePages Free"), strconv.FormatInt(value, 10))
+	if _, exists := topology["hugepages_free"]; exists {
+		hugePages = append(hugePages, renderer.pick("空闲 ", "free ")+strconv.FormatInt(int64Value(topology, "hugepages_free"), 10))
 	}
 	if value := int64Value(topology, "hugepage_bytes"); value > 0 {
-		renderer.basicRow(renderer.pick("HugePage大小", "HugePage Size"), formatBytes(value))
+		hugePages = append(hugePages, renderer.pick("大小 ", "size ")+formatBytes(value))
+	}
+	if len(hugePages) > 0 {
+		renderer.basicRow("HugePages", strings.Join(hugePages, " / "))
 	}
 	disks := arrayValue(root, "disks")
 	for index, raw := range disks {
@@ -422,10 +421,18 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 		if value := int64Value(disk, "size_bytes"); value > 0 {
 			renderer.basicRow(renderer.pick(zhPrefix+" 容量", enPrefix+" Size"), formatBytes(value))
 		}
-		renderer.basicRow(renderer.pick(zhPrefix+" 协议", enPrefix+" Protocol"), stringValue(health, "protocol"))
-		renderer.basicRow(renderer.pick(zhPrefix+" 健康", enPrefix+" Health"), fallback(stringValue(health, "status"), stringValue(health, "availability")))
+		details := make([]string, 0, 3)
+		if value := stringValue(health, "protocol"); value != "" {
+			details = append(details, renderer.pick("协议 ", "protocol ")+value)
+		}
+		if value := fallback(stringValue(health, "status"), stringValue(health, "availability")); value != "-" {
+			details = append(details, renderer.pick("健康 ", "health ")+value)
+		}
 		if value := floatValue(temperature, "celsius"); value != 0 {
-			renderer.basicRow(renderer.pick(zhPrefix+" 温度", enPrefix+" Temperature"), formatTemperature(value))
+			details = append(details, renderer.pick("温度 ", "temperature ")+formatTemperature(value))
+		}
+		if len(details) > 0 {
+			renderer.basicRow(renderer.pick(zhPrefix, enPrefix), strings.Join(details, " / "))
 		}
 	}
 	raid := objectValue(root, "raid")
@@ -807,17 +814,62 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 	renderer.row(renderer.pick("汇总", "Summary"), summaryValue)
 	rows := make([][]string, 0, len(ordered))
 	for _, report := range ordered {
+		errors := structuredTCPErrorValues(report.Errors)
 		rows = append(rows, []string{
 			fallback(report.Target.Name, report.Target.ID),
 			fmt.Sprintf("%d/%d", report.Successful, report.Attempts),
 			fmt.Sprintf("%.1f%%", structuredTCPLoss(report)),
-			fmt.Sprintf("%s; %s", formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors)),
+			formatTCPMillisecondValue(report.MinMS),
+			formatTCPMillisecondValue(report.MeanMS),
+			formatTCPMillisecondValue(report.P50MS),
+			formatTCPMillisecondValue(report.P95MS),
+			formatTCPMillisecondValue(report.MaxMS),
+			errors[0], errors[1], errors[2], errors[3],
 		})
 	}
-	renderer.table(
-		[]string{renderer.pick("平台", "Platform"), renderer.pick("成功/尝试", "Success"), renderer.pick("丢包", "Loss"), "Min/Avg/P50/P95/Max; D/R/T/O"},
-		rows, []int{20, 9, 7, 37},
-	)
+	renderer.tcpTable([]string{
+		renderer.pick("平台", "Platform"), renderer.pick("成功/尝试", "Success/Attempts"), renderer.pick("丢包", "Loss"),
+		"Min", "Avg", "P50", "P95", "Max", "D", "R", "T", "O",
+	}, rows)
+}
+
+func (renderer *structuredTextRenderer) tcpTable(headers []string, rows [][]string) {
+	widths := make([]int, len(headers))
+	for index, header := range headers {
+		widths[index] = runewidth.StringWidth(header)
+		if index >= 3 {
+			widths[index] = max(widths[index], 3)
+		}
+	}
+	for _, row := range rows {
+		for index, value := range row {
+			if index < len(widths) {
+				widths[index] = max(widths[index], runewidth.StringWidth(compactText(value)))
+			}
+		}
+	}
+	renderer.tcpTableLine(headers, widths)
+	for _, row := range rows {
+		if len(row) == len(widths) {
+			renderer.tcpTableLine(row, widths)
+		}
+	}
+}
+
+func (renderer *structuredTextRenderer) tcpTableLine(values []string, widths []int) {
+	renderer.builder.WriteByte(' ')
+	for index, value := range values {
+		if index > 0 {
+			renderer.builder.WriteString("  ")
+		}
+		value = compactText(value)
+		if index == 0 {
+			renderer.builder.WriteString(padDisplay(value, widths[index]))
+		} else {
+			renderer.builder.WriteString(padDisplayLeft(value, widths[index]))
+		}
+	}
+	renderer.builder.WriteByte('\n')
 }
 
 func structuredTCPLoss(report TCPReport) float64 {
@@ -856,34 +908,17 @@ func summarizeStructuredTCP(reports []TCPReport) structuredTCPSummary {
 	return summary
 }
 
-func formatTCPMilliseconds(values ...float64) string {
-	maximum := float64(0)
-	for _, value := range values {
-		if value > maximum {
-			maximum = value
-		}
+func formatTCPMillisecondValue(value float64) string {
+	if value <= 0 {
+		return "-"
 	}
-	precision := 1
-	suffix := " ms"
-	if maximum >= 100 {
-		precision = 0
-		suffix = "ms"
+	if value >= 100 {
+		return strconv.FormatFloat(math.Round(value), 'f', 0, 64)
 	}
-	parts := make([]string, len(values))
-	for index, value := range values {
-		if value <= 0 {
-			parts[index] = "-"
-		} else {
-			if precision == 0 {
-				value = math.Round(value)
-			}
-			parts[index] = strconv.FormatFloat(value, 'f', precision, 64)
-		}
-	}
-	return strings.Join(parts, "/") + suffix
+	return strconv.FormatFloat(value, 'f', 1, 64)
 }
 
-func formatTCPErrorCounts(errors map[string]int) string {
+func structuredTCPErrorValues(errors map[string]int) [4]string {
 	counts := [4]int{}
 	for class, count := range errors {
 		switch class {
@@ -897,7 +932,9 @@ func formatTCPErrorCounts(errors map[string]int) string {
 			counts[3] += count
 		}
 	}
-	return fmt.Sprintf("%d/%d/%d/%d", counts[0], counts[1], counts[2], counts[3])
+	return [4]string{
+		strconv.Itoa(counts[0]), strconv.Itoa(counts[1]), strconv.Itoa(counts[2]), strconv.Itoa(counts[3]),
+	}
 }
 
 func formatStructuredTCPFailures(dns, refused, timeout, other int, zh bool) string {
@@ -1259,6 +1296,14 @@ func padDisplay(value string, width int) string {
 		return value
 	}
 	return value + strings.Repeat(" ", width-current)
+}
+
+func padDisplayLeft(value string, width int) string {
+	current := runewidth.StringWidth(value)
+	if current >= width {
+		return value
+	}
+	return strings.Repeat(" ", width-current) + value
 }
 
 func wrapDisplay(value string, width int) []string {
