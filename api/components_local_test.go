@@ -584,6 +584,145 @@ func TestHardwareStageRunsEachBenchmarkOnceWithOneDeadline(t *testing.T) {
 	}
 }
 
+func TestStructuredPlanHonorsBarriersConcurrencyOrderAndSpeedIsolation(t *testing.T) {
+	started := make(chan string, 3)
+	releases := map[string]chan struct{}{
+		"media": make(chan struct{}),
+		"ping":  make(chan struct{}),
+		"tcp":   make(chan struct{}),
+	}
+	var (
+		stateMutex   sync.Mutex
+		basicsDone   bool
+		hardwareDone bool
+		progress     []string
+	)
+	ctx := WithProgressObserver(context.Background(), func(event ProgressEvent) {
+		stateMutex.Lock()
+		progress = append(progress, event.Section+":"+string(event.Phase))
+		stateMutex.Unlock()
+	})
+	task := func(name string, result structuredTaskResult) structuredComponentTask {
+		return structuredComponentTask{section: name, run: func(context.Context) structuredTaskResult {
+			stateMutex.Lock()
+			if !basicsDone || !hardwareDone {
+				t.Errorf("%s started before basics/hardware barrier", name)
+			}
+			stateMutex.Unlock()
+			started <- name
+			<-releases[name]
+			return result
+		}}
+	}
+	speedStarted := make(chan struct{}, 1)
+	plan := structuredCollectionPlan{
+		basics: func(context.Context) []ComponentReport {
+			stateMutex.Lock()
+			basicsDone = true
+			stateMutex.Unlock()
+			return []ComponentReport{{Name: "basics", Status: ReportStatusOK}}
+		},
+		hardware: func(context.Context) []ComponentReport {
+			stateMutex.Lock()
+			defer stateMutex.Unlock()
+			if !basicsDone {
+				t.Error("hardware started before basics completed")
+			}
+			hardwareDone = true
+			return []ComponentReport{{Name: "cputest", Status: ReportStatusOK}}
+		},
+		concurrent: []structuredComponentTask{
+			task("media", structuredTaskResult{components: []ComponentReport{{Name: "unlocktests.media", Status: ReportStatusOK}}}),
+			task("ping", structuredTaskResult{components: []ComponentReport{{Name: "ping.icmp", Status: ReportStatusOK}}}),
+			task("tcp", structuredTaskResult{tcp: []TCPReport{{Attempts: 1, Successful: 1}}}),
+		},
+		speed: &structuredComponentTask{section: "speed", run: func(context.Context) structuredTaskResult {
+			speedStarted <- struct{}{}
+			return structuredTaskResult{components: []ComponentReport{{Name: "speed.registry", Status: ReportStatusOK}}}
+		}},
+	}
+	type collectionResult struct {
+		components []ComponentReport
+		tcp        []TCPReport
+	}
+	done := make(chan collectionResult, 1)
+	go func() {
+		components, tcp := runStructuredCollectionPlan(ctx, plan)
+		done <- collectionResult{components: components, tcp: tcp}
+	}()
+
+	seen := make(map[string]bool)
+	for range 3 {
+		select {
+		case name := <-started:
+			seen[name] = true
+		case <-time.After(time.Second):
+			t.Fatal("structured non-speed tasks did not start concurrently")
+		}
+	}
+	for _, name := range []string{"media", "ping", "tcp"} {
+		if !seen[name] {
+			t.Fatalf("structured task %q did not start: %v", name, seen)
+		}
+	}
+	close(releases["ping"])
+	close(releases["tcp"])
+	select {
+	case <-speedStarted:
+		t.Fatal("speed started while an earlier non-speed task was still running")
+	default:
+	}
+	close(releases["media"])
+	select {
+	case <-speedStarted:
+	case <-time.After(time.Second):
+		t.Fatal("speed did not start after the non-speed barrier")
+	}
+	var result collectionResult
+	select {
+	case result = <-done:
+	case <-time.After(time.Second):
+		t.Fatal("structured plan did not complete")
+	}
+	gotNames := make([]string, 0, len(result.components))
+	for _, component := range result.components {
+		gotNames = append(gotNames, component.Name)
+	}
+	if got, want := strings.Join(gotNames, ","), "basics,cputest,unlocktests.media,ping.icmp,speed.registry"; got != want {
+		t.Fatalf("structured component order = %q, want %q", got, want)
+	}
+	if len(result.tcp) != 1 {
+		t.Fatalf("structured TCP result lost: %+v", result.tcp)
+	}
+	stateMutex.Lock()
+	gotProgress := append([]string(nil), progress...)
+	stateMutex.Unlock()
+	wantProgress := []string{
+		"media:started", "media:completed", "ping:started", "ping:completed",
+		"tcp:started", "tcp:completed", "speed:started", "speed:completed",
+	}
+	if strings.Join(gotProgress, ",") != strings.Join(wantProgress, ",") {
+		t.Fatalf("progress order = %v, want %v", gotProgress, wantProgress)
+	}
+}
+
+func TestStructuredNetworkTaskOrderMatchesDisplayedSections(t *testing.T) {
+	tasks := []structuredComponentTask{
+		{section: "routes"}, {section: "ping"}, {section: "media"}, {section: "tcp"},
+		{section: "security"}, {section: "email"}, {section: "future"}, {section: "backtrace"},
+		{section: "tgdc"}, {section: "web"}, {section: "nat"},
+	}
+	sortStructuredNetworkTasks(tasks)
+	sections := make([]string, 0, len(tasks))
+	for _, task := range tasks {
+		sections = append(sections, task.section)
+	}
+	want := "media,security,email,backtrace,routes,ping,tgdc,web,nat,tcp,future"
+	if got := strings.Join(sections, ","); got != want {
+		t.Fatalf("structured task order = %q, want %q", got, want)
+	}
+}
+
 func TestHardwareStageKeepsStandardProfiles(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.BasicStatus = false

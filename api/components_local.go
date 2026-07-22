@@ -41,33 +41,182 @@ import (
 // the standard CPU, memory, and disk probes share one bounded hardware-stage
 // context.
 func collectPublishedComponentReports(ctx context.Context, config *Config, inputs componentInputs) []ComponentReport {
+	reports, _ := collectPublishedComponentReportsWithTCP(ctx, config, inputs)
+	return reports
+}
+
+type structuredTaskResult struct {
+	components []ComponentReport
+	tcp        []TCPReport
+	status     ReportStatus
+	reason     string
+}
+
+type structuredComponentTask struct {
+	section string
+	run     func(context.Context) structuredTaskResult
+}
+
+type structuredCollectionPlan struct {
+	basics     func(context.Context) []ComponentReport
+	hardware   func(context.Context) []ComponentReport
+	concurrent []structuredComponentTask
+	speed      *structuredComponentTask
+}
+
+func sortStructuredNetworkTasks(tasks []structuredComponentTask) {
+	canonicalOrder := map[string]int{
+		"media": 0, "security": 1, "email": 2, "backtrace": 3, "routes": 4,
+		"ping": 5, "tgdc": 6, "web": 7, "nat": 8, "tcp": 9,
+	}
+	sort.SliceStable(tasks, func(i, j int) bool {
+		left, leftKnown := canonicalOrder[tasks[i].section]
+		right, rightKnown := canonicalOrder[tasks[j].section]
+		if leftKnown != rightKnown {
+			return leftKnown
+		}
+		if !leftKnown {
+			return false
+		}
+		return left < right
+	})
+}
+
+func runStructuredCollectionPlan(ctx context.Context, plan structuredCollectionPlan) ([]ComponentReport, []TCPReport) {
+	components := make([]ComponentReport, 0, 12)
+	if plan.basics != nil {
+		components = append(components, plan.basics(ctx)...)
+	}
+	if plan.hardware != nil {
+		components = append(components, plan.hardware(ctx)...)
+	}
+	var tcp []TCPReport
+	for _, result := range runStructuredConcurrentTasks(ctx, plan.concurrent) {
+		components = append(components, result.components...)
+		if result.tcp != nil {
+			tcp = result.tcp
+		}
+	}
+	if plan.speed != nil && ctx.Err() == nil {
+		progressStarted(ctx, plan.speed.section)
+		result := runStructuredTask(ctx, *plan.speed)
+		status, reason := structuredTaskResultStatus(result)
+		if contextStatus, done := contextProgressStatus(ctx); done {
+			status, reason = contextStatus, ctx.Err().Error()
+		}
+		progressCompleted(ctx, plan.speed.section, status, reason)
+		components = append(components, result.components...)
+	}
+	return components, tcp
+}
+
+func runStructuredConcurrentTasks(ctx context.Context, tasks []structuredComponentTask) []structuredTaskResult {
+	if ctx.Err() != nil {
+		results := make([]structuredTaskResult, 0, len(tasks))
+		for _, task := range tasks {
+			progressStarted(ctx, task.section)
+			result := runStructuredTask(ctx, task)
+			status, _ := contextProgressStatus(ctx)
+			progressCompleted(ctx, task.section, status, ctx.Err().Error())
+			results = append(results, result)
+		}
+		return results
+	}
+	channels := make([]<-chan structuredTaskResult, len(tasks))
+	for index := range tasks {
+		result := make(chan structuredTaskResult, 1)
+		channels[index] = result
+		task := tasks[index]
+		go func() {
+			value := structuredTaskResult{}
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					value = structuredTaskResult{status: ReportStatusError, reason: fmt.Sprintf("%s component panic", task.section)}
+				}
+				result <- value
+				close(result)
+			}()
+			value = runStructuredTask(ctx, task)
+		}()
+	}
+	results := make([]structuredTaskResult, 0, len(tasks))
+	for index, channel := range channels {
+		progressStarted(ctx, tasks[index].section)
+		select {
+		case result := <-channel:
+			status, reason := structuredTaskResultStatus(result)
+			if contextStatus, done := contextProgressStatus(ctx); done {
+				status, reason = contextStatus, ctx.Err().Error()
+			}
+			progressCompleted(ctx, tasks[index].section, status, reason)
+			results = append(results, result)
+		case <-ctx.Done():
+			status, _ := contextProgressStatus(ctx)
+			progressCompleted(ctx, tasks[index].section, status, ctx.Err().Error())
+			return results
+		}
+	}
+	return results
+}
+
+func runStructuredTask(ctx context.Context, task structuredComponentTask) (result structuredTaskResult) {
+	defer func() {
+		if recover() != nil {
+			result = structuredTaskResult{status: ReportStatusError, reason: fmt.Sprintf("%s component panic", task.section)}
+		}
+	}()
+	if task.run == nil {
+		return structuredTaskResult{status: ReportStatusUnavailable, reason: fmt.Sprintf("%s component runner unavailable", task.section)}
+	}
+	return task.run(ctx)
+}
+
+func structuredTaskResultStatus(result structuredTaskResult) (ReportStatus, string) {
+	if result.status != "" {
+		return result.status, result.reason
+	}
+	if len(result.components) > 0 {
+		return aggregateComponentSectionStatus(result.components)
+	}
+	if result.tcp != nil {
+		return tcpSectionStatus(result.tcp)
+	}
+	return ReportStatusOK, ""
+}
+
+func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config, inputs componentInputs) ([]ComponentReport, []TCPReport) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	if config == nil {
 		config = NewDefaultConfig()
 	}
-	result := make([]ComponentReport, 0, 10)
-	if config.BasicStatus {
-		result = append(result, collectComponentStep(ctx, "basics", func() ComponentReport {
-			started := time.Now()
-			report := basicssystem.CollectSystemReport(ctx)
-			return componentPayload("basics", report.SchemaVersion, componentStatus(string(report.Availability)), started, report, nil)
-		}))
+	plan := structuredCollectionPlan{
+		basics: func(stageCtx context.Context) []ComponentReport {
+			if !config.BasicStatus {
+				return nil
+			}
+			return []ComponentReport{collectComponentStep(stageCtx, "basics", func() ComponentReport {
+				started := time.Now()
+				report := basicssystem.CollectSystemReport(stageCtx)
+				return componentPayload("basics", report.SchemaVersion, componentStatus(string(report.Availability)), started, report, nil)
+			})}
+		},
+		hardware: func(stageCtx context.Context) []ComponentReport {
+			return collectHardwareComponentReports(stageCtx, config, defaultHardwareComponentRunners())
+		},
 	}
-	result = append(result, collectHardwareComponentReports(ctx, config, defaultHardwareComponentRunners())...)
 	if config.Nt3Status && inputs.Network && len(inputs.ProvinceRoutes) > 0 {
-		progressStarted(ctx, "routes")
-		firstRouteComponent := len(result)
-		started := time.Now()
-		routes := inputs.ProvinceRoutes
-		{
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "routes", run: func(taskCtx context.Context) structuredTaskResult {
+			result := make([]ComponentReport, 0, 2)
+			started := time.Now()
+			routes := inputs.ProvinceRoutes
 			targets := nt3model.BuildProvinceLatencyTargets(routes, config.Nt3CheckType)
 			probeConfig := nt3.StandardProvinceLatencyConfig()
 			if config.DeepMode {
 				probeConfig = nt3.DeepProvinceLatencyConfig()
 			}
-			probeCtx, cancel := componentContext(ctx, 45*time.Second)
+			probeCtx, cancel := componentContext(taskCtx, 45*time.Second)
 			probes := nt3.RunProvinceLatency(probeCtx, targets, probeConfig)
 			probeErr := probeCtx.Err()
 			cancel()
@@ -80,9 +229,9 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 				}
 			}
 			result = append(result, componentPayload("nt3.province_latency", "goecs.nt3/province-latency-v1", status, started, probes, nil))
-			if config.DeepMode && ctx.Err() == nil {
+			if config.DeepMode && taskCtx.Err() == nil {
 				routeStarted := time.Now()
-				routeCtx, routeCancel := context.WithTimeout(ctx, 3*time.Minute)
+				routeCtx, routeCancel := context.WithTimeout(taskCtx, 3*time.Minute)
 				routeConfig := nt3.DeepDetailedProvinceRouteConfig(nt3.NTraceProvinceTracer)
 				routeConfig.IPVersion = config.Nt3CheckType
 				routeConfig.Concurrency = 3
@@ -91,81 +240,84 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 				routeCancel()
 				result = append(result, componentPayload("nt3.province_routes", "goecs.nt3/province-routes-v1", routeStatus, routeStarted, routesReport, routeErr))
 			}
-		}
-		routeStatus, routeReason := aggregateComponentSectionStatus(result[firstRouteComponent:])
-		progressCompleted(ctx, "routes", routeStatus, routeReason)
+			return structuredTaskResult{components: result}
+		}})
 	}
 	if config.PingTestStatus && inputs.Network && (len(inputs.ProvinceRoutes) > 0 || config.Language == "en" || config.PingScope == "international") {
-		result = append(result, collectComponentStep(ctx, "ping", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "ping", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
 			targets := structuredPingTargets(config, inputs.ProvinceRoutes)
-			pingCtx, cancel := componentContext(ctx, 30*time.Second)
+			pingCtx, cancel := componentContext(taskCtx, 30*time.Second)
 			defer cancel()
 			probes := pingprobe.RunICMPProbes(pingCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
 			sortICMPResults(probes, config.PingSortOrder)
 			report := componentPayload("ping.icmp", "goecs.ping/icmp-v1", pingComponentStatus(pingCtx, probes), started, probes, nil)
 			report.Reason = pingComponentReason(probes, report.Status)
-			return report
-		}))
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.TgdcTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "tgdc", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "tgdc", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			probeCtx, cancel := componentContext(ctx, 30*time.Second)
+			probeCtx, cancel := componentContext(taskCtx, 30*time.Second)
 			defer cancel()
 			probes := pingprobe.RunTelegramICMPProbes(probeCtx, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 5})
 			report := componentPayload("ping.telegram", "goecs.ping/telegram-v1", pingComponentStatus(probeCtx, probes), started, probes, nil)
 			report.Reason = pingComponentReason(probes, report.Status)
-			return report
-		}))
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.WebTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "web", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "web", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			probeCtx, cancel := componentContext(ctx, 45*time.Second)
+			probeCtx, cancel := componentContext(taskCtx, 45*time.Second)
 			defer cancel()
 			probes := pingprobe.RunWebsiteTCPProbes(probeCtx, pingprobe.TCPProbeConfig{Attempts: 3, Timeout: 5 * time.Second, Concurrency: 16})
 			report := componentPayload("ping.web_tcp", "goecs.ping/web-tcp-v1", pingTCPComponentStatus(probeCtx, probes), started, probes, nil)
 			report.Reason = pingTCPComponentReason(probes, report.Status)
-			return report
-		}))
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.UtTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "media", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "media", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			mediaCtx, cancel := componentContext(ctx, 60*time.Second)
+			mediaCtx, cancel := componentContext(taskCtx, 60*time.Second)
 			defer cancel()
-			return withComponentDuration(collectMediaComponentWithMetadata(mediaCtx, config, inputs.MediaProviders), started)
-		}))
+			report := withComponentDuration(collectMediaComponentWithMetadata(mediaCtx, config, inputs.MediaProviders), started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.SecurityTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "security", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "security", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			securityCtx, cancel := componentContext(ctx, 60*time.Second)
+			securityCtx, cancel := componentContext(taskCtx, 60*time.Second)
 			defer cancel()
-			return withComponentDuration(collectSecurityComponent(securityCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.DNSBLZones), started)
-		}))
+			report := withComponentDuration(collectSecurityComponent(securityCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.DNSBLZones), started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.BacktraceStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "backtrace", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "backtrace", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			backtraceCtx, cancel := componentContext(ctx, 45*time.Second)
+			backtraceCtx, cancel := componentContext(taskCtx, 45*time.Second)
 			defer cancel()
-			return withComponentDuration(collectBacktraceComponentWithRegistry(backtraceCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
-		}))
+			report := withComponentDuration(collectBacktraceComponentWithRegistry(backtraceCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if config.EmailTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "email", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "email", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			mailCtx, cancel := componentContext(ctx, 30*time.Second)
+			mailCtx, cancel := componentContext(taskCtx, 30*time.Second)
 			defer cancel()
-			return withComponentDuration(collectMailComponent(mailCtx, portemail.DefaultPlatformSpecs(), nil, nil, nil), started)
-		}))
+			report := withComponentDuration(collectMailComponent(mailCtx, portemail.DefaultPlatformSpecs(), nil, nil, nil), started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
 	}
 	if inputs.Network {
-		result = append(result, collectComponentStep(ctx, "nat", func() ComponentReport {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "nat", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			stunCtx, cancel := componentContext(ctx, 15*time.Second)
+			stunCtx, cancel := componentContext(taskCtx, 15*time.Second)
 			defer cancel()
 			servers := gostunmodel.GetDefaultServers(gostunmodel.IPVersion)
 			if !config.DeepMode && len(servers) > 1 {
@@ -175,19 +327,32 @@ func collectPublishedComponentReports(ctx context.Context, config *Config, input
 				Servers: servers, IPVersion: gostunmodel.IPVersion,
 				Timeout: 3 * time.Second, MaxConcurrent: 1,
 			}, stuncheck.ProbeNAT)
-			return withComponentDuration(report, started)
-		}))
+			report = withComponentDuration(report, started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}})
+	}
+	if config.TCPProbeStatus && inputs.Network && len(inputs.TCPTargets) > 0 {
+		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "tcp", run: func(taskCtx context.Context) structuredTaskResult {
+			reports := runTCPReports(taskCtx, inputs.TCPTargets, tcpProbeConfig{
+				attempts: 3, timeout: 3 * time.Second, concurrency: 16,
+				dial: (&net.Dialer{}).DialContext,
+			})
+			sortTCPReports(reports, config.TCPSortOrder)
+			return structuredTaskResult{tcp: reports}
+		}})
 	}
 	if config.SpeedTestStatus && inputs.Network {
-		result = append(result, collectComponentStep(ctx, "speed", func() ComponentReport {
+		plan.speed = &structuredComponentTask{section: "speed", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			speedCtx, cancel := componentContext(ctx, 75*time.Second)
+			speedCtx, cancel := componentContext(taskCtx, 75*time.Second)
 			defer cancel()
 			privateRunner := privateSpeedRunnerForConfig(config.Language, config.DataOffline)
-			return withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithDependencies(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, nil, nil, privateRunner), started)
-		}))
+			report := withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithDependencies(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, nil, nil, privateRunner), started)
+			return structuredTaskResult{components: []ComponentReport{report}}
+		}}
 	}
-	return result
+	sortStructuredNetworkTasks(plan.concurrent)
+	return runStructuredCollectionPlan(ctx, plan)
 }
 
 func structuredPingTargets(config *Config, routes []nt3model.ProvinceRoute) []pingprobe.ICMPTarget {

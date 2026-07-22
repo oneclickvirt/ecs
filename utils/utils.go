@@ -313,6 +313,14 @@ func BasicsAndSecurityCheck(language, nt3CheckType string, securityCheckStatus b
 	return ipv4, ipv6, basicInfo, securityInfo, nt3CheckType
 }
 
+// SecurityInfoCheck runs the legacy security providers after the hardware
+// stage. It intentionally returns only the security text: public IP identity
+// and basic system information were already collected by the basics stage.
+func SecurityInfoCheck(language string) string {
+	_, _, _, securityInfo, _ := networkCheckFn("both", true, language)
+	return securityInfo
+}
+
 // CaptureOutput 捕获函数输出和错误输出，实时输出，并返回字符串
 func CaptureOutput(f func()) string {
 	// 保存旧的 stdout 和 stderr

@@ -17,7 +17,6 @@ import (
 	"github.com/oneclickvirt/ecs/utils"
 	pingmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
-	"github.com/oneclickvirt/portchecker/email"
 )
 
 type identityReadyContextKey struct{}
@@ -51,108 +50,12 @@ func signalIdentityReady(ctx context.Context) {
 
 // RunChineseTests runs all tests in Chinese mode
 func RunChineseTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
-	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
-	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
-	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
-	}
-	signalIdentityReady(ctx)
-	if config.UtTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" && !config.OnlyChinaTest {
-		wg1.Add(1)
-		go func() {
-			defer wg1.Done()
-			result := tests.MediaTest(config.Language, config.UnlockTestRegion, config.UnlockTestIPVersion, config.UnlockTestShowIP)
-			infoMutex.Lock()
-			*mediaInfo = result
-			infoMutex.Unlock()
-		}()
-	}
-	if config.EmailTestStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		wg2.Add(1)
-		go func() {
-			defer wg2.Done()
-			result := email.EmailCheck()
-			infoMutex.Lock()
-			*emailInfo = result
-			infoMutex.Unlock()
-		}()
-	}
-	if (config.OnlyChinaTest || config.PingTestStatus) && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		wg3.Add(1)
-		go func() {
-			defer wg3.Done()
-			result := runConfiguredPing(config)
-			infoMutex.Lock()
-			*ptInfo = result
-			infoMutex.Unlock()
-		}()
-	}
-	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunStreamingTests(ctx, config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
-	}
-	if runtime.GOOS != "windows" && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
-	}
-	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunTCPTests(ctx, config, *output, tempOutput, outputMutex)
-		*output = RunSpeedTests(ctx, config, *output, tempOutput, outputMutex)
-	}
-	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
+	runLegacyTests(ctx, preCheck, config, wg1, wg2, wg3, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo, output, tempOutput, startTime, outputMutex, infoMutex)
 }
 
 // RunEnglishTests runs all tests in English mode
 func RunEnglishTests(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, wg1, wg2, wg3 *sync.WaitGroup, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo *string, output *string, tempOutput string, startTime time.Time, outputMutex *sync.Mutex, infoMutex *sync.Mutex) {
-	*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
-	*output = RunCPUTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunMemoryTest(ctx, config, *output, tempOutput, outputMutex)
-	*output = RunDiskTest(ctx, config, *output, tempOutput, outputMutex)
-	if config.OnlyIpInfoCheck && !config.BasicStatus && preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
-	}
-	signalIdentityReady(ctx)
-	if preCheck.Connected && preCheck.StackType != "" && preCheck.StackType != "None" {
-		if config.UtTestStatus {
-			wg1.Add(1)
-			go func() {
-				defer wg1.Done()
-				result := tests.MediaTest(config.Language, config.UnlockTestRegion, config.UnlockTestIPVersion, config.UnlockTestShowIP)
-				infoMutex.Lock()
-				*mediaInfo = result
-				infoMutex.Unlock()
-			}()
-		}
-		if config.EmailTestStatus {
-			wg2.Add(1)
-			go func() {
-				defer wg2.Done()
-				result := email.EmailCheck()
-				infoMutex.Lock()
-				*emailInfo = result
-				infoMutex.Unlock()
-			}()
-		}
-		if config.PingTestStatus {
-			wg3.Add(1)
-			go func() {
-				defer wg3.Done()
-				result := runConfiguredPing(config)
-				infoMutex.Lock()
-				*ptInfo = result
-				infoMutex.Unlock()
-			}()
-		}
-		*output = RunStreamingTests(ctx, config, wg1, mediaInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunSecurityTests(ctx, config, *securityInfo, *output, tempOutput, outputMutex)
-		*output = RunEmailTests(ctx, config, wg2, emailInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunEnglishNetworkTests(ctx, config, wg3, ptInfo, *output, tempOutput, outputMutex, infoMutex)
-		*output = RunTCPTests(ctx, config, *output, tempOutput, outputMutex)
-		*output = RunEnglishSpeedTests(ctx, config, *output, tempOutput, outputMutex)
-	}
-	*output = AppendTimeInfo(config, *output, tempOutput, startTime, outputMutex)
+	runLegacyTests(ctx, preCheck, config, wg1, wg2, wg3, basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo, output, tempOutput, startTime, outputMutex, infoMutex)
 }
 
 // RunTCPTests appends the new handshake diagnostics as an explicit standalone
@@ -162,26 +65,15 @@ func RunTCPTests(ctx context.Context, config *params.Config, output, tempOutput 
 	if ctx.Err() != nil || config == nil || !config.TCPProbeStatus {
 		return output
 	}
+	_ = tempOutput
+	section := bufferedTCPSection(ctx, config)
+	if section == "" {
+		return output
+	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
-	return utils.PrintAndCapture(func() {
-		if config.Language == "zh" {
-			utils.PrintCenteredTitle("TCP握手延迟", config.Width)
-		} else {
-			utils.PrintCenteredTitle("TCP-Handshake-Latency", config.Width)
-		}
-		probeConfig := pt.DefaultTCPProbeConfig()
-		results := pt.RunTCPRegistry(ctx, probeConfig)
-		if !config.DataOffline {
-			if loaded, _, err := pt.RunLoadedTCPRegistry(ctx, probeConfig); err == nil {
-				results = loaded
-			}
-		}
-		fmt.Println(pt.FormatTCPResultsWithOptions(results, pt.TCPFormatOptions{
-			Format: pt.TCPTextFormat(config.TCPTextFormat),
-			Sort:   pingmodel.TCPSort(config.TCPSortOrder),
-		}))
-	}, tempOutput, output)
+	fmt.Print(section)
+	return output + section
 }
 
 func runConfiguredPing(config *params.Config) string {
@@ -231,11 +123,11 @@ func RunBasicTests(ctx context.Context, preCheck utils.NetCheckResult, config *p
 				}
 			}
 			if preCheck.Connected && preCheck.StackType == "DualStack" {
-				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, config.Nt3CheckType, config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, config.Nt3CheckType, false)
 			} else if preCheck.Connected && preCheck.StackType == "IPv4" {
-				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv4", config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv4", false)
 			} else if preCheck.Connected && preCheck.StackType == "IPv6" {
-				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv6", config.SecurityTestStatus)
+				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "ipv6", false)
 			} else {
 				tests.IPV4, tests.IPV6, *basicInfo, *securityInfo, config.Nt3CheckType = utils.BasicsAndSecurityCheck(config.Language, "", false)
 				config.SecurityTestStatus = false
@@ -337,26 +229,27 @@ func RunCPUBurnTest(ctx context.Context, config *params.Config, output, tempOutp
 }
 
 func printCPUBurnResult(language string, result cpu.BurnResult) {
+	fmt.Print(formatCPUBurnResult(language, result))
+}
+
+func formatCPUBurnResult(language string, result cpu.BurnResult) string {
 	duration := time.Duration(result.DurationMS) * time.Millisecond
 	if result.Status == "ok" {
 		if language == "zh" {
-			fmt.Printf("压力测试            : %s / %d 线程 / %.2f 次/秒 / %d 次\n",
-				formatCompactDuration(duration), result.EffectiveThreads, result.EventsPerSecond, result.Events)
-		} else {
-			fmt.Printf("Pressure Test        : %s / %d threads / %.2f events/s / %d events\n",
+			return fmt.Sprintf("压力测试            : %s / %d 线程 / %.2f 次/秒 / %d 次\n",
 				formatCompactDuration(duration), result.EffectiveThreads, result.EventsPerSecond, result.Events)
 		}
-		return
+		return fmt.Sprintf("Pressure Test        : %s / %d threads / %.2f events/s / %d events\n",
+			formatCompactDuration(duration), result.EffectiveThreads, result.EventsPerSecond, result.Events)
 	}
 	reason := strings.TrimSpace(result.Error)
 	if reason == "" {
 		reason = strings.TrimSpace(result.Status)
 	}
 	if language == "zh" {
-		fmt.Printf("压力测试            : %s\n", reason)
-	} else {
-		fmt.Printf("Pressure Test        : %s\n", reason)
+		return fmt.Sprintf("压力测试            : %s\n", reason)
 	}
+	return fmt.Sprintf("Pressure Test        : %s\n", reason)
 }
 
 func formatCompactDuration(duration time.Duration) string {

@@ -77,6 +77,27 @@ func TestBasicsAndSecurityCheck_SecurityEnabled(t *testing.T) {
 	}
 }
 
+func TestSecurityInfoCheckRunsOnlyDeferredSecurityProbe(t *testing.T) {
+	originalFn := networkCheckFn
+	t.Cleanup(func() { networkCheckFn = originalFn })
+
+	calls := 0
+	networkCheckFn = func(checkType string, securityCheckStatus bool, language string) (string, string, string, string, error) {
+		calls++
+		if checkType != "both" || !securityCheckStatus || language != "en" {
+			t.Fatalf("unexpected deferred security request: type=%q enabled=%v language=%q", checkType, securityCheckStatus, language)
+		}
+		return "1.1.1.1", "", "ignored basic output", "deferred security output", nil
+	}
+
+	if got := SecurityInfoCheck("en"); got != "deferred security output" {
+		t.Fatalf("SecurityInfoCheck() = %q", got)
+	}
+	if calls != 1 {
+		t.Fatalf("network check calls = %d, want 1", calls)
+	}
+}
+
 // TestPrintCenteredTitle_Width verifies that PrintCenteredTitle produces lines
 // whose visual display width equals the requested width for both ASCII-only and
 // CJK titles (CJK characters each occupy 2 terminal columns).

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/oneclickvirt/cputest/cpu"
 	"github.com/oneclickvirt/ecs/internal/params"
+	pingmodel "github.com/oneclickvirt/pingtest/model"
+	"github.com/oneclickvirt/pingtest/pt"
 )
 
 func TestShouldPrintBriefIPLinesInBasicStage(t *testing.T) {
@@ -248,5 +251,201 @@ func TestRunCPUBurnTestSkipsOrdinaryDefaults(t *testing.T) {
 	var outputMutex sync.Mutex
 	if output := RunCPUBurnTest(context.Background(), cfg, "existing", "", &outputMutex); output != "existing" || called {
 		t.Fatalf("ordinary CLI default unexpectedly ran deep burn: output=%q called=%t", output, called)
+	}
+}
+
+func TestLegacyWorkflowBarriersOrderedDrainAndSpeedIsolation(t *testing.T) {
+	hardwareStarted := make(chan string, 3)
+	hardwareRelease := map[string]chan struct{}{
+		"cpu": make(chan struct{}), "memory": make(chan struct{}), "disk": make(chan struct{}),
+	}
+	independentStarted := make(chan string, 2)
+	independentRelease := map[string]chan struct{}{
+		"ping": make(chan struct{}), "tcp": make(chan struct{}),
+	}
+	emitted := make(chan string, 8)
+	speedStarted := make(chan struct{}, 1)
+	var (
+		mutex      sync.Mutex
+		basicsDone bool
+		output     strings.Builder
+	)
+	hardwareTask := func(name, value string) bufferedTask {
+		return bufferedTask{name: name, run: func(context.Context) string {
+			mutex.Lock()
+			if !basicsDone {
+				t.Errorf("%s started before basics completed", name)
+			}
+			mutex.Unlock()
+			hardwareStarted <- name
+			<-hardwareRelease[name]
+			return value
+		}}
+	}
+	independentTask := func(name, value string) bufferedTask {
+		return bufferedTask{name: name, run: func(context.Context) string {
+			independentStarted <- name
+			<-independentRelease[name]
+			return value
+		}}
+	}
+	plan := legacyWorkflowPlan{
+		basics: func(context.Context) {
+			mutex.Lock()
+			basicsDone = true
+			mutex.Unlock()
+		},
+		hardware: []bufferedTask{
+			hardwareTask("cpu", "CPU\n"), hardwareTask("memory", "MEM\n"), hardwareTask("disk", "DISK\n"),
+		},
+		independent: []bufferedTask{
+			independentTask("ping", "PING-BEGIN PING-END\n"),
+			independentTask("tcp", "TCP-BEGIN TCP-END\n"),
+		},
+		speed: func(context.Context) { speedStarted <- struct{}{} },
+		emit: func(value string) {
+			mutex.Lock()
+			output.WriteString(value)
+			mutex.Unlock()
+			emitted <- value
+		},
+	}
+	done := make(chan struct{})
+	go func() {
+		runLegacyWorkflowPlan(context.Background(), plan)
+		close(done)
+	}()
+
+	for _, name := range []string{"cpu", "memory", "disk"} {
+		select {
+		case got := <-hardwareStarted:
+			if got != name {
+				t.Fatalf("hardware started out of order: got %q want %q", got, name)
+			}
+		case <-time.After(time.Second):
+			t.Fatalf("hardware %q did not start", name)
+		}
+		if name != "disk" {
+			select {
+			case unexpected := <-hardwareStarted:
+				t.Fatalf("hardware %q overlapped %q", unexpected, name)
+			default:
+			}
+		}
+		close(hardwareRelease[name])
+		select {
+		case <-emitted:
+		case <-time.After(time.Second):
+			t.Fatalf("hardware %q was not emitted after completion", name)
+		}
+	}
+
+	seen := make(map[string]bool)
+	for range 2 {
+		select {
+		case name := <-independentStarted:
+			seen[name] = true
+		case <-time.After(time.Second):
+			t.Fatal("ping/TCP did not start concurrently after hardware")
+		}
+	}
+	if !seen["ping"] || !seen["tcp"] {
+		t.Fatalf("unexpected independent starts: %v", seen)
+	}
+	close(independentRelease["tcp"])
+	select {
+	case value := <-emitted:
+		t.Fatalf("later TCP chapter overtook ping: %q", value)
+	case <-time.After(20 * time.Millisecond):
+	}
+	select {
+	case <-speedStarted:
+		t.Fatal("speed started before all non-speed tasks were consumed")
+	default:
+	}
+	close(independentRelease["ping"])
+	for _, want := range []string{"PING-BEGIN PING-END\n", "TCP-BEGIN TCP-END\n"} {
+		select {
+		case got := <-emitted:
+			if got != want {
+				t.Fatalf("ordered drain emitted %q, want %q", got, want)
+			}
+		case <-time.After(time.Second):
+			t.Fatalf("ordered chapter %q was not emitted immediately", want)
+		}
+	}
+	select {
+	case <-speedStarted:
+	case <-time.After(time.Second):
+		t.Fatal("speed did not start after the non-speed barrier")
+	}
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("legacy workflow did not complete")
+	}
+	mutex.Lock()
+	gotOutput := output.String()
+	mutex.Unlock()
+	if want := "CPU\nMEM\nDISK\nPING-BEGIN PING-END\nTCP-BEGIN TCP-END\n"; gotOutput != want {
+		t.Fatalf("buffered output interleaved: got %q want %q", gotOutput, want)
+	}
+}
+
+func TestOrderedBufferedTaskPanicCannotBlockFollowingChapter(t *testing.T) {
+	emitted := make(chan string, 1)
+	done := make(chan struct{})
+	go func() {
+		runOrderedBufferedTasks(context.Background(), []bufferedTask{
+			{name: "panic", run: func(context.Context) string { panic("fixture") }},
+			{name: "next", run: func(context.Context) string { return "next\n" }},
+		}, func(value string) { emitted <- value })
+		close(done)
+	}()
+	select {
+	case got := <-emitted:
+		if got != "next\n" {
+			t.Fatalf("unexpected post-panic output %q", got)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("provider panic blocked the ordered drain")
+	}
+	<-done
+}
+
+func TestTCPRegistryIsSelectedBeforeSingleProbeRun(t *testing.T) {
+	previousLoaded, previousBuiltin := runLoadedTCPRegistry, runBuiltinTCPRegistry
+	defer func() {
+		runLoadedTCPRegistry, runBuiltinTCPRegistry = previousLoaded, previousBuiltin
+	}()
+	loadedCalls, builtinCalls := 0, 0
+	fixture := []pt.TCPResult{{
+		Target:   pingmodel.TCPTarget{Name: "Fixture", Host: "fixture.test", Port: 443},
+		Attempts: 1, Successful: 1, SuccessRatePercent: 100,
+	}}
+	runLoadedTCPRegistry = func(context.Context, pt.TCPProbeConfig) ([]pt.TCPResult, pingmodel.TCPTargetRegistryLoadResult, error) {
+		loadedCalls++
+		return fixture, pingmodel.TCPTargetRegistryLoadResult{}, nil
+	}
+	runBuiltinTCPRegistry = func(context.Context, pt.TCPProbeConfig) []pt.TCPResult {
+		builtinCalls++
+		return fixture
+	}
+	cfg := &params.Config{Language: "en", Width: 80, TCPProbeStatus: true, TCPSortOrder: "name", TCPTextFormat: "compact"}
+	text := bufferedTCPSection(context.Background(), cfg)
+	if loadedCalls != 1 || builtinCalls != 0 {
+		t.Fatalf("successful loaded registry calls: loaded=%d builtin=%d", loadedCalls, builtinCalls)
+	}
+	if !strings.Contains(text, "Summary") || !strings.Contains(text, "Platform") {
+		t.Fatalf("legacy TCP language was not forwarded: %q", text)
+	}
+
+	runLoadedTCPRegistry = func(context.Context, pt.TCPProbeConfig) ([]pt.TCPResult, pingmodel.TCPTargetRegistryLoadResult, error) {
+		loadedCalls++
+		return nil, pingmodel.TCPTargetRegistryLoadResult{}, errors.New("fixture load failure")
+	}
+	_ = bufferedTCPSection(context.Background(), cfg)
+	if loadedCalls != 2 || builtinCalls != 1 {
+		t.Fatalf("fallback registry calls: loaded=%d builtin=%d", loadedCalls, builtinCalls)
 	}
 }

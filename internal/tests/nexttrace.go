@@ -3,36 +3,39 @@ package tests
 import (
 	"fmt"
 	"net"
-	"os"
 	"strings"
 
 	"github.com/oneclickvirt/nt3/nt"
 )
 
 func NextTrace3Check(language, nt3Location, nt3CheckType string) {
+	fmt.Print(NextTrace3CheckText(language, nt3Location, nt3CheckType))
+}
+
+// NextTrace3CheckText returns the complete route section without writing to
+// stdout/stderr. This allows the caller to execute routes concurrently while
+// preserving deterministic section output.
+func NextTrace3CheckText(language, nt3Location, nt3CheckType string) (output string) {
+	var builder strings.Builder
 	// 先检查 ICMP 权限
 	conn, err := net.ListenPacket("ip4:icmp", "0.0.0.0")
 	if err != nil {
 		// 没有权限，显示友好提示并跳过
 		if language == "zh" {
-			fmt.Println("路由追踪测试需要 root 权限或 CAP_NET_RAW 能力，已跳过")
-			fmt.Fprintf(os.Stderr, "[WARN] ICMP权限不足: %v\n", err)
+			return "路由追踪测试需要 root 权限或 CAP_NET_RAW 能力，已跳过\n"
 		} else {
-			fmt.Println("Route tracing test requires root privileges or CAP_NET_RAW capability, skipped")
-			fmt.Fprintf(os.Stderr, "[WARN] Insufficient ICMP permission: %v\n", err)
+			return "Route tracing test requires root privileges or CAP_NET_RAW capability, skipped\n"
 		}
-		return
 	}
 	conn.Close()
 	defer func() {
 		if r := recover(); r != nil {
 			if language == "zh" {
-				fmt.Println("路由追踪测试出现错误，已跳过")
-				fmt.Fprintf(os.Stderr, "[WARN] 路由追踪panic: %v\n", r)
+				builder.WriteString("路由追踪测试出现错误，已跳过\n")
 			} else {
-				fmt.Println("Route tracing test failed, skipped")
-				fmt.Fprintf(os.Stderr, "[WARN] Route tracing panic: %v\n", r)
+				builder.WriteString("Route tracing test failed, skipped\n")
 			}
+			output = builder.String()
 		}
 	}()
 	resultChan := make(chan nt.TraceResult, 100)
@@ -56,22 +59,16 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 			for index, res := range result.Output {
 				res = strings.TrimSpace(res)
 				if res != "" && index == 0 {
-					fmt.Println(res)
+					builder.WriteString(res + "\n")
 				}
 			}
 			continue
 		}
 		if result.ISPName == "Error" {
 			if language == "zh" {
-				fmt.Println("路由追踪测试失败（可能因为权限不足），已跳过")
+				builder.WriteString("路由追踪测试失败（可能因为权限不足），已跳过\n")
 			} else {
-				fmt.Println("Route tracing test failed (possibly due to insufficient permissions), skipped")
-			}
-			for _, res := range result.Output {
-				res = strings.TrimSpace(res)
-				if res != "" {
-					fmt.Fprintf(os.Stderr, "[WARN] %s\n", res)
-				}
+				builder.WriteString("Route tracing test failed (possibly due to insufficient permissions), skipped\n")
 			}
 			errorOccurred = true
 			continue
@@ -82,17 +79,18 @@ func NextTrace3Check(language, nt3Location, nt3CheckType string) {
 				continue
 			}
 			if strings.Contains(res, "ICMP") {
-				fmt.Print(res)
+				builder.WriteString(res)
 			} else {
-				fmt.Println(res)
+				builder.WriteString(res + "\n")
 			}
 		}
 	}
 	if errorOccurred {
 		if language == "zh" {
-			fmt.Println("提示: 路由追踪需要 root 权限或 CAP_NET_RAW 能力")
+			builder.WriteString("提示: 路由追踪需要 root 权限或 CAP_NET_RAW 能力\n")
 		} else {
-			fmt.Println("Hint: Route tracing requires root privileges or CAP_NET_RAW capability")
+			builder.WriteString("Hint: Route tracing requires root privileges or CAP_NET_RAW capability\n")
 		}
 	}
+	return builder.String()
 }

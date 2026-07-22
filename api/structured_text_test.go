@@ -141,10 +141,52 @@ func TestRenderStructuredBasicsShowsCollectedHardwareDetails(t *testing.T) {
 		"memory_topology":{"nodes":[{}],"dimms":[{},{}],"hugepages_total":16,"hugepages_free":8},
 		"raid":{"arrays":[{}]},"disks":[]
 	}`)}, nil)
-	for _, want := range []string{"2400 MHz", "2 核", "4 线程", "memory 256.00 MiB/512.00 MiB", "qdisc fq", "rmem", "BIOS BIOS 1.0", "GPU 1 / PCI 1 / NUMA 1 / DIMM 2 / RAID 1 / HugePages 8/16"} {
+	for _, want := range []string{
+		"CPU频率", "2400 MHz", "CPU物理核心", "CPU逻辑线程",
+		"内存总量", "1.00 GiB", "可用内存", "512.00 MiB", "虚拟化类型", "kvm",
+		"TCP加速方式", "bbr", "TCP队列规则", "fq", "TCP接收缓冲", "TCP发送缓冲",
+		"Cgroup内存使用", "256.00 MiB", "Cgroup内存上限", "512.00 MiB",
+		"主板厂商", "主板型号", "BIOS厂商", "BIOS版本", "PCI设备数量", "GPU设备数量",
+		"NUMA节点数量", "DIMM数量", "HugePages总数", "HugePages空闲", "RAID阵列数量",
+	} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("structured basics missing %q:\n%s", want, text)
 		}
+	}
+	for _, forbidden := range []string{"主板/BIOS", "硬件拓扑", "DIMM总容量", "DIMM Total"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("structured basics retained compound or duplicate field %q:\n%s", forbidden, text)
+		}
+	}
+	labels := []string{"TCP加速方式", "TCP队列规则", "TCP接收缓冲", "TCP发送缓冲"}
+	last := -1
+	for _, label := range labels {
+		index := strings.Index(text, label)
+		if index <= last {
+			t.Fatalf("TCP tuning rows are not contiguous and ordered: %v\n%s", labels, text)
+		}
+		last = index
+	}
+}
+
+func TestRenderStructuredBasicsSplitsPhysicalDiskProperties(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Width = 100
+	text := renderStructuredRunText(config, nil, []ComponentReport{componentFixture(t, "basics", ReportStatusOK, `{
+		"disks":[{"name":"vda","vendor":"Fixture","model":"Disk","size_bytes":10737418240,
+			"health":{"protocol":"ata","status":"passed"},"temperature":{"celsius":42}}]
+	}`)}, nil)
+	labels := []string{"物理盘 1 型号", "物理盘 1 容量", "物理盘 1 协议", "物理盘 1 健康", "物理盘 1 温度"}
+	last := -1
+	for _, label := range labels {
+		index := strings.Index(text, label)
+		if index <= last {
+			t.Fatalf("disk properties are missing or out of order: %v\n%s", labels, text)
+		}
+		last = index
+	}
+	if strings.Contains(text, "磁盘  型号") || strings.Contains(text, "Disk  Model") {
+		t.Fatalf("structured basics retained the composite disk table:\n%s", text)
 	}
 }
 
@@ -156,15 +198,31 @@ func TestRenderStructuredTCPKeepsCompleteMetricsOnOneLine(t *testing.T) {
 		MinMS: 1, MeanMS: 2, P50MS: 2, P95MS: 2.9, MaxMS: 3,
 		Errors: map[string]int{"timeout": 1},
 	}})
-	for _, want := range []string{"1 个目标 / 2/3 次成功", "Min/Avg/P50/P95/Max", "1.0/2.0/2.0/2.9/3.0 ms", "0/0/1/0"} {
+	for _, want := range []string{"目标:1", "握手:2/3", "失败:1", "超:1", "Min/Avg/P50/P95/Max; D/R/T/O", "1.0/2.0/2.0/2.9/3.0 ms; 0/0/1/0"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("compact TCP output missing %q:\n%s", want, text)
 		}
+	}
+	if strings.Count(text, "Min/Avg/P50/P95/Max; D/R/T/O") != 1 {
+		t.Fatalf("TCP output did not keep one four-column header:\n%s", text)
 	}
 	for _, line := range strings.Split(text, "\n") {
 		if runewidth.StringWidth(line) > config.Width {
 			t.Fatalf("TCP line exceeds width: %q", line)
 		}
+	}
+}
+
+func TestRenderStructuredTCPPrecedesSpeedSection(t *testing.T) {
+	config := NewConfig("v-test")
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "unlocktests.media", ReportStatusOK, `{"results":[]}`),
+		componentFixture(t, "speed.registry", ReportStatusOK, `{"benchmarks":[]}`),
+	}, []TCPReport{{Target: TCPTarget{Name: "Fixture"}, Attempts: 1, Successful: 1}})
+	tcpIndex := strings.Index(text, "TCP握手延迟")
+	speedIndex := strings.Index(text, "就近节点测速")
+	if tcpIndex < 0 || speedIndex < 0 || tcpIndex >= speedIndex {
+		t.Fatalf("TCP must render before speed: tcp=%d speed=%d\n%s", tcpIndex, speedIndex, text)
 	}
 }
 
@@ -179,6 +237,9 @@ func TestRenderStructuredTCPKeepsSlowMetricsAndCountersComplete(t *testing.T) {
 		if !strings.Contains(text, want) {
 			t.Fatalf("slow structured TCP output missing %q:\n%s", want, text)
 		}
+	}
+	if !strings.Contains(text, "失败:0") || strings.Contains(text, "DNS:") || strings.Contains(text, "拒:") || strings.Contains(text, "超:") || strings.Contains(text, "其:") {
+		t.Fatalf("successful TCP summary should keep total failure count without zero-value classes:\n%s", text)
 	}
 	if strings.Contains(text, "...") {
 		t.Fatalf("slow structured TCP output was truncated:\n%s", text)
@@ -206,7 +267,7 @@ func TestStructuredNetworkTextUsesCompactColumnsAndKeepsPrivateLabels(t *testing
 	}
 	applyStructuredPrivacy(report)
 	text := renderStructuredRunText(config, nil, report.Components, report.TCP)
-	for _, pair := range [][2]string{{"Alpha", "Beta"}, {"AlphaTCP", "BetaTCP"}} {
+	for _, pair := range [][2]string{{"Alpha", "Beta"}} {
 		found := false
 		for _, line := range strings.Split(text, "\n") {
 			if strings.Contains(line, pair[0]) && strings.Contains(line, pair[1]) {
@@ -216,6 +277,20 @@ func TestStructuredNetworkTextUsesCompactColumnsAndKeepsPrivateLabels(t *testing
 		}
 		if !found {
 			t.Fatalf("network targets were not paired in compact columns: %q/%q\n%s", pair[0], pair[1], text)
+		}
+	}
+	for _, name := range []string{"AlphaTCP", "BetaTCP"} {
+		matched := false
+		for _, line := range strings.Split(text, "\n") {
+			if strings.Contains(line, name) {
+				matched = true
+				if strings.Contains(line, "/ai") || strings.Contains(line, "/cloud") {
+					t.Fatalf("TCP row exposed category: %q", line)
+				}
+			}
+		}
+		if !matched {
+			t.Fatalf("TCP row missing %q:\n%s", name, text)
 		}
 	}
 	if strings.Contains(text, "203.0.113") {

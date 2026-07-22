@@ -78,6 +78,10 @@ func collectComponentReports(ctx context.Context, config *Config, inputs compone
 	return collectPublishedComponentReports(ctx, config, inputs)
 }
 
+func collectComponentReportsWithTCP(ctx context.Context, config *Config, inputs componentInputs) ([]ComponentReport, []TCPReport) {
+	return collectPublishedComponentReportsWithTCP(ctx, config, inputs)
+}
+
 func componentPayload(name, schema string, status ReportStatus, started time.Time, payload any, err error) ComponentReport {
 	report := ComponentReport{
 		Name: name, SchemaVersion: schema, Status: status,

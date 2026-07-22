@@ -202,7 +202,6 @@ func validatedStructuredConfig(config *Config) *Config {
 func collectStructuredExtras(ctx context.Context, preCheck utils.NetCheckResult, config *Config) structuredExtras {
 	inputs, dataFiles, primary, loadErr := loadComponentData(ctx, config.DataOffline)
 	extras := structuredExtras{data: primary, dataFiles: dataFiles, err: loadErr}
-	targets := inputs.TCPTargets
 	publicIPv4, publicIPv6 := GetIPv4Address(), GetIPv6Address()
 	if preCheck.Connected && publicIPv4 == "" && publicIPv6 == "" {
 		publicIPv4, publicIPv6 = structuredIdentity(ctx)
@@ -210,21 +209,7 @@ func collectStructuredExtras(ctx context.Context, preCheck utils.NetCheckResult,
 	inputs.Network = preCheck.Connected && ctx.Err() == nil
 	inputs.PublicIPv4 = publicIPv4
 	inputs.PublicIPv6 = publicIPv6
-	extras.components = collectComponentReports(ctx, config, inputs)
-	if !config.TCPProbeStatus || !preCheck.Connected || ctx.Err() != nil || len(targets) == 0 {
-		return extras
-	}
-	progressStarted(ctx, "tcp")
-	extras.tcp = runTCPReports(ctx, targets, tcpProbeConfig{
-		attempts: 3, timeout: 3 * time.Second, concurrency: 16,
-		dial: (&net.Dialer{}).DialContext,
-	})
-	sortTCPReports(extras.tcp, config.TCPSortOrder)
-	tcpStatus, tcpReason := tcpSectionStatus(extras.tcp)
-	if status, done := contextProgressStatus(ctx); done {
-		tcpStatus, tcpReason = status, ctx.Err().Error()
-	}
-	progressCompleted(ctx, "tcp", tcpStatus, tcpReason)
+	extras.components, extras.tcp = collectComponentReportsWithTCP(ctx, config, inputs)
 	return extras
 }
 
@@ -392,8 +377,8 @@ func sectionReports(config *Config, preCheck utils.NetCheckResult, extras struct
 		{"email", config.EmailTestStatus, true}, {"backtrace", config.BacktraceStatus, true},
 		{"routes", config.Nt3Status, true}, {"ping", config.PingTestStatus, true},
 		{"tgdc", config.TgdcTestStatus, true}, {"web", config.WebTestStatus, true},
-		{"tcp", config.TCPProbeStatus, true}, {"speed", config.SpeedTestStatus, true},
-		{"nat", true, true},
+		{"nat", true, true}, {"tcp", config.TCPProbeStatus, true},
+		{"speed", config.SpeedTestStatus, true},
 	}
 	result := make([]SectionReport, 0, len(sections))
 	componentsBySection := make(map[string][]ComponentReport, len(extras.components))

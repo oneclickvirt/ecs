@@ -18,15 +18,31 @@ type structuredTextRenderer struct {
 	builder strings.Builder
 	width   int
 	zh      bool
+	tcpSort string
 }
 
 func renderStructuredRunText(config *Config, dataFiles []DataFileVersion, components []ComponentReport, tcp []TCPReport) string {
 	renderer := newStructuredTextRenderer(config)
 	renderer.header(config)
 	renderer.dataFiles(dataFiles)
-	renderer.components(components)
+	beforeSpeed, speed := partitionSpeedComponents(components)
+	renderer.components(beforeSpeed)
 	renderer.tcp(tcp)
+	renderer.components(speed)
 	return renderer.builder.String()
+}
+
+func partitionSpeedComponents(components []ComponentReport) ([]ComponentReport, []ComponentReport) {
+	beforeSpeed := make([]ComponentReport, 0, len(components))
+	speed := make([]ComponentReport, 0, 1)
+	for _, component := range components {
+		if component.Name == "speed.registry" {
+			speed = append(speed, component)
+		} else {
+			beforeSpeed = append(beforeSpeed, component)
+		}
+	}
+	return beforeSpeed, speed
 }
 
 func (renderer *structuredTextRenderer) components(components []ComponentReport) {
@@ -101,7 +117,11 @@ func newStructuredTextRenderer(config *Config) *structuredTextRenderer {
 	if width < 48 {
 		width = 48
 	}
-	return &structuredTextRenderer{width: width, zh: zh}
+	tcpSort := "name"
+	if config != nil && config.TCPSortOrder == "latency" {
+		tcpSort = "latency"
+	}
+	return &structuredTextRenderer{width: width, zh: zh, tcpSort: tcpSort}
 }
 
 func (renderer *structuredTextRenderer) header(config *Config) {
@@ -138,11 +158,22 @@ func (renderer *structuredTextRenderer) section(title string) {
 }
 
 func (renderer *structuredTextRenderer) row(label, value string) {
+	renderer.rowWithLabelWidth(label, value, structuredLabelWidth)
+}
+
+func (renderer *structuredTextRenderer) basicRow(label, value string) {
+	if value = compactText(value); value == "" || value == "-" {
+		return
+	}
+	renderer.rowWithLabelWidth(label, value, 20)
+}
+
+func (renderer *structuredTextRenderer) rowWithLabelWidth(label, value string, labelWidth int) {
 	value = compactText(value)
 	if value == "" {
 		value = "-"
 	}
-	prefix := " " + padDisplay(label, structuredLabelWidth) + " : "
+	prefix := " " + padDisplay(label, labelWidth) + " : "
 	continuation := strings.Repeat(" ", runewidth.StringWidth(prefix))
 	available := renderer.width - runewidth.StringWidth(prefix)
 	if available < 12 {
@@ -302,54 +333,118 @@ func (renderer *structuredTextRenderer) basicPayload(payload json.RawMessage) {
 	virtualization := objectValue(root, "virtualization")
 	network := objectValue(root, "network")
 	firmware := objectValue(root, "firmware")
-	cpuDetails := []string{stringValue(cpu, "model")}
+	renderer.basicRow("CPU", stringValue(cpu, "model"))
 	if value := floatValue(cpu, "frequency_mhz"); value > 0 {
-		cpuDetails = append(cpuDetails, fmt.Sprintf("%.0f MHz", value))
+		renderer.basicRow(renderer.pick("CPU频率", "CPU Frequency"), fmt.Sprintf("%.0f MHz", value))
 	}
 	if value := intValue(cpu, "physical_cores"); value > 0 {
-		cpuDetails = append(cpuDetails, countLabel(value, renderer.pick("核", "cores")))
+		renderer.basicRow(renderer.pick("CPU物理核心", "CPU Physical Cores"), strconv.Itoa(value))
 	}
 	if value := intValue(cpu, "logical_cpus"); value > 0 {
-		cpuDetails = append(cpuDetails, countLabel(value, renderer.pick("线程", "threads")))
+		renderer.basicRow(renderer.pick("CPU逻辑线程", "CPU Logical Threads"), strconv.Itoa(value))
 	}
-	renderer.row("CPU", joinNonEmpty(cpuDetails...))
-	renderer.row(renderer.pick("内存", "Memory"), fmt.Sprintf("%s / %s", formatBytes(int64Value(memory, "available_bytes")), formatBytes(int64Value(memory, "total_bytes"))))
-	renderer.row("Cgroup", joinNonEmpty(stringValue(cgroup, "version"), quotaLabel(floatValue(cgroup, "cpu_quota_cores")), stringValue(cgroup, "cpuset"), memoryLimitLabel(int64Value(cgroup, "memory_current_bytes"), int64Value(cgroup, "memory_limit_bytes"))))
-	renderer.row(renderer.pick("虚拟化", "Virtualization"), joinNonEmpty(stringValue(virtualization, "type"), stringValue(virtualization, "container_runtime")))
-	renderer.row(renderer.pick("网络调优", "Network Tuning"), joinNonEmpty(stringValue(network, "congestion_control"), qdiscLabel(stringValue(network, "default_qdisc")), tuningTupleLabel("rmem", int64ArrayValue(network, "tcp_rmem")), tuningTupleLabel("wmem", int64ArrayValue(network, "tcp_wmem"))))
-	renderer.row(renderer.pick("主板/BIOS", "Board / BIOS"), joinNonEmpty(joinValuesWithSpace(stringValue(firmware, "board_vendor"), stringValue(firmware, "board_name"), stringValue(firmware, "board_version")), "BIOS "+joinValuesWithSpace(stringValue(firmware, "bios_vendor"), stringValue(firmware, "bios_version"), stringValue(firmware, "bios_date"))))
-	disks := arrayValue(root, "disks")
-	if len(disks) > 0 {
-		rows := make([][]string, 0, len(disks))
-		for _, raw := range disks {
-			disk, _ := raw.(map[string]any)
-			health := objectValue(disk, "health")
-			temperature := objectValue(disk, "temperature")
-			rows = append(rows, []string{
-				stringValue(disk, "name"), joinNonEmpty(stringValue(disk, "vendor"), stringValue(disk, "model")),
-				formatBytes(int64Value(disk, "size_bytes")), fallback(stringValue(health, "status"), stringValue(health, "availability")),
-				formatTemperature(floatValue(temperature, "celsius")),
-			})
-		}
-		renderer.table([]string{renderer.pick("磁盘", "Disk"), renderer.pick("型号", "Model"), renderer.pick("容量", "Size"), renderer.pick("健康", "Health"), renderer.pick("温度", "Temp")}, rows, []int{12, 26, 12, 12, 10})
+	if value := int64Value(memory, "total_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("内存总量", "Memory Total"), formatBytes(value))
 	}
-	topology := objectValue(root, "memory_topology")
-	raid := objectValue(root, "raid")
-	renderer.row(renderer.pick("硬件拓扑", "Hardware Topology"), hardwareTopologyLabel(root, topology, raid))
-}
+	if value := int64Value(memory, "available_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("可用内存", "Memory Available"), formatBytes(value))
+	}
+	renderer.basicRow(renderer.pick("虚拟化类型", "Virtualization Type"), stringValue(virtualization, "type"))
+	renderer.basicRow(renderer.pick("容器运行时", "Container Runtime"), stringValue(virtualization, "container_runtime"))
 
-func hardwareTopologyLabel(root, topology, raid map[string]any) string {
-	parts := []string{
-		fmt.Sprintf("GPU %d", len(arrayValue(root, "gpus"))),
-		fmt.Sprintf("PCI %d", len(arrayValue(objectValue(root, "pci"), "devices"))),
-		fmt.Sprintf("NUMA %d", len(arrayValue(topology, "nodes"))),
-		fmt.Sprintf("DIMM %d", len(arrayValue(topology, "dimms"))),
-		fmt.Sprintf("RAID %d", len(arrayValue(raid, "arrays"))),
+	// Keep the four TCP tuning rows adjacent, matching the standalone basics
+	// component. Each row carries one setting so scanning does not require
+	// unpacking a compound value.
+	renderer.basicRow(renderer.pick("TCP加速方式", "TCP Acceleration"), stringValue(network, "congestion_control"))
+	renderer.basicRow(renderer.pick("TCP队列规则", "TCP Queue Discipline"), stringValue(network, "default_qdisc"))
+	renderer.basicRow(renderer.pick("TCP接收缓冲", "TCP Receive Buffer"), tuningTupleValues(int64ArrayValue(network, "tcp_rmem")))
+	renderer.basicRow(renderer.pick("TCP发送缓冲", "TCP Send Buffer"), tuningTupleValues(int64ArrayValue(network, "tcp_wmem")))
+
+	renderer.basicRow(renderer.pick("Cgroup版本", "Cgroup Version"), stringValue(cgroup, "version"))
+	if value := floatValue(cgroup, "cpu_quota_cores"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup CPU配额", "Cgroup CPU Quota"), fmt.Sprintf("%.2f cores", value))
 	}
-	if total := int64Value(topology, "hugepages_total"); total > 0 {
-		parts = append(parts, fmt.Sprintf("HugePages %d/%d", int64Value(topology, "hugepages_free"), total))
+	renderer.basicRow(renderer.pick("Cgroup CPU集合", "Cgroup CPU Set"), stringValue(cgroup, "cpuset"))
+	if value := int64Value(cgroup, "memory_current_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup内存使用", "Cgroup Memory Usage"), formatBytes(value))
 	}
-	return strings.Join(parts, " / ")
+	if value := int64Value(cgroup, "memory_limit_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup内存上限", "Cgroup Memory Limit"), formatBytes(value))
+	}
+	if value := int64Value(cgroup, "memory_high_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup内存高水位", "Cgroup Memory High"), formatBytes(value))
+	}
+	if value := int64Value(cgroup, "memory_swap_limit_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup交换上限", "Cgroup Swap Limit"), formatBytes(value))
+	}
+	if value := int64Value(cgroup, "pids_limit"); value > 0 {
+		renderer.basicRow(renderer.pick("Cgroup进程上限", "Cgroup PID Limit"), strconv.FormatInt(value, 10))
+	}
+
+	for _, field := range []struct{ zh, en, key string }{
+		{"主板厂商", "Board Vendor", "board_vendor"}, {"主板型号", "Board Name", "board_name"},
+		{"主板版本", "Board Version", "board_version"}, {"BIOS厂商", "BIOS Vendor", "bios_vendor"},
+		{"BIOS版本", "BIOS Version", "bios_version"}, {"BIOS日期", "BIOS Date", "bios_date"},
+	} {
+		renderer.basicRow(renderer.pick(field.zh, field.en), stringValue(firmware, field.key))
+	}
+
+	pci := objectValue(root, "pci")
+	gpus := arrayValue(root, "gpus")
+	pciDevices := arrayValue(pci, "devices")
+	renderer.basicRow(renderer.pick("PCI设备数量", "PCI Device Count"), strconv.Itoa(len(pciDevices)))
+	renderer.basicRow(renderer.pick("PCI驱动", "PCI Drivers"), structuredDriverList(pciDevices))
+	renderer.basicRow(renderer.pick("GPU设备数量", "GPU Device Count"), strconv.Itoa(len(gpus)))
+	renderer.basicRow(renderer.pick("GPU驱动", "GPU Drivers"), structuredDriverList(gpus))
+
+	topology := objectValue(root, "memory_topology")
+	renderer.basicRow(renderer.pick("NUMA节点数量", "NUMA Node Count"), strconv.Itoa(len(arrayValue(topology, "nodes"))))
+	// DIMM capacity intentionally is not summed here: the memory row already
+	// reports total memory, and virtualized DMI tables commonly repeat it.
+	renderer.basicRow(renderer.pick("DIMM数量", "DIMM Count"), strconv.Itoa(len(arrayValue(topology, "dimms"))))
+	if value := int64Value(topology, "hugepages_total"); value > 0 {
+		renderer.basicRow(renderer.pick("HugePages总数", "HugePages Total"), strconv.FormatInt(value, 10))
+	}
+	if value := int64Value(topology, "hugepages_free"); value > 0 {
+		renderer.basicRow(renderer.pick("HugePages空闲", "HugePages Free"), strconv.FormatInt(value, 10))
+	}
+	if value := int64Value(topology, "hugepage_bytes"); value > 0 {
+		renderer.basicRow(renderer.pick("HugePage大小", "HugePage Size"), formatBytes(value))
+	}
+	disks := arrayValue(root, "disks")
+	for index, raw := range disks {
+		disk, _ := raw.(map[string]any)
+		health := objectValue(disk, "health")
+		temperature := objectValue(disk, "temperature")
+		zhPrefix := fmt.Sprintf("物理盘 %d", index+1)
+		enPrefix := fmt.Sprintf("Disk %d", index+1)
+		renderer.basicRow(renderer.pick(zhPrefix+" 型号", enPrefix+" Model"), joinNonEmpty(stringValue(disk, "vendor"), stringValue(disk, "model")))
+		if value := int64Value(disk, "size_bytes"); value > 0 {
+			renderer.basicRow(renderer.pick(zhPrefix+" 容量", enPrefix+" Size"), formatBytes(value))
+		}
+		renderer.basicRow(renderer.pick(zhPrefix+" 协议", enPrefix+" Protocol"), stringValue(health, "protocol"))
+		renderer.basicRow(renderer.pick(zhPrefix+" 健康", enPrefix+" Health"), fallback(stringValue(health, "status"), stringValue(health, "availability")))
+		if value := floatValue(temperature, "celsius"); value != 0 {
+			renderer.basicRow(renderer.pick(zhPrefix+" 温度", enPrefix+" Temperature"), formatTemperature(value))
+		}
+	}
+	raid := objectValue(root, "raid")
+	arrays := arrayValue(raid, "arrays")
+	controllers := arrayValue(raid, "controllers")
+	renderer.basicRow(renderer.pick("RAID阵列数量", "RAID Arrays"), strconv.Itoa(len(arrays)))
+	renderer.basicRow(renderer.pick("RAID级别", "RAID Levels"), structuredUniqueValues(arrays, "level"))
+	degraded := 0
+	for _, raw := range arrays {
+		array, _ := raw.(map[string]any)
+		if boolValue(array, "degraded") {
+			degraded++
+		}
+	}
+	if degraded > 0 {
+		renderer.basicRow(renderer.pick("RAID降级阵列", "RAID Degraded Arrays"), strconv.Itoa(degraded))
+	}
+	renderer.basicRow(renderer.pick("RAID控制器数量", "RAID Controllers"), strconv.Itoa(len(controllers)))
+	renderer.basicRow(renderer.pick("RAID驱动", "RAID Drivers"), structuredDriverList(controllers))
 }
 
 func (renderer *structuredTextRenderer) cpuPayload(payload json.RawMessage, label string) {
@@ -701,34 +796,28 @@ func (renderer *structuredTextRenderer) tcp(reports []TCPReport) {
 		return
 	}
 	renderer.section(renderer.pick("TCP握手延迟", "TCP Handshake Latency"))
-	summary := summarizeStructuredTCP(reports)
-	renderer.row(renderer.pick("汇总", "Summary"), fmt.Sprintf(renderer.pick("%d 个目标 / %d/%d 次成功 / %.1f%%", "%d targets / %d/%d succeeded / %.1f%%"), len(reports), summary.successful, summary.attempts, summary.successRate))
-	renderer.row(renderer.pick("失败", "Failures"), fmt.Sprintf("DNS:%d R:%d T:%d O:%d", summary.dns, summary.refused, summary.timeout, summary.other))
-	cellWidth := (renderer.width - 3) / 2
-	renderer.compactColumns([]string{renderer.pick("平台 | 成功/尝试 | 丢包", "Target | Success/Attempts | Loss"), renderer.pick("平台 | 成功/尝试 | 丢包", "Target | Success/Attempts | Loss")}, cellWidth)
-	renderer.compactColumns([]string{"Min/Avg/P50/P95/Max; D/R/T/O", "Min/Avg/P50/P95/Max; D/R/T/O"}, cellWidth)
-	for index := 0; index < len(reports); index += 2 {
-		left := structuredTCPReportLines(reports[index], renderer.zh)
-		right := []string{"", ""}
-		if index+1 < len(reports) {
-			right = structuredTCPReportLines(reports[index+1], renderer.zh)
-		}
-		for line := range left {
-			renderer.compactColumns([]string{left[line], right[line]}, cellWidth)
-		}
+	ordered := append([]TCPReport(nil), reports...)
+	sortTCPReports(ordered, renderer.tcpSort)
+	summary := summarizeStructuredTCP(ordered)
+	failed := max(0, summary.attempts-summary.successful)
+	summaryValue := fmt.Sprintf(renderer.pick("目标:%d  握手:%d/%d  成功率:%.1f%%  失败:%d", "Targets:%d  Handshakes:%d/%d  Success:%.1f%%  Failed:%d"), len(ordered), summary.successful, summary.attempts, summary.successRate, failed)
+	if failures := formatStructuredTCPFailures(summary.dns, summary.refused, summary.timeout, summary.other, renderer.zh); failures != "" {
+		summaryValue += "  " + failures
 	}
-}
-
-func structuredTCPReportLines(report TCPReport, zh bool) []string {
-	_ = zh
-	name := fallback(report.Target.Name, report.Target.ID)
-	if strings.TrimSpace(report.Target.Category) != "" {
-		name += "/" + strings.TrimSpace(report.Target.Category)
+	renderer.row(renderer.pick("汇总", "Summary"), summaryValue)
+	rows := make([][]string, 0, len(ordered))
+	for _, report := range ordered {
+		rows = append(rows, []string{
+			fallback(report.Target.Name, report.Target.ID),
+			fmt.Sprintf("%d/%d", report.Successful, report.Attempts),
+			fmt.Sprintf("%.1f%%", structuredTCPLoss(report)),
+			fmt.Sprintf("%s; %s", formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors)),
+		})
 	}
-	return []string{
-		fmt.Sprintf("%s | %d/%d | %.1f%%", name, report.Successful, report.Attempts, structuredTCPLoss(report)),
-		fmt.Sprintf("%s; %s", formatTCPMilliseconds(report.MinMS, report.MeanMS, report.P50MS, report.P95MS, report.MaxMS), formatTCPErrorCounts(report.Errors)),
-	}
+	renderer.table(
+		[]string{renderer.pick("平台", "Platform"), renderer.pick("成功/尝试", "Success"), renderer.pick("丢包", "Loss"), "Min/Avg/P50/P95/Max; D/R/T/O"},
+		rows, []int{20, 9, 7, 37},
+	)
 }
 
 func structuredTCPLoss(report TCPReport) float64 {
@@ -809,6 +898,21 @@ func formatTCPErrorCounts(errors map[string]int) string {
 		}
 	}
 	return fmt.Sprintf("%d/%d/%d/%d", counts[0], counts[1], counts[2], counts[3])
+}
+
+func formatStructuredTCPFailures(dns, refused, timeout, other int, zh bool) string {
+	labels := [4]string{"DNS", "R", "T", "O"}
+	if zh {
+		labels = [4]string{"DNS", "拒", "超", "其"}
+	}
+	counts := [4]int{dns, refused, timeout, other}
+	parts := make([]string, 0, len(counts))
+	for index, count := range counts {
+		if count > 0 {
+			parts = append(parts, fmt.Sprintf("%s:%d", labels[index], count))
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 func (renderer *structuredTextRenderer) componentTitle(name string) string {
@@ -1060,46 +1164,52 @@ func formatTemperature(value float64) string {
 	return fmt.Sprintf("%.1f C", value)
 }
 
-func countLabel(value int, unit string) string {
-	if value <= 0 {
-		return ""
-	}
-	return fmt.Sprintf("%d %s", value, unit)
-}
-
-func quotaLabel(value float64) string {
-	if value <= 0 {
-		return ""
-	}
-	return fmt.Sprintf("%.2f CPU", value)
-}
-
-func memoryLimitLabel(current, limit int64) string {
-	if limit <= 0 {
-		return ""
-	}
-	if current > 0 {
-		return "memory " + formatBytes(current) + "/" + formatBytes(limit)
-	}
-	return "memory " + formatBytes(limit)
-}
-
-func qdiscLabel(value string) string {
-	if value == "" {
-		return ""
-	}
-	return "qdisc " + value
-}
-
-func tuningTupleLabel(name string, values []int64) string {
+func tuningTupleValues(values []int64) string {
 	if len(values) == 0 {
 		return ""
 	}
-	parts := make([]string, len(values))
-	for index, value := range values {
-		parts[index] = formatBytes(value)
+	parts := make([]string, 0, len(values))
+	for _, value := range values {
+		if value > 0 {
+			parts = append(parts, formatBytes(value))
+		}
 	}
-	return name + " " + strings.Join(parts, "/")
+	return strings.Join(parts, "/")
+}
+
+func structuredDriverList(items []any) string {
+	values := make(map[string]struct{})
+	for _, raw := range items {
+		item, _ := raw.(map[string]any)
+		if value := strings.TrimSpace(stringValue(item, "driver")); value != "" {
+			values[value] = struct{}{}
+		}
+	}
+	result := make([]string, 0, len(values))
+	for value := range values {
+		result = append(result, value)
+	}
+	sort.Strings(result)
+	if len(result) > 4 {
+		result = append(result[:4], fmt.Sprintf("+%d", len(result)-4))
+	}
+	return strings.Join(result, ",")
+}
+
+func structuredUniqueValues(items []any, key string) string {
+	values := make(map[string]struct{})
+	for _, raw := range items {
+		item, _ := raw.(map[string]any)
+		if value := strings.TrimSpace(stringValue(item, key)); value != "" {
+			values[value] = struct{}{}
+		}
+	}
+	result := make([]string, 0, len(values))
+	for value := range values {
+		result = append(result, value)
+	}
+	sort.Strings(result)
+	return strings.Join(result, ",")
 }
 
 func fallback(values ...string) string {
@@ -1119,16 +1229,6 @@ func joinNonEmpty(values ...string) string {
 		}
 	}
 	return strings.Join(result, " / ")
-}
-
-func joinValuesWithSpace(values ...string) string {
-	result := make([]string, 0, len(values))
-	for _, value := range values {
-		if value = strings.TrimSpace(value); value != "" && value != "-" {
-			result = append(result, value)
-		}
-	}
-	return strings.Join(result, " ")
 }
 
 func humanizeKey(value string) string {
