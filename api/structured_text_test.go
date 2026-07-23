@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -73,6 +74,78 @@ func TestRenderStructuredRunTextUsesEnglishTitles(t *testing.T) {
 	for _, want := range []string{"VPS Fusion Monster Test", "NAT Type Check", "Mapping Consistency", "Port Preservation", "Hairpin"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("English text missing %q:\n%s", want, text)
+		}
+	}
+}
+
+func TestRenderStructuredEnglishDiskNeverEmitsAnEmptyChapter(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "en"
+	config.Width = 80
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "disktest", ReportStatusOK, `{"status":"ok","metrics":[]}`),
+		componentFixture(t, "disktest.deep_multi", ReportStatusSkipped, `{"requested":false,"paths":[]}`),
+	}, nil)
+	if !strings.Contains(text, "Disk Benchmark") || !strings.Contains(text, "No benchmark data") {
+		t.Fatalf("empty standard disk payload produced a title-only section:\n%s", text)
+	}
+	if !strings.Contains(text, "Deep Multi-Path Disk Test") || !strings.Contains(text, "Result") || !strings.Contains(text, "skipped") {
+		t.Fatalf("empty deep disk payload produced a title-only section:\n%s", text)
+	}
+}
+
+func TestRenderStructuredDiskUsesSelectedMethodAndLegacyRows(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "en"
+	config.Width = 100
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "disktest", ReportStatusOK, `{"schema_version":"goecs.disk/v1","status":"ok","method":"dd","legacy_output":"Test Path    Block Size    Direct Write(IOPS)    Direct Read(IOPS)\n/             4k            1 MB/s(1)               2 MB/s(2)\n"}`),
+	}, nil)
+	for _, want := range []string{"Disk-Test--dd-Method", "Test Path", "Direct Write", "/             4k"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("structured DD output missing %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "Disk-Test--fio-Method") {
+		t.Fatalf("DD payload was mislabeled as FIO:\n%s", text)
+	}
+}
+
+func TestRenderStructuredDiskMethodTitlesAcrossLanguages(t *testing.T) {
+	for _, test := range []struct {
+		language, method, title string
+	}{
+		{language: "zh", method: "dd", title: "硬盘测试-通过dd测试"},
+		{language: "zh", method: "fio", title: "硬盘测试-通过fio测试"},
+		{language: "en", method: "dd", title: "Disk-Test--dd-Method"},
+		{language: "en", method: "fio", title: "Disk-Test--fio-Method"},
+	} {
+		t.Run(test.language+"/"+test.method, func(t *testing.T) {
+			config := NewConfig("v-test")
+			config.Language = test.language
+			payload := fmt.Sprintf(`{"schema_version":"goecs.disk/v1","status":"ok","method":%q,"metrics":[{"scenario_id":"4k-q1-read","iops":1}]}`, test.method)
+			text := renderStructuredRunText(config, nil, []ComponentReport{componentFixture(t, "disktest", ReportStatusOK, payload)}, nil)
+			if !strings.Contains(text, test.title) {
+				t.Fatalf("disk method title missing %q:\n%s", test.title, text)
+			}
+		})
+	}
+}
+
+func TestRenderStructuredDiskFailureShowsSanitizedReason(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "en"
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "disktest", ReportStatusUnavailable, `{"status":"unavailable","error":"load https://private.example/data?token=secret from /root/cache failed","metrics":[]}`),
+	}, nil)
+	for _, want := range []string{"Disk Benchmark", "Status", "unavailable", "Reason", "[remote-url]", "[local-path]"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("disk failure output missing %q:\n%s", want, text)
+		}
+	}
+	for _, forbidden := range []string{"private.example", "token=secret", "/root/cache"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("disk failure output leaked %q:\n%s", forbidden, text)
 		}
 	}
 }

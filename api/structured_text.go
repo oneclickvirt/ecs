@@ -270,6 +270,15 @@ func (renderer *structuredTextRenderer) dataFiles(files []DataFileVersion) {
 
 func (renderer *structuredTextRenderer) component(component ComponentReport) {
 	title := renderer.componentTitle(component.Name)
+	if component.Name == "disktest" {
+		if method := stringValue(payloadObject(component.Payload), "method"); method != "" {
+			if renderer.zh {
+				title = fmt.Sprintf("硬盘测试-通过%s测试", method)
+			} else {
+				title = fmt.Sprintf("Disk-Test--%s-Method", method)
+			}
+		}
+	}
 	if title == "" {
 		return
 	}
@@ -320,8 +329,10 @@ func (renderer *structuredTextRenderer) componentState(component ComponentReport
 	if showState {
 		renderer.row(renderer.pick("状态", "Status"), renderer.status(component.Status))
 	}
-	if component.Reason != "" && showState {
+	if component.Reason != "" && showState && !((component.Name == "disktest" || component.Name == "disktest.deep_multi") && len(component.Payload) > 0) {
 		renderer.row(renderer.pick("说明", "Reason"), component.Reason)
+	} else if component.Status == ReportStatusSkipped && component.Reason != "" && component.Reason != "explicit deep target not configured" {
+		renderer.row(renderer.pick("说明", "Reason"), localizedDiskError(component.Reason, renderer.zh))
 	}
 }
 
@@ -485,7 +496,28 @@ func (renderer *structuredTextRenderer) memoryPayload(payload json.RawMessage) {
 
 func (renderer *structuredTextRenderer) diskPayload(payload json.RawMessage) {
 	root := payloadObject(payload)
-	renderer.diskMetrics(arrayValue(root, "metrics"))
+	if output := stringValue(root, "legacy_output"); strings.TrimSpace(output) != "" {
+		renderer.legacyDiskOutput(output)
+		return
+	}
+	if !renderer.diskMetrics(arrayValue(root, "metrics")) {
+		renderer.diskEmptyResult(root)
+	}
+}
+
+func (renderer *structuredTextRenderer) legacyDiskOutput(output string) {
+	for _, line := range strings.Split(strings.TrimSuffix(output, "\n"), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		available := renderer.width - 1
+		if available < 1 {
+			available = renderer.width
+		}
+		renderer.builder.WriteByte(' ')
+		renderer.builder.WriteString(truncateDisplay(line, available))
+		renderer.builder.WriteByte('\n')
+	}
 }
 
 func (renderer *structuredTextRenderer) deepDiskPayload(payload json.RawMessage) {
@@ -494,11 +526,16 @@ func (renderer *structuredTextRenderer) deepDiskPayload(payload json.RawMessage)
 	for index, raw := range paths {
 		path, _ := raw.(map[string]any)
 		renderer.row(renderer.pick("测试目录", "Test Path"), fmt.Sprintf("#%d %s", index+1, renderer.status(ReportStatus(stringValue(path, "status")))))
-		renderer.diskMetrics(arrayValue(path, "metrics"))
+		if !renderer.diskMetrics(arrayValue(path, "metrics")) {
+			renderer.diskEmptyResult(path)
+		}
+	}
+	if len(paths) == 0 {
+		renderer.diskEmptyResult(root)
 	}
 }
 
-func (renderer *structuredTextRenderer) diskMetrics(metrics []any) {
+func (renderer *structuredTextRenderer) diskMetrics(metrics []any) bool {
 	rows := make([][]string, 0, len(metrics))
 	for _, raw := range metrics {
 		metric, _ := raw.(map[string]any)
@@ -508,7 +545,51 @@ func (renderer *structuredTextRenderer) diskMetrics(metrics []any) {
 			formatNanoseconds(int64Value(metric, "latency_p95_ns")), formatNanoseconds(int64Value(metric, "latency_p99_ns")),
 		})
 	}
+	if len(rows) == 0 {
+		return false
+	}
 	renderer.table([]string{renderer.pick("项目", "Scenario"), "IOPS", renderer.pick("带宽", "Bandwidth"), "P50", "P95", "P99"}, rows, []int{20, 10, 14, 10, 10, 10})
+	return true
+}
+
+func (renderer *structuredTextRenderer) diskEmptyResult(root map[string]any) {
+	if detail := sanitizePublicText(stringValue(root, "error")); detail != "" {
+		renderer.row(renderer.pick("说明", "Reason"), localizedDiskError(detail, renderer.zh))
+		return
+	}
+	if requested, exists := root["requested"].(bool); exists && !requested {
+		renderer.row(renderer.pick("结果", "Result"), renderer.status(ReportStatusSkipped))
+		return
+	}
+	renderer.row(renderer.pick("结果", "Result"), renderer.pick("无可用测试数据", "No benchmark data"))
+}
+
+func localizedDiskError(value string, zh bool) string {
+	value = strings.TrimSpace(value)
+	translations := map[string][2]string{
+		"canceled":                    {"已取消", "Canceled"},
+		"timeout":                     {"超时", "Timed out"},
+		"fio_unavailable":             {"FIO不可用", "FIO unavailable"},
+		"fio_failed":                  {"FIO执行失败", "FIO failed"},
+		"invalid_fio_output":          {"FIO输出无法解析", "Invalid FIO output"},
+		"test_path_not_found":         {"测试路径不存在", "Test path not found"},
+		"test_path_permission_denied": {"测试路径权限不足", "Test path permission denied"},
+		"insufficient_space":          {"可用空间不足", "Insufficient free space"},
+		"test_path_not_directory":     {"测试路径不是目录", "Test path is not a directory"},
+		"raw_device_forbidden":        {"禁止写入裸设备", "Raw device paths are forbidden"},
+		"unsafe_test_size":            {"测试文件大小不安全", "Unsafe test size"},
+		"test_path_unavailable":       {"测试路径不可用", "Test path unavailable"},
+		"dd_output_unavailable":       {"DD输出不可用", "DD output unavailable"},
+		"dd_partial_failure":          {"部分DD操作失败", "One or more DD operations failed"},
+		"deep_fio_required":           {"深度磁盘矩阵需要FIO", "Deep disk matrix requires FIO"},
+	}
+	if translated, ok := translations[value]; ok {
+		if zh {
+			return translated[0]
+		}
+		return translated[1]
+	}
+	return localizedValue(value, zh)
 }
 
 func (renderer *structuredTextRenderer) mediaPayload(payload json.RawMessage) {

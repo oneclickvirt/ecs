@@ -294,6 +294,13 @@ func bufferedDiskSection(ctx context.Context, config *params.Config) string {
 		if config.Language == "zh" {
 			title = fmt.Sprintf("硬盘测试-通过%s测试", method)
 		}
+		if strings.TrimSpace(result) == "" {
+			if config.Language == "en" {
+				result = "Disk test unavailable\n"
+			} else {
+				result = "硬盘测试不可用\n"
+			}
+		}
 		return legacySectionText(title, config.Width, result)
 	}
 	if config.AutoChangeDiskMethod {

@@ -12,7 +12,7 @@ require (
 	github.com/oneclickvirt/basics v0.0.28
 	github.com/oneclickvirt/cputest v0.0.18
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
-	github.com/oneclickvirt/disktest v0.0.15
+	github.com/oneclickvirt/disktest v0.0.17
 	github.com/oneclickvirt/gostun v0.0.10
 	github.com/oneclickvirt/memorytest v0.0.14
 	github.com/oneclickvirt/nt3 v0.0.22
@@ -79,7 +79,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/nxtrace/NTrace-core v1.7.1 // indirect
+	github.com/nxtrace/NTrace-core v1.7.1
 	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
 	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect

@@ -12,12 +12,12 @@ import (
 func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChange bool) (realTestMethod, res string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] DiskTest panic: %v\n", r)
-			res = fmt.Sprintf("\nDisk test failed: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] DiskTest failed")
+			res = diskUnavailableMessage(language)
 			realTestMethod = "error"
 		}
 	}()
-	
+
 	switch testMethod {
 	case "fio":
 		res = disk.FioTest(language, isMultiCheck, testPath)
@@ -44,8 +44,18 @@ func DiskTest(language, testMethod, testPath string, isMultiCheck bool, autoChan
 			realTestMethod = "dd"
 		}
 	}
+	if strings.TrimSpace(res) == "" {
+		res = diskUnavailableMessage(language)
+	}
 	if !strings.Contains(res, "\n") && res != "" {
 		res += "\n"
 	}
 	return
+}
+
+func diskUnavailableMessage(language string) string {
+	if strings.EqualFold(strings.TrimSpace(language), "en") {
+		return "Disk test unavailable\n"
+	}
+	return "硬盘测试不可用\n"
 }

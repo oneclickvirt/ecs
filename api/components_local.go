@@ -595,16 +595,23 @@ type hardwareComponentRunners struct {
 	CPU               func(context.Context, cpu.StructuredConfig) cpu.StructuredResult
 	Memory            func(context.Context, memory.BenchmarkConfig) (memory.BenchmarkResult, error)
 	Disk              func(context.Context, disk.MatrixConfig) disk.MatrixResult
+	DiskDD            func(context.Context, string, bool, string) string
 	DeepDisk          func(context.Context, disk.MatrixConfig) disk.MatrixResult
 	DiscoverDiskPaths func() (disk.TestPathInfo, error)
 	DeepMultiDisk     func(context.Context, []string, disk.MatrixConfig) disk.MultiPathResult
 	Burn              func(context.Context, cpu.BurnConfig) cpu.BurnResult
 }
 
+type diskComponentPayload struct {
+	disk.MatrixResult
+	Method       string `json:"method"`
+	LegacyOutput string `json:"legacy_output,omitempty"`
+}
+
 func defaultHardwareComponentRunners() hardwareComponentRunners {
 	return hardwareComponentRunners{
 		CPU: cpu.RunStructured, Memory: memory.RunBenchmark,
-		Disk: disk.RunStandardFioMatrix, DeepDisk: disk.RunDeepFioMatrix,
+		Disk: disk.RunStandardFioMatrix, DiskDD: disk.DDTestContext, DeepDisk: disk.RunDeepFioMatrix,
 		DiscoverDiskPaths: disk.DiscoverTestPaths, DeepMultiDisk: disk.RunDeepMultiPathMatrix,
 		Burn: cpu.RunBurn,
 	}
@@ -677,8 +684,6 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 		started := time.Now()
 		if report, complete := canceledHardwareComponent(hardwareCtx, "disktest", "goecs.disk/v1", started); complete {
 			reports = append(reports, report)
-		} else if runners.Disk == nil {
-			reports = append(reports, componentPayload("disktest", "goecs.disk/v1", ReportStatusUnavailable, started, nil, errors.New("disk structured runner unavailable")))
 		} else {
 			path := config.DiskTestPath
 			if path == "" {
@@ -699,8 +704,53 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 					diskRunner = runners.DeepDisk
 				}
 			}
-			matrix := diskRunner(hardwareCtx, disk.MatrixConfig{Path: path, SizeBytes: sizeBytes, Runtime: matrixRuntime, MaxDuration: diskBudget})
-			reports = append(reports, hardwareComponentPayload(hardwareCtx, "disktest", matrix.SchemaVersion, matrix.Status, started, matrix, nil))
+			matrixConfig := disk.MatrixConfig{Path: path, SizeBytes: sizeBytes, Runtime: matrixRuntime, MaxDuration: diskBudget}
+			fioReport := func() ComponentReport {
+				if diskRunner == nil {
+					return componentPayload("disktest", "goecs.disk/v1", ReportStatusUnavailable, started, nil, errors.New("fio structured runner unavailable"))
+				}
+				matrix := diskRunner(hardwareCtx, matrixConfig)
+				payload := diskComponentPayload{MatrixResult: matrix, Method: "fio"}
+				report := hardwareComponentPayload(hardwareCtx, "disktest", matrix.SchemaVersion, matrix.Status, started, payload, nil)
+				if report.Reason == "" && matrix.Status != "ok" {
+					report.Reason = sanitizePublicText(matrix.Error)
+				}
+				return report
+			}
+			ddReport := func() ComponentReport {
+				if runners.DiskDD == nil {
+					return componentPayload("disktest", "goecs.disk/v1", ReportStatusUnavailable, started, nil, errors.New("dd structured runner unavailable"))
+				}
+				if hardwareCtx.Err() != nil {
+					status, _ := contextComponentStatus(hardwareCtx)
+					return componentPayload("disktest", "goecs.disk/v1", status, started, nil, hardwareCtx.Err())
+				}
+				output := runners.DiskDD(hardwareCtx, config.Language, config.DiskMultiCheck, config.DiskTestPath)
+				status, reason := legacyDiskOutputStatus(output)
+				payload := diskComponentPayload{
+					MatrixResult: disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: status, DurationMS: time.Since(started).Milliseconds(), Error: reason},
+					Method:       "dd", LegacyOutput: output,
+				}
+				report := hardwareComponentPayload(hardwareCtx, "disktest", "goecs.disk/v1", status, started, payload, nil)
+				if report.Reason == "" && reason != "" {
+					report.Reason = reason
+				}
+				return report
+			}
+			method := strings.ToLower(strings.TrimSpace(config.DiskTestMethod))
+			var report ComponentReport
+			if method == "dd" {
+				report = ddReport()
+				if diskReportAllowsFallback(report) && config.AutoChangeDiskMethod {
+					report = fioReport()
+				}
+			} else {
+				report = fioReport()
+				if diskReportAllowsFallback(report) && config.AutoChangeDiskMethod {
+					report = ddReport()
+				}
+			}
+			reports = append(reports, report)
 		}
 		last := reports[len(reports)-1]
 		progressCompleted(parent, "disk", last.Status, last.Reason)
@@ -745,16 +795,27 @@ func collectExplicitDeepHardwareReportsWithRunners(ctx context.Context, config *
 
 	started := time.Now()
 	paths := splitExplicitTargets(config.DeepDiskPaths)
-	if len(paths) == 0 && config.DiskMultiCheck {
+	if strings.ToLower(strings.TrimSpace(config.DiskTestMethod)) == "dd" {
+		report := skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started)
+		report.Reason = "deep_fio_required"
+		result = append(result, report)
+		paths = nil
+	} else if len(paths) == 0 && config.DiskMultiCheck {
 		if discovered, err := runners.DiscoverDiskPaths(); err == nil {
 			paths = discovered.MountPoints
 		}
 	}
-	if len(paths) == 0 {
-		result = append(result, skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started))
-	} else {
-		matrix := runners.DeepMultiDisk(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, Runtime: 2 * time.Second, MaxDuration: min(3*time.Minute, config.HardwareBudget)})
-		result = append(result, hardwareComponentPayload(ctx, "disktest.deep_multi", matrix.SchemaVersion, matrix.Status, started, matrix, nil))
+	if len(result) == 0 {
+		if len(paths) == 0 {
+			result = append(result, skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started))
+		} else {
+			matrix := runners.DeepMultiDisk(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, Runtime: 2 * time.Second, MaxDuration: min(3*time.Minute, config.HardwareBudget)})
+			report := hardwareComponentPayload(ctx, "disktest.deep_multi", matrix.SchemaVersion, matrix.Status, started, matrix, nil)
+			if report.Reason == "" && matrix.Status != "ok" {
+				report.Reason = sanitizePublicText(matrix.Error)
+			}
+			result = append(result, report)
+		}
 	}
 
 	started = time.Now()
@@ -845,6 +906,23 @@ func hardwareComponentPayload(ctx context.Context, name, schema, raw string, sta
 		report.Reason = ctx.Err().Error()
 	}
 	return report
+}
+
+func legacyDiskOutputStatus(output string) (string, string) {
+	normalized := strings.ToLower(strings.TrimSpace(output))
+	if normalized == "" || normalized == "disk test unavailable" || normalized == "硬盘测试不可用" {
+		return "unavailable", "dd_output_unavailable"
+	}
+	for _, marker := range []string{"write failed", "read failed", "unable to parse", "写入失败", "读取失败", "无法解析"} {
+		if strings.Contains(normalized, marker) {
+			return "partial", "dd_partial_failure"
+		}
+	}
+	return "ok", ""
+}
+
+func diskReportAllowsFallback(report ComponentReport) bool {
+	return report.Status == ReportStatusUnavailable || report.Status == ReportStatusError || report.Status == ReportStatusTimeout
 }
 
 // hardwareStageContext is deliberately separate from componentContext. The

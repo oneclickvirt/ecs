@@ -284,37 +284,13 @@ func RunMemoryTest(ctx context.Context, config *params.Config, output, tempOutpu
 
 // RunDiskTest runs disk test
 func RunDiskTest(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex) string {
-	if ctx.Err() != nil {
+	if ctx.Err() != nil || config == nil || !config.DiskTestStatus {
 		return output
 	}
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	return utils.PrintAndCapture(func() {
-		if config.DiskTestStatus && config.AutoChangeDiskMethod {
-			realTestMethod, res := tests.DiskTest(config.Language, config.DiskTestMethod, config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
-			if config.Language == "zh" {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", realTestMethod), config.Width)
-			} else {
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", realTestMethod), config.Width)
-			}
-			fmt.Print(res)
-		} else if config.DiskTestStatus && !config.AutoChangeDiskMethod {
-			if config.Language == "zh" {
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "dd"), config.Width)
-				_, res := tests.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
-				fmt.Print(res)
-				utils.PrintCenteredTitle(fmt.Sprintf("硬盘测试-通过%s测试", "fio"), config.Width)
-				_, res = tests.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
-				fmt.Print(res)
-			} else {
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "dd"), config.Width)
-				_, res := tests.DiskTest(config.Language, "dd", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
-				fmt.Print(res)
-				utils.PrintCenteredTitle(fmt.Sprintf("Disk-Test--%s-Method", "fio"), config.Width)
-				_, res = tests.DiskTest(config.Language, "fio", config.DiskTestPath, config.DiskMultiCheck, config.AutoChangeDiskMethod)
-				fmt.Print(res)
-			}
-		}
+		fmt.Print(bufferedDiskSection(ctx, config))
 	}, tempOutput, output)
 }
 

@@ -254,6 +254,57 @@ func TestRunCPUBurnTestSkipsOrdinaryDefaults(t *testing.T) {
 	}
 }
 
+func TestBufferedDiskSectionEnglishNeverEmitsAnEmptyChapter(t *testing.T) {
+	previous := runLegacyDisk
+	defer func() { runLegacyDisk = previous }()
+	runLegacyDisk = func(language, method, path string, multi, auto bool) (string, string) {
+		if language != "en" || method != "fio" || path != "/fixture" || multi || !auto {
+			t.Fatalf("unexpected disk arguments: language=%q method=%q path=%q multi=%t auto=%t", language, method, path, multi, auto)
+		}
+		return "fio", ""
+	}
+
+	text := bufferedDiskSection(context.Background(), &params.Config{
+		Language: "en", Width: 64, DiskTestStatus: true, DiskTestMethod: "fio",
+		DiskTestPath: "/fixture", AutoChangeDiskMethod: true,
+	})
+	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk test unavailable\n") {
+		t.Fatalf("empty English disk result produced an empty chapter: %q", text)
+	}
+}
+
+func TestBufferedDiskSectionReportsEachUnavailableMethod(t *testing.T) {
+	previous := runLegacyDisk
+	defer func() { runLegacyDisk = previous }()
+	runLegacyDisk = func(_ string, method, _ string, _, _ bool) (string, string) {
+		return method, ""
+	}
+
+	text := bufferedDiskSection(context.Background(), &params.Config{
+		Language: "en", Width: 64, DiskTestStatus: true, AutoChangeDiskMethod: false,
+	})
+	if strings.Count(text, "Disk test unavailable") != 2 ||
+		!strings.Contains(text, "Disk-Test--dd-Method") || !strings.Contains(text, "Disk-Test--fio-Method") {
+		t.Fatalf("dual disk method output lost an unavailable result: %q", text)
+	}
+}
+
+func TestRunDiskTestUsesTheSameEnglishEmptyResultContract(t *testing.T) {
+	previous := runLegacyDisk
+	defer func() { runLegacyDisk = previous }()
+	runLegacyDisk = func(_ string, method, _ string, _, _ bool) (string, string) {
+		return method, ""
+	}
+	cfg := &params.Config{
+		Language: "en", Width: 64, DiskTestStatus: true, DiskTestMethod: "fio", AutoChangeDiskMethod: true,
+	}
+	var outputMutex sync.Mutex
+	text := RunDiskTest(context.Background(), cfg, "", "", &outputMutex)
+	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk test unavailable\n") {
+		t.Fatalf("RunDiskTest diverged from buffered disk output: %q", text)
+	}
+}
+
 func TestLegacyWorkflowBarriersOrderedDrainAndSpeedIsolation(t *testing.T) {
 	hardwareStarted := make(chan string, 3)
 	hardwareRelease := map[string]chan struct{}{

@@ -13,6 +13,7 @@ const privacyRedacted = "[redacted]"
 var (
 	privacyIPv4Pattern = regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
 	privacyIPv6Pattern = regexp.MustCompile(`(?i)(?:[0-9a-f]{0,4}:){2,}[0-9a-f:.%]*`)
+	privacyDiskRow     = regexp.MustCompile(`^(\s*)(\S+)(\s+.*)$`)
 )
 
 // applyStructuredPrivacy removes host identity from the machine-readable
@@ -60,6 +61,12 @@ func redactJSONValue(value any, key string) {
 	switch typed := value.(type) {
 	case map[string]any:
 		for childKey, child := range typed {
+			if strings.EqualFold(strings.TrimSpace(childKey), "legacy_output") {
+				if text, ok := child.(string); ok {
+					typed[childKey] = redactLegacyDiskOutput(text)
+					continue
+				}
+			}
 			if privacySensitiveKey(childKey) {
 				// Structured probe targets carry useful non-identifying labels
 				// alongside a host. Preserve the object shape and redact only its
@@ -91,6 +98,29 @@ func redactJSONValue(value any, key string) {
 			}
 		}
 	}
+}
+
+func redactLegacyDiskOutput(value string) string {
+	lines := strings.Split(value, "\n")
+	for index, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "Test Path") || strings.HasPrefix(trimmed, "测试路径") {
+			continue
+		}
+		matches := privacyDiskRow.FindStringSubmatch(line)
+		if len(matches) != 4 || !isAbsoluteDiskPath(matches[2]) {
+			continue
+		}
+		lines[index] = matches[1] + "[redacted-path]" + matches[3]
+	}
+	return strings.Join(lines, "\n")
+}
+
+func isAbsoluteDiskPath(value string) bool {
+	if strings.HasPrefix(value, "/") || strings.HasPrefix(value, `\\`) {
+		return true
+	}
+	return len(value) >= 3 && ((value[0] >= 'A' && value[0] <= 'Z') || (value[0] >= 'a' && value[0] <= 'z')) && value[1] == ':' && (value[2] == '\\' || value[2] == '/')
 }
 
 func privacySensitiveKey(key string) bool {

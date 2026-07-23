@@ -770,6 +770,151 @@ func TestHardwareStageKeepsStandardProfiles(t *testing.T) {
 	}
 }
 
+func TestHardwareStagePromotesSanitizedDiskFailureReason(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.AutoChangeDiskMethod = false
+	cfg.DiskTestPath = t.TempDir()
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+			return disk.MatrixResult{
+				SchemaVersion: "goecs.disk/v1", Status: "unavailable",
+				Error: "load https://private.example/data?token=secret from /root/cache failed",
+			}
+		},
+	})
+	if len(reports) != 1 || reports[0].Status != ReportStatusUnavailable {
+		t.Fatalf("unexpected disk report: %#v", reports)
+	}
+	if !strings.Contains(reports[0].Reason, "[remote-url]") || !strings.Contains(reports[0].Reason, "[local-path]") {
+		t.Fatalf("disk failure reason was not retained safely: %q", reports[0].Reason)
+	}
+	for _, forbidden := range []string{"private.example", "token=secret", "/root/cache"} {
+		if strings.Contains(reports[0].Reason, forbidden) {
+			t.Fatalf("disk report reason leaked %q: %q", forbidden, reports[0].Reason)
+		}
+	}
+}
+
+func TestHardwareStageHonorsSelectedDiskMethod(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.DiskTestMethod = "dd"
+	cfg.AutoChangeDiskMethod = false
+	ddCalls := 0
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		DiskDD: func(_ context.Context, language string, multi bool, path string) string {
+			ddCalls++
+			if language != "zh" || multi || path != "" {
+				t.Fatalf("unexpected DD adapter arguments: language=%q multi=%t path=%q", language, multi, path)
+			}
+			return "Test Path    Block Size    Direct Write(IOPS)    Direct Read(IOPS)\n/             4k            1 MB/s(1)               2 MB/s(2)\n"
+		},
+		Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+			t.Fatal("selected DD method unexpectedly invoked FIO")
+			return disk.MatrixResult{}
+		},
+	})
+	if ddCalls != 1 || len(reports) != 1 || reports[0].Status != ReportStatusOK {
+		t.Fatalf("selected DD method was not used: calls=%d reports=%#v", ddCalls, reports)
+	}
+	var payload struct {
+		Method       string `json:"method"`
+		LegacyOutput string `json:"legacy_output"`
+	}
+	if err := json.Unmarshal(reports[0].Payload, &payload); err != nil {
+		t.Fatalf("decode DD payload: %v", err)
+	}
+	if payload.Method != "dd" || !strings.Contains(payload.LegacyOutput, "Direct Write") {
+		t.Fatalf("DD payload did not preserve method/output: %#v", payload)
+	}
+}
+
+func TestHardwareStageDiskMethodSelectionAcrossLanguages(t *testing.T) {
+	for _, language := range []string{"zh", "en"} {
+		for _, method := range []string{"dd", "fio"} {
+			t.Run(language+"/"+method, func(t *testing.T) {
+				cfg := NewDefaultConfig()
+				cfg.Language = language
+				cfg.BasicStatus = false
+				cfg.CpuTestStatus = false
+				cfg.MemoryTestStatus = false
+				cfg.DiskTestStatus = true
+				cfg.DiskTestMethod = method
+				cfg.AutoChangeDiskMethod = false
+				ddCalls, fioCalls := 0, 0
+				reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+					DiskDD: func(_ context.Context, gotLanguage string, _ bool, _ string) string {
+						ddCalls++
+						if gotLanguage != language {
+							t.Fatalf("DD language = %q, want %q", gotLanguage, language)
+						}
+						return "/ 4k 1 MB/s(1) 2 MB/s(2)\n"
+					},
+					Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+						fioCalls++
+						return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok", Metrics: []disk.FioMetrics{{ScenarioID: "4k-q1-read"}}}
+					},
+				})
+				if len(reports) != 1 || reports[0].Status != ReportStatusOK {
+					t.Fatalf("unexpected %s report: %#v", method, reports)
+				}
+				if method == "dd" && (ddCalls != 1 || fioCalls != 0) {
+					t.Fatalf("DD selection calls: dd=%d fio=%d", ddCalls, fioCalls)
+				}
+				if method == "fio" && (ddCalls != 0 || fioCalls != 1) {
+					t.Fatalf("FIO selection calls: dd=%d fio=%d", ddCalls, fioCalls)
+				}
+			})
+		}
+	}
+}
+
+func TestHardwareStageDiskFallbackChangesReportedMethod(t *testing.T) {
+	for _, test := range []struct {
+		name, selected, expected string
+		ddOutput                 string
+		fioStatus                string
+	}{
+		{name: "fio to dd", selected: "fio", expected: "dd", ddOutput: "/ 4k 1 MB/s(1) 2 MB/s(2)\n", fioStatus: "unavailable"},
+		{name: "dd to fio", selected: "dd", expected: "fio", ddOutput: "", fioStatus: "ok"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := NewDefaultConfig()
+			cfg.BasicStatus = false
+			cfg.CpuTestStatus = false
+			cfg.MemoryTestStatus = false
+			cfg.DiskTestStatus = true
+			cfg.DiskTestMethod = test.selected
+			cfg.AutoChangeDiskMethod = true
+			reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+				DiskDD: func(context.Context, string, bool, string) string { return test.ddOutput },
+				Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+					return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: test.fioStatus, Metrics: []disk.FioMetrics{{ScenarioID: "4k-q1-read"}}}
+				},
+			})
+			if len(reports) != 1 {
+				t.Fatalf("unexpected fallback reports: %#v", reports)
+			}
+			var payload struct {
+				Method string `json:"method"`
+			}
+			if err := json.Unmarshal(reports[0].Payload, &payload); err != nil {
+				t.Fatalf("decode fallback payload: %v", err)
+			}
+			if payload.Method != test.expected {
+				t.Fatalf("reported fallback method = %q, want %q", payload.Method, test.expected)
+			}
+		})
+	}
+}
+
 func TestHardwareStageSelectsDeepProfiles(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.BasicStatus = false
