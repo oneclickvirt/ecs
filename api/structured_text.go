@@ -553,6 +553,19 @@ func (renderer *structuredTextRenderer) diskMetrics(metrics []any) bool {
 }
 
 func (renderer *structuredTextRenderer) diskEmptyResult(root map[string]any) {
+	if attempts := arrayValue(root, "attempts"); len(attempts) > 0 {
+		rows := make([][]string, 0, len(attempts))
+		for _, raw := range attempts {
+			attempt, _ := raw.(map[string]any)
+			rows = append(rows, []string{
+				strings.ToUpper(stringValue(attempt, "method")),
+				renderer.status(ReportStatus(stringValue(attempt, "status"))),
+				localizedDiskError(stringValue(attempt, "reason"), renderer.zh),
+			})
+		}
+		renderer.table([]string{renderer.pick("方法", "Method"), renderer.pick("状态", "Status"), renderer.pick("说明", "Reason")}, rows, []int{8, 12, 42})
+		return
+	}
 	if detail := sanitizePublicText(stringValue(root, "error")); detail != "" {
 		renderer.row(renderer.pick("说明", "Reason"), localizedDiskError(detail, renderer.zh))
 		return
@@ -571,6 +584,7 @@ func localizedDiskError(value string, zh bool) string {
 		"timeout":                     {"超时", "Timed out"},
 		"fio_unavailable":             {"FIO不可用", "FIO unavailable"},
 		"fio_failed":                  {"FIO执行失败", "FIO failed"},
+		"fio_output_empty":            {"FIO未返回可用指标", "FIO returned no benchmark metrics"},
 		"invalid_fio_output":          {"FIO输出无法解析", "Invalid FIO output"},
 		"test_path_not_found":         {"测试路径不存在", "Test path not found"},
 		"test_path_permission_denied": {"测试路径权限不足", "Test path permission denied"},

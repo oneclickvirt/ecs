@@ -279,11 +279,15 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 		case "deepgpudevice":
 			config.DeepGPUDevice = strings.TrimSpace(a.textVal)
 		case "timeout":
-			if duration, err := time.ParseDuration(strings.TrimSpace(a.textVal)); err == nil {
+			if value := strings.TrimSpace(a.textVal); value == "" {
+				config.MaxDuration = 0
+			} else if duration, err := time.ParseDuration(value); err == nil {
 				config.MaxDuration = duration
 			}
 		case "hardwarebudget":
-			if duration, err := time.ParseDuration(strings.TrimSpace(a.textVal)); err == nil {
+			if value := strings.TrimSpace(a.textVal); value == "" {
+				config.HardwareBudget = 0
+			} else if duration, err := time.ParseDuration(value); err == nil {
 				config.HardwareBudget = duration
 			}
 		case "nt3loc":

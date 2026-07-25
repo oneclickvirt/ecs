@@ -120,8 +120,8 @@ func NewConfig(version string) *Config {
 		PingSortOrder:         "latency",
 		PingScope:             "auto",
 		TCPSortOrder:          "name",
-		MaxDuration:           15 * time.Minute,
-		HardwareBudget:        2 * time.Minute,
+		MaxDuration:           0,
+		HardwareBudget:        0,
 		DeepBurnDuration:      0,
 		JSONPath:              "",
 		DataOffline:           false,
@@ -293,8 +293,8 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.PingSortOrder, "ping-sort", "latency", "Set Ping result order (supported: latency, name)")
 	c.GoecsFlag.StringVar(&c.PingScope, "ping-scope", "auto", "Set Ping targets (supported: auto, china, international; English auto is international)")
 	c.GoecsFlag.StringVar(&c.TCPSortOrder, "tcp-sort", "name", "Set TCP platform order (supported: name, latency)")
-	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 15*time.Minute, "Set the global test deadline")
-	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 2*time.Minute, "Set the standard hardware test budget")
+	c.GoecsFlag.DurationVar(&c.MaxDuration, "timeout", 0, "Set an optional global test deadline (0 disables it)")
+	c.GoecsFlag.DurationVar(&c.HardwareBudget, "hardware-budget", 0, "Set an optional hardware test budget (0 uses the global deadline)")
 	c.GoecsFlag.StringVar(&c.DeepDiskPaths, "deep-disk-paths", "", "Comma-separated mounted directories for the explicit deep multi-disk matrix")
 	c.GoecsFlag.StringVar(&c.DeepSMARTDevices, "deep-smart-devices", "", "Comma-separated devices explicitly allowed for deep SMART self-tests")
 	c.GoecsFlag.DurationVar(&c.DeepBurnDuration, "deep-burn-duration", 0, "Explicit deep CPU burn duration (disabled when zero)")
@@ -666,24 +666,30 @@ func (c *Config) ValidateParams() {
 	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
 	c.DeepSMARTDevices = strings.TrimSpace(c.DeepSMARTDevices)
 	c.DeepGPUDevice = strings.TrimSpace(c.DeepGPUDevice)
-	if c.MaxDuration <= 0 || c.MaxDuration > 15*time.Minute {
-		c.MaxDuration = 15 * time.Minute
+	if c.MaxDuration < 0 {
+		c.MaxDuration = 0
 	}
-	standardHardwareBudget := min(2*time.Minute, c.MaxDuration)
-	hardwareBudgetLimit := standardHardwareBudget
-	if c.DeepMode {
-		hardwareBudgetLimit = c.MaxDuration
+	if c.HardwareBudget < 0 {
+		c.HardwareBudget = 0
 	}
-	if c.HardwareBudget <= 0 || c.HardwareBudget > hardwareBudgetLimit {
-		c.HardwareBudget = hardwareBudgetLimit
+	if c.MaxDuration > 0 && c.HardwareBudget > c.MaxDuration {
+		c.HardwareBudget = c.MaxDuration
 	}
 	if !c.DeepMode {
 		c.DeepDiskPaths = ""
 		c.DeepSMARTDevices = ""
 		c.DeepBurnDuration = 0
 		c.DeepGPUDevice = ""
-	} else if c.DeepBurnDuration < 0 || c.DeepBurnDuration > c.HardwareBudget {
-		c.DeepBurnDuration = c.HardwareBudget
+	} else {
+		effectiveHardwareBudget := c.HardwareBudget
+		if effectiveHardwareBudget <= 0 {
+			effectiveHardwareBudget = c.MaxDuration
+		}
+		if c.DeepBurnDuration < 0 {
+			c.DeepBurnDuration = 0
+		} else if effectiveHardwareBudget > 0 && c.DeepBurnDuration > effectiveHardwareBudget {
+			c.DeepBurnDuration = effectiveHardwareBudget
+		}
 	}
 	if c.PrivacyMode {
 		c.EnableUpload = false

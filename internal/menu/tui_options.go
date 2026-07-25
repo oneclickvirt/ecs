@@ -2,6 +2,7 @@ package menu
 
 import (
 	"strconv"
+	"time"
 
 	textinput "github.com/charmbracelet/bubbles/textinput"
 	"github.com/oneclickvirt/ecs/internal/params"
@@ -155,10 +156,10 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 		},
 		{key: "deepdiskpaths", nameZh: "深度多盘目录", nameEn: "Deep Disk Paths", kind: "text", descZh: "逗号分隔的已挂载普通目录；留空关闭。", descEn: "Comma-separated mounted directories; empty disables.", textVal: config.DeepDiskPaths},
 		{key: "deepsmartdevices", nameZh: "SMART自检设备", nameEn: "SMART Devices", kind: "text", descZh: "逗号分隔的显式设备；留空关闭。", descEn: "Comma-separated explicit devices; empty disables.", textVal: config.DeepSMARTDevices},
-		{key: "deepburnduration", nameZh: "CPU烤机时长", nameEn: "CPU Burn Duration", kind: "text", descZh: "例如30s或2m；留空关闭。", descEn: "For example 30s or 2m; empty disables.", textVal: config.DeepBurnDuration.String()},
+		{key: "deepburnduration", nameZh: "CPU烤机时长", nameEn: "CPU Burn Duration", kind: "text", descZh: "例如30s或2m；留空关闭。", descEn: "For example 30s or 2m; empty disables.", textVal: optionalDurationText(config.DeepBurnDuration)},
 		{key: "deepgpudevice", nameZh: "GPU设备选择器", nameEn: "GPU Device", kind: "text", descZh: "显式GPU设备；留空关闭。", descEn: "Explicit GPU selector; empty disables.", textVal: config.DeepGPUDevice},
-		{key: "timeout", nameZh: "全局截止时间", nameEn: "Global Deadline", kind: "text", descZh: "最长15m，例如10m。", descEn: "Up to 15m, for example 10m.", textVal: config.MaxDuration.String()},
-		{key: "hardwarebudget", nameZh: "硬件阶段预算", nameEn: "Hardware Budget", kind: "text", descZh: "标准模式最长2m；深度模式不超过全局截止时间。", descEn: "Up to 2m in standard mode; deep mode is capped by the global deadline.", textVal: config.HardwareBudget.String()},
+		{key: "timeout", nameZh: "全局截止时间", nameEn: "Global Deadline", kind: "text", descZh: "可选总时限，例如10m；留空不设置。", descEn: "Optional whole-run deadline, for example 10m; empty disables.", textVal: optionalDurationText(config.MaxDuration)},
+		{key: "hardwarebudget", nameZh: "硬件阶段预算", nameEn: "Hardware Budget", kind: "text", descZh: "可选硬件阶段时限，例如3m；留空跟随全局截止时间。", descEn: "Optional hardware-stage deadline, for example 3m; empty follows the global deadline.", textVal: optionalDurationText(config.HardwareBudget)},
 		{
 			key: "nt3loc", nameZh: "NT3测试地区", nameEn: "NT3 Location", kind: "option",
 			descZh: "选择路由追踪地区。显示中文全称，内部仍使用标准参数值。",
@@ -345,6 +346,13 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 	}
 
 	return adv
+}
+
+func optionalDurationText(duration time.Duration) string {
+	if duration <= 0 {
+		return ""
+	}
+	return duration.String()
 }
 
 func optionIndexByValue(options []advOption, value string) int {

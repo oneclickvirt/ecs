@@ -296,9 +296,9 @@ func bufferedDiskSection(ctx context.Context, config *params.Config) string {
 		}
 		if strings.TrimSpace(result) == "" {
 			if config.Language == "en" {
-				result = "Disk test unavailable\n"
+				result = "Disk benchmark returned no usable data.\n"
 			} else {
-				result = "硬盘测试不可用\n"
+				result = "磁盘测试未返回可用的性能数据。\n"
 			}
 		}
 		return legacySectionText(title, config.Width, result)

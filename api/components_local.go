@@ -38,8 +38,7 @@ import (
 
 // collectPublishedComponentReports calls the structured APIs from the
 // published component modules. It deliberately does not call shell scripts;
-// the standard CPU, memory, and disk probes share one bounded hardware-stage
-// context.
+// the standard CPU, memory, and disk probes share one hardware-stage context.
 func collectPublishedComponentReports(ctx context.Context, config *Config, inputs componentInputs) []ComponentReport {
 	reports, _ := collectPublishedComponentReportsWithTCP(ctx, config, inputs)
 	return reports
@@ -216,10 +215,8 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 			if config.DeepMode {
 				probeConfig = nt3.DeepProvinceLatencyConfig()
 			}
-			probeCtx, cancel := componentContext(taskCtx, 45*time.Second)
-			probes := nt3.RunProvinceLatency(probeCtx, targets, probeConfig)
-			probeErr := probeCtx.Err()
-			cancel()
+			probes := nt3.RunProvinceLatency(taskCtx, targets, probeConfig)
+			probeErr := taskCtx.Err()
 			status := ReportStatusOK
 			if probeErr != nil {
 				if probeErr == context.DeadlineExceeded {
@@ -231,13 +228,11 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 			result = append(result, componentPayload("nt3.province_latency", "goecs.nt3/province-latency-v1", status, started, probes, nil))
 			if config.DeepMode && taskCtx.Err() == nil {
 				routeStarted := time.Now()
-				routeCtx, routeCancel := context.WithTimeout(taskCtx, 3*time.Minute)
 				routeConfig := nt3.DeepDetailedProvinceRouteConfig(nt3.NTraceProvinceTracer)
 				routeConfig.IPVersion = config.Nt3CheckType
 				routeConfig.Concurrency = 3
-				routesReport, routeErr := nt3.RunDetailedProvinceRoutes(routeCtx, routes, routeConfig)
-				routeStatus := detailedRouteComponentStatus(routeCtx, routesReport, routeErr)
-				routeCancel()
+				routesReport, routeErr := nt3.RunDetailedProvinceRoutes(taskCtx, routes, routeConfig)
+				routeStatus := detailedRouteComponentStatus(taskCtx, routesReport, routeErr)
 				result = append(result, componentPayload("nt3.province_routes", "goecs.nt3/province-routes-v1", routeStatus, routeStarted, routesReport, routeErr))
 			}
 			return structuredTaskResult{components: result}
@@ -247,11 +242,9 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "ping", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
 			targets := structuredPingTargets(config, inputs.ProvinceRoutes)
-			pingCtx, cancel := componentContext(taskCtx, 30*time.Second)
-			defer cancel()
-			probes := pingprobe.RunICMPProbes(pingCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
+			probes := pingprobe.RunICMPProbes(taskCtx, targets, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 8})
 			sortICMPResults(probes, config.PingSortOrder)
-			report := componentPayload("ping.icmp", "goecs.ping/icmp-v1", pingComponentStatus(pingCtx, probes), started, probes, nil)
+			report := componentPayload("ping.icmp", "goecs.ping/icmp-v1", pingComponentStatus(taskCtx, probes), started, probes, nil)
 			report.Reason = pingComponentReason(probes, report.Status)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
@@ -259,10 +252,8 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 	if config.TgdcTestStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "tgdc", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			probeCtx, cancel := componentContext(taskCtx, 30*time.Second)
-			defer cancel()
-			probes := pingprobe.RunTelegramICMPProbes(probeCtx, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 5})
-			report := componentPayload("ping.telegram", "goecs.ping/telegram-v1", pingComponentStatus(probeCtx, probes), started, probes, nil)
+			probes := pingprobe.RunTelegramICMPProbes(taskCtx, pingprobe.ICMPProbeConfig{Count: 3, Timeout: 5 * time.Second, Concurrency: 5})
+			report := componentPayload("ping.telegram", "goecs.ping/telegram-v1", pingComponentStatus(taskCtx, probes), started, probes, nil)
 			report.Reason = pingComponentReason(probes, report.Status)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
@@ -270,10 +261,8 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 	if config.WebTestStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "web", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			probeCtx, cancel := componentContext(taskCtx, 45*time.Second)
-			defer cancel()
-			probes := pingprobe.RunWebsiteTCPProbes(probeCtx, pingprobe.TCPProbeConfig{Attempts: 3, Timeout: 5 * time.Second, Concurrency: 16})
-			report := componentPayload("ping.web_tcp", "goecs.ping/web-tcp-v1", pingTCPComponentStatus(probeCtx, probes), started, probes, nil)
+			probes := pingprobe.RunWebsiteTCPProbes(taskCtx, pingprobe.TCPProbeConfig{Attempts: 3, Timeout: 5 * time.Second, Concurrency: 16})
+			report := componentPayload("ping.web_tcp", "goecs.ping/web-tcp-v1", pingTCPComponentStatus(taskCtx, probes), started, probes, nil)
 			report.Reason = pingTCPComponentReason(probes, report.Status)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
@@ -281,49 +270,39 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 	if config.UtTestStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "media", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			mediaCtx, cancel := componentContext(taskCtx, 60*time.Second)
-			defer cancel()
-			report := withComponentDuration(collectMediaComponentWithMetadata(mediaCtx, config, inputs.MediaProviders), started)
+			report := withComponentDuration(collectMediaComponentWithMetadata(taskCtx, config, inputs.MediaProviders), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
 	}
 	if config.SecurityTestStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "security", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			securityCtx, cancel := componentContext(taskCtx, 60*time.Second)
-			defer cancel()
-			report := withComponentDuration(collectSecurityComponent(securityCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.DNSBLZones), started)
+			report := withComponentDuration(collectSecurityComponent(taskCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.DNSBLZones), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
 	}
 	if config.BacktraceStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "backtrace", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			backtraceCtx, cancel := componentContext(taskCtx, 45*time.Second)
-			defer cancel()
-			report := withComponentDuration(collectBacktraceComponentWithRegistry(backtraceCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
+			report := withComponentDuration(collectBacktraceComponentWithRegistry(taskCtx, inputs.PublicIPv4, inputs.PublicIPv6, inputs.BGPASNMap), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
 	}
 	if config.EmailTestStatus && inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "email", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			mailCtx, cancel := componentContext(taskCtx, 30*time.Second)
-			defer cancel()
-			report := withComponentDuration(collectMailComponent(mailCtx, portemail.DefaultPlatformSpecs(), nil, nil, nil), started)
+			report := withComponentDuration(collectMailComponent(taskCtx, portemail.DefaultPlatformSpecs(), nil, nil, nil), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}})
 	}
 	if inputs.Network {
 		plan.concurrent = append(plan.concurrent, structuredComponentTask{section: "nat", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			stunCtx, cancel := componentContext(taskCtx, 15*time.Second)
-			defer cancel()
 			servers := gostunmodel.GetDefaultServers(gostunmodel.IPVersion)
 			if !config.DeepMode && len(servers) > 1 {
 				servers = servers[:1]
 			}
-			report := collectSTUNComponent(stunCtx, stuncheck.ProbeConfig{
+			report := collectSTUNComponent(taskCtx, stuncheck.ProbeConfig{
 				Servers: servers, IPVersion: gostunmodel.IPVersion,
 				Timeout: 3 * time.Second, MaxConcurrent: 1,
 			}, stuncheck.ProbeNAT)
@@ -344,10 +323,8 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 	if config.SpeedTestStatus && inputs.Network {
 		plan.speed = &structuredComponentTask{section: "speed", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			speedCtx, cancel := componentContext(taskCtx, 75*time.Second)
-			defer cancel()
 			privateRunner := privateSpeedRunnerForConfig(config.Language, config.DataOffline)
-			report := withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithDependencies(speedCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, nil, nil, privateRunner), started)
+			report := withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithDependencies(taskCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, nil, nil, privateRunner), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}}
 	}
@@ -604,8 +581,15 @@ type hardwareComponentRunners struct {
 
 type diskComponentPayload struct {
 	disk.MatrixResult
-	Method       string `json:"method"`
-	LegacyOutput string `json:"legacy_output,omitempty"`
+	Method       string                `json:"method"`
+	LegacyOutput string                `json:"legacy_output,omitempty"`
+	Attempts     []diskAttemptEvidence `json:"attempts,omitempty"`
+}
+
+type diskAttemptEvidence struct {
+	Method string       `json:"method"`
+	Status ReportStatus `json:"status"`
+	Reason string       `json:"reason,omitempty"`
 }
 
 func defaultHardwareComponentRunners() hardwareComponentRunners {
@@ -692,24 +676,24 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 			if absolute, err := filepath.Abs(path); err == nil {
 				path = absolute
 			}
-			diskBudget := 45 * time.Second
-			matrixRuntime := time.Second
 			sizeBytes := int64(16 << 20)
 			diskRunner := runners.Disk
 			if config.DeepMode {
-				diskBudget = min(3*time.Minute, config.HardwareBudget)
-				matrixRuntime = 2 * time.Second
 				sizeBytes = 256 << 20
 				if runners.DeepDisk != nil {
 					diskRunner = runners.DeepDisk
 				}
 			}
-			matrixConfig := disk.MatrixConfig{Path: path, SizeBytes: sizeBytes, Runtime: matrixRuntime, MaxDuration: diskBudget}
+			matrixConfig := disk.MatrixConfig{Path: path, SizeBytes: sizeBytes, MaxDuration: config.HardwareBudget}
 			fioReport := func() ComponentReport {
 				if diskRunner == nil {
 					return componentPayload("disktest", "goecs.disk/v1", ReportStatusUnavailable, started, nil, errors.New("fio structured runner unavailable"))
 				}
 				matrix := diskRunner(hardwareCtx, matrixConfig)
+				if strings.EqualFold(strings.TrimSpace(matrix.Status), "ok") && len(matrix.Metrics) == 0 {
+					matrix.Status = "unavailable"
+					matrix.Error = "fio_output_empty"
+				}
 				payload := diskComponentPayload{MatrixResult: matrix, Method: "fio"}
 				report := hardwareComponentPayload(hardwareCtx, "disktest", matrix.SchemaVersion, matrix.Status, started, payload, nil)
 				if report.Reason == "" && matrix.Status != "ok" {
@@ -742,12 +726,20 @@ func collectHardwareComponentReports(parent context.Context, config *Config, run
 			if method == "dd" {
 				report = ddReport()
 				if diskReportAllowsFallback(report) && config.AutoChangeDiskMethod {
+					first := report
 					report = fioReport()
+					if diskReportAllowsFallback(report) {
+						report = withDiskAttemptEvidence(report, first, report)
+					}
 				}
 			} else {
 				report = fioReport()
 				if diskReportAllowsFallback(report) && config.AutoChangeDiskMethod {
+					first := report
 					report = ddReport()
+					if diskReportAllowsFallback(report) {
+						report = withDiskAttemptEvidence(report, first, report)
+					}
 				}
 			}
 			reports = append(reports, report)
@@ -809,7 +801,7 @@ func collectExplicitDeepHardwareReportsWithRunners(ctx context.Context, config *
 		if len(paths) == 0 {
 			result = append(result, skippedDeepComponent("disktest.deep_multi", "goecs.disk/deep-multi-v1", started))
 		} else {
-			matrix := runners.DeepMultiDisk(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, Runtime: 2 * time.Second, MaxDuration: min(3*time.Minute, config.HardwareBudget)})
+			matrix := runners.DeepMultiDisk(ctx, paths, disk.MatrixConfig{SizeBytes: 256 << 20, MaxDuration: config.HardwareBudget})
 			report := hardwareComponentPayload(ctx, "disktest.deep_multi", matrix.SchemaVersion, matrix.Status, started, matrix, nil)
 			if report.Reason == "" && matrix.Status != "ok" {
 				report.Reason = sanitizePublicText(matrix.Error)
@@ -910,7 +902,7 @@ func hardwareComponentPayload(ctx context.Context, name, schema, raw string, sta
 
 func legacyDiskOutputStatus(output string) (string, string) {
 	normalized := strings.ToLower(strings.TrimSpace(output))
-	if normalized == "" || normalized == "disk test unavailable" || normalized == "硬盘测试不可用" {
+	if normalized == "" || normalized == "disk test unavailable" || normalized == "硬盘测试不可用" || !legacyDiskResultUsable(output) {
 		return "unavailable", "dd_output_unavailable"
 	}
 	for _, marker := range []string{"write failed", "read failed", "unable to parse", "写入失败", "读取失败", "无法解析"} {
@@ -921,20 +913,61 @@ func legacyDiskOutputStatus(output string) (string, string) {
 	return "ok", ""
 }
 
+func legacyDiskResultUsable(output string) bool {
+	normalized := strings.ToLower(output)
+	for _, unit := range []string{"kb/s", "mb/s", "gb/s", "tb/s", "kib/s", "mib/s", "gib/s", "tib/s"} {
+		if strings.Contains(normalized, unit) {
+			return true
+		}
+	}
+	return false
+}
+
 func diskReportAllowsFallback(report ComponentReport) bool {
 	return report.Status == ReportStatusUnavailable || report.Status == ReportStatusError || report.Status == ReportStatusTimeout
 }
 
-// hardwareStageContext is deliberately separate from componentContext. The
-// latter is appropriate for independent network probes and caps each probe at
-// one minute; CPU, memory, and disk are one standard stage and must consume a
-// single caller-configured budget (two minutes by default).
+func withDiskAttemptEvidence(report ComponentReport, attempts ...ComponentReport) ComponentReport {
+	payload := diskComponentPayload{}
+	_ = json.Unmarshal(report.Payload, &payload)
+	if payload.SchemaVersion == "" {
+		payload.SchemaVersion = "goecs.disk/v1"
+	}
+	if payload.Status == "" {
+		payload.Status = string(report.Status)
+	}
+	if payload.Error == "" {
+		payload.Error = sanitizePublicText(report.Reason)
+	}
+	payload.Attempts = make([]diskAttemptEvidence, 0, len(attempts))
+	for _, attempt := range attempts {
+		attemptPayload := diskComponentPayload{}
+		_ = json.Unmarshal(attempt.Payload, &attemptPayload)
+		method := strings.ToLower(strings.TrimSpace(attemptPayload.Method))
+		if method == "" {
+			continue
+		}
+		reason := sanitizePublicText(attempt.Reason)
+		if reason == "" {
+			reason = sanitizePublicText(attemptPayload.Error)
+		}
+		payload.Attempts = append(payload.Attempts, diskAttemptEvidence{Method: method, Status: attempt.Status, Reason: reason})
+	}
+	if encoded, err := json.Marshal(payload); err == nil {
+		report.Payload = encoded
+	}
+	return report
+}
+
+// hardwareStageContext is separate from the network task contexts. CPU,
+// memory, and disk are one standard stage and consume only the caller's
+// optional hardware budget; zero inherits the global run context unchanged.
 func hardwareStageContext(parent context.Context, budget time.Duration) (context.Context, context.CancelFunc) {
 	if parent == nil {
 		parent = context.Background()
 	}
 	if budget <= 0 {
-		budget = 2 * time.Minute
+		return parent, func() {}
 	}
 	return context.WithTimeout(parent, budget)
 }
@@ -1923,14 +1956,4 @@ func stunComponentStatus(ctx context.Context, report stuncheck.NATSummary) Repor
 	default:
 		return ReportStatusError
 	}
-}
-
-func componentContext(parent context.Context, budget time.Duration) (context.Context, context.CancelFunc) {
-	if budget <= 0 {
-		budget = 30 * time.Second
-	}
-	if budget > 60*time.Second {
-		budget = 60 * time.Second
-	}
-	return context.WithTimeout(parent, budget)
 }

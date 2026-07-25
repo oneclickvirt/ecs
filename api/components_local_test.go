@@ -765,7 +765,7 @@ func TestHardwareStageKeepsStandardProfiles(t *testing.T) {
 	if memoryConfig.WorkingSetBytes != defaultMemory.WorkingSetBytes || memoryConfig.Iterations != defaultMemory.Iterations {
 		t.Fatalf("unexpected standard memory config: %+v", memoryConfig)
 	}
-	if diskConfig.SizeBytes != 16<<20 || diskConfig.Runtime != time.Second || diskConfig.MaxDuration != 45*time.Second {
+	if diskConfig.SizeBytes != 16<<20 || diskConfig.Runtime != 0 || diskConfig.MaxDuration != 2*time.Minute {
 		t.Fatalf("unexpected standard disk config: %+v", diskConfig)
 	}
 }
@@ -915,6 +915,139 @@ func TestHardwareStageDiskFallbackChangesReportedMethod(t *testing.T) {
 	}
 }
 
+func TestHardwareStageEmptyFioMetricsFallBackToDD(t *testing.T) {
+	for _, language := range []string{"zh", "en"} {
+		t.Run(language, func(t *testing.T) {
+			cfg := NewDefaultConfig()
+			cfg.Language = language
+			cfg.BasicStatus = false
+			cfg.CpuTestStatus = false
+			cfg.MemoryTestStatus = false
+			cfg.DiskTestStatus = true
+			cfg.DiskTestMethod = "fio"
+			cfg.AutoChangeDiskMethod = true
+			ddCalls := 0
+			reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+				Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+					return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok"}
+				},
+				DiskDD: func(context.Context, string, bool, string) string {
+					ddCalls++
+					return "/ 4k 1.0 MB/s(1) 2.0 MB/s(2)\n"
+				},
+			})
+			if ddCalls != 1 || len(reports) != 1 || reports[0].Status != ReportStatusOK {
+				t.Fatalf("empty FIO metrics did not fall back: dd=%d reports=%#v", ddCalls, reports)
+			}
+			var payload struct {
+				Method string `json:"method"`
+			}
+			if err := json.Unmarshal(reports[0].Payload, &payload); err != nil || payload.Method != "dd" {
+				t.Fatalf("fallback payload = %#v err=%v", payload, err)
+			}
+		})
+	}
+}
+
+func TestHardwareStageHeaderOnlyDDFallsBackToFio(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.Language = "en"
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.DiskTestMethod = "dd"
+	cfg.AutoChangeDiskMethod = true
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		DiskDD: func(context.Context, string, bool, string) string {
+			return "Test Path Block Direct Write(IOPS) Direct Read(IOPS)\n"
+		},
+		Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+			return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok", Metrics: []disk.FioMetrics{{ScenarioID: "4k-q1-read"}}}
+		},
+	})
+	if len(reports) != 1 || reports[0].Status != ReportStatusOK {
+		t.Fatalf("header-only DD did not fall back: %#v", reports)
+	}
+	var payload struct {
+		Method string `json:"method"`
+	}
+	if err := json.Unmarshal(reports[0].Payload, &payload); err != nil || payload.Method != "fio" {
+		t.Fatalf("fallback payload = %#v err=%v", payload, err)
+	}
+}
+
+func TestHardwareStageBothDiskMethodsUnavailableRetainsReason(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.Language = "en"
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.DiskTestMethod = "fio"
+	cfg.AutoChangeDiskMethod = true
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		Disk: func(context.Context, disk.MatrixConfig) disk.MatrixResult {
+			return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok"}
+		},
+		DiskDD: func(context.Context, string, bool, string) string { return "" },
+	})
+	if len(reports) != 1 || reports[0].Status != ReportStatusUnavailable || reports[0].Reason != "dd_output_unavailable" {
+		t.Fatalf("both-unavailable report = %#v", reports)
+	}
+	var payload struct {
+		Attempts []diskAttemptEvidence `json:"attempts"`
+	}
+	if err := json.Unmarshal(reports[0].Payload, &payload); err != nil || len(payload.Attempts) != 2 {
+		t.Fatalf("both-unavailable evidence = %#v err=%v payload=%s", payload.Attempts, err, reports[0].Payload)
+	}
+	if payload.Attempts[0].Method != "fio" || payload.Attempts[0].Reason != "fio_output_empty" || payload.Attempts[1].Method != "dd" || payload.Attempts[1].Reason != "dd_output_unavailable" {
+		t.Fatalf("unexpected attempt evidence: %#v", payload.Attempts)
+	}
+}
+
+func TestHardwareStageZeroBudgetInheritsParentDeadline(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.HardwareBudget = 0
+	parent, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	parentDeadline, _ := parent.Deadline()
+	var diskDeadline time.Time
+	reports := collectHardwareComponentReports(parent, cfg, hardwareComponentRunners{
+		Disk: func(ctx context.Context, _ disk.MatrixConfig) disk.MatrixResult {
+			diskDeadline, _ = ctx.Deadline()
+			return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok", Metrics: []disk.FioMetrics{{ScenarioID: "4k-q1-read"}}}
+		},
+	})
+	if len(reports) != 1 || !diskDeadline.Equal(parentDeadline) {
+		t.Fatalf("zero budget did not inherit parent deadline: parent=%s disk=%s reports=%#v", parentDeadline, diskDeadline, reports)
+	}
+}
+
+func TestHardwareStageZeroBudgetWithoutParentDeadlineStaysUnbounded(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = true
+	cfg.HardwareBudget = 0
+	reports := collectHardwareComponentReports(context.Background(), cfg, hardwareComponentRunners{
+		Disk: func(ctx context.Context, config disk.MatrixConfig) disk.MatrixResult {
+			if _, hasDeadline := ctx.Deadline(); hasDeadline || config.MaxDuration != 0 {
+				t.Fatalf("default disk run was bounded: context=%v config=%+v", hasDeadline, config)
+			}
+			return disk.MatrixResult{SchemaVersion: "goecs.disk/v1", Status: "ok", Metrics: []disk.FioMetrics{{ScenarioID: "4k-q1-read"}}}
+		},
+	})
+	if len(reports) != 1 || reports[0].Status != ReportStatusOK {
+		t.Fatalf("unexpected unbounded disk report: %#v", reports)
+	}
+}
+
 func TestHardwareStageSelectsDeepProfiles(t *testing.T) {
 	cfg := NewDefaultConfig()
 	cfg.BasicStatus = false
@@ -962,7 +1095,7 @@ func TestHardwareStageSelectsDeepProfiles(t *testing.T) {
 	if memoryConfig.WorkingSetBytes != 256<<20 || memoryConfig.Iterations != 8 {
 		t.Fatalf("unexpected deep memory config: %+v", memoryConfig)
 	}
-	if deepDiskConfig.SizeBytes != 256<<20 || deepDiskConfig.Runtime != 2*time.Second || deepDiskConfig.MaxDuration != 3*time.Minute {
+	if deepDiskConfig.SizeBytes != 256<<20 || deepDiskConfig.Runtime != 0 || deepDiskConfig.MaxDuration != 5*time.Minute {
 		t.Fatalf("unexpected deep disk config: %+v", deepDiskConfig)
 	}
 }

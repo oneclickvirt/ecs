@@ -118,15 +118,17 @@ func WithAnalyzeResult(enable bool) ConfigOption {
 	}
 }
 
-// WithMaxDuration sets the global deadline. Values above 15 minutes are
-// clamped by Config.ValidateParams.
+// WithMaxDuration sets an optional global deadline. A zero duration disables
+// the global deadline while individual network operations retain their own
+// connection and request timeouts.
 func WithMaxDuration(duration time.Duration) ConfigOption {
 	return func(c *Config) {
 		c.MaxDuration = duration
 	}
 }
 
-// WithHardwareBudget sets the standard hardware stage budget.
+// WithHardwareBudget sets an optional hardware stage budget. A zero duration
+// uses the global deadline supplied to the run.
 func WithHardwareBudget(duration time.Duration) ConfigOption {
 	return func(c *Config) {
 		c.HardwareBudget = duration

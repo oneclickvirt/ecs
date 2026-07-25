@@ -67,6 +67,7 @@ func TestLegacyDeadlineKeepsOneCleanupWindow(t *testing.T) {
 	}{
 		{maximum: 15 * time.Second, soft: 12 * time.Second},
 		{maximum: 15 * time.Minute, soft: 14*time.Minute + 30*time.Second},
+		{maximum: 0, soft: 0},
 	} {
 		soft, hard := legacyDeadlineWindows(test.maximum)
 		if soft != test.soft || hard != test.maximum {

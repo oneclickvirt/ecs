@@ -357,3 +357,26 @@ func TestSectionReportsIncludesTelegramAndWebsiteComponents(t *testing.T) {
 		t.Fatalf("unexpected website section: %#v", statuses["web"])
 	}
 }
+
+func TestRunAllTestsContextZeroMaxDurationDoesNotExpireImmediately(t *testing.T) {
+	config := NewDefaultConfig()
+	config.MaxDuration = 0
+	config.BasicStatus = false
+	config.CpuTestStatus = false
+	config.MemoryTestStatus = false
+	config.DiskTestStatus = false
+	config.UtTestStatus = false
+	config.SecurityTestStatus = false
+	config.EmailTestStatus = false
+	config.BacktraceStatus = false
+	config.Nt3Status = false
+	config.SpeedTestStatus = false
+	config.PingTestStatus = false
+	config.TgdcTestStatus = false
+	config.WebTestStatus = false
+	config.TCPProbeStatus = false
+	result := RunAllTestsContext(context.Background(), NetCheckResult{Connected: false, StackType: "None"}, config)
+	if result == nil || result.Report == nil || result.Report.Status == ReportStatusTimeout {
+		t.Fatalf("zero MaxDuration expired immediately: %#v", result)
+	}
+}

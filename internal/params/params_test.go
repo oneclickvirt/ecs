@@ -147,13 +147,13 @@ func TestApplyFullTestPresetIsCompleteAndConnectivityAware(t *testing.T) {
 	}
 }
 
-func TestValidateParamsCapsStandardHardwareBudget(t *testing.T) {
+func TestValidateParamsPreservesOptionalHardwareBudget(t *testing.T) {
 	cfg := NewConfig("test")
 	cfg.MaxDuration = 15 * time.Minute
 	cfg.HardwareBudget = 5 * time.Minute
 	cfg.ValidateParams()
-	if cfg.HardwareBudget != 2*time.Minute {
-		t.Fatalf("HardwareBudget = %s, want 2m standard cap", cfg.HardwareBudget)
+	if cfg.HardwareBudget != 5*time.Minute {
+		t.Fatalf("HardwareBudget = %s, want explicit 5m budget", cfg.HardwareBudget)
 	}
 
 	cfg.MaxDuration = 30 * time.Second
@@ -161,6 +161,22 @@ func TestValidateParamsCapsStandardHardwareBudget(t *testing.T) {
 	cfg.ValidateParams()
 	if cfg.HardwareBudget != 30*time.Second {
 		t.Fatalf("HardwareBudget = %s, want MaxDuration cap", cfg.HardwareBudget)
+	}
+
+	cfg = NewConfig("test")
+	cfg.ValidateParams()
+	if cfg.HardwareBudget != 0 || cfg.MaxDuration != 0 {
+		t.Fatalf("default budgets = max %s hardware %s, want no global or hardware deadline", cfg.MaxDuration, cfg.HardwareBudget)
+	}
+}
+
+func TestValidateParamsAllowsExplicitLongGlobalDeadline(t *testing.T) {
+	cfg := NewConfig("test")
+	cfg.MaxDuration = 30 * time.Minute
+	cfg.HardwareBudget = 20 * time.Minute
+	cfg.ValidateParams()
+	if cfg.MaxDuration != 30*time.Minute || cfg.HardwareBudget != 20*time.Minute {
+		t.Fatalf("explicit long budgets were changed: max=%s hardware=%s", cfg.MaxDuration, cfg.HardwareBudget)
 	}
 }
 

@@ -237,3 +237,19 @@ func TestCustomAdvancedIncludesAIOnlyUnlockRegion(t *testing.T) {
 		t.Fatalf("AI-only unlock region is missing: %#v", setting.options)
 	}
 }
+
+func TestAdvancedBudgetFieldsAreEmptyWhenDisabled(t *testing.T) {
+	cfg := params.NewConfig("test")
+	advanced := defaultAdvSettings(cfg)
+	for _, key := range []string{"timeout", "hardwarebudget", "deepburnduration"} {
+		if value := findAdvanced(t, advanced, key).textVal; value != "" {
+			t.Fatalf("disabled %s field = %q, want empty", key, value)
+		}
+	}
+	applyCustomResult(tuiResult{advanced: []advSetting{
+		{key: "timeout", textVal: ""}, {key: "hardwarebudget", textVal: ""},
+	}}, utils.NetCheckResult{}, cfg)
+	if cfg.MaxDuration != 0 || cfg.HardwareBudget != 0 {
+		t.Fatalf("empty budget fields did not disable deadlines: max=%s hardware=%s", cfg.MaxDuration, cfg.HardwareBudget)
+	}
+}

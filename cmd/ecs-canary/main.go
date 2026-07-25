@@ -23,7 +23,11 @@ func main() {
 	_ = flags.Parse(os.Args[1:])
 	config := canaryConfig(*offline, *standard, *tcp, *hardware, *deepDiskPath, *deepBurnDuration, *maxDuration)
 	preCheck := api.NetCheckResult{Connected: !*offline, StackType: "IPv4", HasIPv4: true}
-	ctx, cancel := context.WithTimeout(context.Background(), *maxDuration)
+	ctx := context.Background()
+	cancel := func() {}
+	if *maxDuration > 0 {
+		ctx, cancel = context.WithTimeout(ctx, *maxDuration)
+	}
 	defer cancel()
 	started := time.Now()
 	var report *api.StructuredReport
@@ -69,7 +73,7 @@ func canaryConfig(offline, standard, tcp, hardware bool, deepDiskPath string, de
 	config.PrivacyMode = true
 	config.EnableUpload = false
 	config.MaxDuration = maxDuration
-	config.HardwareBudget = min(2*time.Minute, maxDuration)
+	config.HardwareBudget = 0
 	config.ValidateParams()
 	return config
 }

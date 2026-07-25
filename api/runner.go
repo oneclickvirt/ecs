@@ -47,7 +47,8 @@ func RunAllTestsContextWithProgress(parent context.Context, preCheck utils.NetCh
 }
 
 // RunAllTestsContext executes the existing text workflow and returns a
-// versioned structured report. The context is bounded by Config.MaxDuration.
+// versioned structured report. A positive Config.MaxDuration bounds the whole
+// run; zero leaves the caller context unchanged.
 func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, config *Config) *RunResult {
 	if parent == nil {
 		parent = context.Background()
@@ -56,7 +57,11 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		config = NewDefaultConfig()
 	}
 	config.ValidateParams()
-	ctx, cancel := context.WithTimeout(parent, config.MaxDuration)
+	ctx := parent
+	cancel := func() {}
+	if config.MaxDuration > 0 {
+		ctx, cancel = context.WithTimeout(parent, config.MaxDuration)
+	}
 	defer cancel()
 	var (
 		wg1, wg2, wg3                                         sync.WaitGroup

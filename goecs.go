@@ -70,6 +70,9 @@ func shouldRunStructuredCLI(config *params.Config) bool {
 }
 
 func legacyDeadlineWindows(maxDuration time.Duration) (time.Duration, time.Duration) {
+	if maxDuration <= 0 {
+		return 0, 0
+	}
 	cleanupGrace := min(30*time.Second, maxDuration/5)
 	softDeadline := maxDuration - cleanupGrace
 	if softDeadline <= 0 {
@@ -84,28 +87,30 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	softDeadline, hardDeadline := legacyDeadlineWindows(config.MaxDuration)
-	softTimer := time.NewTimer(softDeadline)
-	defer softTimer.Stop()
 	runCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	go func() {
-		<-softTimer.C
-		cancel()
-	}()
 	resultCh := make(chan *ecsapi.RunResult, 1)
 	go func() {
 		resultCh <- ecsapi.RunAllTestsContext(runCtx, preCheck, config)
 	}()
-	hardTimer := time.NewTimer(hardDeadline)
-	defer hardTimer.Stop()
+	var softTimer, hardTimer *time.Timer
+	if softDeadline, hardDeadline := legacyDeadlineWindows(config.MaxDuration); hardDeadline > 0 {
+		softTimer = time.AfterFunc(softDeadline, cancel)
+		hardTimer = time.NewTimer(hardDeadline)
+		defer softTimer.Stop()
+		defer hardTimer.Stop()
+	}
 	var result *ecsapi.RunResult
-	select {
-	case result = <-resultCh:
-	case <-hardTimer.C:
-		fmt.Fprintln(os.Stderr, "global structured deadline exceeded; terminating benchmark process group")
-		runner.ForceExit(1)
-		return
+	if hardTimer == nil {
+		result = <-resultCh
+	} else {
+		select {
+		case result = <-resultCh:
+		case <-hardTimer.C:
+			fmt.Fprintln(os.Stderr, "global structured deadline exceeded; terminating benchmark process group")
+			runner.ForceExit(1)
+			return
+		}
 	}
 	if result == nil {
 		fmt.Fprintln(os.Stderr, "failed to run structured ECS tests")
@@ -180,11 +185,12 @@ func main() {
 	defer signal.Stop(sig)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	softDeadline, hardDeadline := legacyDeadlineWindows(configs.MaxDuration)
-	softDeadlineTimer := time.AfterFunc(softDeadline, cancel)
-	hardDeadlineTimer := time.AfterFunc(hardDeadline, func() { runner.ForceExit(1) })
-	defer softDeadlineTimer.Stop()
-	defer hardDeadlineTimer.Stop()
+	if softDeadline, hardDeadline := legacyDeadlineWindows(configs.MaxDuration); hardDeadline > 0 {
+		softDeadlineTimer := time.AfterFunc(softDeadline, cancel)
+		hardDeadlineTimer := time.AfterFunc(hardDeadline, func() { runner.ForceExit(1) })
+		defer softDeadlineTimer.Stop()
+		defer hardDeadlineTimer.Stop()
+	}
 	go runner.HandleSignalInterrupt(ctx, cancel, sig, configs, &startTime, &output, tempOutput, uploadDone, &outputMutex)
 	switch configs.Language {
 	case "zh":

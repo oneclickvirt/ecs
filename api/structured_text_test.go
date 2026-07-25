@@ -150,6 +150,32 @@ func TestRenderStructuredDiskFailureShowsSanitizedReason(t *testing.T) {
 	}
 }
 
+func TestRenderStructuredEnglishDiskExplainsEmptyFioOutput(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "en"
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "disktest", ReportStatusUnavailable, `{"status":"unavailable","method":"fio","error":"fio_output_empty","metrics":[]}`),
+	}, nil)
+	for _, want := range []string{"Disk-Test--fio-Method", "unavailable", "FIO returned no benchmark metrics"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("empty FIO explanation missing %q:\n%s", want, text)
+		}
+	}
+}
+
+func TestRenderStructuredDiskShowsBothFailedMethodAttempts(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "en"
+	text := renderStructuredRunText(config, nil, []ComponentReport{
+		componentFixture(t, "disktest", ReportStatusUnavailable, `{"status":"unavailable","method":"dd","error":"dd_output_unavailable","attempts":[{"method":"fio","status":"unavailable","reason":"fio_output_empty"},{"method":"dd","status":"unavailable","reason":"dd_output_unavailable"}]}`),
+	}, nil)
+	for _, want := range []string{"Method", "FIO", "DD", "FIO returned no benchmark metrics", "DD output unavailable"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("disk attempt evidence missing %q:\n%s", want, text)
+		}
+	}
+}
+
 func TestRenderStructuredRunTextCoversEveryStructuredSection(t *testing.T) {
 	config := NewConfig("v-test")
 	config.Width = 100

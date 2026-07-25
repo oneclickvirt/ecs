@@ -23,7 +23,7 @@ func TestCanaryConfigAllowsOnlyExplicitSafeDeepTargets(t *testing.T) {
 	if !config.DeepMode || config.DeepDiskPaths != "/tmp" || config.DeepBurnDuration != 5*time.Second || !canaryRunsHardware(config) {
 		t.Fatalf("explicit deep canary was not configured: %#v", config)
 	}
-	if config.DeepSMARTDevices != "" || config.DeepGPUDevice != "" || config.HardwareBudget != 20*time.Second {
+	if config.DeepSMARTDevices != "" || config.DeepGPUDevice != "" || config.HardwareBudget != 0 {
 		t.Fatalf("deep canary escaped its safety boundary: %#v", config)
 	}
 }
@@ -36,7 +36,7 @@ func TestCanaryStandardProfileEnablesEveryStandardSection(t *testing.T) {
 		!config.SpeedTestStatus || !config.TCPProbeStatus || !canaryRunsHardware(config) {
 		t.Fatalf("standard canary omitted a section: %#v", config)
 	}
-	if config.DeepMode || !config.PrivacyMode || config.EnableUpload || config.HardwareBudget != 2*time.Minute {
+	if config.DeepMode || !config.PrivacyMode || config.EnableUpload || config.HardwareBudget != 0 {
 		t.Fatalf("standard canary escaped its safety boundary: %#v", config)
 	}
 }

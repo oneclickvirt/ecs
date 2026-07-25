@@ -268,7 +268,7 @@ func TestBufferedDiskSectionEnglishNeverEmitsAnEmptyChapter(t *testing.T) {
 		Language: "en", Width: 64, DiskTestStatus: true, DiskTestMethod: "fio",
 		DiskTestPath: "/fixture", AutoChangeDiskMethod: true,
 	})
-	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk test unavailable\n") {
+	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk benchmark returned no usable data.\n") {
 		t.Fatalf("empty English disk result produced an empty chapter: %q", text)
 	}
 }
@@ -283,7 +283,7 @@ func TestBufferedDiskSectionReportsEachUnavailableMethod(t *testing.T) {
 	text := bufferedDiskSection(context.Background(), &params.Config{
 		Language: "en", Width: 64, DiskTestStatus: true, AutoChangeDiskMethod: false,
 	})
-	if strings.Count(text, "Disk test unavailable") != 2 ||
+	if strings.Count(text, "Disk benchmark returned no usable data.") != 2 ||
 		!strings.Contains(text, "Disk-Test--dd-Method") || !strings.Contains(text, "Disk-Test--fio-Method") {
 		t.Fatalf("dual disk method output lost an unavailable result: %q", text)
 	}
@@ -300,7 +300,7 @@ func TestRunDiskTestUsesTheSameEnglishEmptyResultContract(t *testing.T) {
 	}
 	var outputMutex sync.Mutex
 	text := RunDiskTest(context.Background(), cfg, "", "", &outputMutex)
-	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk test unavailable\n") {
+	if !strings.Contains(text, "Disk-Test--fio-Method") || !strings.Contains(text, " Disk benchmark returned no usable data.\n") {
 		t.Fatalf("RunDiskTest diverged from buffered disk output: %q", text)
 	}
 }
