@@ -426,6 +426,18 @@ func UploadText(absPath string) (string, string, error) {
 	return UploadTextContext(context.Background(), absPath)
 }
 
+// MaxPasteUploadBytes is kept in sync with pastebin's public upload endpoint.
+// It leaves room for complete GoECS reports while bounding the client-side
+// request before an unnecessary network transfer.
+const MaxPasteUploadBytes int64 = 80 * 1024
+
+func validatePasteUploadSize(size int64) error {
+	if size < 0 || size > MaxPasteUploadBytes {
+		return fmt.Errorf("file size exceeds %d KiB limit", MaxPasteUploadBytes/1024)
+	}
+	return nil
+}
+
 // UploadTextContext uploads a result file while honoring cancellation and the
 // caller's global deadline.
 func UploadTextContext(ctx context.Context, absPath string) (string, string, error) {
@@ -454,8 +466,8 @@ func UploadTextContext(ctx context.Context, absPath string) (string, string, err
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get file info: %w", err)
 	}
-	if fileInfo.Size() > 25*1024 { // 25KB
-		return "", "", fmt.Errorf("file size exceeds 25KB limit")
+	if err := validatePasteUploadSize(fileInfo.Size()); err != nil {
+		return "", "", err
 	}
 	// 上传逻辑
 	upload := func(url string) (string, string, error) {
