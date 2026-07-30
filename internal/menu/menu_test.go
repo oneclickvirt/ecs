@@ -72,7 +72,7 @@ func TestApplyMenuResultRestoresExplicitTestFlagForPreset(t *testing.T) {
 	}
 }
 
-func TestFullPresetEnablesEnhancedChecks(t *testing.T) {
+func TestFullPresetKeepsTCPProbeOptional(t *testing.T) {
 	cfg := params.NewConfig("test")
 	applyMenuResult(utils.NetCheckResult{Connected: true, StackType: "IPv4"}, cfg, tuiResult{
 		choice:     "1",
@@ -80,14 +80,14 @@ func TestFullPresetEnablesEnhancedChecks(t *testing.T) {
 		mainUpload: cfg.EnableUpload,
 	}, nil)
 
-	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || cfg.TCPTextFormat != "compact" || !cfg.UnlockTestShowIP || !cfg.PingTestStatus {
+	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || cfg.TCPProbeStatus || cfg.TCPTextFormat != "compact" || !cfg.UnlockTestShowIP || !cfg.PingTestStatus {
 		t.Fatalf("full preset did not enable enhanced checks: disk_multi=%t deep=%t burn=%s tcp=%t tcp_format=%s show_ip=%t ping=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.TCPTextFormat, cfg.UnlockTestShowIP, cfg.PingTestStatus)
 	}
 }
 
 func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
 	cfg := params.NewConfig("test")
-	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=false", "-tcp-format=full", "-utshowip=false", "-deep-burn-duration=0s"})
+	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=true", "-tcp-format=full", "-utshowip=false", "-deep-burn-duration=0s"})
 	saved := cfg.SaveUserSetParams()
 	applyMenuResult(utils.NetCheckResult{Connected: true, StackType: "IPv4"}, cfg, tuiResult{
 		choice:     "1",
@@ -95,8 +95,49 @@ func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
 		mainUpload: cfg.EnableUpload,
 	}, saved)
 
-	if cfg.DiskMultiCheck || cfg.DeepMode || cfg.DeepBurnDuration != 0 || cfg.TCPProbeStatus || cfg.TCPTextFormat != "full" || cfg.UnlockTestShowIP {
+	if cfg.DiskMultiCheck || cfg.DeepMode || cfg.DeepBurnDuration != 0 || !cfg.TCPProbeStatus || cfg.TCPTextFormat != "full" || cfg.UnlockTestShowIP {
 		t.Fatalf("explicit enhanced flag overrides were ignored: disk_multi=%t deep=%t burn=%s tcp=%t tcp_format=%s show_ip=%t", cfg.DiskMultiCheck, cfg.DeepMode, cfg.DeepBurnDuration, cfg.TCPProbeStatus, cfg.TCPTextFormat, cfg.UnlockTestShowIP)
+	}
+}
+
+func TestTCPProbePresetDefaults(t *testing.T) {
+	tests := []struct {
+		choice string
+		want   bool
+	}{
+		{choice: "1", want: false},
+		{choice: "2", want: false},
+		{choice: "3", want: true},
+		{choice: "4", want: true},
+		{choice: "5", want: false},
+		{choice: "6", want: true},
+		{choice: "7", want: false},
+		{choice: "8", want: false},
+		{choice: "9", want: false},
+		{choice: "10", want: true},
+	}
+	for _, test := range tests {
+		t.Run(test.choice, func(t *testing.T) {
+			cfg := params.NewConfig("test")
+			applyMenuResult(utils.NetCheckResult{Connected: true}, cfg, tuiResult{
+				choice: test.choice, language: "zh", mainUpload: cfg.EnableUpload,
+			}, nil)
+			if cfg.TCPProbeStatus != test.want {
+				t.Fatalf("choice %s TCPProbeStatus = %t, want %t", test.choice, cfg.TCPProbeStatus, test.want)
+			}
+		})
+	}
+}
+
+func TestNetworkPresetRespectsExplicitTCPDisable(t *testing.T) {
+	cfg := params.NewConfig("test")
+	cfg.ParseFlags([]string{"-tcp=false"})
+	saved := cfg.SaveUserSetParams()
+	applyMenuResult(utils.NetCheckResult{Connected: true}, cfg, tuiResult{
+		choice: "6", language: "zh", mainUpload: cfg.EnableUpload,
+	}, saved)
+	if cfg.TCPProbeStatus {
+		t.Fatal("explicit -tcp=false should override the network preset")
 	}
 }
 
@@ -155,6 +196,18 @@ func TestMainQuickOptionsSyncToCustomAdvanced(t *testing.T) {
 	}
 	if findAdvanced(t, model.advanced, "upload").boolVal {
 		t.Fatalf("upload advanced setting should follow main quick option")
+	}
+}
+
+func TestAdvancedCustomDefaultsTCPOnAndRespectsExplicitDisable(t *testing.T) {
+	cfg := params.NewConfig("test")
+	if !findAdvanced(t, defaultAdvSettings(cfg), "tcp").boolVal {
+		t.Fatal("advanced custom should enable TCP probes by default")
+	}
+
+	cfg.ParseFlags([]string{"-tcp=false"})
+	if findAdvanced(t, defaultAdvSettings(cfg), "tcp").boolVal {
+		t.Fatal("advanced custom ignored explicit -tcp=false")
 	}
 }
 

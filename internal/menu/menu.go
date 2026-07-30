@@ -127,14 +127,14 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 		}
 		fmt.Println("1. 融合怪完全体(能测全测)")
 		fmt.Println("2. 极简版(系统信息+CPU+内存+磁盘+测速节点5个)")
-		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+跨国平台解锁+路由+测速节点5个)")
-		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+测速节点5个)")
+		fmt.Println("3. 精简版(系统信息+CPU+内存+磁盘+跨国平台解锁+路由+TCP握手+测速节点5个)")
+		fmt.Println("4. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+TCP握手+测速节点5个)")
 		fmt.Println("5. 精简解锁版(系统信息+CPU+内存+磁盘IO+跨国平台解锁+测速节点5个)")
-		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TGDC+网站延迟+测速节点11个)")
+		fmt.Println("6. 网络单项(IP质量检测+上游及三网回程+广州三网回程详细路由+全国延迟+TCP握手+TGDC+网站延迟+测速节点11个)")
 		fmt.Println("7. 解锁单项(跨国平台解锁)")
 		fmt.Println("8. 硬件单项(系统信息+CPU+dd磁盘测试+fio磁盘测试)")
 		fmt.Println("9. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
-		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+全国延迟+TGDC+网站延迟")
+		fmt.Println("10. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+全国延迟+TCP握手+TGDC+网站延迟")
 		fmt.Println("0. 退出程序")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", config.EcsVersion)
@@ -147,13 +147,14 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 		}
 		fmt.Println("1. VPS Fusion Monster Test (Full Test)")
 		fmt.Println("2. Minimal Test Suite (System Info + CPU + Memory + Disk + 5 Speed Test Nodes)")
-		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + International Platform Unlock + Routing + 5 Speed Test Nodes)")
-		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + Backtrace + Routing + 5 Speed Test Nodes)")
+		fmt.Println("3. Standard Test Suite (System Info + CPU + Memory + Disk + International Platform Unlock + Routing + TCP Handshake + 5 Speed Test Nodes)")
+		fmt.Println("4. Network-Focused Test Suite (System Info + CPU + Memory + Disk + Backtrace + Routing + TCP Handshake + 5 Speed Test Nodes)")
 		fmt.Println("5. Unlock-Focused Test Suite (System Info + CPU + Memory + Disk IO + International Platform Unlock + 5 Speed Test Nodes)")
-		fmt.Println("6. Network-Only Test (IP Quality Test + Upstream & 3-Network Backtrace + Guangzhou 3-Network Detailed Routing + National Latency + TGDC + Websites + 11 Speed Test Nodes)")
+		fmt.Println("6. Network-Only Test (IP Quality Test + Upstream & 3-Network Backtrace + Guangzhou 3-Network Detailed Routing + National Latency + TCP Handshake + TGDC + Websites + 11 Speed Test Nodes)")
 		fmt.Println("7. Unlock-Only Test (International Platform Unlock)")
 		fmt.Println("8. Hardware-Only Test (System Info + CPU + Memory + dd Disk Test + fio Disk Test)")
 		fmt.Println("9. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
+		fmt.Println("10. 3-Network Backtrace + Detailed Routes (Beijing/Shanghai/Guangzhou/Chengdu) + National Latency + TCP Handshake + TGDC + Websites")
 		fmt.Println("0. Exit Program")
 	}
 }
@@ -172,6 +173,7 @@ func resetMenuSelectedStatuses(config *params.Config) {
 	config.PingTestStatus = false
 	config.TgdcTestStatus = false
 	config.WebTestStatus = false
+	config.TCPProbeStatus = false
 	config.OnlyIpInfoCheck = false
 	config.OnlyChinaTest = false
 	config.AutoChangeDiskMethod = true
@@ -264,6 +266,7 @@ func SetStandardTestStatus(preCheck utils.NetCheckResult, config *params.Config)
 		config.UtTestStatus = true
 		config.Nt3Status = true
 		config.SpeedTestStatus = true
+		config.TCPProbeStatus = true
 	}
 }
 
@@ -277,6 +280,7 @@ func SetNetworkFocusedTestStatus(preCheck utils.NetCheckResult, config *params.C
 		config.BacktraceStatus = true
 		config.Nt3Status = true
 		config.SpeedTestStatus = true
+		config.TCPProbeStatus = true
 	}
 }
 
@@ -302,6 +306,7 @@ func SetNetworkOnlyTestStatus(config *params.Config) {
 	config.PingTestStatus = true
 	config.TgdcTestStatus = true
 	config.WebTestStatus = true
+	config.TCPProbeStatus = true
 }
 
 // SetUnlockOnlyTestStatus sets unlock-only test configuration
@@ -336,6 +341,7 @@ func SetRouteTestStatus(config *params.Config) {
 	config.PingTestStatus = true
 	config.TgdcTestStatus = true
 	config.WebTestStatus = true
+	config.TCPProbeStatus = true
 }
 
 // PrintInvalidChoice prints invalid choice message

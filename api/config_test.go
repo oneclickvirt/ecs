@@ -53,7 +53,7 @@ func TestWithFullTestPresetUsesMenuContract(t *testing.T) {
 	if cfg.Choice != "1" || !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second {
 		t.Fatalf("API full preset did not enable deep hardware defaults: %+v", cfg)
 	}
-	if !cfg.PingTestStatus || !cfg.TCPProbeStatus || !cfg.UnlockTestShowIP || !cfg.SpeedTestStatus {
+	if !cfg.PingTestStatus || cfg.TCPProbeStatus || !cfg.UnlockTestShowIP || !cfg.SpeedTestStatus {
 		t.Fatalf("API full preset did not enable network enhancements: %+v", cfg)
 	}
 }

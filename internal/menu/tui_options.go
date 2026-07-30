@@ -13,14 +13,14 @@ func defaultMainItems() []mainMenuItem {
 	return []mainMenuItem{
 		{id: "1", zh: "融合怪完全体(能测全测)", en: "Full Test (All Available Tests)", descZh: "系统信息、CPU、内存、磁盘、解锁、IP质量、邮件端口、回程、NT3、测速、TGDC、网站延迟。", descEn: "Runs all available modules: system, compute, memory, disk, unlock, security, routing and speed.", needNet: false},
 		{id: "2", zh: "极简版", en: "Minimal Suite", descZh: "系统信息+CPU+内存+磁盘+测速节点×5，不含解锁/网络/路由测试。", descEn: "System info + CPU + memory + disk + 5 speed nodes. No unlock/network/routing tests.", needNet: false},
-		{id: "3", zh: "精简版", en: "Standard Suite", descZh: "系统信息+CPU+内存+磁盘+跨国平台解锁+三网回程路由+测速节点×5。", descEn: "System info + CPU + memory + disk + streaming unlock + 3-network routing + 5 speed nodes.", needNet: false},
-		{id: "4", zh: "精简网络版", en: "Network Suite", descZh: "系统信息+CPU+内存+磁盘+上游及三网回程路由+测速节点×5。", descEn: "System info + CPU + memory + disk + upstream/3-network backtrace routing + 5 speed nodes.", needNet: false},
+		{id: "3", zh: "精简版", en: "Standard Suite", descZh: "系统信息+CPU+内存+磁盘+跨国平台解锁+三网回程路由+TCP握手+测速节点×5。", descEn: "System info + CPU + memory + disk + streaming unlock + routing + TCP handshake + 5 speed nodes.", needNet: false},
+		{id: "4", zh: "精简网络版", en: "Network Suite", descZh: "系统信息+CPU+内存+磁盘+上游及三网回程路由+TCP握手+测速节点×5。", descEn: "System info + CPU + memory + disk + backtrace routing + TCP handshake + 5 speed nodes.", needNet: false},
 		{id: "5", zh: "精简解锁版", en: "Unlock Suite", descZh: "系统信息+CPU+内存+磁盘IO+跨国平台解锁+测速节点×5。", descEn: "System info + CPU + memory + disk IO + streaming unlock + 5 speed nodes.", needNet: false},
-		{id: "6", zh: "网络单项", en: "Network Only", descZh: "仅网络维度：IP质量、回程、NT3、延迟、TGDC、网站和测速。", descEn: "Network-only profile: IP quality, route, latency, TGDC, websites, speed.", needNet: true},
+		{id: "6", zh: "网络单项", en: "Network Only", descZh: "仅网络维度：IP质量、回程、NT3、延迟、TCP握手、TGDC、网站和测速。", descEn: "Network-only profile: IP quality, route, latency, TCP handshake, TGDC, websites and speed.", needNet: true},
 		{id: "7", zh: "解锁单项", en: "Unlock Only", descZh: "仅进行跨国平台解锁与流媒体可用性检测。", descEn: "Unlock-only profile for cross-border media/service availability.", needNet: true},
 		{id: "8", zh: "硬件单项", en: "Hardware Only", descZh: "系统信息、CPU、内存、dd/fio 磁盘测试。", descEn: "Hardware-only profile with system, CPU, memory and disk tests.", needNet: false},
 		{id: "9", zh: "IP质量检测", en: "IP Quality", descZh: "15个数据库IP质量检测+邮件端口连通性检测。", descEn: "IP quality check across 15 databases + email port connectivity test.", needNet: true},
-		{id: "10", zh: "三网回程线路", en: "3-Network Route", descZh: "三网回程、NT3路由、延迟、TGDC、网站延迟专项。", descEn: "3-network backtrace + NT3 route + latency/TGDC/website checks.", needNet: true},
+		{id: "10", zh: "三网回程线路", en: "3-Network Route", descZh: "三网回程、NT3路由、延迟、TCP握手、TGDC、网站延迟专项。", descEn: "3-network backtrace + NT3 route + latency, TCP handshake, TGDC and website checks.", needNet: true},
 		{id: "custom", zh: ">>> 高级自定义(全参数模式)", en: ">>> Advanced Custom (Full Parameters)", descZh: "按参数逐项配置，支持测试项、方法、路径、上传和结果分析。", descEn: "Configure per-parameter with test toggles, methods, paths, upload and analysis.", needNet: false},
 		{id: "0", zh: "退出程序", en: "Exit Program", descZh: "退出当前程序。", descEn: "Exit program.", needNet: false},
 	}
@@ -274,7 +274,7 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			textVal: config.FilePath,
 		},
 		{key: "privacy", nameZh: "隐私模式", nameEn: "Privacy Mode", kind: "bool", descZh: "隐藏敏感硬件标识并禁止上传。", descEn: "Hide sensitive hardware identifiers and disable upload.", boolVal: config.PrivacyMode},
-		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "追加TCP握手延迟与错误分类单项。", descEn: "Append the TCP latency and error classification section.", boolVal: config.TCPProbeStatus},
+		{key: "tcp", nameZh: "TCP握手探针", nameEn: "TCP Handshake Probe", kind: "bool", descZh: "追加TCP握手延迟与错误分类单项。", descEn: "Append the TCP latency and error classification section.", boolVal: !config.UserSetFlags["tcp"] || config.TCPProbeStatus},
 		{
 			key: "tcpformat", nameZh: "TCP输出明细", nameEn: "TCP Output Detail", kind: "option",
 			descZh: "兼容旧参数；两种模式均以双列形式显示全部平台。",

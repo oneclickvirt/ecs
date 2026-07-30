@@ -131,7 +131,7 @@ func TestApplyFullTestPresetIsCompleteAndConnectivityAware(t *testing.T) {
 	if cfg.Choice != "1" || !cfg.BasicStatus || !cfg.CpuTestStatus || !cfg.MemoryTestStatus || !cfg.DiskTestStatus {
 		t.Fatalf("full preset did not enable core tests: %+v", cfg)
 	}
-	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || !cfg.TCPProbeStatus || !cfg.PingTestStatus || !cfg.UnlockTestShowIP {
+	if !cfg.DiskMultiCheck || !cfg.DeepMode || cfg.DeepBurnDuration != 20*time.Second || cfg.TCPProbeStatus || !cfg.PingTestStatus || !cfg.UnlockTestShowIP {
 		t.Fatalf("full preset did not enable enhanced tests: %+v", cfg)
 	}
 	if cfg.UtTestStatus || cfg.SecurityTestStatus || cfg.EmailTestStatus || cfg.BacktraceStatus || cfg.Nt3Status || cfg.SpeedTestStatus || cfg.TgdcTestStatus || cfg.WebTestStatus {

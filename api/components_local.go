@@ -19,6 +19,7 @@ import (
 	unlockexecutor "github.com/oneclickvirt/UnlockTests/executor"
 	unlockmodel "github.com/oneclickvirt/UnlockTests/model"
 	bgptools "github.com/oneclickvirt/backtrace/bgptools"
+	backtraceroute "github.com/oneclickvirt/backtrace/bk"
 	backtracemodel "github.com/oneclickvirt/backtrace/model"
 	basicmodel "github.com/oneclickvirt/basics/model"
 	basicssystem "github.com/oneclickvirt/basics/system"
@@ -1023,6 +1024,7 @@ func detailedRouteComponentStatus(ctx context.Context, results []nt3.DetailedPro
 type backtraceRunner func(context.Context, string, bgptools.IPBGPReportConfig) (*bgptools.IPBGPReport, error)
 
 type backtraceConfigFactory func() bgptools.IPBGPReportConfig
+type backtraceRouteRunner func(context.Context, backtraceroute.RouteReportConfig) backtraceroute.RouteReport
 
 func defaultBacktraceConfig() bgptools.IPBGPReportConfig {
 	return bgptools.IPBGPReportConfig{
@@ -1051,7 +1053,7 @@ func collectBacktraceComponentWithRegistry(ctx context.Context, ipv4, ipv6 strin
 			registry[strconv.FormatUint(uint64(entry.ASN), 10)] = strings.TrimSpace(entry.Name)
 		}
 	}
-	return collectBacktraceComponentWithRegistryAndDependencies(ctx, ipv4, ipv6, registry, bgptools.QueryIPBGPReport, nil)
+	return collectBacktraceComponentWithRegistryAndRoute(ctx, ipv4, ipv6, registry, bgptools.QueryIPBGPReport, nil, backtraceroute.RunRouteReport)
 }
 
 type asnMetadata struct {
@@ -1077,6 +1079,10 @@ func collectBacktraceComponentWithDependencies(ctx context.Context, ipv4, ipv6 s
 }
 
 func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, ipv4, ipv6 string, asnRegistry map[string]string, runner backtraceRunner, configFactory backtraceConfigFactory) ComponentReport {
+	return collectBacktraceComponentWithRegistryAndRoute(ctx, ipv4, ipv6, asnRegistry, runner, configFactory, nil)
+}
+
+func collectBacktraceComponentWithRegistryAndRoute(ctx context.Context, ipv4, ipv6 string, asnRegistry map[string]string, runner backtraceRunner, configFactory backtraceConfigFactory, routeRunner backtraceRouteRunner) ComponentReport {
 	started := time.Now()
 	if ctx == nil {
 		ctx = context.Background()
@@ -1094,13 +1100,14 @@ func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, i
 		}
 	}
 	if len(addresses) == 0 {
-		payload := map[string]any{"schema_version": "goecs.backtrace/v1", "reports": []any{}}
-		report := componentPayload("backtrace.ip_bgp", "goecs.backtrace/v1", ReportStatusUnavailable, started, payload, nil)
+		payload := map[string]any{"schema_version": "goecs.backtrace/v2", "reports": []any{}}
+		report := componentPayload("backtrace.ip_bgp", "goecs.backtrace/v2", ReportStatusUnavailable, started, payload, nil)
 		report.Reason = "no valid public IP address"
 		return report
 	}
 	reports := make([]*bgptools.IPBGPReport, len(addresses))
 	errorsByIndex := make([]error, len(addresses))
+	var returnRoutes *backtraceroute.RouteReport
 	var wg sync.WaitGroup
 	for index, ip := range addresses {
 		wg.Add(1)
@@ -1109,12 +1116,25 @@ func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, i
 			reports[index], errorsByIndex[index] = runner(ctx, ip, configFactory())
 		}(index, ip)
 	}
+	if routeRunner != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			routes := routeRunner(ctx, backtraceroute.RouteReportConfig{
+				EnableIPv6: net.ParseIP(strings.TrimSpace(ipv6)) != nil,
+				Attempts:   3,
+				Timeout:    15 * time.Second,
+			})
+			returnRoutes = &routes
+		}()
+	}
 	wg.Wait()
 	payload := struct {
-		SchemaVersion string                  `json:"schema_version"`
-		Reports       []*bgptools.IPBGPReport `json:"reports"`
-		ASNRegistry   asnRegistryUsage        `json:"asn_registry"`
-	}{SchemaVersion: "goecs.backtrace/v1", Reports: reports, ASNRegistry: buildASNRegistryUsage(asnRegistry, reports)}
+		SchemaVersion string                      `json:"schema_version"`
+		Reports       []*bgptools.IPBGPReport     `json:"reports"`
+		ASNRegistry   asnRegistryUsage            `json:"asn_registry"`
+		ReturnRoutes  *backtraceroute.RouteReport `json:"return_routes,omitempty"`
+	}{SchemaVersion: "goecs.backtrace/v2", Reports: reports, ASNRegistry: buildASNRegistryUsage(asnRegistry, reports), ReturnRoutes: returnRoutes}
 	valid, degraded := 0, 0
 	for index, report := range reports {
 		if report == nil {
@@ -1133,6 +1153,10 @@ func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, i
 			degraded++
 		}
 	}
+	routeAvailable, routeTotal := routeAvailability(returnRoutes)
+	if routeTotal > 0 && routeAvailable < routeTotal {
+		degraded += routeTotal - routeAvailable
+	}
 	status := ReportStatusUnavailable
 	if valid > 0 && degraded == 0 {
 		status = ReportStatusOK
@@ -1149,9 +1173,26 @@ func collectBacktraceComponentWithRegistryAndDependencies(ctx context.Context, i
 	}
 	result := componentPayload("backtrace.ip_bgp", payload.SchemaVersion, status, started, payload, nil)
 	if result.Status != ReportStatusOK {
-		result.Reason = fmt.Sprintf("%d/%d IP/BGP reports available", valid, len(reports))
+		if routeTotal > 0 {
+			result.Reason = fmt.Sprintf("%d/%d IP/BGP reports and %d/%d return routes available", valid, len(reports), routeAvailable, routeTotal)
+		} else {
+			result.Reason = fmt.Sprintf("%d/%d IP/BGP reports available", valid, len(reports))
+		}
 	}
 	return result
+}
+
+func routeAvailability(report *backtraceroute.RouteReport) (int, int) {
+	if report == nil {
+		return 0, 0
+	}
+	available := 0
+	for _, target := range report.Targets {
+		if target.Status == backtraceroute.RouteProbeAvailable {
+			available++
+		}
+	}
+	return available, len(report.Targets)
 }
 
 func parseASNRegistry(data []byte) (map[string]string, error) {

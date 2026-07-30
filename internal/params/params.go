@@ -153,7 +153,7 @@ func (c *Config) ApplyFullTestPreset(connected bool) {
 	c.DiskMultiCheck = true
 	c.DeepMode = true
 	c.DeepBurnDuration = 20 * time.Second
-	c.TCPProbeStatus = true
+	c.TCPProbeStatus = false
 	c.TCPTextFormat = "compact"
 	c.PingTestStatus = true
 	c.PingSortOrder = "latency"

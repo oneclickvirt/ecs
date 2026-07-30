@@ -402,6 +402,12 @@ Abuser 或 Abuse 的滥用得分会直接影响机器的正常使用（中国境
 
 IP 网络信息会结合 RDAP，必要时再使用 WHOIS，显示网段、注册机构、注册时间和 geofeed 等归属信息；能够取得时还会列出 IXP、上游和对等网络。不同来源的更新时间和覆盖范围不同，某个字段为空不代表对应关系一定不存在。
 
+回程部分默认检测北京、上海、广州、成都的电信、联通、移动 IPv4 目标，启用 IPv6 时再检测北京、上海、广州三网 IPv6 目标。每个目标执行三次 Go 原生 ICMP traceroute；主目标无有效跳点时才尝试同省同运营商备用目标，最终仍按固定城市和运营商顺序逐行显示。
+
+线路类型按实际回覆跳点的 ASN 顺序和重复证据判断，而不是“出现一次 ASN 就算整条线路”。CN2 GIA 至少需要两个 AS4809 跳点；仅一个 AS4134 或 AS4837 跳点可能只是目的网交付，会标为证据不足；三次追踪若同时出现精品和普通骨干证据，会保守标为动态混合。联通同时识别 AS9929、AS10099/CUG 和 AS4837，移动识别 AS58807/CMIN2、AS58453/CMI 和 AS9808/CMNET。
+
+结构化结果会另外记录成功次数、有效跳点、是否到达目标，以及 traceroute 回覆样本的 Min/Avg/P50/P95/Max 和抖动。这些数值只描述路由探针的回覆情况，不能当成业务端口丢包率。独立组件可用 `-route-json` 输出完整数据，`-route-attempts=1..5`、`-timeout` 和 `-ipv6` 分别控制次数、总时限和双栈目标。
+
 依赖项目：[https://github.com/oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 
 #### 上游类型与运营商等级说明
@@ -441,8 +447,10 @@ IP 网络信息会结合 RDAP，必要时再使用 WHOIS，显示网段、注册
 | 中国电信 | CN2 GIA         | Global Internet Access(GT)        | 直连国际POP，低延迟低丢包  | 优质(最好)   |
 | 中国联通 | 4837            | Unicom International (AS4837)       | 常见国际出口，覆盖广      | 一般到良好   |
 | 中国联通 | 9929            | Unicom Premium / CU-IX             | 精品网，直连主要IXP，延迟低 | 优质   |
+| 中国联通 | CUG (AS10099)   | China Unicom Global                | 联通国际网络，不等同于9929 | 良好   |
 | 中国移动 | CMI (AS58453)   | China Mobile International         | 节点多，对两广(广东广西)优化好      | 两广良好，其他一般   |
 | 中国移动 | CMIN2 (AS58807) | China Mobile International N2      | 高质量专线，低延迟低丢包，对标CN2    | 优质   |
+| 中国移动 | CMNET (AS9808)  | China Mobile Network               | 常见国内骨干和目的网投递     | 一般   |
 
 用什么运营商连宿主机的IP就看哪个运营商的线路就行了，具体线路的路由情况，看在下一个检测项看到对应的ICMP检测路由信息。
 
@@ -523,7 +531,7 @@ TCP 握手测试只执行 DNS 解析和 TCP 建连，不下载网页内容，也
 
 每个平台默认尝试 3 次，单次最多等待 5 秒，最多同时测试 16 个目标。表格每个平台一行，延迟统一使用毫秒；`Min Avg P50 P95 Max` 分别是最小、平均、中位、95% 分位和最大握手延迟，`D R T O` 分别是 DNS 解析失败、连接被拒绝、超时和其他错误次数。失败次数为 0 只表示 TCP 建连成功，不代表平台内容或账号功能一定可用。
 
-选项1默认启用本项。默认按平台名称稳定排序，`-tcp-sort=latency` 会优先显示失败、丢包和高延迟目标；还可通过 `-attempts`、`-timeout`、`-concurrency` 和 `-target` 调整尝试次数、单次超时、并发数或只测试一个目标。
+选项1默认不启用本项，避免与已启用的 ICMP Ping 重复占用输出空间。精简版、精简网络版、网络单项、三网回程线路专项和高级自定义默认启用，也可通过 `-tcp=true/false` 显式覆盖。默认按平台名称稳定排序，`-tcp-sort=latency` 会优先显示失败、丢包和高延迟目标；组件自身还可通过 `-attempts`、`-timeout`、`-concurrency` 和 `-target` 调整尝试次数、单次超时、并发数或只测试一个目标。
 
 当前内置目标覆盖下表平台。同一平台可能存在多个独立端点，因此实际显示的目标数可能高于表内平台数。
 
@@ -906,6 +914,16 @@ The result separates local mail listeners, outbound SMTP port 25, dynamically re
 
 If the current host doesn't function as a mail server and doesn't send/receive emails, this project indicator can be ignored.
 
+### Upstream and Return Route Detection
+
+Dependency project: [https://github.com/oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
+
+The IP report combines RDAP with a bounded WHOIS fallback and may include prefixes, registration dates, geofeed records, IXPs, upstreams, and peers. The return-route matrix covers Telecom, Unicom, and Mobile targets in Beijing, Shanghai, Guangzhou, and Chengdu over IPv4, plus Beijing, Shanghai, and Guangzhou over IPv6 when enabled. Each target is traced three times with the Go ICMP tracer; same-province and same-carrier alternatives are used only when the primary target has no responding hops.
+
+Classification uses ordered responding-hop ASN evidence. CN2 GIA requires at least two AS4809 hops; a single AS4134 or AS4837 destination-delivery hop is inconclusive, and conflicting premium and ordinary paths across successful attempts are conservatively reported as dynamic mixed. Unicom distinguishes AS9929, AS10099/CUG, and AS4837. Mobile distinguishes AS58807/CMIN2, AS58453/CMI, and AS9808/CMNET.
+
+Structured results include successful attempts, responding hops, target reachability, and Min/Avg/P50/P95/Max plus jitter for traceroute reply samples. These values do not represent application packet loss. The standalone component exposes `-route-json`, `-route-attempts=1..5`, `-timeout`, and `-ipv6`.
+
 ### PING Testing 
 
 Dependency project: [https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
@@ -924,7 +942,7 @@ This test performs DNS resolution and establishes a TCP connection only. It does
 
 Each platform is attempted three times by default, with a five-second limit per attempt and up to 16 targets in progress. Every platform has one row and all latency values are milliseconds. `Min Avg P50 P95 Max` are minimum, mean, median, 95th percentile, and maximum handshake latency. `D R T O` are DNS failures, refused connections, timeouts, and other errors. Zero failures prove only that TCP connections succeeded, not that page content or account features are available.
 
-Option 1 enables this test. The default order is stable by platform name; `-tcp-sort=latency` prioritizes failures, loss, and high latency. `-attempts`, `-timeout`, `-concurrency`, and `-target` control attempts, per-attempt timeout, concurrency, or a single target.
+Option 1 leaves this test disabled by default because its ICMP Ping coverage already provides the primary latency view. Standard, network-focused, network-only, route-focused, and advanced-custom profiles enable it by default; `-tcp=true/false` explicitly overrides the preset. Platform-name order remains the default, while `-tcp-sort=latency` prioritizes failures, loss, and high latency. The standalone component also exposes `-attempts`, `-timeout`, `-concurrency`, and `-target`.
 
 The bundled targets currently cover the platforms below. A platform may have more than one independent endpoint, so the number of displayed targets can be greater than the number of platform names in this table.
 
@@ -1303,6 +1321,16 @@ IPタイプの分類について詳しく説明する必要がある
 
 現在のホストがメール局として機能せず、電子メールの送受信を行わない場合、この項目指標は無視して構いません。
 
+### 上流および帰路回線テスト
+
+依存プロジェクト：[https://github.com/oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
+
+IP情報は RDAP と制限付き WHOIS フォールバックを組み合わせ、プレフィックス、登録日、geofeed、IXP、上流、peer を取得できる範囲で表示します。帰路は IPv4 で北京・上海・広州・成都の電信・聯通・移動を、IPv6 有効時は北京・上海・広州の三社を対象にします。各対象は Go の ICMP traceroute で3回測定し、主対象に有効な応答 hop がない場合だけ同一省・同一事業者の代替対象を使用します。
+
+回線分類は応答 hop の ASN 順序と反復証拠に基づきます。CN2 GIA には少なくとも2個の AS4809 hop が必要です。AS4134 または AS4837 が1 hop だけ見える場合は目的網への引き渡しの可能性があるため判定保留となり、複数回の成功測定で精品網と普通網が競合した場合は保守的に動的混合と表示します。聯通は AS9929、AS10099/CUG、AS4837、移動は AS58807/CMIN2、AS58453/CMI、AS9808/CMNET を区別します。
+
+構造化結果には成功回数、有効 hop 数、対象到達、および traceroute 応答サンプルの Min/Avg/P50/P95/Max と jitter が含まれます。これはアプリケーションのパケット損失率ではありません。単体コンポーネントでは `-route-json`、`-route-attempts=1..5`、`-timeout`、`-ipv6` を指定できます。
+
 ### PING検出
 
 依存プロジェクト：[https://github.com/oneclickvirt/pingtest](https://github.com/oneclickvirt/pingtest)
@@ -1321,7 +1349,7 @@ IPタイプの分類について詳しく説明する必要がある
 
 デフォルトでは各プラットフォームを3回試行し、1回の上限は5秒、同時実行は最大16対象です。各プラットフォームを1行で表示し、遅延単位はすべてミリ秒です。`Min Avg P50 P95 Max` は最小、平均、中央値、95パーセンタイル、最大のハンドシェイク遅延です。`D R T O` はDNS失敗、接続拒否、タイムアウト、その他のエラー回数です。失敗0はTCP接続の成功だけを表し、ページ内容やアカウント機能の利用可否は保証しません。
 
-オプション1ではデフォルトで有効です。通常はプラットフォーム名で安定ソートし、`-tcp-sort=latency` は失敗、損失、高遅延を優先します。`-attempts`、`-timeout`、`-concurrency`、`-target` で試行数、単回タイムアウト、並列数、単一対象を指定できます。
+オプション1では ICMP Ping と重複するため、TCP ハンドシェイクテストをデフォルトで無効にします。標準、ネットワーク重視、ネットワーク単項、ルート重視、高度なカスタムではデフォルトで有効になり、`-tcp=true/false` で明示的に上書きできます。通常はプラットフォーム名で安定ソートし、`-tcp-sort=latency` は失敗、損失、高遅延を優先します。単体コンポーネントでは `-attempts`、`-timeout`、`-concurrency`、`-target` も指定できます。
 
 同梱対象は現在、下表のプラットフォームをカバーします。同じプラットフォームに複数の独立エンドポイントがある場合、実際の表示対象数は表のプラットフォーム数より多くなります。
 

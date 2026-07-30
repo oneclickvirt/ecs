@@ -431,6 +431,28 @@ func TestPrivacyModeCanRenderRedactedStructuredText(t *testing.T) {
 	}
 }
 
+func TestStructuredBacktraceRendersCompactReturnRouteTable(t *testing.T) {
+	config := NewConfig("v-test")
+	config.Language = "zh"
+	text := renderStructuredRunText(config, nil, []ComponentReport{componentFixture(t, "backtrace.ip_bgp", ReportStatusOK, `{
+		"schema_version":"goecs.backtrace/v2","reports":[],
+		"return_routes":{"schema_version":"backtrace.routes/v1","targets":[{
+			"target":{"name":"北京电信v4","carrier":"CT","ip_version":"v4"},
+			"status":"available","attempts":3,"successful_attempts":3,"valid_hops":12,
+			"classification":{"code":"ct_cn2_gia","label":"电信CN2GIA [精品线路]"},
+			"hop_rtt":{"p95_ms":23.4}
+		}]}
+	}`)}, nil)
+	for _, want := range []string{"回程目标", "北京电信v4", "电信CN2GIA", "3/3", "23.4 ms"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("structured return route missing %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "evidence") {
+		t.Fatalf("structured text exposed verbose route evidence:\n%s", text)
+	}
+}
+
 func componentFixture(t *testing.T, name string, status ReportStatus, payload string) ComponentReport {
 	t.Helper()
 	if !json.Valid([]byte(payload)) {

@@ -695,6 +695,29 @@ func (renderer *structuredTextRenderer) backtracePayload(payload json.RawMessage
 			renderer.row("Geofeed", formatIntCounts(counts))
 		}
 	}
+	returnRoutes := objectValue(root, "return_routes")
+	if len(returnRoutes) > 0 {
+		routeRows := make([][]string, 0)
+		for _, raw := range arrayValue(returnRoutes, "targets") {
+			targetReport, _ := raw.(map[string]any)
+			target := objectValue(targetReport, "target")
+			classification := objectValue(targetReport, "classification")
+			latency := objectValue(targetReport, "hop_rtt")
+			classValue := stringValue(classification, "label")
+			if !renderer.zh {
+				classValue = stringValue(classification, "code")
+			}
+			routeRows = append(routeRows, []string{
+				stringValue(target, "name"), classValue,
+				fmt.Sprintf("%d/%d", intValue(targetReport, "successful_attempts"), intValue(targetReport, "attempts")),
+				strconv.Itoa(intValue(targetReport, "valid_hops")), fmt.Sprintf("%.1f ms", floatValue(latency, "p95_ms")),
+			})
+		}
+		renderer.table(
+			[]string{renderer.pick("回程目标", "Return Target"), renderer.pick("线路", "Class"), renderer.pick("成功", "Success"), renderer.pick("跳点", "Hops"), "P95"},
+			routeRows, []int{18, 26, 10, 8, 10},
+		)
+	}
 }
 
 func (renderer *structuredTextRenderer) mailPayload(payload json.RawMessage) {

@@ -19,6 +19,7 @@ import (
 	unlockexecutor "github.com/oneclickvirt/UnlockTests/executor"
 	unlockmodel "github.com/oneclickvirt/UnlockTests/model"
 	bgptools "github.com/oneclickvirt/backtrace/bgptools"
+	backtraceroute "github.com/oneclickvirt/backtrace/bk"
 	basicsmodel "github.com/oneclickvirt/basics/model"
 	"github.com/oneclickvirt/cputest/cpu"
 	"github.com/oneclickvirt/disktest/disk"
@@ -467,6 +468,41 @@ func TestLocalBacktraceComponentUsesStructuredRunner(t *testing.T) {
 	}
 	if len(payload.Reports) != 2 || payload.Reports[0].IP != "192.0.2.1" || payload.Reports[1].IP != "2001:db8::1" {
 		t.Fatalf("unexpected backtrace payload: %+v", payload)
+	}
+}
+
+func TestLocalBacktraceComponentIncludesStructuredReturnRoutes(t *testing.T) {
+	report := collectBacktraceComponentWithRegistryAndRoute(
+		context.Background(), "192.0.2.1", "", map[string]string{},
+		func(_ context.Context, ip string, _ bgptools.IPBGPReportConfig) (*bgptools.IPBGPReport, error) {
+			return &bgptools.IPBGPReport{IP: ip, Status: bgptools.ReportAvailable}, nil
+		}, nil,
+		func(_ context.Context, config backtraceroute.RouteReportConfig) backtraceroute.RouteReport {
+			if config.Attempts != 3 || config.EnableIPv6 || config.Timeout != 15*time.Second {
+				t.Fatalf("unexpected route config: %+v", config)
+			}
+			return backtraceroute.RouteReport{
+				SchemaVersion: backtraceroute.RouteReportSchema,
+				Targets: []backtraceroute.RouteTargetReport{{
+					Target: backtraceroute.RouteTarget{Name: "测试电信v4", Carrier: "CT", IPVersion: "v4"},
+					Status: backtraceroute.RouteProbeAvailable, Attempts: 3, SuccessfulAttempts: 3,
+					Classification: backtraceroute.RouteClassification{Code: "ct_cn2_gia", Label: "电信CN2GIA [精品线路]"},
+				}},
+			}
+		},
+	)
+	if report.Status != ReportStatusOK || report.SchemaVersion != "goecs.backtrace/v2" {
+		t.Fatalf("unexpected backtrace result: %#v", report)
+	}
+	var payload struct {
+		SchemaVersion string                      `json:"schema_version"`
+		ReturnRoutes  *backtraceroute.RouteReport `json:"return_routes"`
+	}
+	if err := json.Unmarshal(report.Payload, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.SchemaVersion != "goecs.backtrace/v2" || payload.ReturnRoutes == nil || len(payload.ReturnRoutes.Targets) != 1 {
+		t.Fatalf("structured routes missing: %+v", payload)
 	}
 }
 
