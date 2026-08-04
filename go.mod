@@ -20,7 +20,7 @@ require (
 	github.com/oneclickvirt/portchecker v0.0.7
 	github.com/oneclickvirt/privatespeedtest v0.0.8
 	github.com/oneclickvirt/security v0.0.18
-	github.com/oneclickvirt/speedtest v0.0.18
+	github.com/oneclickvirt/speedtest v0.0.19
 	golang.org/x/term v0.44.0
 )
 
@@ -103,7 +103,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.17.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
-	github.com/showwin/speedtest-go v1.7.10 // indirect
+	github.com/showwin/speedtest-go v1.7.11 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
