@@ -15,7 +15,7 @@ import (
 func ShowHead(language string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] ShowHead panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] speedtest header unavailable")
 		}
 	}()
 	sp.ShowHead(language)
@@ -24,7 +24,7 @@ func ShowHead(language string) {
 func NearbySP() {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] NearbySP panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] nearby speedtest unavailable")
 		}
 	}()
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
@@ -83,7 +83,7 @@ func printTableRow(result pst.SpeedTestResult) {
 func privateSpeedTest(num int, operator string) (int, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] privateSpeedTest panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] speedtest registry unavailable")
 		}
 	}()
 	*pst.NoProgress = true
@@ -194,7 +194,7 @@ func privateSpeedTest(num int, operator string) (int, error) {
 func privateSpeedTestWithFallback(num int, operator, language string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] privateSpeedTestWithFallback panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] preferred speedtest unavailable; using fallback")
 		}
 	}()
 	// 先尝试私有节点测速
@@ -215,7 +215,7 @@ func privateSpeedTestWithFallback(num int, operator, language string) {
 func CustomSP(platform, operator string, num int, language string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] CustomSP panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] custom speedtest unavailable")
 		}
 	}()
 	// 对于三网测速（cmcc、cu、ct）和 other，优先使用 privatespeedtest 进行私有测速
@@ -223,7 +223,7 @@ func CustomSP(platform, operator string, num int, language string) {
 	if opLower == "cmcc" || opLower == "cu" || opLower == "ct" || opLower == "other" {
 		testedCount, err := privateSpeedTest(num, opLower)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] privatespeedtest failed: %v\n", err)
+			fmt.Fprintln(os.Stderr, "[WARN] preferred speedtest unavailable; using fallback")
 			// 全部失败，继续使用原有的公共节点兜底方案
 		} else if testedCount >= num {
 			// 私有节点测速成功且数量达标，直接返回

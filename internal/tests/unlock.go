@@ -18,7 +18,7 @@ import (
 func MediaTest(language, region, ipVersion string, showIP bool) string {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] MediaTest panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] media test unavailable")
 		}
 	}()
 

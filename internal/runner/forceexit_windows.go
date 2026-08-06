@@ -11,6 +11,7 @@ func IsolateProcessGroup() {}
 // forceExit on Windows simply calls os.Exit; there is no process-group kill
 // mechanism equivalent to POSIX SIGKILL on this platform.
 func forceExit(code int) {
+	runExitCleanup()
 	os.Exit(code)
 }
 

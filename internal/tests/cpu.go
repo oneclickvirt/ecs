@@ -12,12 +12,12 @@ import (
 func CpuTest(language, testMethod, testThread string) (realTestMethod, res string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] CpuTest panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] CPU benchmark unavailable")
 			res = fmt.Sprintf("\nCPU test failed: %v\n", r)
 			realTestMethod = "error"
 		}
 	}()
-	
+
 	if runtime.GOOS == "windows" {
 		if testMethod != "winsat" && testMethod != "" {
 			// res = "Detected host is Windows, using Winsat for testing.\n"

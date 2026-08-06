@@ -97,7 +97,7 @@ func componentPayload(name, schema string, status ReportStatus, started time.Tim
 		encoded, marshalErr := json.Marshal(payload)
 		if marshalErr != nil {
 			report.Status = ReportStatusError
-			report.Reason = fmt.Sprintf("encode component payload: %v", marshalErr)
+			report.Reason = sanitizePublicReason(fmt.Sprintf("encode component payload: %v", marshalErr))
 		} else {
 			report.Payload = encoded
 		}

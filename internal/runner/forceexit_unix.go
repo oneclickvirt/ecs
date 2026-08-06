@@ -36,6 +36,7 @@ func isTerminal(fd int) bool {
 // benchmarks create their own process group, so group cleanup alone can leave
 // a process holding an SSH stdout pipe open after goecs exits.
 func forceExit(code int) {
+	runExitCleanup()
 	pid := os.Getpid()
 	for _, child := range descendantPIDs(pid) {
 		_ = syscall.Kill(child, syscall.SIGKILL)

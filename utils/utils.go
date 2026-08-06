@@ -29,6 +29,25 @@ import (
 
 var networkCheckFn = network.NetworkCheck
 
+var captureOutputSanitizer struct {
+	sync.RWMutex
+	fn func(string) string
+}
+
+// SetOutputSanitizer installs the boundary applied to complete stdout/stderr
+// lines before CaptureOutput displays or retains them.
+func SetOutputSanitizer(fn func(string) string) {
+	captureOutputSanitizer.Lock()
+	captureOutputSanitizer.fn = fn
+	captureOutputSanitizer.Unlock()
+}
+
+func currentOutputSanitizer() func(string) string {
+	captureOutputSanitizer.RLock()
+	defer captureOutputSanitizer.RUnlock()
+	return captureOutputSanitizer.fn
+}
+
 // IsNonInteractive reports whether goecs should avoid prompts and blocking
 // terminal waits. The lower-case env var matches goecs.sh documentation.
 func IsNonInteractive() bool {
@@ -346,14 +365,17 @@ func CaptureOutput(f func()) string {
 	done := make(chan struct{}, 2)
 	stdoutBufferWriter := &leadingCellWriter{writer: &stdoutBuf, lineStart: true}
 	stdoutDisplayWriter := &leadingCellWriter{writer: oldStdout, lineStart: true}
+	sanitizer := currentOutputSanitizer()
 	go func() {
-		multiWriter := io.MultiWriter(stdoutBufferWriter, stdoutDisplayWriter)
-		io.Copy(multiWriter, stdoutPipeR)
+		writer := &lineSanitizingWriter{writer: io.MultiWriter(stdoutBufferWriter, stdoutDisplayWriter), sanitizer: sanitizer}
+		_, _ = io.Copy(writer, stdoutPipeR)
+		_ = writer.Flush()
 		done <- struct{}{}
 	}()
 	go func() {
-		multiWriter := io.MultiWriter(&stderrBuf, oldStderr)
-		io.Copy(multiWriter, stderrPipeR)
+		writer := &lineSanitizingWriter{writer: io.MultiWriter(&stderrBuf, oldStderr), sanitizer: sanitizer}
+		_, _ = io.Copy(writer, stderrPipeR)
+		_ = writer.Flush()
 		done <- struct{}{}
 	}()
 	// 执行函数
@@ -377,6 +399,53 @@ func CaptureOutput(f func()) string {
 	// 返回捕获的输出字符串
 	// stderrBuf.String()
 	return stdoutBuf.String()
+}
+
+type lineSanitizingWriter struct {
+	writer    io.Writer
+	sanitizer func(string) string
+	pending   []byte
+}
+
+func (w *lineSanitizingWriter) Write(data []byte) (int, error) {
+	w.pending = append(w.pending, data...)
+	for {
+		newline := bytes.IndexByte(w.pending, '\n')
+		if newline < 0 {
+			break
+		}
+		line := append([]byte(nil), w.pending[:newline+1]...)
+		w.pending = w.pending[newline+1:]
+		if err := w.writeLine(string(line)); err != nil {
+			return 0, err
+		}
+	}
+	return len(data), nil
+}
+
+func (w *lineSanitizingWriter) Flush() error {
+	if len(w.pending) == 0 {
+		return nil
+	}
+	line := string(w.pending)
+	w.pending = nil
+	return w.writeLine(line)
+}
+
+func (w *lineSanitizingWriter) writeLine(line string) (err error) {
+	cleaned := line
+	if w.sanitizer != nil {
+		cleaned = "output unavailable"
+		if strings.HasSuffix(line, "\n") {
+			cleaned += "\n"
+		}
+		func() {
+			defer func() { _ = recover() }()
+			cleaned = w.sanitizer(line)
+		}()
+	}
+	_, err = io.WriteString(w.writer, cleaned)
+	return err
 }
 
 // leadingCellWriter keeps the compact CLI contract used by the original

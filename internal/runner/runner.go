@@ -599,6 +599,7 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 		}()
 
 		if config.Finish {
+			runExitCleanup()
 			os.Exit(0)
 		}
 		// ── Snapshot timing information ──────────────────────────────────────────
@@ -633,7 +634,8 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 				printTimeInfo(config, minutes, seconds, currentTime)
 			}, "", "")
 			*output += timeInfo
-			finalOutput = *output
+			finalOutput = sanitizeRunnerOutput(*output)
+			*output = finalOutput
 			outputMutex.Unlock()
 
 		case <-time.After(10 * time.Second):
@@ -685,6 +687,7 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 			fmt.Println("Press Enter to exit...")
 			fmt.Scanln()
 		}
+		runExitCleanup()
 		os.Exit(0)
 	case <-ctx.Done():
 		// Keep signal delivery armed after the soft deadline. Returning while
@@ -696,6 +699,7 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 
 // HandleUploadResults handles uploading results
 func HandleUploadResults(config *params.Config, output string) {
+	output = sanitizeRunnerOutput(output)
 	httpURL, httpsURL := utils.ProcessAndUpload(output, config.FilePath, config.EnableUpload, config.Language)
 	if httpURL != "" || httpsURL != "" {
 		if config.Language == "en" {

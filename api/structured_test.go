@@ -109,24 +109,16 @@ func TestDataOfflineForcesEmbeddedSnapshot(t *testing.T) {
 	// Data-offline validation must not start live mail/STUN probes in the local
 	// component adapter; network capability is covered by dedicated fixtures.
 	report := CollectStructuredReport(context.Background(), NetCheckResult{Connected: false, StackType: "None"}, cfg, "", time.Now(), time.Now())
-	if report.Data == nil || report.Data.Source != "embedded" || report.Data.Fallback != "embedded" {
-		t.Fatalf("unexpected offline data source: %#v", report.Data)
+	if report.Data != nil || len(report.DataFiles) != 0 {
+		t.Fatalf("public report exposed registry provenance: data=%#v files=%#v", report.Data, report.DataFiles)
 	}
-	if len(report.DataFiles) != 8 {
-		t.Fatalf("expected all known data files, got %#v", report.DataFiles)
+	encoded, err := report.JSON()
+	if err != nil {
+		t.Fatal(err)
 	}
-	for index, file := range report.DataFiles {
-		if !hasPrivateComponentData() && (file.File == dnsblDataFile || file.File == privateDataFile || file.File == transferDataFile) {
-			if file.Status != ReportStatusError || file.Reason == "" {
-				t.Fatalf("public-only file %d has unexpected state: %#v", index, file)
-			}
-			continue
-		}
-		if file.Status != ReportStatusOK || file.Source != "embedded" || file.Fallback != "embedded" {
-			t.Fatalf("file %d has unexpected state: %#v", index, file)
-		}
-		if index > 0 && report.DataFiles[index-1].File >= file.File {
-			t.Fatalf("data files are not stable-sorted: %#v", report.DataFiles)
+	for _, forbidden := range []string{`"data":`, `"data_files":`, "tcp-targets.json", "embedded"} {
+		if strings.Contains(string(encoded), forbidden) {
+			t.Fatalf("public JSON exposed %q: %s", forbidden, encoded)
 		}
 	}
 }
@@ -148,6 +140,38 @@ func TestRunAllTestsContextPrivacyOmitsText(t *testing.T) {
 	result := RunAllTestsContext(context.Background(), NetCheckResult{Connected: false, StackType: "None"}, cfg)
 	if result.Report == nil || result.Report.Text != "" {
 		t.Fatalf("privacy report leaked text: %#v", result.Report)
+	}
+}
+
+func TestRunAllTestsContextUsesClassicHumanFormatter(t *testing.T) {
+	cfg := NewDefaultConfig()
+	cfg.DataOffline = true
+	cfg.AnalyzeResult = false
+	cfg.BasicStatus = false
+	cfg.CpuTestStatus = false
+	cfg.MemoryTestStatus = false
+	cfg.DiskTestStatus = false
+	cfg.UtTestStatus = false
+	cfg.SecurityTestStatus = false
+	cfg.EmailTestStatus = false
+	cfg.BacktraceStatus = false
+	cfg.Nt3Status = false
+	cfg.PingTestStatus = false
+	cfg.TgdcTestStatus = false
+	cfg.WebTestStatus = false
+	cfg.TCPProbeStatus = false
+	cfg.SpeedTestStatus = false
+	result := RunAllTestsContext(context.Background(), NetCheckResult{Connected: false, StackType: "None"}, cfg)
+	if result.StructuredOutput != "" {
+		t.Fatalf("structured tables leaked into human output: %q", result.StructuredOutput)
+	}
+	if !strings.Contains(result.Output, "版本："+cfg.EcsVersion) || !strings.Contains(result.Output, "花费          :") {
+		t.Fatalf("classic option-1 framing is missing:\n%s", result.Output)
+	}
+	for _, forbidden := range []string{"数据源状态", "Data Sources", " 网络类型       :", " 节点                来源"} {
+		if strings.Contains(result.Output, forbidden) {
+			t.Fatalf("alternate structured formatter leaked %q:\n%s", forbidden, result.Output)
+		}
 	}
 }
 

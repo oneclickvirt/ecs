@@ -90,20 +90,23 @@ type TCPReport struct {
 }
 
 type StructuredReport struct {
-	SchemaVersion string            `json:"schema_version"`
-	ECSVersion    string            `json:"ecs_version"`
-	Status        ReportStatus      `json:"status"`
-	StartedAt     time.Time         `json:"started_at"`
-	FinishedAt    time.Time         `json:"finished_at"`
-	DurationMS    int64             `json:"duration_ms"`
-	DeepMode      bool              `json:"deep_mode"`
-	PrivacyMode   bool              `json:"privacy_mode"`
-	Data          *DataVersion      `json:"data,omitempty"`
-	DataFiles     []DataFileVersion `json:"data_files,omitempty"`
-	Sections      []SectionReport   `json:"sections"`
-	Components    []ComponentReport `json:"components,omitempty"`
-	TCP           []TCPReport       `json:"tcp,omitempty"`
-	Text          string            `json:"text"`
+	SchemaVersion string       `json:"schema_version"`
+	ECSVersion    string       `json:"ecs_version"`
+	Status        ReportStatus `json:"status"`
+	StartedAt     time.Time    `json:"started_at"`
+	FinishedAt    time.Time    `json:"finished_at"`
+	DurationMS    int64        `json:"duration_ms"`
+	DeepMode      bool         `json:"deep_mode"`
+	PrivacyMode   bool         `json:"privacy_mode"`
+	// Data and DataFiles are retained for Go source compatibility only. Public
+	// report constructors leave them empty and JSON never serializes them because
+	// source/fallback metadata can identify private registries.
+	Data       *DataVersion      `json:"-"`
+	DataFiles  []DataFileVersion `json:"-"`
+	Sections   []SectionReport   `json:"sections"`
+	Components []ComponentReport `json:"components,omitempty"`
+	TCP        []TCPReport       `json:"tcp,omitempty"`
+	Text       string            `json:"text"`
 }
 
 // ComponentReport is the cross-repository envelope used by component
@@ -125,14 +128,45 @@ type UnifiedReport struct {
 	Components []ComponentReport `json:"-"`
 }
 
+type structuredReportJSON StructuredReport
+
 func (report *StructuredReport) WithComponents(components ...ComponentReport) UnifiedReport {
 	copyReport := *report
 	copyReport.Components = append(append([]ComponentReport(nil), report.Components...), components...)
-	return UnifiedReport{StructuredReport: &copyReport, Components: append([]ComponentReport(nil), components...)}
+	sanitizeStructuredReport(&copyReport)
+	appended := append([]ComponentReport(nil), copyReport.Components[len(report.Components):]...)
+	return UnifiedReport{StructuredReport: &copyReport, Components: appended}
+}
+
+func publicStructuredReportCopy(report *StructuredReport) *StructuredReport {
+	if report == nil {
+		return nil
+	}
+	public := *report
+	public.Sections = append([]SectionReport(nil), report.Sections...)
+	public.Components = append([]ComponentReport(nil), report.Components...)
+	public.TCP = append([]TCPReport(nil), report.TCP...)
+	sanitizeStructuredReport(&public)
+	return &public
+
+}
+
+// MarshalJSON enforces the public report boundary even when callers use the
+// standard encoding/json package instead of StructuredReport.JSON.
+func (report *StructuredReport) MarshalJSON() ([]byte, error) {
+	public := publicStructuredReportCopy(report)
+	if public == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal((*structuredReportJSON)(public))
 }
 
 func (report *StructuredReport) JSON() ([]byte, error) {
-	return json.MarshalIndent(report, "", "  ")
+	public := publicStructuredReportCopy(report)
+	if public == nil {
+		return json.MarshalIndent(nil, "", "  ")
+	}
+	return json.MarshalIndent((*structuredReportJSON)(public), "", "  ")
 }
 
 type tcpProbeConfig struct {
@@ -157,6 +191,7 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 		ctx = context.Background()
 	}
 	config = validatedStructuredConfig(config)
+	defer sanitizeConfiguredLog(config)
 	// This API is used after the legacy text workflow by the CLI and GUI. The
 	// legacy path has already executed destructive/expensive hardware tests, so
 	// do not run a second benchmark just to populate a JSON envelope. Missing
@@ -187,6 +222,7 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 	if config.PrivacyMode {
 		applyStructuredPrivacy(report)
 	}
+	sanitizeStructuredReport(report)
 	return report
 }
 

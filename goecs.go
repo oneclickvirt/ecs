@@ -48,6 +48,12 @@ func initLogger() {
 	}
 }
 
+func sanitizeECSLog() {
+	if configs.EnableLogger {
+		_ = ecsapi.SanitizeLogFile("ecs.log")
+	}
+}
+
 func handleLanguageSpecificSettings() {
 	if configs.Language == "en" {
 		configs.BacktraceStatus = false
@@ -91,7 +97,34 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	defer cancel()
 	resultCh := make(chan *ecsapi.RunResult, 1)
 	go func() {
-		resultCh <- ecsapi.RunAllTestsContext(runCtx, preCheck, config)
+		// JSON on stdout remains a machine-only mode. JSON written to a file,
+		// however, must not replace the classic real-time terminal workflow or
+		// rerun benchmarks merely to populate a structured envelope.
+		if config.JSONPath == "-" {
+			resultCh <- ecsapi.RunAllTestsContext(runCtx, preCheck, config)
+			return
+		}
+		var (
+			wg1, wg2, wg3                                         sync.WaitGroup
+			basicInfo, securityInfo, emailInfo, mediaInfo, ptInfo string
+			output, tempOutput                                    string
+			outputMutex, infoMutex                                sync.Mutex
+		)
+		startedAt := time.Now()
+		switch config.Language {
+		case "en":
+			runner.RunEnglishTests(runCtx, preCheck, config, &wg1, &wg2, &wg3,
+				&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
+				&output, tempOutput, startedAt, &outputMutex, &infoMutex)
+		default:
+			runner.RunChineseTests(runCtx, preCheck, config, &wg1, &wg2, &wg3,
+				&basicInfo, &securityInfo, &emailInfo, &mediaInfo, &ptInfo,
+				&output, tempOutput, startedAt, &outputMutex, &infoMutex)
+		}
+		if runCtx.Err() == nil && config.AnalyzeResult {
+			output = runner.AppendAnalysisSummary(config, output, tempOutput, &outputMutex)
+		}
+		resultCh <- ecsapi.NewTextRunResult(runCtx, preCheck, config, output, startedAt, time.Now())
 	}()
 	var softTimer, hardTimer *time.Timer
 	if softDeadline, hardDeadline := legacyDeadlineWindows(config.MaxDuration); hardDeadline > 0 {
@@ -108,6 +141,7 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 		case result = <-resultCh:
 		case <-hardTimer.C:
 			fmt.Fprintln(os.Stderr, "global structured deadline exceeded; terminating benchmark process group")
+			sanitizeECSLog()
 			runner.ForceExit(1)
 			return
 		}
@@ -121,7 +155,7 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	}
 	finalized, err := ecsapi.FinalizeRunResultContext(ctx, preCheck, (*ecsapi.Config)(config), result)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to finalize result: %v\n", err)
+		fmt.Fprintln(os.Stderr, "failed to finalize result")
 	}
 	if finalized.HTTPURL != "" || finalized.HTTPSURL != "" {
 		fmt.Printf("Http URL:  %s\nHttps URL: %s\n", finalized.HTTPURL, finalized.HTTPSURL)
@@ -139,6 +173,11 @@ func main() {
 		return
 	}
 	initLogger()
+	runner.SetExitCleanup(sanitizeECSLog)
+	defer runner.SetExitCleanup(nil)
+	runner.SetOutputSanitizer(ecsapi.SanitizeOutput)
+	defer runner.SetOutputSanitizer(nil)
+	defer sanitizeECSLog()
 	utils.CheckAndFixAndroidDNS(configs.Language)
 	preCheck := utils.CheckPublicAccess(3 * time.Second)
 	go func() {
@@ -187,7 +226,10 @@ func main() {
 	defer cancel()
 	if softDeadline, hardDeadline := legacyDeadlineWindows(configs.MaxDuration); hardDeadline > 0 {
 		softDeadlineTimer := time.AfterFunc(softDeadline, cancel)
-		hardDeadlineTimer := time.AfterFunc(hardDeadline, func() { runner.ForceExit(1) })
+		hardDeadlineTimer := time.AfterFunc(hardDeadline, func() {
+			sanitizeECSLog()
+			runner.ForceExit(1)
+		})
 		defer softDeadlineTimer.Stop()
 		defer hardDeadlineTimer.Stop()
 	}
@@ -203,12 +245,14 @@ func main() {
 	if ctx.Err() == nil && configs.AnalyzeResult {
 		output = runner.AppendAnalysisSummary(configs, output, tempOutput, &outputMutex)
 	}
+	output = ecsapi.SanitizeOutput(output)
 	// HandleUploadResults always writes the local result file. Keep that
 	// behavior after a deadline/cancellation; EnableUpload alone controls the
 	// optional remote share.
 	if preCheck.Connected || output != "" {
 		runner.HandleUploadResults(configs, output)
 	}
+	sanitizeECSLog()
 	configs.Finish = true
 	if shouldWaitForExitInput() {
 		fmt.Println("Press Enter to exit...")

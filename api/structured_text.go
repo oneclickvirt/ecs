@@ -22,9 +22,14 @@ type structuredTextRenderer struct {
 }
 
 func renderStructuredRunText(config *Config, dataFiles []DataFileVersion, components []ComponentReport, tcp []TCPReport) string {
+	_ = dataFiles // provenance is internal-only and must never enter text output
+	components = append([]ComponentReport(nil), components...)
+	for index := range components {
+		components[index].Reason = sanitizePublicReason(components[index].Reason)
+		components[index].Payload = sanitizeComponentPayload(components[index].Payload)
+	}
 	renderer := newStructuredTextRenderer(config)
 	renderer.header(config)
-	renderer.dataFiles(dataFiles)
 	beforeSpeed, speed := partitionSpeedComponents(components)
 	renderer.components(beforeSpeed)
 	renderer.tcp(tcp)
@@ -238,34 +243,6 @@ func (renderer *structuredTextRenderer) tableLine(values []string, widths []int)
 		renderer.builder.WriteString(padDisplay(value, widths[index]))
 	}
 	renderer.builder.WriteByte('\n')
-}
-
-func (renderer *structuredTextRenderer) dataFiles(files []DataFileVersion) {
-	if len(files) == 0 {
-		return
-	}
-	title := renderer.pick("数据源状态", "Data Sources")
-	renderer.section(title)
-	rows := make([][]string, 0, len(files))
-	for _, file := range files {
-		source := file.Source
-		if file.Fallback != "" {
-			if strings.EqualFold(file.Fallback, file.Source) {
-				source += renderer.pick(" (回退)", " (fallback)")
-			} else {
-				source += " -> " + file.Fallback
-			}
-		}
-		updated := "-"
-		if !file.GeneratedAt.IsZero() {
-			updated = file.GeneratedAt.Local().Format("01-02 15:04")
-		}
-		rows = append(rows, []string{strings.TrimSuffix(file.File, ".json"), source, strconv.Itoa(file.Count), updated, renderer.status(file.Status)})
-	}
-	renderer.table(
-		[]string{renderer.pick("数据", "Data"), renderer.pick("来源", "Source"), renderer.pick("数量", "Count"), renderer.pick("更新时间", "Updated"), renderer.pick("状态", "Status")},
-		rows, []int{20, 13, 7, 12, 11},
-	)
 }
 
 func (renderer *structuredTextRenderer) component(component ComponentReport) {

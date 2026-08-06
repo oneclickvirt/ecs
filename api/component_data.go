@@ -72,7 +72,9 @@ func loadComponentData(ctx context.Context, offline bool) (componentInputs, []Da
 			primary = result.primary
 		}
 		if result.err != nil {
-			loadErr = errors.Join(loadErr, fmt.Errorf("load %s: %w", result.file.File, result.err))
+			// Keep the logical component name for internal aggregation, but never
+			// expose the loader's endpoint, repository or credential-bearing error.
+			loadErr = errors.Join(loadErr, fmt.Errorf("load %s: %s", result.file.File, sanitizePublicReason(result.err.Error())))
 		}
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].File < files[j].File })
@@ -179,7 +181,7 @@ func timeMetadataFile(file, schema string, generatedAt time.Time, source string,
 
 func failedComponentData(ctx context.Context, file string, err error) componentDataResult {
 	return componentDataResult{
-		file: DataFileVersion{File: file, Status: dataFileStatus(ctx, err), Reason: sanitizePublicText(err.Error())},
+		file: DataFileVersion{File: file, Status: dataFileStatus(ctx, err), Reason: sanitizePublicReason(err.Error())},
 		err:  err,
 	}
 }

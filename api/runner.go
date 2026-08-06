@@ -22,6 +22,72 @@ type RunResult struct {
 	JSON             []byte
 }
 
+// NewTextRunResult wraps an already completed classic text run without
+// starting any component, registry, hardware, network, or speed test again.
+// It is used by CLI/GUI callers that need JSON alongside the established
+// real-time output.
+func NewTextRunResult(ctx context.Context, preCheck utils.NetCheckResult, config *Config, output string, startedAt, finishedAt time.Time) *RunResult {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	config = validatedStructuredConfig(config)
+	status, reason := ReportStatusOK, ""
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		status, reason = ReportStatusTimeout, sanitizePublicReason(ctx.Err().Error())
+	} else if errors.Is(ctx.Err(), context.Canceled) {
+		status, reason = ReportStatusCanceled, sanitizePublicReason(ctx.Err().Error())
+	}
+	output = sanitizePublicOutput(output)
+	sections := classicSectionReports(config, preCheck, status, reason)
+	reportStatus := aggregateReportStatus(status, sections)
+	report := &StructuredReport{
+		SchemaVersion: StructuredReportSchema, ECSVersion: config.EcsVersion,
+		Status: reportStatus, StartedAt: startedAt, FinishedAt: finishedAt,
+		DurationMS: finishedAt.Sub(startedAt).Milliseconds(), DeepMode: config.DeepMode,
+		PrivacyMode: config.PrivacyMode, Sections: sections, Text: output,
+	}
+	if config.PrivacyMode {
+		applyStructuredPrivacy(report)
+		output = ""
+	}
+	sanitizeStructuredReport(report)
+	jsonData, _ := report.JSON()
+	return &RunResult{
+		Output: output, Duration: finishedAt.Sub(startedAt), StartTime: startedAt,
+		EndTime: finishedAt, Report: report, JSON: jsonData,
+	}
+}
+
+func classicSectionReports(config *Config, preCheck utils.NetCheckResult, status ReportStatus, reason string) []SectionReport {
+	definitions := []struct {
+		name    string
+		enabled bool
+		network bool
+	}{
+		{"basics", config.BasicStatus, false}, {"cpu", config.CpuTestStatus || (config.DeepMode && config.DeepBurnDuration > 0), false},
+		{"memory", config.MemoryTestStatus, false}, {"disk", config.DiskTestStatus, false},
+		{"media", config.UtTestStatus, true}, {"security", config.SecurityTestStatus, true},
+		{"email", config.EmailTestStatus, true}, {"backtrace", config.BacktraceStatus, true},
+		{"routes", config.Nt3Status, true}, {"ping", config.PingTestStatus, true},
+		{"tgdc", config.TgdcTestStatus, true}, {"web", config.WebTestStatus, true},
+		{"tcp", config.TCPProbeStatus, true}, {"speed", config.SpeedTestStatus, true},
+	}
+	sections := make([]SectionReport, 0, len(definitions))
+	for _, definition := range definitions {
+		sectionStatus, sectionReason := status, reason
+		if !definition.enabled {
+			sectionStatus, sectionReason = ReportStatusSkipped, "disabled"
+		} else if definition.network && !preCheck.Connected {
+			sectionStatus, sectionReason = ReportStatusUnavailable, "network unavailable"
+		}
+		sections = append(sections, SectionReport{
+			Name: definition.name, Enabled: definition.enabled,
+			Status: sectionStatus, Reason: sanitizePublicReason(sectionReason),
+		})
+	}
+	return sections
+}
+
 func applyLanguageAndUploadRules(preCheck utils.NetCheckResult, config *Config) {
 	if config.Language == "en" {
 		config.BacktraceStatus = false
@@ -57,6 +123,7 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		config = NewDefaultConfig()
 	}
 	config.ValidateParams()
+	defer sanitizeConfiguredLog(config)
 	ctx := parent
 	cancel := func() {}
 	if config.MaxDuration > 0 {
@@ -74,40 +141,13 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 	startTime := time.Now()
 	applyLanguageAndUploadRules(preCheck, config)
 	structuredConfig := *config
-	legacyConfig := legacyConfigForStructured(config)
+	// The classic runner remains the sole human-facing text formatter. Local
+	// structured adapters still collect machine-readable payloads below, but
+	// they must never replace the established option-1 sections with a second
+	// table layout.
+	legacyConfig := config
 	if UsesStructuredComponents() {
 		configureStructuredLogging(config.EnableLogger)
-		extras := collectStructuredExtras(ctx, preCheck, &structuredConfig)
-		status, reason := structuredRunStatus(ctx, extras.err)
-		output = renderStructuredRunText(config, extras.dataFiles, extras.components, extras.tcp)
-		if ctx.Err() == nil && config.AnalyzeResult {
-			progressStarted(ctx, "analysis")
-			output = runner.AppendAnalysisSummary(config, output, "", &outputMutex)
-			progressCompleted(ctx, "analysis", ReportStatusOK, "")
-		}
-		endTime := time.Now()
-		sections := sectionReports(config, preCheck, extras, status, reason)
-		status = aggregateReportStatus(status, sections)
-		report := &StructuredReport{
-			SchemaVersion: StructuredReportSchema, ECSVersion: config.EcsVersion,
-			Status: status, StartedAt: startTime, FinishedAt: endTime,
-			DurationMS: endTime.Sub(startTime).Milliseconds(), DeepMode: config.DeepMode,
-			PrivacyMode: config.PrivacyMode, Data: extras.data, DataFiles: extras.dataFiles,
-			Components: extras.components, TCP: extras.tcp, Sections: sections, Text: output,
-		}
-		if config.PrivacyMode {
-			applyStructuredPrivacy(report)
-			output = renderStructuredRunText(config, report.DataFiles, report.Components, report.TCP)
-		}
-		output = appendStructuredTimeText(output, config, startTime, endTime)
-		if !config.PrivacyMode {
-			report.Text = output
-		}
-		jsonData, _ := report.JSON()
-		return &RunResult{
-			Output: output, StructuredOutput: output, Duration: endTime.Sub(startTime),
-			StartTime: startTime, EndTime: endTime, Report: report, JSON: jsonData,
-		}
 	}
 	identityReady := make(chan struct{}, 1)
 	workflowCtx := runner.WithIdentityReady(ctx, identityReady)
@@ -174,15 +214,11 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		status, reason = ReportStatusCanceled, ctx.Err().Error()
 	}
 	if extras.err != nil && status == ReportStatusOK {
-		status, reason = ReportStatusPartial, extras.err.Error()
+		status, reason = ReportStatusPartial, sanitizePublicReason(extras.err.Error())
 	}
+	// Structured payloads are returned in report.JSON; human-readable output is
+	// intentionally the legacy option-1 stream above.
 	structuredOutput := ""
-	if workflowFinished && (structuredOwnsHardware() || structuredOwnsNetwork()) {
-		legacyOutputLength := len(output)
-		output = appendStructuredHardwareText(output, config, extras.components)
-		output = appendStructuredTCPText(output, config, extras.tcp)
-		structuredOutput = output[legacyOutputLength:]
-	}
 	endTime := time.Now()
 	sections := sectionReports(config, preCheck, extras, status, reason)
 	status = aggregateReportStatus(status, sections)
@@ -204,6 +240,12 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		report.Status = status
 		report.Text = ""
 	}
+	output = sanitizePublicOutput(output)
+	structuredOutput = sanitizePublicOutput(structuredOutput)
+	if !config.PrivacyMode {
+		report.Text = output
+	}
+	sanitizeStructuredReport(report)
 	jsonData, _ := report.JSON()
 	return &RunResult{
 		Output:           output,
@@ -218,13 +260,13 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 
 func structuredRunStatus(ctx context.Context, runErr error) (ReportStatus, string) {
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return ReportStatusTimeout, ctx.Err().Error()
+		return ReportStatusTimeout, sanitizePublicReason(ctx.Err().Error())
 	}
 	if errors.Is(ctx.Err(), context.Canceled) {
-		return ReportStatusCanceled, ctx.Err().Error()
+		return ReportStatusCanceled, sanitizePublicReason(ctx.Err().Error())
 	}
 	if runErr != nil {
-		return ReportStatusPartial, runErr.Error()
+		return ReportStatusPartial, sanitizePublicReason(runErr.Error())
 	}
 	return ReportStatusOK, ""
 }
@@ -297,7 +339,7 @@ func RunBasicTests(preCheck utils.NetCheckResult, config *Config) string {
 		output, tempOutput      string
 		outputMutex             sync.Mutex
 	)
-	return runner.RunBasicTests(context.Background(), preCheck, config, &basicInfo, &securityInfo, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunBasicTests(context.Background(), preCheck, config, &basicInfo, &securityInfo, output, tempOutput, &outputMutex))
 }
 
 // RunCPUTest 运行CPU测试
@@ -306,7 +348,7 @@ func RunCPUTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunCPUTest(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunCPUTest(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // RunMemoryTest 运行内存测试
@@ -315,7 +357,7 @@ func RunMemoryTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunMemoryTest(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunMemoryTest(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // RunDiskTest 运行硬盘测试
@@ -324,7 +366,7 @@ func RunDiskTest(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunDiskTest(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunDiskTest(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // RunIpInfoCheck 执行IP信息检测
@@ -333,7 +375,7 @@ func RunIpInfoCheck(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunIpInfoCheck(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunIpInfoCheck(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // RunStreamingTests 运行流媒体测试
@@ -344,7 +386,7 @@ func RunStreamingTests(config *Config, mediaInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunStreamingTests(context.Background(), config, &wg1, &mediaInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return finalizePublicText(config, runner.RunStreamingTests(context.Background(), config, &wg1, &mediaInfo, output, tempOutput, &outputMutex, &infoMutex))
 }
 
 // RunSecurityTests 运行安全测试
@@ -353,7 +395,7 @@ func RunSecurityTests(config *Config, securityInfo string) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunSecurityTests(context.Background(), config, securityInfo, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunSecurityTests(context.Background(), config, securityInfo, output, tempOutput, &outputMutex))
 }
 
 // RunEmailTests 运行邮件端口测试
@@ -364,7 +406,7 @@ func RunEmailTests(config *Config, emailInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunEmailTests(context.Background(), config, &wg2, &emailInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return finalizePublicText(config, runner.RunEmailTests(context.Background(), config, &wg2, &emailInfo, output, tempOutput, &outputMutex, &infoMutex))
 }
 
 // RunNetworkTests 运行网络测试（中文模式）
@@ -375,7 +417,7 @@ func RunNetworkTests(config *Config, ptInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return finalizePublicText(config, runner.RunNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex))
 }
 
 // RunSpeedTests 运行测速测试（中文模式）
@@ -384,7 +426,7 @@ func RunSpeedTests(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunSpeedTests(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunSpeedTests(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // RunEnglishNetworkTests 运行网络测试（英文模式）
@@ -395,7 +437,7 @@ func RunEnglishNetworkTests(config *Config, ptInfo string) string {
 		outputMutex        sync.Mutex
 		infoMutex          sync.Mutex
 	)
-	return runner.RunEnglishNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex)
+	return finalizePublicText(config, runner.RunEnglishNetworkTests(context.Background(), config, &wg3, &ptInfo, output, tempOutput, &outputMutex, &infoMutex))
 }
 
 // RunEnglishSpeedTests 运行测速测试（英文模式）
@@ -404,7 +446,7 @@ func RunEnglishSpeedTests(config *Config) string {
 		output, tempOutput string
 		outputMutex        sync.Mutex
 	)
-	return runner.RunEnglishSpeedTests(context.Background(), config, output, tempOutput, &outputMutex)
+	return finalizePublicText(config, runner.RunEnglishSpeedTests(context.Background(), config, output, tempOutput, &outputMutex))
 }
 
 // AppendTimeInfo 添加时间信息
@@ -413,10 +455,11 @@ func AppendTimeInfo(config *Config, output string, startTime time.Time) string {
 		tempOutput  string
 		outputMutex sync.Mutex
 	)
-	return runner.AppendTimeInfo(config, output, tempOutput, startTime, &outputMutex)
+	return finalizePublicText(config, runner.AppendTimeInfo(config, output, tempOutput, startTime, &outputMutex))
 }
 
 // HandleUploadResults 处理上传结果
 func HandleUploadResults(config *Config, output string) {
-	runner.HandleUploadResults(config, output)
+	runner.HandleUploadResults(config, sanitizePublicOutput(output))
+	sanitizeConfiguredLog(config)
 }

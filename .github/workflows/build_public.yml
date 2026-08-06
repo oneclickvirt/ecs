@@ -62,30 +62,24 @@ jobs:
             report = json.load(handle)
         if report.get("schema_version") != "goecs.report/v1":
             raise SystemExit("public canary returned an unexpected schema")
-        files = {item.get("file"): item for item in report.get("data_files") or []}
-        expected_public = {
-            "bgp-asn-map.json",
-            "media-providers.json",
-            "province-routes.json",
-            "speedtest-servers.json",
-            "tcp-targets.json",
+        if report.get("privacy_mode") is not True:
+            raise SystemExit("public canary did not enable privacy mode")
+        sections = report.get("sections") or []
+        expected_sections = {
+            "basics", "cpu", "memory", "disk", "media", "security", "email",
+            "backtrace", "routes", "ping", "tgdc", "web", "nat", "tcp", "speed",
         }
-        expected_private = {
-            "dnsbl-zones.json",
-            "openspeedtest-servers.json",
-            "private-speedtest-servers.json",
-        }
-        if set(files) != expected_public | expected_private:
-            raise SystemExit(f"public canary returned unexpected registry states: {sorted(files)}")
-        failed = [
-            name for name in expected_public
-            if files[name].get("status") != "ok" or files[name].get("source") != "embedded"
-        ]
-        if failed:
-            raise SystemExit(f"public registries failed embedded validation: {sorted(failed)}")
-        exposed = [name for name in expected_private if files[name].get("status") == "ok"]
-        if exposed:
-            raise SystemExit(f"public build unexpectedly exposed private registries: {sorted(exposed)}")
+        names = {item.get("name") for item in sections}
+        if names != expected_sections:
+            raise SystemExit(f"public canary returned an unexpected section set: {sorted(names)}")
+        # Registry provenance and private-loader details are an internal concern;
+        # they must never become part of the public report contract.
+        encoded = json.dumps(report, ensure_ascii=False).lower()
+        for forbidden in ("data", "data_files", "source", "fallback", "manifest", "registry"):
+            if f'"{forbidden}"' in encoded:
+                raise SystemExit(f"public canary exposed private metadata field: {forbidden}")
+        if any(marker in encoded for marker in ("privatespeedtest", "dnsbl-zones", "openspeedtest-servers")):
+            raise SystemExit("public canary exposed private registry details")
         PY
         rm -f maintest public-canary.json
         

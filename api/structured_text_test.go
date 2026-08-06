@@ -39,9 +39,14 @@ func TestRenderStructuredRunTextKeepsCompactProjectStyle(t *testing.T) {
 		File: "tcp-targets.json", Source: "embedded", Fallback: "embedded", Count: 64,
 		Status: ReportStatusOK, GeneratedAt: time.Date(2026, 7, 20, 0, 0, 0, 0, time.UTC),
 	}}, components, reports)
-	for _, want := range []string{"VPS融合怪测试", "数据源状态", "CPU性能测试", "内存性能测试", "就近节点测速", "TCP握手延迟", "Example TCP"} {
+	for _, want := range []string{"VPS融合怪测试", "CPU性能测试", "内存性能测试", "就近节点测速", "TCP握手延迟", "Example TCP"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("rendered text missing %q:\n%s", want, text)
+		}
+	}
+	for _, forbidden := range []string{"数据源状态", "Data Sources", "tcp-targets", "embedded"} {
+		if strings.Contains(text, forbidden) {
+			t.Fatalf("rendered text exposed data provenance %q:\n%s", forbidden, text)
 		}
 	}
 	for _, forbidden := range []string{"schema_version", "events_per_second", "\"benchmarks\"", "{", "}"} {

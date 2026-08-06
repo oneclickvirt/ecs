@@ -12,12 +12,12 @@ import (
 func MemoryTest(language, testMethod string) (realTestMethod, res string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "[WARN] MemoryTest panic: %v\n", r)
+			fmt.Fprintln(os.Stderr, "[WARN] memory benchmark unavailable")
 			res = fmt.Sprintf("\nMemory test failed: %v\n", r)
 			realTestMethod = "error"
 		}
 	}()
-	
+
 	testMethod = strings.ToLower(testMethod)
 	if testMethod == "" {
 		testMethod = "auto"

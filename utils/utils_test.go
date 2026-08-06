@@ -20,6 +20,20 @@ func TestCaptureOutputReservesLeadingCell(t *testing.T) {
 	}
 }
 
+func TestCaptureOutputSanitizesCompleteLinesBeforeDisplayAndRetention(t *testing.T) {
+	SetOutputSanitizer(func(value string) string {
+		return strings.ReplaceAll(value, "https://private.example/list?token=secret", "[remote-url]")
+	})
+	t.Cleanup(func() { SetOutputSanitizer(nil) })
+	output := CaptureOutput(func() {
+		fmt.Print("registry https://private.")
+		fmt.Print("example/list?token=secret\n")
+	})
+	if output != " registry [remote-url]\n" {
+		t.Fatalf("CaptureOutput() = %q", output)
+	}
+}
+
 // func TestCheckPublicAccess(t *testing.T) {
 // 	timeout := 3 * time.Second
 // 	result := CheckPublicAccess(timeout)

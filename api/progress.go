@@ -49,6 +49,7 @@ func emitProgress(ctx context.Context, event ProgressEvent) {
 	if event.At.IsZero() {
 		event.At = time.Now()
 	}
+	event.Reason = sanitizePublicReason(event.Reason)
 	func() {
 		defer func() { _ = recover() }()
 		observer(event)
