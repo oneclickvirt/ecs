@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"strings"
 	"sync"
 	"time"
 
@@ -302,34 +301,6 @@ func legacyConfigForStructured(config *Config) *Config {
 		}
 	}
 	return &legacyCopy
-}
-
-// appendStructuredHardwareText keeps the text-facing RunAllTests API useful
-// when local builds execute hardware through the context-aware structured
-// adapters. It only renders already-collected payloads and never invokes a
-// benchmark. Published builds retain their original legacy text output.
-func appendStructuredHardwareText(output string, config *Config, components []ComponentReport) string {
-	if config == nil || (!structuredOwnsHardware() && !structuredOwnsNetwork()) {
-		return output
-	}
-	renderer := newStructuredTextRenderer(config)
-	if strings.TrimSpace(output) == "" && len(components) > 0 {
-		renderer.header(config)
-	}
-	renderer.components(components)
-	return output + renderer.builder.String()
-}
-
-func appendStructuredTCPText(output string, config *Config, reports []TCPReport) string {
-	if config == nil || !structuredOwnsNetwork() || !config.TCPProbeStatus || len(reports) == 0 {
-		return output
-	}
-	renderer := newStructuredTextRenderer(config)
-	if strings.TrimSpace(output) == "" {
-		renderer.header(config)
-	}
-	renderer.tcp(reports)
-	return output + renderer.builder.String()
 }
 
 // RunBasicTests 运行基础信息测试
