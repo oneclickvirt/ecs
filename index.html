@@ -1,816 +1,791 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="wdrGBim_2XmtMrqxivze70saMiPQAiOhpmN3KAWb0Sw" />
-    <title>CPU Performance Ladder For Sysbench</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google-site-verification" content="wdrGBim_2XmtMrqxivze70saMiPQAiOhpmN3KAWb0Sw">
+    <meta name="color-scheme" content="dark light">
+    <meta name="description" content="Sysbench CPU 性能排行榜与样本统计">
+    <title>Sysbench CPU 性能天梯</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-subtle: #f1f5f9;
+            --surface-hover: #e8eef8;
+            --line: #d8dee9;
+            --line-strong: #b9c4d4;
+            --text: #172033;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --accent: #2563eb;
+            --accent-strong: #1d4ed8;
+            --accent-soft: rgba(37, 99, 235, 0.14);
+            --danger: #dc2626;
+            --danger-soft: rgba(220, 38, 38, 0.12);
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
         }
+
+        [data-theme="dark"] {
+            --bg: #101522;
+            --surface: #151b2a;
+            --surface-subtle: #1d2434;
+            --surface-hover: #252e42;
+            --line: #30394b;
+            --line-strong: #44506a;
+            --text: #f8fafc;
+            --text-muted: #aab4c5;
+            --text-soft: #7f8ba2;
+            --accent: #3b82f6;
+            --accent-strong: #60a5fa;
+            --accent-soft: rgba(59, 130, 246, 0.18);
+            --danger: #f87171;
+            --danger-soft: rgba(248, 113, 113, 0.14);
+            --shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { min-width: 320px; scroll-behavior: smooth; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #fafafa;
-            color: #37352f;
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            background: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
+            transition: background-color 160ms ease, color 160ms ease;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 48px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #e9e9e7;
-            position: relative;
-        }
-        .header h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #2d2d2d;
-            margin-bottom: 8px;
-        }
-        .header p {
-            font-size: 16px;
-            color: #6b6b6b;
-        }
-        .language-toggle {
+
+        button, input { font: inherit; }
+        button, a { -webkit-tap-highlight-color: transparent; }
+        button { cursor: pointer; }
+        button:disabled { cursor: not-allowed; }
+
+        .sr-only {
             position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .site-header {
+            position: sticky;
             top: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e9e9e7;
-            border-radius: 8px;
-            overflow: hidden;
+            z-index: 10;
+            min-height: 60px;
+            border-bottom: 1px solid var(--line);
+            background: color-mix(in srgb, var(--surface) 94%, transparent);
+            backdrop-filter: blur(14px);
+        }
+
+        .header-inner {
+            width: min(1200px, 100%);
+            min-height: 60px;
+            margin: 0 auto;
+            padding: 0 24px;
             display: flex;
-        }
-        .language-toggle button {
-            padding: 8px 16px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-            color: #6b6b6b;
-        }
-        .language-toggle button.active {
-            background: #0066cc;
-            color: white;
-        }
-        .language-toggle button:hover:not(.active) {
-            background: #f7f7f5;
-        }
-        .controls {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
             align-items: center;
-        }
-        .search-box {
-            flex: 1;
-            min-width: 200px;
-            position: relative;
-            display: flex;
-            gap: 8px;
-        }
-        .search-box input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #e9e9e7;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
-            transition: all 0.2s ease;
-        }
-        .search-box input:focus {
-            outline: none;
-            border-color: #0066cc;
-            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
-        }
-        .search-buttons {
-            display: flex;
-            gap: 4px;
-        }
-        .search-btn {
-            padding: 12px 16px;
-            border: 1px solid #e9e9e7;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            color: #6b6b6b;
-        }
-        .search-btn:hover {
-            background: #f7f7f5;
-        }
-        .search-btn.search {
-            background: #0066cc;
-            color: white;
-            border-color: #0066cc;
-        }
-        .search-btn.clear {
-            background: #e91e63;
-            color: white;
-            border-color: #e91e63;
-        }
-        .view-toggle {
-            display: flex;
-            background: white;
-            border: 1px solid #e9e9e7;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .view-toggle button {
-            padding: 12px 20px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        .view-toggle button.active {
-            background: #0066cc;
-            color: white;
-        }
-        .view-toggle button:hover:not(.active) {
-            background: #f7f7f5;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            justify-content: space-between;
             gap: 20px;
-            margin-bottom: 32px;
         }
-        .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid #e9e9e7;
-            text-align: center;
-            transition: transform 0.2s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.1);
-        }
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #0066cc;
-            margin-bottom: 4px;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #6b6b6b;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
+
+        .brand {
+            display: inline-flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
+            gap: 10px;
+            color: var(--text);
+            text-decoration: none;
+            white-space: nowrap;
         }
-        .pagination button {
-            padding: 8px 16px;
-            border: 1px solid #e9e9e7;
-            background: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-        .pagination button:hover:not(:disabled) {
-            background: #f7f7f5;
-        }
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .pagination button.active {
-            background: #0066cc;
-            color: white;
-            border-color: #0066cc;
-        }
-        .pagination-info {
-            font-size: 14px;
-            color: #6b6b6b;
-        }
-        .page-jump {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .page-jump input {
-            width: 60px;
-            padding: 6px 8px;
-            border: 1px solid #e9e9e7;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .page-jump button {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-        .cpu-groups {
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
             display: grid;
+            place-items: center;
+            border: 1px solid rgba(96, 165, 250, 0.45);
+            border-radius: 50%;
+            color: #dbeafe;
+            background: linear-gradient(145deg, #1d4ed8, #2563eb);
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .brand-name { font-size: 15px; font-weight: 700; letter-spacing: 0; }
+
+        .desktop-nav, .mobile-nav { display: flex; align-items: center; gap: 4px; }
+
+        .nav-link, .nav-button {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--text-muted);
+            background: transparent;
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+        }
+
+        .nav-link:hover, .nav-button:hover, .nav-link:focus-visible, .nav-button:focus-visible {
+            color: var(--text);
+            background: var(--surface-hover);
+            border-color: var(--line);
+            outline: none;
+        }
+
+        .nav-link[aria-current="page"] { color: var(--accent-strong); }
+        .mobile-nav { display: none; }
+        .mobile-menu { position: relative; }
+        .mobile-menu summary { list-style: none; }
+        .mobile-menu summary::-webkit-details-marker { display: none; }
+        .mobile-menu[open] .mobile-menu-panel {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: min(250px, calc(100vw - 32px));
+            padding: 8px;
+            display: grid;
+            gap: 4px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .mobile-menu-panel .nav-link { width: 100%; }
+
+        .page-shell {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            padding: 38px 24px 56px;
+        }
+
+        .hero {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
             gap: 24px;
+            padding: 0 0 28px;
+            border-bottom: 1px solid var(--line);
         }
-        .cpu-group {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #e9e9e7;
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.15; letter-spacing: 0; }
+        .hero-subtitle { margin: 10px 0 0; color: var(--text-muted); font-size: 15px; }
+
+        .language-toggle, .view-toggle {
+            display: inline-flex;
+            flex: none;
             overflow: hidden;
-            transition: all 0.2s ease;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            background: var(--surface);
         }
-        .cpu-group:hover {
-            box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.1);
+
+        .language-toggle button, .view-toggle button {
+            min-height: 34px;
+            padding: 6px 12px;
+            border: 0;
+            color: var(--text-muted);
+            background: transparent;
+            font-size: 12px;
+            transition: color 140ms ease, background-color 140ms ease;
         }
-        .group-header {
-            padding: 20px 24px;
-            background: #f7f7f5;
-            border-bottom: 1px solid #e9e9e7;
-            cursor: pointer;
+
+        .language-toggle button + button, .view-toggle button + button { border-left: 1px solid var(--line); }
+        .language-toggle button:hover, .view-toggle button:hover { color: var(--text); background: var(--surface-hover); }
+        .language-toggle button.active, .view-toggle button.active { color: #fff; background: var(--accent); }
+        .language-toggle button.active + button, .view-toggle button.active + button { border-left-color: var(--accent); }
+
+        .toolbar {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-form { min-width: 0; flex: 1; display: flex; gap: 8px; }
+
+        .search-input-wrap { min-width: 0; flex: 1; position: relative; }
+        .search-input-wrap::before { content: "⌕"; position: absolute; left: 13px; top: 7px; color: var(--text-soft); font-size: 20px; line-height: 1; }
+
+        .search-input {
+            width: 100%;
+            min-height: 40px;
+            padding: 8px 14px 8px 38px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            color: var(--text);
+            background: var(--surface);
+            outline: none;
+            transition: border-color 140ms ease, box-shadow 140ms ease;
+        }
+
+        .search-input::placeholder { color: var(--text-soft); }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+        .action-button {
+            min-height: 40px;
+            padding: 8px 15px;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            color: var(--text-muted);
+            background: var(--surface);
+            font-size: 13px;
+            transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+        }
+
+        .action-button:hover, .action-button:focus-visible { color: var(--text); background: var(--surface-hover); border-color: var(--line-strong); outline: none; }
+        .action-button.primary { color: #fff; border-color: var(--accent); background: var(--accent); }
+        .action-button.primary:hover, .action-button.primary:focus-visible { border-color: var(--accent-strong); background: var(--accent-strong); }
+        .action-button.ghost-danger { color: var(--danger); }
+        .action-button:disabled { opacity: 0.45; }
+
+        .stats-grid {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .stat-card {
+            min-height: 112px;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        .stat-label { color: var(--text-muted); font-size: 12px; }
+        .stat-value { margin-top: 8px; color: var(--text); font-size: 27px; font-weight: 750; line-height: 1; }
+        .stat-value.accent { color: var(--accent-strong); }
+
+        .status-row {
+            min-height: 26px;
+            margin-top: 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .group-header:hover {
-            background: #f0f0ef;
-        }
-        .group-title-section {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        .rank-badge {
-            background: #0066cc;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            min-width: 40px;
-            text-align: center;
-        }
-        .group-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d2d2d;
-        }
-        .group-stats {
-            display: flex;
-            gap: 24px;
-            font-size: 14px;
-            color: #6b6b6b;
-        }
-        .expand-icon {
-            transition: transform 0.2s ease;
+            gap: 12px;
+            color: var(--text-muted);
             font-size: 12px;
         }
-        .cpu-group.expanded .expand-icon {
-            transform: rotate(180deg);
-        }
-        .group-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-        .cpu-group.expanded .group-content {
-            max-height: 2000px;
-        }
-        .cpu-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .cpu-table th,
-        .cpu-table td {
-            padding: 16px 24px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0ef;
-        }
-        .cpu-table th {
-            font-weight: 600;
-            color: #6b6b6b;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: #fafafa;
-        }
-        .cpu-table td {
-            font-size: 14px;
-        }
-        .cpu-table tbody tr:hover {
-            background: #fafafa;
-        }
-        .score-cell {
-            font-weight: 600;
-        }
-        .score-single {
-            color: #0066cc;
-        }
-        .score-multi {
-            color: #e91e63;
-        }
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b6b6b;
-        }
-        .spinner {
-            display: inline-block;
-            width: 32px;
-            height: 32px;
-            border: 3px solid #f0f0ef;
-            border-top: 3px solid #0066cc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-        }
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        .no-data {
-            text-align: center;
-            padding: 60px 20px;
-            color: #6b6b6b;
-        }
-        .footer {
-            margin-top: 60px;
-            padding: 32px 0;
-            border-top: 1px solid #e9e9e7;
-            text-align: center;
-            background: white;
-            border-radius: 12px;
-        }
-        .footer-content {
+
+        .status-message { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .status-message.error { color: var(--danger); }
+        .status-message.success::before { content: "●"; margin-right: 7px; color: #22c55e; }
+        .status-message.error::before { content: "!"; display: inline-grid; width: 16px; height: 16px; margin-right: 6px; place-items: center; border-radius: 50%; color: #fff; background: var(--danger); font-size: 11px; font-weight: 700; }
+
+        .pagination {
+            margin: 22px 0 14px;
             display: flex;
-            flex-direction: column;
-            gap: 16px;
             align-items: center;
-        }
-        .footer-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-            flex-wrap: wrap;
             justify-content: center;
-        }
-        .footer-link {
-            color: #0066cc;
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 8px;
-            transition: color 0.2s ease;
         }
-        .footer-link:hover {
-            color: #004499;
+
+        .pagination-info { min-width: 128px; color: var(--text-muted); font-size: 13px; text-align: center; }
+        .page-jump { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; }
+        .page-input { width: 54px; min-height: 34px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--surface); text-align: center; }
+        .page-input:focus { border-color: var(--accent); outline: 2px solid var(--accent-soft); }
+        .pagination .action-button { min-height: 34px; padding: 6px 11px; }
+
+        .results {
+            min-height: 200px;
+            display: grid;
+            gap: 8px;
         }
-        .footer-text {
-            font-size: 13px;
-            color: #6b6b6b;
+
+        .cpu-group {
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
         }
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px 16px;
-            }
-            .header {
-                position: static;
-            }
-            .language-toggle {
-                position: static;
-                margin-bottom: 16px;
-                align-self: center;
-            }
-            .header h1 {
-                font-size: 24px;
-            }
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-box {
-                min-width: auto;
-                flex-direction: column;
-            }
-            .search-buttons {
-                justify-content: center;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 16px;
-            }
-            .stat-card {
-                padding: 16px;
-            }
-            .stat-value {
-                font-size: 20px;
-            }
-            .group-stats {
-                flex-direction: column;
-                gap: 8px;
-            }
-            .group-title-section {
-                flex-direction: column;
-                gap: 8px;
-                align-items: flex-start;
-            }
-            .cpu-table {
-                font-size: 12px;
-            }
-            .cpu-table th,
-            .cpu-table td {
-                padding: 12px 16px;
-            }
-            .pagination {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .footer-links {
-                flex-direction: column;
-                gap: 16px;
-            }
+
+        .group-toggle {
+            width: 100%;
+            min-height: 72px;
+            padding: 13px 16px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: 14px;
+            border: 0;
+            color: var(--text);
+            background: transparent;
+            text-align: left;
+        }
+
+        .group-toggle:hover, .group-toggle:focus-visible { background: var(--surface-hover); outline: none; }
+        .rank-badge { min-width: 36px; padding: 5px 8px; border-radius: 6px; color: #fff; background: var(--accent); font-size: 12px; font-weight: 700; text-align: center; }
+        .group-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 700; }
+        .group-stats { display: flex; align-items: center; gap: 16px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+        .group-chevron { color: var(--text-soft); font-size: 14px; transition: transform 140ms ease; }
+        .group-toggle[aria-expanded="true"] .group-chevron { transform: rotate(180deg); }
+
+        .group-content { display: none; border-top: 1px solid var(--line); background: var(--surface-subtle); }
+        .group-content.open { display: block; }
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; min-width: 620px; border-collapse: collapse; }
+        th, td { padding: 11px 16px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12px; }
+        th { color: var(--text-muted); background: var(--surface); font-weight: 650; }
+        td { color: var(--text); }
+        tbody tr:last-child td { border-bottom: 0; }
+        tbody tr:hover { background: var(--surface-hover); }
+        .score-single { color: var(--accent-strong); font-weight: 700; }
+        .score-multi { color: #e879f9; font-weight: 700; }
+
+        .empty-state, .loading-state {
+            padding: 54px 20px;
+            border: 1px dashed var(--line-strong);
+            border-radius: 8px;
+            color: var(--text-muted);
+            background: var(--surface);
+            text-align: center;
+        }
+
+        .loading-spinner { width: 28px; height: 28px; margin: 0 auto 14px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 800ms linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-state strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 15px; }
+        .empty-state p { margin: 0 0 16px; }
+
+        .site-footer {
+            margin-top: 38px;
+            padding-top: 22px;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            border-top: 1px solid var(--line);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .footer-links { display: flex; flex-wrap: wrap; gap: 14px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; }
+        .footer-links a:hover { color: var(--accent-strong); }
+
+        @media (max-width: 980px) {
+            .desktop-nav .nav-link:nth-last-child(-n + 2) { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner { padding: 0 16px; }
+            .desktop-nav { display: none; }
+            .mobile-nav { display: flex; }
+            .page-shell { padding: 28px 16px 40px; }
+            .hero { align-items: flex-start; flex-direction: column; padding-bottom: 22px; }
+            .hero-tools { width: 100%; display: flex; justify-content: space-between; }
+            .toolbar { align-items: stretch; flex-direction: column; }
+            .search-form { width: 100%; }
+            .view-toggle { align-self: flex-start; }
+            .group-toggle { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+            .group-stats { grid-column: 2 / -1; gap: 9px; overflow: hidden; font-size: 11px; }
+            .site-footer { align-items: flex-start; flex-direction: column; }
+        }
+
+        @media (max-width: 460px) {
+            .search-form { flex-wrap: wrap; }
+            .search-input-wrap { flex-basis: 100%; }
+            .search-form .action-button { flex: 1; }
+            .stats-grid { gap: 9px; }
+            .stat-card { min-height: 96px; padding: 14px; }
+            .stat-value { font-size: 21px; }
+            .stat-label { font-size: 11px; }
+            .group-toggle { min-height: 82px; padding: 11px 12px; }
+            .group-title { font-size: 13px; }
+            .group-stats { flex-wrap: wrap; white-space: normal; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="language-toggle">
-                <button id="langZh" class="active">中文</button>
-                <button id="langEn">English</button>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="https://paste.spiritlhl.net/#/" target="_blank" rel="noopener noreferrer">
+                <span class="brand-mark" aria-hidden="true">P</span>
+                <span class="brand-name">PasteBin</span>
+            </a>
+            <nav class="desktop-nav" aria-label="主导航">
+                <button class="nav-button" id="themeToggle" type="button" aria-pressed="true"><span aria-hidden="true">☼</span><span data-i18n="themeLight">亮色主题</span></button>
+                <a class="nav-link" href="https://github.com/oneclickvirt/ecs" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span><span data-i18n="goScript">Go版本脚本</span></a>
+                <a class="nav-link" href="https://github.com/spiritLHLS/ecs" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⚙</span><span data-i18n="shellScript">Shell版本脚本</span></a>
+                <a class="nav-link" href="https://www.spiritlhl.net/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⌂</span><span data-i18n="projects">所有项目主页</span></a>
+                <a class="nav-link" href="https://sysbench.spiritlhl.net/" aria-current="page"><span aria-hidden="true">▣</span><span data-i18n="ranking">排行榜天梯图</span></a>
+                <a class="nav-link" href="https://spiders.spiritlhl.net/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↻</span><span data-i18n="monitor">VPS补货监控</span></a>
+            </nav>
+            <div class="mobile-nav">
+                <button class="nav-button" id="themeToggleMobile" type="button" aria-label="切换主题" aria-pressed="true"><span aria-hidden="true">☼</span></button>
+                <details class="mobile-menu">
+                    <summary class="nav-button" aria-label="打开导航菜单"><span aria-hidden="true">☰</span></summary>
+                    <nav class="mobile-menu-panel" aria-label="移动端导航">
+                        <a class="nav-link" href="https://github.com/oneclickvirt/ecs" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↗</span><span data-i18n="goScript">Go版本脚本</span></a>
+                        <a class="nav-link" href="https://github.com/spiritLHLS/ecs" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⚙</span><span data-i18n="shellScript">Shell版本脚本</span></a>
+                        <a class="nav-link" href="https://www.spiritlhl.net/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⌂</span><span data-i18n="projects">所有项目主页</span></a>
+                        <a class="nav-link" href="https://sysbench.spiritlhl.net/" aria-current="page"><span aria-hidden="true">▣</span><span data-i18n="ranking">排行榜天梯图</span></a>
+                        <a class="nav-link" href="https://spiders.spiritlhl.net/" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">↻</span><span data-i18n="monitor">VPS补货监控</span></a>
+                    </nav>
+                </details>
             </div>
-            <h1 data-zh="CPU Performance Ladder For Sysbench" data-en="CPU Performance Ladder For Sysbench">CPU Performance Ladder For Sysbench</h1>
-            <p data-zh="Sysbench天梯图" data-en="Sysbench CPU Benchmark Rankings">Sysbench天梯图</p>
         </div>
-        <div class="controls">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="搜索CPU型号或关键词..." data-placeholder-zh="搜索CPU型号或关键词..." data-placeholder-en="Search CPU model or keywords...">
-                <div class="search-buttons">
-                    <button id="searchBtn" class="search-btn search" data-zh="搜索" data-en="Search">搜索</button>
-                    <button id="clearBtn" class="search-btn clear" data-zh="清除" data-en="Clear">清除</button>
+    </header>
+
+    <main class="page-shell">
+        <section class="hero" aria-labelledby="pageTitle">
+            <div>
+                <p class="eyebrow" data-i18n="eyebrow">PERFORMANCE DATA</p>
+                <h1 id="pageTitle" data-i18n="title">CPU Performance Ladder For Sysbench</h1>
+                <p class="hero-subtitle" data-i18n="subtitle">Sysbench 天梯图</p>
+            </div>
+            <div class="hero-tools">
+                <div class="language-toggle" role="group" aria-label="语言">
+                    <button id="langZh" type="button" class="active" aria-pressed="true">中文</button>
+                    <button id="langEn" type="button" aria-pressed="false">English</button>
                 </div>
             </div>
-            <div class="view-toggle">
-                <button id="compactView" class="active" data-zh="紧凑视图" data-en="Compact View">紧凑视图</button>
-                <button id="detailView" data-zh="详细视图" data-en="Detail View">详细视图</button>
-            </div>
-        </div>
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <div class="stat-value" id="totalCpus">-</div>
-                <div class="stat-label" data-zh="CPU型号总数" data-en="Total CPU Models">CPU型号总数</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalTests">-</div>
-                <div class="stat-label" data-zh="测试样本数" data-en="Test Samples">测试样本数</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="topSingle">-</div>
-                <div class="stat-label" data-zh="最高单核分数" data-en="Highest Single Score">最高单核分数</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="topMulti">-</div>
-                <div class="stat-label" data-zh="最高多核分数" data-en="Highest Multi Score">最高多核分数</div>
-            </div>
-        </div>
-        <div id="loadingIndicator" class="loading">
-            <div class="spinner"></div>
-            <div data-zh="正在加载CPU数据..." data-en="Loading CPU data...">正在加载CPU数据...</div>
-        </div>
-        <div class="pagination" id="pagination" style="display: none;">
-            <button id="prevPage" data-zh="上一页" data-en="Previous">上一页</button>
-            <div class="pagination-info" id="pageInfo">-</div>
-            <div class="page-jump">
-                <span data-zh="跳转到" data-en="Go to">跳转到</span>
-                <input type="number" id="pageInput" min="1">
-                <span data-zh="页" data-en="page">页</span>
-                <button id="jumpBtn" data-zh="跳转" data-en="Go">跳转</button>
-            </div>
-            <button id="nextPage" data-zh="下一页" data-en="Next">下一页</button>
-        </div>
-        <div id="cpuGroups" class="cpu-groups" style="display: none;"></div>
-        <div id="noData" class="no-data" style="display: none;">
-            <div data-zh="📄 未找到CPU数据文件" data-en="📄 CPU data file not found">📄 未找到CPU数据文件</div>
-            <p data-zh="请确保 cpu_statistics.json 文件存在于当前目录" data-en="Please ensure cpu_statistics.json file exists in current directory">请确保 cpu_statistics.json 文件存在于当前目录</p>
-        </div>
-        <div class="footer">
-            <div class="footer-content">
-                <div class="footer-links">
-                    <a href="https://github.com/oneclickvirt/ecs" class="footer-link" target="_blank" rel="noopener">
-                        <span>🚀</span>
-                        <span data-zh="测试脚本" data-en="Test Script">测试脚本</span>
-                    </a>
-                    <a href="https://www.spiritlhl.net/" class="footer-link" target="_blank" rel="noopener">
-                        <span>🌐</span>
-                        <span data-zh="spiritlhl 官网" data-en="spiritlhl Official">spiritlhl 官网</span>
-                    </a>
+        </section>
+
+        <section class="toolbar" aria-label="排行榜控制">
+            <form class="search-form" id="searchForm" role="search">
+                <div class="search-input-wrap">
+                    <label class="sr-only" for="searchInput" data-i18n="searchLabel">搜索 CPU 型号</label>
+                    <input class="search-input" id="searchInput" type="search" autocomplete="off" data-i18n-placeholder="searchPlaceholder" placeholder="输入关键词，浏览全部 CPU 型号">
                 </div>
-                <div class="footer-text" data-zh="本项目隶属于 spiritlhl 旗下" data-en="This project is under spiritlhl">本项目隶属于 spiritlhl 旗下</div>
+                <button class="action-button primary" type="submit" data-i18n="search">搜索</button>
+                <button class="action-button ghost-danger" id="clearBtn" type="button" data-i18n="clear">清除</button>
+            </form>
+            <div class="view-toggle" role="group" aria-label="视图模式">
+                <button id="compactView" type="button" class="active" aria-pressed="true" data-i18n="compact">紧凑视图</button>
+                <button id="detailView" type="button" aria-pressed="false" data-i18n="detail">详细视图</button>
             </div>
+        </section>
+
+        <section class="stats-grid" aria-label="统计摘要">
+            <article class="stat-card"><div class="stat-label" data-i18n="models">CPU型号总数</div><div class="stat-value accent" id="totalCpus">-</div></article>
+            <article class="stat-card"><div class="stat-label" data-i18n="samples">测试样本数</div><div class="stat-value" id="totalTests">-</div></article>
+            <article class="stat-card"><div class="stat-label" data-i18n="topSingle">最高单核分数</div><div class="stat-value" id="topSingle">-</div></article>
+            <article class="stat-card"><div class="stat-label" data-i18n="topMulti">最高多核分数</div><div class="stat-value" id="topMulti">-</div></article>
+        </section>
+
+        <div class="status-row" aria-live="polite">
+            <span class="status-message" id="statusMessage" data-i18n="loading">正在加载排行榜数据...</span>
+            <span id="resultCount"></span>
         </div>
-    </div>
+
+        <div class="loading-state" id="loadingState"><div class="loading-spinner" aria-hidden="true"></div><span data-i18n="loading">正在加载排行榜数据...</span></div>
+
+        <div class="pagination" id="pagination" hidden>
+            <button class="action-button" id="prevPage" type="button" disabled data-i18n="previous">上一页</button>
+            <span class="pagination-info" id="pageInfo">-</span>
+            <label class="page-jump"><span data-i18n="jumpTo">跳转到</span><input class="page-input" id="pageInput" type="number" min="1" inputmode="numeric" aria-label="页码"><span data-i18n="page">页</span><button class="action-button" id="jumpBtn" type="button" data-i18n="jump">跳转</button></label>
+            <button class="action-button" id="nextPage" type="button" data-i18n="next">下一页</button>
+        </div>
+
+        <section class="results" id="results" aria-live="polite"></section>
+
+        <footer class="site-footer">
+            <div class="footer-links">
+                <a href="https://github.com/oneclickvirt/ecs" target="_blank" rel="noopener noreferrer" data-i18n="footerScript">测试脚本</a>
+                <a href="https://paste.spiritlhl.net/#/" target="_blank" rel="noopener noreferrer" data-i18n="footerPaste">PasteBin 首页</a>
+                <a href="https://www.spiritlhl.net/" target="_blank" rel="noopener noreferrer" data-i18n="footerHome">spiritlhl 官网</a>
+            </div>
+            <span data-i18n="footerCopyright">本项目隶属于 spiritlhl 旗下</span>
+        </footer>
+    </main>
+
     <script>
-        class CPUDashboard {
-            constructor() {
-                this.data = [];
-                this.groupedData = {};
-                this.filteredGroups = {};
-                this.sortedPrefixes = [];
-                this.allSortedPrefixes = [];
-                this.prefixRanks = {};
-                this.isDetailView = false;
-                this.searchTerm = '';
-                this.currentPage = 1;
-                this.itemsPerPage = 10;
-                this.currentLang = 'zh';
-                this.total_samples = 0;
-                this.initializeEventListeners();
-                this.loadData();
+        (() => {
+            "use strict";
+
+            const DATA_URLS = [
+                "./cpu_statistics.json",
+                "https://raw.githubusercontent.com/oneclickvirt/ecs/refs/heads/ranks/cpu_statistics.json",
+                "https://github.com/oneclickvirt/ecs/raw/refs/heads/ranks/cpu_statistics.json"
+            ];
+            const PAGE_SIZE = 10;
+            const translations = {
+                zh: {
+                    eyebrow: "PERFORMANCE DATA", title: "CPU Performance Ladder For Sysbench", subtitle: "Sysbench 天梯图", themeLight: "亮色主题", themeDark: "深色主题",
+                    goScript: "Go版本脚本", shellScript: "Shell版本脚本", projects: "所有项目主页", ranking: "排行榜天梯图", monitor: "VPS补货监控", searchLabel: "搜索 CPU 型号", searchPlaceholder: "输入关键词，浏览全部 CPU 型号", search: "搜索", clear: "清除", compact: "紧凑视图", detail: "详细视图", models: "CPU型号总数", samples: "测试样本数", topSingle: "最高单核分数", topMulti: "最高多核分数", loading: "正在加载排行榜数据...", loaded: "数据已更新", previous: "上一页", next: "下一页", jumpTo: "跳转到", page: "页", jump: "跳转", noMatch: "没有匹配的 CPU 型号", noMatchHint: "请尝试更换关键词。", noData: "暂时无法加载排行榜数据", noDataHint: "请稍后重试，或检查数据源是否可访问。", retry: "重新加载", samplesShort: "样本", singleMax: "单核最高", multiMax: "多核最高", model: "CPU型号", cores: "核心数", single: "单核分数", multi: "多核分数", threads: "多核线程", pageInfo: (page, total) => `第 ${page} 页，共 ${total} 页`, resultCount: count => `显示 ${count.toLocaleString()} 个型号`, footerScript: "测试脚本", footerPaste: "PasteBin 首页", footerHome: "spiritlhl 官网", footerCopyright: "本项目隶属于 spiritlhl 旗下", loadError: "数据源请求失败"
+                },
+                en: {
+                    eyebrow: "PERFORMANCE DATA", title: "CPU Performance Ladder For Sysbench", subtitle: "Sysbench CPU benchmark rankings", themeLight: "Light theme", themeDark: "Dark theme",
+                    goScript: "Go Script", shellScript: "Shell Script", projects: "All Projects", ranking: "CPU Rankings", monitor: "VPS Stock Monitor", searchLabel: "Search CPU model", searchPlaceholder: "Enter a keyword to browse CPU models", search: "Search", clear: "Clear", compact: "Compact view", detail: "Detailed view", models: "CPU models", samples: "Test samples", topSingle: "Highest single-core", topMulti: "Highest multi-core", loading: "Loading ranking data...", loaded: "Data updated", previous: "Previous", next: "Next", jumpTo: "Go to", page: "page", jump: "Go", noMatch: "No matching CPU models", noMatchHint: "Try another keyword.", noData: "Ranking data is unavailable", noDataHint: "Try again later or check the data source.", retry: "Retry", samplesShort: "Samples", singleMax: "Max single", multiMax: "Max multi", model: "CPU model", cores: "Cores", single: "Single score", multi: "Multi score", threads: "Multi threads", pageInfo: (page, total) => `Page ${page} of ${total}`, resultCount: count => `Showing ${count.toLocaleString()} models`, footerScript: "Test script", footerPaste: "PasteBin home", footerHome: "spiritlhl home", footerCopyright: "A spiritlhl project", loadError: "Data source request failed"
+                }
+            };
+
+            const byId = id => document.getElementById(id);
+            const state = { lang: "zh", theme: "dark", detail: false, term: "", page: 1, groups: [], filtered: [], totalRows: 0, totalSamples: 0, loading: true };
+
+            function text(key, ...args) {
+                const value = translations[state.lang][key];
+                return typeof value === "function" ? value(...args) : value;
             }
-            initializeEventListeners() {
-                const searchInput = document.getElementById('searchInput');
-                const searchBtn = document.getElementById('searchBtn');
-                const clearBtn = document.getElementById('clearBtn');
-                const performSearch = () => {
-                    this.searchTerm = searchInput.value.toLowerCase();
-                    this.currentPage = 1;
-                    this.filterAndRender();
-                };
-                searchInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') performSearch();
+
+            function setTheme(theme) {
+                state.theme = theme === "light" ? "light" : "dark";
+                document.documentElement.dataset.theme = state.theme;
+                const light = state.theme === "light";
+                const label = text(light ? "themeDark" : "themeLight");
+                [byId("themeToggle"), byId("themeToggleMobile")].forEach(button => {
+                    if (!button) return;
+                    button.setAttribute("aria-pressed", String(!light));
+                    const labelNode = button.querySelector("[data-i18n]");
+                    if (labelNode) labelNode.textContent = label;
+                    button.setAttribute("aria-label", label);
                 });
-                searchBtn.addEventListener('click', performSearch);
-                clearBtn.addEventListener('click', () => {
-                    searchInput.value = '';
-                    this.searchTerm = '';
-                    this.currentPage = 1;
-                    this.filterAndRender();
-                });
-                document.getElementById('compactView').addEventListener('click', () => {
-                    this.setViewMode(false);
-                });
-                document.getElementById('detailView').addEventListener('click', () => {
-                    this.setViewMode(true);
-                });
-                document.getElementById('prevPage').addEventListener('click', () => {
-                    if (this.currentPage > 1) {
-                        this.currentPage--;
-                        this.renderGroups();
-                    }
-                });
-                document.getElementById('nextPage').addEventListener('click', () => {
-                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
-                    if (this.currentPage < totalPages) {
-                        this.currentPage++;
-                        this.renderGroups();
-                    }
-                });
-                document.getElementById('jumpBtn').addEventListener('click', () => {
-                    const page = parseInt(document.getElementById('pageInput').value);
-                    const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
-                    if (page >= 1 && page <= totalPages) {
-                        this.currentPage = page;
-                        this.renderGroups();
-                    }
-                });
-                document.getElementById('langZh').addEventListener('click', () => {
-                    this.setLanguage('zh');
-                });
-                document.getElementById('langEn').addEventListener('click', () => {
-                    this.setLanguage('en');
-                });
+                try { localStorage.setItem("rank-theme", state.theme); } catch (_) { /* private browsing */ }
             }
-            setLanguage(lang) {
-                this.currentLang = lang;
-                document.getElementById('langZh').classList.toggle('active', lang === 'zh');
-                document.getElementById('langEn').classList.toggle('active', lang === 'en');
-                document.querySelectorAll('[data-zh]').forEach(el => {
-                    if (el.tagName === 'INPUT') {
-                        el.placeholder = el.getAttribute(`data-placeholder-${lang}`);
-                    } else {
-                        el.textContent = el.getAttribute(`data-${lang}`);
-                    }
+
+            function setLanguage(lang) {
+                state.lang = lang === "en" ? "en" : "zh";
+                document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
+                document.querySelectorAll("[data-i18n]").forEach(node => {
+                    const key = node.dataset.i18n;
+                    if (translations[state.lang][key] && typeof translations[state.lang][key] !== "function") node.textContent = translations[state.lang][key];
                 });
-                this.updatePagination();
-                this.renderGroups();
+                document.querySelectorAll("[data-i18n-placeholder]").forEach(node => { node.placeholder = text(node.dataset.i18nPlaceholder); });
+                byId("langZh").classList.toggle("active", state.lang === "zh");
+                byId("langEn").classList.toggle("active", state.lang === "en");
+                byId("langZh").setAttribute("aria-pressed", String(state.lang === "zh"));
+                byId("langEn").setAttribute("aria-pressed", String(state.lang === "en"));
+                setTheme(state.theme);
+                render();
             }
-            async loadData() {
-                const cdnUrls = [
-                    "http://cdn1.spiritlhl.net/",
-                    "http://cdn2.spiritlhl.net/", 
-                    "http://cdn3.spiritlhl.net/",
-                    "http://cdn4.spiritlhl.net/"
-                ];
-                const urls = [
-                    'cpu_statistics.json',
-                    ...cdnUrls.map(cdn => `${cdn}https://raw.githubusercontent.com/oneclickvirt/ecs/refs/heads/ranks/cpu_statistics.json`)
-                ];
-                for (let url of urls) {
+
+            function formatNumber(value) { return Number(value || 0).toLocaleString(); }
+            function normalize(value) { return String(value ?? "").trim().toLocaleLowerCase(); }
+            function validNumber(value) { return Number.isFinite(Number(value)) ? Number(value) : 0; }
+
+            function normalizePayload(payload) {
+                const source = Array.isArray(payload) ? payload : payload && Array.isArray(payload.cpu_statistics) ? payload.cpu_statistics : [];
+                const rows = source.map((item, index) => {
+                    if (!item || typeof item !== "object") return null;
+                    const model = String(item.cpu_model ?? item.model ?? "").trim();
+                    const prefix = String(item.cpu_prefix ?? "").trim() || model;
+                    if (!model) return null;
+                    return {
+                        cpu_model: model,
+                        cpu_prefix: prefix,
+                        cpu_cores: Math.max(0, Math.round(validNumber(item.typical_cores ?? item.cpu_cores))),
+                        single_score: Math.max(0, validNumber(item.max_single_score ?? item.single_score)),
+                        multi_score: Math.max(0, validNumber(item.max_multi_score ?? item.multi_score)),
+                        multi_threads: Math.max(0, Math.round(validNumber(item.typical_threads ?? item.multi_threads))),
+                        rank: Math.max(0, Math.round(validNumber(item.rank))) || index + 1,
+                        sample_count: Math.max(0, Math.round(validNumber(item.sample_count)))
+                    };
+                }).filter(Boolean);
+                if (!rows.length) throw new Error("empty payload");
+                return { rows, totalSamples: Math.max(0, Math.round(validNumber(payload && payload.total_samples))) };
+            }
+
+            async function fetchWithTimeout(url) {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 9000);
+                try {
+                    const response = await fetch(url, { signal: controller.signal, cache: "no-store", headers: { Accept: "application/json" } });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } finally { clearTimeout(timer); }
+            }
+
+            async function loadData() {
+                setLoading(true);
+                let lastError = null;
+                for (const url of DATA_URLS) {
                     try {
-                        const response = await fetch(url);
-                        if (!response.ok) throw new Error('请求失败');
-                        const data = await response.json();
-                        if (data.cpu_statistics) {
-                            this.data = data.cpu_statistics.map(stat => ({
-                                cpu_prefix: stat.cpu_prefix,
-                                cpu_model: stat.cpu_model,
-                                cpu_cores: stat.typical_cores,
-                                single_score: stat.max_single_score,
-                                multi_score: stat.max_multi_score,
-                                multi_threads: stat.typical_threads
-                            }));
-                            if (data.total_samples) {
-                                this.total_samples = data.total_samples;
-                            }
-                        } else {
-                            this.data = Array.isArray(data) ? data : [];
-                        }
-                        this.processData();
-                        this.updateStats();
-                        this.filterAndRender();
-                        document.getElementById('loadingIndicator').style.display = 'none';
-                        document.getElementById('pagination').style.display = 'flex';
-                        document.getElementById('cpuGroups').style.display = 'block';
+                        const payload = normalizePayload(await fetchWithTimeout(url));
+                        state.groups = groupRows(payload.rows);
+                        state.totalRows = payload.rows.length;
+                        state.totalSamples = payload.totalSamples || payload.rows.reduce((sum, row) => sum + row.sample_count, 0);
+                        state.page = 1;
+                        state.loading = false;
+                        setStatus("success", text("loaded"));
+                        updateStats(payload.rows);
+                        render();
                         return;
-                    } catch (error) {
-                        continue;
-                    }
+                    } catch (error) { lastError = error; }
                 }
-                document.getElementById('loadingIndicator').style.display = 'none';
-                document.getElementById('noData').style.display = 'block';
+                state.loading = false;
+                setStatus("error", `${text("loadError")} (${lastError ? "HTTP/JSON" : "unknown"})`);
+                renderError();
             }
-            processData() {
-                this.groupedData = {};
-                this.data.forEach(cpu => {
-                    const prefix = cpu.cpu_prefix;
-                    if (!this.groupedData[prefix]) {
-                        this.groupedData[prefix] = [];
-                    }
-                    this.groupedData[prefix].push(cpu);
+
+            function groupRows(rows) {
+                const groups = new Map();
+                rows.forEach(row => {
+                    if (!groups.has(row.cpu_prefix)) groups.set(row.cpu_prefix, []);
+                    groups.get(row.cpu_prefix).push(row);
                 });
-                Object.keys(this.groupedData).forEach(prefix => {
-                    this.groupedData[prefix].sort((a, b) => b.single_score - a.single_score);
-                });
-                this.allSortedPrefixes = Object.keys(this.groupedData).sort((a, b) => {
-                    const maxSingleA = Math.max(...this.groupedData[a].map(cpu => cpu.single_score));
-                    const maxSingleB = Math.max(...this.groupedData[b].map(cpu => cpu.single_score));
-                    return maxSingleB - maxSingleA;
-                });
-                this.allSortedPrefixes.forEach((prefix, index) => {
-                    this.prefixRanks[prefix] = index + 1;
-                });
-                this.sortedPrefixes = [...this.allSortedPrefixes];
+                return [...groups.entries()].map(([prefix, values]) => {
+                    values.sort((a, b) => b.single_score - a.single_score || b.multi_score - a.multi_score || a.cpu_model.localeCompare(b.cpu_model));
+                    return { prefix, values, rank: Math.min(...values.map(row => row.rank || Number.MAX_SAFE_INTEGER)), maxSingle: Math.max(...values.map(row => row.single_score)), maxMulti: Math.max(...values.map(row => row.multi_score)) };
+                }).sort((a, b) => a.rank - b.rank || b.maxSingle - a.maxSingle || a.prefix.localeCompare(b.prefix));
             }
-            updateStats() {
-                const totalCpus = Object.keys(this.groupedData).length;
-                const totalTests = this.total_samples;
-                const topSingle = Math.max(...this.data.map(cpu => cpu.single_score));
-                const topMulti = Math.max(...this.data.map(cpu => cpu.multi_score));
-                document.getElementById('totalCpus').textContent = totalCpus.toLocaleString();
-                document.getElementById('totalTests').textContent = totalTests.toLocaleString();
-                document.getElementById('topSingle').textContent = topSingle.toLocaleString();
-                document.getElementById('topMulti').textContent = topMulti.toLocaleString();
+
+            function updateStats(rows) {
+                byId("totalCpus").textContent = formatNumber(state.totalRows);
+                byId("totalTests").textContent = formatNumber(state.totalSamples);
+                byId("topSingle").textContent = formatNumber(Math.max(...rows.map(row => row.single_score)));
+                byId("topMulti").textContent = formatNumber(Math.max(...rows.map(row => row.multi_score)));
             }
-            filterAndRender() {
-                if (this.searchTerm) {
-                    this.filteredGroups = {};
-                    const filteredPrefixes = [];
-                    this.allSortedPrefixes.forEach(prefix => {
-                        const filteredCpus = this.groupedData[prefix].filter(cpu => 
-                            cpu.cpu_model.toLowerCase().includes(this.searchTerm) ||
-                            cpu.cpu_prefix.toLowerCase().includes(this.searchTerm)
-                        );
-                        if (filteredCpus.length > 0) {
-                            this.filteredGroups[prefix] = filteredCpus;
-                            filteredPrefixes.push(prefix);
-                        }
-                    });
-                    this.sortedPrefixes = filteredPrefixes;
-                } else {
-                    this.filteredGroups = this.groupedData;
-                    this.sortedPrefixes = [...this.allSortedPrefixes];
+
+            function setLoading(isLoading) {
+                state.loading = isLoading;
+                if (isLoading) {
+                    byId("loadingState").hidden = false;
+                    byId("pagination").hidden = true;
+                    byId("statusMessage").className = "status-message";
+                    byId("statusMessage").textContent = text("loading");
                 }
-                this.renderGroups();
             }
-            renderGroups() {
-                const container = document.getElementById('cpuGroups');
-                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-                const endIndex = startIndex + this.itemsPerPage;
-                const currentPagePrefixes = this.sortedPrefixes.slice(startIndex, endIndex);
-                container.innerHTML = currentPagePrefixes.map(prefix => {
-                    const cpus = this.filteredGroups[prefix];
-                    const topCpu = cpus[0];
-                    const maxSingle = Math.max(...cpus.map(cpu => cpu.single_score));
-                    const maxMulti = Math.max(...cpus.map(cpu => cpu.multi_score));
-                    const rank = this.prefixRanks[prefix];
-                    const sampleText = this.currentLang === 'zh' ? '样本' : 'Samples';
-                    const singleText = this.currentLang === 'zh' ? '单核最高' : 'Max Single';
-                    const multiText = this.currentLang === 'zh' ? '多核最高' : 'Max Multi';
-                    return `
-                        <div class="cpu-group" data-prefix="${prefix}">
-                            <div class="group-header">
-                                <div class="group-title-section">
-                                    <div class="rank-badge">#${rank}</div>
-                                    <div class="group-title">${topCpu.cpu_model}</div>
-                                </div>
-                                <div class="group-stats">
-                                    <span>${sampleText}: ${cpus.length}</span>
-                                    <span>${singleText}: ${maxSingle.toLocaleString()}</span>
-                                    <span>${multiText}: ${maxMulti.toLocaleString()}</span>
-                                </div>
-                                <div class="expand-icon">▼</div>
-                            </div>
-                            <div class="group-content">
-                                ${this.renderTable(cpus)}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                container.querySelectorAll('.group-header').forEach(header => {
-                    header.addEventListener('click', () => {
-                        const group = header.parentElement;
-                        group.classList.toggle('expanded');
-                    });
+
+            function setStatus(kind, message) {
+                const node = byId("statusMessage");
+                node.className = `status-message ${kind || ""}`;
+                node.textContent = message;
+            }
+
+            function getFilteredGroups() {
+                const term = normalize(state.term);
+                if (!term) return [...state.groups];
+                return state.groups.map(group => ({ ...group, values: group.values.filter(row => normalize(`${row.cpu_model} ${row.cpu_prefix}`).includes(term)) })).filter(group => group.values.length);
+            }
+
+            function makeCell(value, className) {
+                const cell = document.createElement("td");
+                if (className) cell.className = className;
+                cell.textContent = String(value);
+                return cell;
+            }
+
+            function renderTable(group) {
+                const tableWrap = document.createElement("div");
+                tableWrap.className = "table-scroll";
+                const table = document.createElement("table");
+                const head = document.createElement("thead");
+                const headRow = document.createElement("tr");
+                const headers = state.detail ? [text("model"), text("cores"), text("single"), text("multi"), text("threads")] : [text("model"), text("cores"), text("single"), text("multi")];
+                headers.forEach(label => { const th = document.createElement("th"); th.scope = "col"; th.textContent = label; headRow.appendChild(th); });
+                head.appendChild(headRow);
+                const body = document.createElement("tbody");
+                const values = state.detail ? group.values : group.values.slice(0, 10);
+                values.forEach(row => {
+                    const tr = document.createElement("tr");
+                    tr.appendChild(makeCell(row.cpu_model));
+                    tr.appendChild(makeCell(row.cpu_cores));
+                    tr.appendChild(makeCell(formatNumber(row.single_score), "score-single"));
+                    tr.appendChild(makeCell(formatNumber(row.multi_score), "score-multi"));
+                    if (state.detail) tr.appendChild(makeCell(row.multi_threads));
+                    body.appendChild(tr);
                 });
-                this.updatePagination();
+                table.append(head, body);
+                tableWrap.appendChild(table);
+                return tableWrap;
             }
-            updatePagination() {
-                const totalPages = Math.ceil(this.sortedPrefixes.length / this.itemsPerPage);
-                const pageInfo = document.getElementById('pageInfo');
-                const pageText = this.currentLang === 'zh' 
-                    ? `第 ${this.currentPage} 页，共 ${totalPages} 页`
-                    : `Page ${this.currentPage} of ${totalPages}`;  
-                pageInfo.textContent = pageText;
-                const pageInput = document.getElementById('pageInput');
-                pageInput.max = totalPages;
-                pageInput.value = this.currentPage;
-                const prevBtn = document.getElementById('prevPage');
-                const nextBtn = document.getElementById('nextPage');
-                prevBtn.disabled = this.currentPage === 1;
-                nextBtn.disabled = this.currentPage === totalPages;
+
+            function renderGroup(group, index) {
+                const article = document.createElement("article");
+                article.className = "cpu-group";
+                const toggle = document.createElement("button");
+                toggle.className = "group-toggle";
+                toggle.type = "button";
+                toggle.setAttribute("aria-expanded", "false");
+                toggle.setAttribute("aria-controls", `group-content-${index}`);
+                const badge = document.createElement("span"); badge.className = "rank-badge"; badge.textContent = `#${group.rank}`;
+                const title = document.createElement("span"); title.className = "group-title"; title.textContent = group.values[0].cpu_model;
+                const stats = document.createElement("span"); stats.className = "group-stats";
+                [[text("samplesShort"), group.values.length], [text("singleMax"), formatNumber(group.maxSingle)], [text("multiMax"), formatNumber(group.maxMulti)]].forEach(([label, value]) => { const item = document.createElement("span"); item.textContent = `${label}: ${value}`; stats.appendChild(item); });
+                const chevron = document.createElement("span"); chevron.className = "group-chevron"; chevron.setAttribute("aria-hidden", "true"); chevron.textContent = "▼";
+                toggle.append(badge, title, stats, chevron);
+                const content = document.createElement("div"); content.className = "group-content"; content.id = `group-content-${index}`; content.appendChild(renderTable(group));
+                toggle.addEventListener("click", () => { const expanded = toggle.getAttribute("aria-expanded") === "true"; toggle.setAttribute("aria-expanded", String(!expanded)); content.classList.toggle("open", !expanded); });
+                article.append(toggle, content);
+                return article;
             }
-            renderTable(cpus) {
-                const headers = this.isDetailView 
-                    ? (this.currentLang === 'zh' 
-                        ? ['CPU型号', '核心数', '单核分数', '多核分数', '多核线程']
-                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score', 'Multi Threads'])
-                    : (this.currentLang === 'zh'
-                        ? ['CPU型号', '核心数', '单核分数', '多核分数']
-                        : ['CPU Model', 'Cores', 'Single Score', 'Multi Score']);
-                const rows = cpus.slice(0, this.isDetailView ? cpus.length : 10).map(cpu => {
-                    const cells = this.isDetailView
-                        ? [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
-                           cpu.multi_score.toLocaleString(), cpu.multi_threads]
-                        : [cpu.cpu_model, cpu.cpu_cores, cpu.single_score.toLocaleString(), 
-                           cpu.multi_score.toLocaleString()];
-                    return `
-                        <tr>
-                            ${cells.map((cell, index) => {
-                                let className = '';
-                                if (index === 2) className = 'score-cell score-single';
-                                else if (index === 3) className = 'score-cell score-multi';
-                                return `<td class="${className}">${cell}</td>`;
-                            }).join('')}
-                        </tr>
-                    `;
-                }).join('');
-                return `
-                    <table class="cpu-table">
-                        <thead>
-                            <tr>
-                                ${headers.map(header => `<th>${header}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows}
-                        </tbody>
-                    </table>
-                `;
+
+            function render() {
+                if (state.loading) return;
+                state.filtered = getFilteredGroups();
+                const totalPages = Math.max(1, Math.ceil(state.filtered.length / PAGE_SIZE));
+                state.page = Math.min(Math.max(state.page, 1), totalPages);
+                const start = (state.page - 1) * PAGE_SIZE;
+                const visibleGroups = state.filtered.slice(start, start + PAGE_SIZE);
+                const results = byId("results");
+                results.replaceChildren();
+                if (!visibleGroups.length) {
+                    const empty = document.createElement("div"); empty.className = "empty-state";
+                    const title = document.createElement("strong"); title.textContent = text("noMatch");
+                    const hint = document.createElement("p"); hint.textContent = text("noMatchHint");
+                    const clear = document.createElement("button"); clear.className = "action-button"; clear.type = "button"; clear.textContent = text("clear"); clear.addEventListener("click", clearSearch);
+                    empty.append(title, hint, clear); results.appendChild(empty);
+                } else visibleGroups.forEach((group, index) => results.appendChild(renderGroup(group, start + index)));
+                byId("loadingState").hidden = true;
+                byId("pagination").hidden = state.filtered.length === 0;
+                byId("pageInfo").textContent = text("pageInfo", state.page, totalPages);
+                byId("pageInput").value = state.page;
+                byId("pageInput").max = totalPages;
+                byId("prevPage").disabled = state.page <= 1;
+                byId("nextPage").disabled = state.page >= totalPages;
+                byId("resultCount").textContent = text("resultCount", state.filtered.length);
             }
-            setViewMode(isDetail) {
-                this.isDetailView = isDetail;
-                document.getElementById('compactView').classList.toggle('active', !isDetail);
-                document.getElementById('detailView').classList.toggle('active', isDetail);
-                this.renderGroups();
+
+            function renderError() {
+                const results = byId("results"); results.replaceChildren();
+                const empty = document.createElement("div"); empty.className = "empty-state";
+                const title = document.createElement("strong"); title.textContent = text("noData");
+                const hint = document.createElement("p"); hint.textContent = text("noDataHint");
+                const retry = document.createElement("button"); retry.className = "action-button primary"; retry.type = "button"; retry.textContent = text("retry"); retry.addEventListener("click", loadData);
+                empty.append(title, hint, retry); results.appendChild(empty);
+                byId("loadingState").hidden = true;
+                byId("pagination").hidden = true;
+                byId("resultCount").textContent = "";
             }
-        }
-        new CPUDashboard();
+
+            function clearSearch() { state.term = ""; state.page = 1; byId("searchInput").value = ""; render(); }
+
+            byId("searchForm").addEventListener("submit", event => { event.preventDefault(); state.term = byId("searchInput").value; state.page = 1; render(); });
+            byId("searchInput").addEventListener("input", event => { state.term = event.target.value; state.page = 1; render(); });
+            byId("clearBtn").addEventListener("click", clearSearch);
+            byId("compactView").addEventListener("click", () => { state.detail = false; byId("compactView").classList.add("active"); byId("detailView").classList.remove("active"); byId("compactView").setAttribute("aria-pressed", "true"); byId("detailView").setAttribute("aria-pressed", "false"); render(); });
+            byId("detailView").addEventListener("click", () => { state.detail = true; byId("detailView").classList.add("active"); byId("compactView").classList.remove("active"); byId("detailView").setAttribute("aria-pressed", "true"); byId("compactView").setAttribute("aria-pressed", "false"); render(); });
+            byId("prevPage").addEventListener("click", () => { if (state.page > 1) { state.page -= 1; render(); window.scrollTo({ top: 0, behavior: "smooth" }); } });
+            byId("nextPage").addEventListener("click", () => { state.page += 1; render(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+            byId("jumpBtn").addEventListener("click", () => { const page = Number.parseInt(byId("pageInput").value, 10); if (Number.isFinite(page)) { state.page = page; render(); } });
+            byId("pageInput").addEventListener("keydown", event => { if (event.key === "Enter") byId("jumpBtn").click(); });
+            byId("langZh").addEventListener("click", () => setLanguage("zh"));
+            byId("langEn").addEventListener("click", () => setLanguage("en"));
+            [byId("themeToggle"), byId("themeToggleMobile")].forEach(button => button.addEventListener("click", () => setTheme(state.theme === "dark" ? "light" : "dark")));
+
+            try { state.theme = localStorage.getItem("rank-theme") || "dark"; } catch (_) { state.theme = "dark"; }
+            setTheme(state.theme);
+            setLanguage("zh");
+            loadData();
+        })();
     </script>
 </body>
 </html>
