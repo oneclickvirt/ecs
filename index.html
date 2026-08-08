@@ -108,14 +108,10 @@
         .brand-mark {
             width: 34px;
             height: 34px;
-            display: grid;
-            place-items: center;
-            border: 1px solid rgba(96, 165, 250, 0.45);
+            display: block;
             border-radius: 50%;
-            color: #dbeafe;
-            background: linear-gradient(145deg, #1d4ed8, #2563eb);
-            font-size: 17px;
-            font-weight: 800;
+            background: #111827;
+            object-fit: contain;
         }
 
         .brand-name { font-size: 15px; font-weight: 700; letter-spacing: 0; }
@@ -185,11 +181,11 @@
             color: var(--accent-strong);
             font-size: 12px;
             font-weight: 700;
-            letter-spacing: 0.08em;
+            letter-spacing: 0;
             text-transform: uppercase;
         }
 
-        h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.15; letter-spacing: 0; }
+        h1 { margin: 0; font-size: 42px; line-height: 1.15; letter-spacing: 0; }
         .hero-subtitle { margin: 10px 0 0; color: var(--text-muted); font-size: 15px; }
 
         .language-toggle, .view-toggle {
@@ -395,6 +391,7 @@
             .desktop-nav { display: none; }
             .mobile-nav { display: flex; }
             .page-shell { padding: 28px 16px 40px; }
+            h1 { font-size: 30px; }
             .hero { align-items: flex-start; flex-direction: column; padding-bottom: 22px; }
             .hero-tools { width: 100%; display: flex; justify-content: space-between; }
             .toolbar { align-items: stretch; flex-direction: column; }
@@ -406,6 +403,7 @@
         }
 
         @media (max-width: 460px) {
+            h1 { font-size: 28px; }
             .search-form { flex-wrap: wrap; }
             .search-input-wrap { flex-basis: 100%; }
             .search-form .action-button { flex: 1; }
@@ -427,7 +425,7 @@
     <header class="site-header">
         <div class="header-inner">
             <a class="brand" href="https://paste.spiritlhl.net/#/" target="_blank" rel="noopener noreferrer">
-                <span class="brand-mark" aria-hidden="true">P</span>
+                <img class="brand-mark" src="./logo.png" alt="" width="34" height="34">
                 <span class="brand-name">PasteBin</span>
             </a>
             <nav class="desktop-nav" aria-label="主导航">
