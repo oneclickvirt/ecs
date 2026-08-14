@@ -490,7 +490,7 @@
         </section>
 
         <div class="status-row" aria-live="polite">
-            <span class="status-message" id="statusMessage" data-i18n="loading">正在加载排行榜数据...</span>
+            <span class="status-message" id="statusMessage">正在加载排行榜数据...</span>
             <span id="resultCount"></span>
         </div>
 
@@ -537,7 +537,7 @@
             };
 
             const byId = id => document.getElementById(id);
-            const state = { lang: "zh", theme: "dark", detail: false, term: "", page: 1, groups: [], filtered: [], totalRows: 0, totalSamples: 0, loading: true };
+            const state = { lang: "zh", theme: "dark", detail: false, term: "", page: 1, groups: [], filtered: [], totalRows: 0, totalSamples: 0, loading: true, statusKind: "loading", statusDetail: "" };
 
             function text(key, ...args) {
                 const value = translations[state.lang][key];
@@ -572,6 +572,7 @@
                 byId("langZh").setAttribute("aria-pressed", String(state.lang === "zh"));
                 byId("langEn").setAttribute("aria-pressed", String(state.lang === "en"));
                 setTheme(state.theme);
+                refreshStatus();
                 render();
             }
 
@@ -622,14 +623,14 @@
                         state.totalSamples = payload.totalSamples || payload.rows.reduce((sum, row) => sum + row.sample_count, 0);
                         state.page = 1;
                         state.loading = false;
-                        setStatus("success", text("loaded"));
+                        setStatus("success");
                         updateStats(payload.rows);
                         render();
                         return;
                     } catch (error) { lastError = error; }
                 }
                 state.loading = false;
-                setStatus("error", `${text("loadError")} (${lastError ? "HTTP/JSON" : "unknown"})`);
+                setStatus("error", lastError ? "HTTP/JSON" : "unknown");
                 renderError();
             }
 
@@ -669,15 +670,22 @@
                 if (isLoading) {
                     byId("loadingState").hidden = false;
                     byId("pagination").hidden = true;
-                    byId("statusMessage").className = "status-message";
-                    byId("statusMessage").textContent = text("loading");
+                    setStatus("loading");
                 }
             }
 
-            function setStatus(kind, message) {
+            function refreshStatus() {
                 const node = byId("statusMessage");
-                node.className = `status-message ${kind || ""}`;
-                node.textContent = message;
+                node.className = `status-message ${state.statusKind === "loading" ? "" : state.statusKind}`;
+                if (state.statusKind === "success") node.textContent = text("loaded");
+                else if (state.statusKind === "error") node.textContent = `${text("loadError")} (${state.statusDetail || "unknown"})`;
+                else node.textContent = text("loading");
+            }
+
+            function setStatus(kind, detail = "") {
+                state.statusKind = kind;
+                state.statusDetail = detail;
+                refreshStatus();
             }
 
             function getFilteredGroups() {
