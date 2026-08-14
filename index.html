@@ -633,16 +633,28 @@
                 renderError();
             }
 
+            function summarizeGroup(prefix, values) {
+                const sortedValues = [...values].sort((a, b) => b.single_score - a.single_score || b.multi_score - a.multi_score || a.cpu_model.localeCompare(b.cpu_model));
+                return {
+                    prefix,
+                    values: sortedValues,
+                    representative: sortedValues[0],
+                    rank: Math.min(...sortedValues.map(row => row.rank || Number.MAX_SAFE_INTEGER)),
+                    sampleCount: sortedValues.reduce((sum, row) => sum + row.sample_count, 0),
+                    maxSingle: Math.max(...sortedValues.map(row => row.single_score)),
+                    maxMulti: Math.max(...sortedValues.map(row => row.multi_score))
+                };
+            }
+
             function groupRows(rows) {
                 const groups = new Map();
                 rows.forEach(row => {
                     if (!groups.has(row.cpu_prefix)) groups.set(row.cpu_prefix, []);
                     groups.get(row.cpu_prefix).push(row);
                 });
-                return [...groups.entries()].map(([prefix, values]) => {
-                    values.sort((a, b) => b.single_score - a.single_score || b.multi_score - a.multi_score || a.cpu_model.localeCompare(b.cpu_model));
-                    return { prefix, values, rank: Math.min(...values.map(row => row.rank || Number.MAX_SAFE_INTEGER)), maxSingle: Math.max(...values.map(row => row.single_score)), maxMulti: Math.max(...values.map(row => row.multi_score)) };
-                }).sort((a, b) => a.rank - b.rank || b.maxSingle - a.maxSingle || a.prefix.localeCompare(b.prefix));
+                return [...groups.entries()]
+                    .map(([prefix, values]) => summarizeGroup(prefix, values))
+                    .sort((a, b) => a.rank - b.rank || b.maxSingle - a.maxSingle || a.prefix.localeCompare(b.prefix));
             }
 
             function updateStats(rows) {
@@ -671,7 +683,10 @@
             function getFilteredGroups() {
                 const term = normalize(state.term);
                 if (!term) return [...state.groups];
-                return state.groups.map(group => ({ ...group, values: group.values.filter(row => normalize(`${row.cpu_model} ${row.cpu_prefix}`).includes(term)) })).filter(group => group.values.length);
+                return state.groups.map(group => {
+                    const values = group.values.filter(row => normalize(`${row.cpu_model} ${row.cpu_prefix}`).includes(term));
+                    return values.length ? summarizeGroup(group.prefix, values) : null;
+                }).filter(Boolean);
             }
 
             function makeCell(value, className) {
@@ -691,7 +706,7 @@
                 headers.forEach(label => { const th = document.createElement("th"); th.scope = "col"; th.textContent = label; headRow.appendChild(th); });
                 head.appendChild(headRow);
                 const body = document.createElement("tbody");
-                const values = state.detail ? group.values : group.values.slice(0, 10);
+                const values = group.representative ? [group.representative] : [];
                 values.forEach(row => {
                     const tr = document.createElement("tr");
                     tr.appendChild(makeCell(row.cpu_model));
@@ -715,9 +730,9 @@
                 toggle.setAttribute("aria-expanded", "false");
                 toggle.setAttribute("aria-controls", `group-content-${index}`);
                 const badge = document.createElement("span"); badge.className = "rank-badge"; badge.textContent = `#${group.rank}`;
-                const title = document.createElement("span"); title.className = "group-title"; title.textContent = group.values[0].cpu_model;
+                const title = document.createElement("span"); title.className = "group-title"; title.textContent = group.representative.cpu_model;
                 const stats = document.createElement("span"); stats.className = "group-stats";
-                [[text("samplesShort"), group.values.length], [text("singleMax"), formatNumber(group.maxSingle)], [text("multiMax"), formatNumber(group.maxMulti)]].forEach(([label, value]) => { const item = document.createElement("span"); item.textContent = `${label}: ${value}`; stats.appendChild(item); });
+                [[text("samplesShort"), formatNumber(group.sampleCount)], [text("singleMax"), formatNumber(group.maxSingle)], [text("multiMax"), formatNumber(group.maxMulti)]].forEach(([label, value]) => { const item = document.createElement("span"); item.textContent = `${label}: ${value}`; stats.appendChild(item); });
                 const chevron = document.createElement("span"); chevron.className = "group-chevron"; chevron.setAttribute("aria-hidden", "true"); chevron.textContent = "▼";
                 toggle.append(badge, title, stats, chevron);
                 const content = document.createElement("div"); content.className = "group-content"; content.id = `group-content-${index}`; content.appendChild(renderTable(group));
