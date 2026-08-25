@@ -61,6 +61,16 @@ type SectionReport struct {
 	Reason  string       `json:"reason,omitempty"`
 }
 
+// DNSResolution records the resolver selected for this run without disclosing
+// any individual DNS query or endpoint address.
+type DNSResolution struct {
+	Requested string `json:"requested"`
+	Active    string `json:"active"`
+	Fallback  bool   `json:"fallback"`
+	Provider  string `json:"provider,omitempty"`
+	Reason    string `json:"reason,omitempty"`
+}
+
 type TCPTarget struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -90,14 +100,15 @@ type TCPReport struct {
 }
 
 type StructuredReport struct {
-	SchemaVersion string       `json:"schema_version"`
-	ECSVersion    string       `json:"ecs_version"`
-	Status        ReportStatus `json:"status"`
-	StartedAt     time.Time    `json:"started_at"`
-	FinishedAt    time.Time    `json:"finished_at"`
-	DurationMS    int64        `json:"duration_ms"`
-	DeepMode      bool         `json:"deep_mode"`
-	PrivacyMode   bool         `json:"privacy_mode"`
+	SchemaVersion string         `json:"schema_version"`
+	ECSVersion    string         `json:"ecs_version"`
+	Status        ReportStatus   `json:"status"`
+	StartedAt     time.Time      `json:"started_at"`
+	FinishedAt    time.Time      `json:"finished_at"`
+	DurationMS    int64          `json:"duration_ms"`
+	DeepMode      bool           `json:"deep_mode"`
+	PrivacyMode   bool           `json:"privacy_mode"`
+	DNS           *DNSResolution `json:"dns,omitempty"`
 	// Data and DataFiles are retained for Go source compatibility only. Public
 	// report constructors leave them empty and JSON never serializes them because
 	// source/fallback metadata can identify private registries.
@@ -216,7 +227,7 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 		Status: status, StartedAt: startedAt, FinishedAt: finishedAt,
 		DurationMS: finishedAt.Sub(startedAt).Milliseconds(), DeepMode: config.DeepMode,
 		PrivacyMode: config.PrivacyMode, Data: extras.data, DataFiles: extras.dataFiles,
-		Components: extras.components, TCP: extras.tcp,
+		DNS: dnsResolutionFrom(preCheck), Components: extras.components, TCP: extras.tcp,
 		Sections: sections, Text: text,
 	}
 	if config.PrivacyMode {
@@ -224,6 +235,19 @@ func CollectStructuredReport(ctx context.Context, preCheck utils.NetCheckResult,
 	}
 	sanitizeStructuredReport(report)
 	return report
+}
+
+func dnsResolutionFrom(preCheck utils.NetCheckResult) *DNSResolution {
+	if strings.TrimSpace(preCheck.DNSRequested) == "" && strings.TrimSpace(preCheck.DNSActive) == "" {
+		return nil
+	}
+	return &DNSResolution{
+		Requested: strings.TrimSpace(preCheck.DNSRequested),
+		Active:    strings.TrimSpace(preCheck.DNSActive),
+		Fallback:  preCheck.DNSFallback,
+		Provider:  sanitizePublicText(preCheck.DNSProvider),
+		Reason:    sanitizePublicReason(preCheck.DNSReason),
+	}
 }
 
 func validatedStructuredConfig(config *Config) *Config {

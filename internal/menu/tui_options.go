@@ -244,6 +244,17 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 				option("ipv6", "仅 IPv6", "IPv6 Only", "仅使用 IPv6 进行解锁测试。", "Only test using IPv6."),
 			},
 		},
+		{
+			key: "dnsmode", nameZh: "DNS解析模式", nameEn: "DNS Resolution Mode", kind: "option",
+			descZh: "自动模式保留系统解析，只有确认本地DNS不可用时才使用内置加密解析；不会改写系统DNS文件。",
+			descEn: "Auto preserves the system resolver unless local DNS is confirmed unavailable, then uses built-in encrypted DNS; resolver files are never rewritten.",
+			options: []advOption{
+				option("auto", "自动回退", "Auto Fallback", "只有确认系统DNS不可用时才自动使用内置DoH或DoT。", "Use built-in DoH or DoT only after system DNS is confirmed unavailable."),
+				option("system", "仅系统DNS", "System Only", "只使用系统DNS，不启用内置回退。", "Use only system DNS and disable the built-in fallback."),
+				option("doh", "强制内置DoH", "Force Built-in DoH", "始终使用内置DoH解析。", "Always use built-in DoH resolution."),
+				option("dot", "强制内置DoT", "Force Built-in DoT", "始终使用内置DoT解析。", "Always use built-in DoT resolution."),
+			},
+		},
 		{key: "utinterface", nameZh: "解锁源接口或IP", nameEn: "Unlock Source Interface/IP", kind: "text", descZh: "留空使用默认路由。", descEn: "Empty uses the default route.", textVal: config.UnlockTestInterface},
 		{key: "utdns", nameZh: "解锁DNS服务器", nameEn: "Unlock DNS Servers", kind: "text", descZh: "多个DNS用逗号分隔；留空使用系统DNS。", descEn: "Comma-separated DNS servers; empty uses system DNS.", textVal: config.UnlockTestDNSServers},
 		{key: "uthttpproxy", nameZh: "解锁HTTP代理", nameEn: "Unlock HTTP Proxy", kind: "text", descZh: "留空关闭。", descEn: "Empty disables.", textVal: config.UnlockTestHTTPProxy},
@@ -334,6 +345,8 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestRegion)
 		case "unlockipver":
 			adv[i].current = optionIndexByValue(adv[i].options, config.UnlockTestIPVersion)
+		case "dnsmode":
+			adv[i].current = optionIndexByValue(adv[i].options, config.DNSMode)
 		case "tcpformat":
 			adv[i].current = optionIndexByValue(adv[i].options, config.TCPTextFormat)
 		case "pingsort":

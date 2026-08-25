@@ -155,6 +155,10 @@ func (m tuiModel) viewMain() string {
 		}
 		hdr.WriteString("\n")
 	}
+	if status := utils.DNSStatusText(m.preCheck, lang); status != "" {
+		hdr.WriteString(tInfoStyle.Render("  " + status))
+		hdr.WriteString("\n")
+	}
 	hdr.WriteString("\n")
 	if lang == "zh" {
 		hdr.WriteString(tSectStyle.Render("  请选择测试方案:"))

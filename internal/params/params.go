@@ -60,6 +60,7 @@ type Config struct {
 	DeepGPUDevice         string
 	JSONPath              string
 	DataOffline           bool
+	DNSMode               string
 	OnlyIpInfoCheck       bool
 	UnlockTestRegion      string
 	UnlockTestShowIP      bool
@@ -125,6 +126,7 @@ func NewConfig(version string) *Config {
 		DeepBurnDuration:      0,
 		JSONPath:              "",
 		DataOffline:           false,
+		DNSMode:               "auto",
 		OnlyIpInfoCheck:       false,
 		UnlockTestRegion:      "0",
 		UnlockTestShowIP:      false,
@@ -301,6 +303,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.DeepGPUDevice, "deep-gpu-device", "", "Explicit GPU device selector for deep compute")
 	c.GoecsFlag.StringVar(&c.JSONPath, "json", "", "Write the versioned JSON report to this path, or '-' for stdout")
 	c.GoecsFlag.BoolVar(&c.DataOffline, "data-offline", false, "Force every component to use its embedded registry without remote requests")
+	c.GoecsFlag.StringVar(&c.DNSMode, "dns-mode", "auto", "DNS mode (auto=preserve system then encrypted fallback, system=system DNS only, doh=force DoH, dot=force DoT)")
 	if err := c.GoecsFlag.Parse(args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
@@ -446,6 +449,9 @@ func (c *Config) SaveUserSetParams() map[string]interface{} {
 	}
 	if c.UserSetFlags["deep-burn-duration"] {
 		saved["deep-burn-duration"] = c.DeepBurnDuration
+	}
+	if c.UserSetFlags["dns-mode"] {
+		saved["dns-mode"] = c.DNSMode
 	}
 
 	return saved
@@ -639,6 +645,11 @@ func (c *Config) RestoreUserSetParams(saved map[string]interface{}) {
 			c.DeepBurnDuration = duration
 		}
 	}
+	if val, ok := saved["dns-mode"]; ok {
+		if stringValue, valid := val.(string); valid {
+			c.DNSMode = stringValue
+		}
+	}
 
 	c.ValidateParams()
 }
@@ -662,6 +673,7 @@ func (c *Config) ValidateParams() {
 	c.PingSortOrder = strings.ToLower(strings.TrimSpace(c.PingSortOrder))
 	c.PingScope = strings.ToLower(strings.TrimSpace(c.PingScope))
 	c.TCPSortOrder = strings.ToLower(strings.TrimSpace(c.TCPSortOrder))
+	c.DNSMode = strings.ToLower(strings.TrimSpace(c.DNSMode))
 	c.JSONPath = strings.TrimSpace(c.JSONPath)
 	c.DeepDiskPaths = strings.TrimSpace(c.DeepDiskPaths)
 	c.DeepSMARTDevices = strings.TrimSpace(c.DeepSMARTDevices)
@@ -713,6 +725,14 @@ func (c *Config) ValidateParams() {
 	}
 	if c.TCPSortOrder != "name" && c.TCPSortOrder != "latency" {
 		c.TCPSortOrder = "name"
+	}
+	if c.DNSMode != "auto" && c.DNSMode != "system" && c.DNSMode != "doh" && c.DNSMode != "dot" {
+		if c.Language == "zh" {
+			fmt.Printf("警告: DNS模式 '%s' 无效，使用默认值 'auto'\n", c.DNSMode)
+		} else {
+			fmt.Printf("Warning: Invalid DNS mode '%s', using default 'auto'\n", c.DNSMode)
+		}
+		c.DNSMode = "auto"
 	}
 
 	validCpuMethods := map[string]bool{"sysbench": true, "geekbench": true, "winsat": true}

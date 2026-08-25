@@ -178,24 +178,41 @@ func main() {
 	runner.SetOutputSanitizer(ecsapi.SanitizeOutput)
 	defer runner.SetOutputSanitizer(nil)
 	defer sanitizeECSLog()
-	utils.CheckAndFixAndroidDNS(configs.Language)
+	// The legacy Android resolver-file repair is retained only for callers that
+	// explicitly require the system resolver. Auto/DoH/DoT runs stay process-local.
+	if configs.DNSMode == "system" {
+		utils.CheckAndFixAndroidDNS(configs.Language)
+	}
 	preCheck := utils.CheckPublicAccess(3 * time.Second)
-	go func() {
-		if preCheck.Connected && !configs.PrivacyMode {
-			resp, err := http.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
-			if err == nil && resp != nil && resp.Body != nil {
-				resp.Body.Close()
+	utils.ConfigureDNS(context.Background(), configs.DNSMode, &preCheck)
+	defer utils.ShutdownDNS()
+	if configs.MenuMode {
+		configuredDNSMode := configs.DNSMode
+		menu.HandleMenuMode(preCheck, configs)
+		if configs.DNSMode != configuredDNSMode {
+			utils.ConfigureDNS(context.Background(), configs.DNSMode, &preCheck)
+			if status := utils.DNSStatusText(preCheck, configs.Language); status != "" {
+				fmt.Println(status)
 			}
 		}
-	}()
-	if configs.MenuMode {
-		menu.HandleMenuMode(preCheck, configs)
 	} else {
+		if status := utils.DNSStatusText(preCheck, configs.Language); status != "" {
+			fmt.Println(status)
+		}
 		configs.OnlyIpInfoCheck = true
 	}
 	handleLanguageSpecificSettings()
 	if !preCheck.Connected {
 		configs.EnableUpload = false
+	}
+	if preCheck.Connected && !configs.PrivacyMode {
+		go func() {
+			client := &http.Client{Timeout: 5 * time.Second}
+			resp, err := client.Get("https://hits.spiritlhl.net/goecs.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+			if err == nil && resp != nil && resp.Body != nil {
+				resp.Body.Close()
+			}
+		}()
 	}
 	// Keep the established interactive/text runner as the default user-facing
 	// path. Structured orchestration is an explicit JSON/API mode; it must not

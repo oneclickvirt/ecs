@@ -250,6 +250,21 @@ jobs:
           go vet ./...
           git diff --exit-code -- go.mod go.sum
 
+      - name: Verify embedded encrypted DNS catalog
+        shell: bash
+        env:
+          BASICS_REF: ${{ steps.component_refs.outputs.basics }}
+        run: |
+          set -euo pipefail
+          test -s deps/basics/network/resolver/endpoints_embed.json
+          if ! git -C deps/basics tag --points-at HEAD | grep -Fx -- "$BASICS_REF" >/dev/null; then
+            echo "Checked out basics source is not the requested immutable tag: $BASICS_REF" >&2
+            exit 1
+          fi
+          export GOWORK="$PWD/go.work"
+          go test -race -count=1 ./deps/basics/network/resolver ./deps/basics/cmd/update-resolver-endpoints
+          sha256sum deps/basics/network/resolver/endpoints_embed.json
+
       - name: Run embedded-registry canary
         shell: bash
         run: |

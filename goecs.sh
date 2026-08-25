@@ -29,13 +29,34 @@ reading() {
     read "$2"
 }
 
-# Unified HTTP GET to stdout — tries curl first, falls back to wget
+# curl can bootstrap Cloudflare DoH with fixed public addresses, so downloads
+# still work when the host is online but has no usable local DNS resolver.
+DOH_URL="https://cloudflare-dns.com/dns-query"
+DOH_RESOLVE="cloudflare-dns.com:443:1.1.1.1,1.0.0.1"
+
+curl_supports_doh() {
+    command -v curl >/dev/null 2>&1 && curl --help all 2>/dev/null | grep -q -- "--doh-url"
+}
+
+curl_fetch() {
+    if curl "$@"; then
+        return 0
+    fi
+    if curl_supports_doh; then
+        curl --doh-url "$DOH_URL" --resolve "$DOH_RESOLVE" "$@"
+        return $?
+    fi
+    return 1
+}
+
+# Unified HTTP GET to stdout. Use ordinary curl first, then retry through the
+# fixed-address DoH bootstrap only after it fails; wget remains available.
 # Usage: http_fetch URL [timeout_seconds]
 http_fetch() {
     local url="$1"
     local timeout="${2:-10}"
     if command -v curl >/dev/null 2>&1; then
-        curl -sL --max-time "$timeout" "$url" 2>/dev/null
+        curl_fetch -sL --max-time "$timeout" "$url" 2>/dev/null
     elif command -v wget >/dev/null 2>&1; then
         wget -qO- --timeout="$timeout" "$url" 2>/dev/null
     else
@@ -80,7 +101,7 @@ check_cdn() {
     local cdn_url
     for cdn_url in $cdn_urls; do
         if command -v curl >/dev/null 2>&1; then
-            if curl -4 -sL -k "$cdn_url$o_url" --max-time 6 2>/dev/null | grep -q "success"; then
+            if curl_fetch -4 -sL -k "$cdn_url$o_url" --max-time 6 2>/dev/null | grep -q "success"; then
                 cdn_success_url="$cdn_url"
                 return 0
             fi
@@ -118,7 +139,7 @@ download_file() {
         _yellow "wget failed, falling back to curl... / wget 失败，回退到 curl..."
     fi
     if command -v curl >/dev/null 2>&1; then
-        if curl -L -o "$output" "$url" 2>/dev/null; then
+        if curl_fetch -L -o "$output" "$url" 2>/dev/null; then
             return 0
         fi
         _yellow "curl failed / curl 失败"
@@ -214,7 +235,7 @@ goecs_check() {
     os=$(uname -s 2>/dev/null || echo "Unknown")
     arch=$(uname -m 2>/dev/null || echo "Unknown")
     check_china
-    ECS_VERSION="0.1.181"
+    ECS_VERSION="0.1.182"
     for api in \
         "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
         "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" \
@@ -226,8 +247,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.181"
-        ECS_VERSION="0.1.181"
+        _yellow "Unable to get version info, using default version 0.1.182"
+        ECS_VERSION="0.1.182"
     fi
     version_output=""
     for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do

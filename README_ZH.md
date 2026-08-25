@@ -62,7 +62,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 三网路由测试：基于 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
 - 网速测试：基于 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)，同时融合私有国内测速节点
 - 三网 Ping 值测试：借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
-- 支持root或admin环境下测试，支持非root或非admin环境下测试，支持离线环境下进行测试，**暂未**支持无DNS的在线环境下进行测试
+- 支持root或admin环境下测试，支持非root或非admin环境下测试，支持离线环境下进行测试；在线且本地DNS确认缺失或不可用时可自动回退到内置DoH或DoT解析，不改写系统DNS文件；短暂DNS或网络错误会保留系统解析
 
 **本项目初次使用建议查看说明：[跳转](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
@@ -104,6 +104,12 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
   ```bash
   export noninteractive=true && curl -L https://ba.sh/JrVa -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
+  ```
+
+- **在线但无本地 DNS（需要支持 DoH 的 curl，例如 curl 7.62+）：**
+
+  ```bash
+  export noninteractive=true && curl --doh-url https://cloudflare-dns.com/dns-query --resolve cloudflare-dns.com:443:1.1.1.1,1.0.0.1 -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs
   ```
 
 **如果需要测试更准确，请按照下面的详细说明进行安装，添加非必需的依赖**
@@ -181,6 +187,19 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 ---
 
+#### **DNS 解析回退**
+
+默认 `-dns-mode=auto` 会保留系统解析，只有多个独立探测均确认本地解析器不可用时，才在当前进程内启用内置加密解析。成功响应或 NXDOMAIN 都会保留系统 DNS；超时、SERVFAIL、丢包和其他短暂网络错误均为不确定结果，不会切换解析器。确认本地 DNS 失效后，会以固定地址完成真实 TLS DNS 查询并选择延迟最低的内置 DoH 或 DoT 上游。若原有公网预检没有得到可达结果，auto 模式会先执行同样有时限的加密 DNS 校验，确认端点可用后才继续；原有公网预检本身保持不变。固定地址只用于引导上游，普通测试域名仍按选中服务的实时 DNS 回应解析。
+
+- `-dns-mode=auto`：默认行为，保留系统 DNS；只有确认本地解析器失效时，才自动回退到已校验且延迟最低的内置 DoH 或 DoT。
+- `-dns-mode=system`：只使用系统 DNS；Android/Termux 仍保留原有的 resolver 文件修复路径。
+- `-dns-mode=doh`：始终使用内置 DoH。
+- `-dns-mode=dot`：始终使用内置 DoT。
+
+回退只作用于本次程序运行，不会修改 `/etc/resolv.conf` 或 `/etc/hosts`，且需要能够访问至少一个内置加密 DNS 上游。经过审核的非过滤公共端点清单随 `basics` 依赖嵌入，并在其发布 tag 前通过固定地址 TLS/DNS 查询校验更新。`-ut-dns` 仍是流媒体解锁模块的显式 DNS 覆盖，本机制不会替换它；留空时该模块会继承当前程序的解析器。
+
+---
+
 #### **命令参数化**
 
 <details>
@@ -224,6 +243,8 @@ Usage: goecs [options]
         Enable/Disable multiple disk checks, e.g., -diskmc=false
   -diskp string
         Set disk test path, e.g., -diskp /root
+  -dns-mode string
+        DNS mode (auto=preserve system then encrypted fallback, system=system DNS only, doh=force DoH, dot=force DoT) (default "auto")
   -email
         Enable/Disable email port test (default true)
   -h    Show help information

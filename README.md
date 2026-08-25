@@ -62,7 +62,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Three-network route test: Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)
 - Speed test: Based on data from [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) and [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID), developed to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)
 - Three-network Ping test: Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
-- Support root or admin environment testing, support non-root or non-admin environment testing, support offline environment for testing, **not yet** support no DNS online environment for testing
+- Supports root or admin environment testing, non-root or non-admin testing, and offline testing. When the host is online and local DNS is confirmed unavailable, it can automatically fall back to built-in DoH or DoT without rewriting resolver files; temporary DNS/network errors preserve system DNS.
 
 **For first-time users of this project, it is recommended to check the instructions: [Jump to](https://github.com/oneclickvirt/ecs/blob/master/README_NEW_USER.md)**
 
@@ -104,6 +104,12 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
   ```bash
   export noninteractive=true && curl -L https://ba.sh/JrVa -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs -l=en
+  ```
+
+- **Online with no local DNS (requires DoH-capable curl, such as curl 7.62+):**
+
+  ```bash
+  export noninteractive=true && curl --doh-url https://cloudflare-dns.com/dns-query --resolve cloudflare-dns.com:443:1.1.1.1,1.0.0.1 -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && chmod +x goecs.sh && ./goecs.sh install && goecs -l=en
   ```
 
 **For more accurate testing, please follow the detailed instructions below to install and add non-essential dependencies**
@@ -180,6 +186,19 @@ The following commands control whether dependencies are installed, whether the p
 
 ---
 
+#### **DNS resolver fallback**
+
+The default `-dns-mode=auto` preserves system DNS unless independent probes confirm that the local resolver is unavailable. A successful response or NXDOMAIN keeps system DNS active; timeouts, SERVFAIL, packet loss, and other temporary errors are inconclusive and do not switch resolvers. After confirmed local DNS failure, goecs selects the lowest-latency built-in encrypted endpoint by measuring a real fixed-address TLS DNS query. If the existing public-connectivity preflight has no positive result, auto first performs the same bounded encrypted DNS validation before continuing. Fixed addresses bootstrap only the resolver endpoints; ordinary test domains still resolve dynamically through the selected DNS service.
+
+- `-dns-mode=auto`: default. Preserve system DNS and fall back to the fastest validated built-in DoH or DoT endpoint only after confirmed local resolver failure.
+- `-dns-mode=system`: use system DNS only. The existing Android/Termux resolver-file repair path remains available only in this mode.
+- `-dns-mode=doh`: always use built-in DoH.
+- `-dns-mode=dot`: always use built-in DoT.
+
+The fallback never changes `/etc/resolv.conf` or `/etc/hosts`; it needs access to at least one built-in encrypted resolver. The vetted, non-filtering endpoint catalog is embedded in the `basics` dependency and refreshed before its release tags through fixed-address TLS/DNS validation. `-ut-dns` remains the streaming-unlock module's explicit DNS override and is never replaced by this fallback. Leave it empty for that module to inherit the process resolver.
+
+---
+
 #### **Command parameterization**
 
 <details>
@@ -223,6 +242,8 @@ Usage: goecs [options]
         Enable/Disable multiple disk checks, e.g., -diskmc=false
   -diskp string
         Set disk test path, e.g., -diskp /root
+  -dns-mode string
+        DNS mode (auto=preserve system then encrypted fallback, system=system DNS only, doh=force DoH, dot=force DoT) (default "auto")
   -email
         Enable/Disable email port test (default true)
   -h    Show help information

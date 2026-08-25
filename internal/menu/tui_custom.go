@@ -220,6 +220,10 @@ func (m tuiModel) viewCustom() string {
 		}
 		hdr.WriteString("\n")
 	}
+	if status := utils.DNSStatusText(m.preCheck, lang); status != "" {
+		hdr.WriteString(tInfoStyle.Render("  " + status))
+		hdr.WriteString("\n")
+	}
 	hdr.WriteString("\n")
 	headerStr := hdr.String()
 	headerLines := strings.Count(headerStr, "\n")

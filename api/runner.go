@@ -43,7 +43,7 @@ func NewTextRunResult(ctx context.Context, preCheck utils.NetCheckResult, config
 		SchemaVersion: StructuredReportSchema, ECSVersion: config.EcsVersion,
 		Status: reportStatus, StartedAt: startedAt, FinishedAt: finishedAt,
 		DurationMS: finishedAt.Sub(startedAt).Milliseconds(), DeepMode: config.DeepMode,
-		PrivacyMode: config.PrivacyMode, Sections: sections, Text: output,
+		PrivacyMode: config.PrivacyMode, DNS: dnsResolutionFrom(preCheck), Sections: sections, Text: output,
 	}
 	if config.PrivacyMode {
 		applyStructuredPrivacy(report)
@@ -122,6 +122,10 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		config = NewDefaultConfig()
 	}
 	config.ValidateParams()
+	if config.DNSMode == "system" {
+		utils.CheckAndFixAndroidDNS(config.Language)
+	}
+	utils.EnsureDNS(parent, config.DNSMode, &preCheck)
 	defer sanitizeConfiguredLog(config)
 	ctx := parent
 	cancel := func() {}
@@ -226,7 +230,7 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 		Status: status, StartedAt: startTime, FinishedAt: endTime,
 		DurationMS: endTime.Sub(startTime).Milliseconds(), DeepMode: config.DeepMode,
 		PrivacyMode: config.PrivacyMode, Data: extras.data, DataFiles: extras.dataFiles,
-		Components: extras.components, TCP: extras.tcp,
+		DNS: dnsResolutionFrom(preCheck), Components: extras.components, TCP: extras.tcp,
 		Sections: sections, Text: output,
 	}
 	if config.PrivacyMode {

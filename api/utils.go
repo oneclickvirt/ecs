@@ -1,13 +1,18 @@
 package api
 
 import (
+	"context"
 	"time"
 
+	dnsresolver "github.com/oneclickvirt/basics/network/resolver"
 	"github.com/oneclickvirt/ecs/utils"
 )
 
 // NetCheckResult 网络检查结果
 type NetCheckResult = utils.NetCheckResult
+
+// DNSStatus describes the resolver selected for the current process.
+type DNSStatus = dnsresolver.Status
 
 // StatsResponse 统计信息响应
 type StatsResponse = utils.StatsResponse
@@ -20,6 +25,18 @@ type GitHubRelease = utils.GitHubRelease
 // 返回: 网络检查结果
 func CheckPublicAccess(timeout time.Duration) NetCheckResult {
 	return utils.CheckPublicAccess(timeout)
+}
+
+// ConfigureDNS explicitly configures the process resolver for callers that
+// execute individual API operations instead of RunAllTestsContext.
+func ConfigureDNS(ctx context.Context, mode string, preCheck *NetCheckResult) DNSStatus {
+	return utils.ConfigureDNS(ctx, mode, preCheck)
+}
+
+// ShutdownDNS releases an optional in-process encrypted resolver and restores the
+// standard-library resolver that was active before configuration.
+func ShutdownDNS() {
+	utils.ShutdownDNS()
 }
 
 // GetGoescStats 获取goecs统计信息

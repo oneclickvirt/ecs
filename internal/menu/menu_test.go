@@ -244,6 +244,8 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 			advanced[index].current = optionIndexByValue(advanced[index].options, "international")
 		case "tcpsort":
 			advanced[index].current = optionIndexByValue(advanced[index].options, "latency")
+		case "dnsmode":
+			advanced[index].current = optionIndexByValue(advanced[index].options, "dot")
 		}
 	}
 	applyCustomResult(tuiResult{toggles: defaultTestToggles(), advanced: advanced}, utils.NetCheckResult{Connected: true}, cfg)
@@ -265,6 +267,9 @@ func TestCustomAdvancedCarriesStructuredRuntimeParameters(t *testing.T) {
 	}
 	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" {
 		t.Fatalf("network ordering settings were not applied: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
+	}
+	if cfg.DNSMode != "dot" {
+		t.Fatalf("DNS mode was not applied: %q", cfg.DNSMode)
 	}
 }
 

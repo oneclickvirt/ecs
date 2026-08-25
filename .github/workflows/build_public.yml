@@ -52,6 +52,46 @@ jobs:
         go-version-file: go.mod
         check-latest: true
 
+    - name: Resolve embedded resolver catalog ref
+      id: resolver_catalog
+      if: steps.release.outputs.publish == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        BASICS_REF="$(go mod edit -json | python3 -c 'import json, sys; required = {item["Path"]: item["Version"] for item in json.load(sys.stdin).get("Require", [])}; print(required["github.com/oneclickvirt/basics"])')"
+        [[ "$BASICS_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid basics release ref: $BASICS_REF" >&2; exit 1; }
+        echo "ref=$BASICS_REF" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout immutable resolver catalog
+      if: steps.release.outputs.publish == 'true'
+      uses: actions/checkout@v4
+      with:
+        repository: oneclickvirt/basics
+        ref: ${{ steps.resolver_catalog.outputs.ref }}
+        path: .release-basics
+        token: ${{ secrets.GHT }}
+
+    - name: Verify immutable resolver catalog
+      if: steps.release.outputs.publish == 'true'
+      shell: bash
+      env:
+        BASICS_REF: ${{ steps.resolver_catalog.outputs.ref }}
+      run: |
+        set -euo pipefail
+        test -s .release-basics/network/resolver/endpoints_embed.json
+        if ! git -C .release-basics tag --points-at HEAD | grep -Fx -- "$BASICS_REF" >/dev/null; then
+          echo "Resolver catalog checkout is not the requested immutable tag: $BASICS_REF" >&2
+          exit 1
+        fi
+        go -C .release-basics test -count=1 ./network/resolver ./cmd/update-resolver-endpoints
+        printf 'Embedded resolver catalog from basics %s: ' "$BASICS_REF" >> "$GITHUB_STEP_SUMMARY"
+        sha256sum .release-basics/network/resolver/endpoints_embed.json >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Remove temporary resolver catalog checkout
+      if: steps.release.outputs.publish == 'true'
+      shell: bash
+      run: rm -rf .release-basics
+
     - name: Create public branch
       if: steps.release.outputs.publish == 'true'
       run: |

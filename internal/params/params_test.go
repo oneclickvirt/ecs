@@ -124,6 +124,32 @@ func TestNetworkSortAndEnglishPingScopeFlags(t *testing.T) {
 	}
 }
 
+func TestDNSModeFlagNormalizesAndFallsBack(t *testing.T) {
+	cfg := NewConfig("test")
+	cfg.ParseFlags([]string{"-dns-mode=DOT"})
+	if cfg.DNSMode != "dot" {
+		t.Fatalf("DNSMode = %q, want dot", cfg.DNSMode)
+	}
+	cfg.DNSMode = "invalid"
+	cfg.ValidateParams()
+	if cfg.DNSMode != "auto" {
+		t.Fatalf("invalid DNSMode = %q, want auto", cfg.DNSMode)
+	}
+}
+
+func TestDNSModeExplicitFlagSurvivesSaveAndRestore(t *testing.T) {
+	cfg := NewConfig("test")
+	cfg.ParseFlags([]string{"-dns-mode=system"})
+	saved := cfg.SaveUserSetParams()
+
+	restored := NewConfig("test")
+	restored.DNSMode = "dot"
+	restored.RestoreUserSetParams(saved)
+	if restored.DNSMode != "system" {
+		t.Fatalf("restored DNSMode = %q, want system", restored.DNSMode)
+	}
+}
+
 func TestApplyFullTestPresetIsCompleteAndConnectivityAware(t *testing.T) {
 	cfg := NewConfig("test")
 	cfg.ApplyFullTestPreset(false)

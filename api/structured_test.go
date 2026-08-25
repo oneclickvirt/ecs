@@ -60,6 +60,26 @@ func TestStructuredReportJSONAndPrivacy(t *testing.T) {
 	}
 }
 
+func TestNewTextRunResultIncludesDNSResolution(t *testing.T) {
+	started := time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)
+	result := NewTextRunResult(context.Background(), NetCheckResult{
+		Connected:    true,
+		DNSRequested: "auto",
+		DNSActive:    "dot",
+		DNSFallback:  true,
+		DNSProvider:  "Cloudflare",
+	}, NewDefaultConfig(), "", started, started.Add(time.Second))
+	if result.Report == nil || result.Report.DNS == nil {
+		t.Fatalf("DNS resolution is missing from report: %#v", result.Report)
+	}
+	if result.Report.DNS.Requested != "auto" || result.Report.DNS.Active != "dot" || !result.Report.DNS.Fallback || result.Report.DNS.Provider != "Cloudflare" {
+		t.Fatalf("unexpected DNS report: %#v", result.Report.DNS)
+	}
+	if !strings.Contains(string(result.JSON), `"dns"`) || !strings.Contains(string(result.JSON), `"fallback": true`) {
+		t.Fatalf("DNS resolution is missing from JSON: %s", result.JSON)
+	}
+}
+
 func TestStructuredPrivacyRedactsComponentIdentity(t *testing.T) {
 	report := &StructuredReport{
 		PrivacyMode: true,

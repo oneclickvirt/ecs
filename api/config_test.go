@@ -17,6 +17,7 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 		WithPingSortOrder("NAME"),
 		WithPingScope("CHINA"),
 		WithTCPSortOrder("LATENCY"),
+		WithDNSMode("DOT"),
 		nil,
 	)
 
@@ -35,7 +36,7 @@ func TestApplyOptionsValidatesConfig(t *testing.T) {
 	if cfg.TCPTextFormat != "full" {
 		t.Fatalf("TCPTextFormat = %q, want full", cfg.TCPTextFormat)
 	}
-	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" {
+	if cfg.PingSortOrder != "name" || cfg.PingScope != "international" || cfg.TCPSortOrder != "latency" || cfg.DNSMode != "dot" {
 		t.Fatalf("network ordering options were not normalized: ping=%q scope=%q tcp=%q", cfg.PingSortOrder, cfg.PingScope, cfg.TCPSortOrder)
 	}
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,8 @@ import (
 	"testing"
 
 	runewidth "github.com/mattn/go-runewidth"
+	dnsresolver "github.com/oneclickvirt/basics/network/resolver"
+	butils "github.com/oneclickvirt/basics/utils"
 )
 
 func TestCaptureOutputReservesLeadingCell(t *testing.T) {
@@ -31,6 +34,298 @@ func TestCaptureOutputSanitizesCompleteLinesBeforeDisplayAndRetention(t *testing
 	})
 	if output != " registry [remote-url]\n" {
 		t.Fatalf("CaptureOutput() = %q", output)
+	}
+}
+
+func TestDNSStatusText(t *testing.T) {
+	tests := []struct {
+		name     string
+		preCheck NetCheckResult
+		language string
+		want     string
+	}{
+		{name: "not configured", want: ""},
+		{
+			name:     "system resolver",
+			preCheck: NetCheckResult{DNSActive: "system"},
+			language: "en",
+			want:     "[DNS] Using the system resolver",
+		},
+		{
+			name:     "automatic fallback",
+			preCheck: NetCheckResult{DNSActive: "doh", DNSFallback: true, DNSProvider: "Cloudflare"},
+			language: "en",
+			want:     "[DNS] System DNS unavailable; built-in DoH fallback active (Cloudflare)",
+		},
+		{
+			name:     "automatic DoT fallback",
+			preCheck: NetCheckResult{DNSActive: "dot", DNSFallback: true, DNSProvider: "Google"},
+			language: "en",
+			want:     "[DNS] System DNS unavailable; built-in DoT fallback active (Google)",
+		},
+		{
+			name:     "inconclusive system resolver",
+			preCheck: NetCheckResult{DNSActive: "system", DNSReason: "system DNS probe inconclusive; preserving system resolver"},
+			language: "en",
+			want:     "[DNS] System resolver probe was inconclusive; preserving system resolver",
+		},
+		{
+			name:     "unavailable",
+			preCheck: NetCheckResult{DNSActive: "unavailable", DNSReason: "DoH probe failed"},
+			language: "en",
+			want:     "[DNS] Resolver unavailable: DoH probe failed",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := DNSStatusText(test.preCheck, test.language); got != test.want {
+				t.Fatalf("DNSStatusText() = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestConfigureDNSUsesNormalPathWithoutBootstrapProbe(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+	})
+	configureCalls := 0
+	shutdownCalls := 0
+	bootstrapCalls := 0
+	dnsConfigureFn = func(_ context.Context, config dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		if config.Mode != dnsresolver.ModeAuto {
+			t.Fatalf("resolver mode = %q, want auto", config.Mode)
+		}
+		return dnsresolver.Status{Requested: dnsresolver.ModeAuto, Active: dnsresolver.ModeSystem, SystemAvailable: true}
+	}
+	dnsShutdownFn = func() { shutdownCalls++ }
+	dnsBootstrapReachableFn = func(context.Context, dnsresolver.Config) (string, bool) {
+		bootstrapCalls++
+		return "", false
+	}
+	preCheck := &NetCheckResult{Connected: true}
+
+	status := ConfigureDNS(context.Background(), "auto", preCheck)
+	if configureCalls != 1 || bootstrapCalls != 0 || shutdownCalls != 0 {
+		t.Fatalf("DNS calls = configure:%d bootstrap:%d shutdown:%d, want configure:1 bootstrap:0 shutdown:0", configureCalls, bootstrapCalls, shutdownCalls)
+	}
+	if status.Active != dnsresolver.ModeSystem || preCheck.DNSActive != string(dnsresolver.ModeSystem) {
+		t.Fatalf("normal DNS status = %#v, precheck = %#v", status, preCheck)
+	}
+}
+
+func TestConfigureDNSSkipsAutoFallbackWhenBootstrapIsUnreachable(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+	})
+	configureCalls := 0
+	shutdownCalls := 0
+	bootstrapCalls := 0
+	dnsConfigureFn = func(context.Context, dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		return dnsresolver.Status{}
+	}
+	dnsShutdownFn = func() { shutdownCalls++ }
+	dnsBootstrapReachableFn = func(context.Context, dnsresolver.Config) (string, bool) {
+		bootstrapCalls++
+		return "", false
+	}
+	preCheck := &NetCheckResult{Connected: false}
+
+	status := ConfigureDNS(context.Background(), "auto", preCheck)
+	if configureCalls != 0 || bootstrapCalls != 1 || shutdownCalls != 1 {
+		t.Fatalf("DNS calls = configure:%d bootstrap:%d shutdown:%d, want configure:0 bootstrap:1 shutdown:1", configureCalls, bootstrapCalls, shutdownCalls)
+	}
+	if status.Active != dnsresolver.ModeUnavailable || preCheck.DNSActive != string(dnsresolver.ModeUnavailable) {
+		t.Fatalf("offline DNS status = %#v, precheck = %#v", status, preCheck)
+	}
+}
+
+func TestConfigureDNSUsesAutoFallbackAfterReachableBootstrap(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	originalStackType := StackType
+	originalBasicsStackType := butils.StackType
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+		StackType = originalStackType
+		butils.StackType = originalBasicsStackType
+	})
+	configureCalls := 0
+	shutdownCalls := 0
+	bootstrapCalls := 0
+	dnsConfigureFn = func(_ context.Context, config dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		if config.Mode != dnsresolver.ModeAuto {
+			t.Fatalf("resolver mode = %q, want auto", config.Mode)
+		}
+		return dnsresolver.Status{Requested: dnsresolver.ModeAuto, Active: dnsresolver.ModeDoH, DoHAvailable: true, Fallback: true, Stack: "IPv4"}
+	}
+	dnsShutdownFn = func() { shutdownCalls++ }
+	dnsBootstrapReachableFn = func(_ context.Context, config dnsresolver.Config) (string, bool) {
+		bootstrapCalls++
+		if config.Mode != dnsresolver.ModeAuto {
+			t.Fatalf("bootstrap mode = %q, want auto", config.Mode)
+		}
+		return "IPv4", true
+	}
+	preCheck := &NetCheckResult{Connected: false, StackType: "None"}
+
+	status := ConfigureDNS(context.Background(), "auto", preCheck)
+	if configureCalls != 1 || bootstrapCalls != 1 || shutdownCalls != 0 {
+		t.Fatalf("DNS calls = configure:%d bootstrap:%d shutdown:%d, want configure:1 bootstrap:1 shutdown:0", configureCalls, bootstrapCalls, shutdownCalls)
+	}
+	if status.Active != dnsresolver.ModeDoH || !preCheck.Connected || !preCheck.HasIPv4 || preCheck.HasIPv6 || preCheck.StackType != "IPv4" || butils.StackType != "IPv4" {
+		t.Fatalf("successful auto fallback did not promote network state: status=%#v precheck=%#v", status, preCheck)
+	}
+}
+
+func TestConfigureDNSAttemptsForcedDoHWithoutConnectivity(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	originalStackType := StackType
+	originalBasicsStackType := butils.StackType
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+		StackType = originalStackType
+		butils.StackType = originalBasicsStackType
+	})
+	configureCalls := 0
+	shutdownCalls := 0
+	bootstrapCalls := 0
+	dnsConfigureFn = func(_ context.Context, config dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		if config.Mode != dnsresolver.ModeDoH {
+			t.Fatalf("resolver mode = %q, want doh", config.Mode)
+		}
+		return dnsresolver.Status{Requested: dnsresolver.ModeDoH, Active: dnsresolver.ModeDoH, DoHAvailable: true, Stack: "IPv6"}
+	}
+	dnsShutdownFn = func() { shutdownCalls++ }
+	dnsBootstrapReachableFn = func(context.Context, dnsresolver.Config) (string, bool) {
+		bootstrapCalls++
+		return "", false
+	}
+	preCheck := &NetCheckResult{Connected: false}
+
+	status := ConfigureDNS(context.Background(), "doh", preCheck)
+	if configureCalls != 1 || bootstrapCalls != 0 || shutdownCalls != 0 {
+		t.Fatalf("DNS calls = configure:%d bootstrap:%d shutdown:%d, want configure:1 bootstrap:0 shutdown:0", configureCalls, bootstrapCalls, shutdownCalls)
+	}
+	if status.Active != dnsresolver.ModeDoH || preCheck.DNSActive != string(dnsresolver.ModeDoH) {
+		t.Fatalf("forced DoH status = %#v, precheck = %#v", status, preCheck)
+	}
+	if !preCheck.Connected || !preCheck.HasIPv6 || preCheck.HasIPv4 || preCheck.StackType != "IPv6" || butils.StackType != "IPv6" {
+		t.Fatalf("successful DoH did not promote network state: %#v", preCheck)
+	}
+}
+
+func TestConfigureDNSAttemptsForcedDoTWithoutConnectivity(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	originalStackType := StackType
+	originalBasicsStackType := butils.StackType
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+		StackType = originalStackType
+		butils.StackType = originalBasicsStackType
+	})
+	configureCalls := 0
+	dnsConfigureFn = func(_ context.Context, config dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		if config.Mode != dnsresolver.ModeDoT {
+			t.Fatalf("resolver mode = %q, want dot", config.Mode)
+		}
+		return dnsresolver.Status{Requested: dnsresolver.ModeDoT, Active: dnsresolver.ModeDoT, DoTAvailable: true, Stack: "IPv4"}
+	}
+	dnsShutdownFn = func() { t.Fatal("forced DoT must not shut down a successful resolver") }
+	dnsBootstrapReachableFn = func(context.Context, dnsresolver.Config) (string, bool) {
+		t.Fatal("forced DoT must bypass the auto bootstrap gate")
+		return "", false
+	}
+	preCheck := &NetCheckResult{Connected: false}
+	status := ConfigureDNS(context.Background(), "dot", preCheck)
+	if configureCalls != 1 || status.Active != dnsresolver.ModeDoT || preCheck.DNSActive != string(dnsresolver.ModeDoT) {
+		t.Fatalf("forced DoT status = %#v, precheck = %#v", status, preCheck)
+	}
+	if !preCheck.Connected || !preCheck.HasIPv4 || preCheck.HasIPv6 || preCheck.StackType != "IPv4" {
+		t.Fatalf("successful DoT did not promote network state: %#v", preCheck)
+	}
+}
+
+func TestConfigureDNSDoesNotFallbackInSystemMode(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalShutdown := dnsShutdownFn
+	originalBootstrapReachable := dnsBootstrapReachableFn
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsShutdownFn = originalShutdown
+		dnsBootstrapReachableFn = originalBootstrapReachable
+	})
+	configureCalls := 0
+	shutdownCalls := 0
+	bootstrapCalls := 0
+	dnsConfigureFn = func(context.Context, dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		return dnsresolver.Status{}
+	}
+	dnsShutdownFn = func() { shutdownCalls++ }
+	dnsBootstrapReachableFn = func(context.Context, dnsresolver.Config) (string, bool) {
+		bootstrapCalls++
+		return "IPv4", true
+	}
+
+	status := ConfigureDNS(context.Background(), "system", &NetCheckResult{Connected: false})
+	if configureCalls != 0 || bootstrapCalls != 0 || shutdownCalls != 1 {
+		t.Fatalf("DNS calls = configure:%d bootstrap:%d shutdown:%d, want configure:0 bootstrap:0 shutdown:1", configureCalls, bootstrapCalls, shutdownCalls)
+	}
+	if status.Requested != dnsresolver.ModeSystem || status.Active != dnsresolver.ModeUnavailable {
+		t.Fatalf("system-only status = %#v", status)
+	}
+}
+
+func TestEnsureDNSReusesMatchingHealthyResolver(t *testing.T) {
+	originalConfigure := dnsConfigureFn
+	originalCurrent := dnsCurrentStatusFn
+	t.Cleanup(func() {
+		dnsConfigureFn = originalConfigure
+		dnsCurrentStatusFn = originalCurrent
+	})
+	configureCalls := 0
+	dnsConfigureFn = func(context.Context, dnsresolver.Config) dnsresolver.Status {
+		configureCalls++
+		return dnsresolver.Status{}
+	}
+	dnsCurrentStatusFn = func() dnsresolver.Status {
+		return dnsresolver.Status{Requested: dnsresolver.ModeAuto, Active: dnsresolver.ModeSystem, SystemAvailable: true}
+	}
+	preCheck := &NetCheckResult{Connected: true}
+
+	status := EnsureDNS(context.Background(), "auto", preCheck)
+	if configureCalls != 0 {
+		t.Fatalf("matching resolver was configured again %d times", configureCalls)
+	}
+	if status.Active != dnsresolver.ModeSystem || preCheck.DNSActive != string(dnsresolver.ModeSystem) {
+		t.Fatalf("reused DNS status = %#v, precheck = %#v", status, preCheck)
 	}
 }
 

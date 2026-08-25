@@ -204,6 +204,14 @@ func WithDataOffline(enable bool) ConfigOption {
 	}
 }
 
+// WithDNSMode selects automatic encrypted-DNS fallback, system DNS only, or
+// a forced built-in DNS-over-HTTPS/DNS-over-TLS resolver.
+func WithDNSMode(mode string) ConfigOption {
+	return func(c *Config) {
+		c.DNSMode = mode
+	}
+}
+
 // WithEnableLogger 设置是否启用日志
 func WithEnableLogger(enable bool) ConfigOption {
 	return func(c *Config) {

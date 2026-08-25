@@ -21,13 +21,20 @@ import (
 	"github.com/imroc/req/v3"
 	"github.com/oneclickvirt/UnlockTests/executor"
 	bnetwork "github.com/oneclickvirt/basics/network"
+	dnsresolver "github.com/oneclickvirt/basics/network/resolver"
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/security/network"
 )
 
-var networkCheckFn = network.NetworkCheck
+var (
+	networkCheckFn          = network.NetworkCheck
+	dnsConfigureFn          = dnsresolver.Configure
+	dnsCurrentStatusFn      = dnsresolver.CurrentStatus
+	dnsShutdownFn           = dnsresolver.Shutdown
+	dnsBootstrapReachableFn = dnsresolver.BootstrapReachable
+)
 
 var captureOutputSanitizer struct {
 	sync.RWMutex
@@ -676,10 +683,144 @@ func ProcessAndUpload(output string, filePath string, enableUplaod bool, languag
 var StackType string
 
 type NetCheckResult struct {
-	HasIPv4   bool
-	HasIPv6   bool
-	Connected bool
-	StackType string // "IPv4", "IPv6", "DualStack", "None"
+	HasIPv4      bool
+	HasIPv6      bool
+	Connected    bool
+	StackType    string // "IPv4", "IPv6", "DualStack", "None"
+	DNSRequested string
+	DNSActive    string
+	DNSFallback  bool
+	DNSProvider  string
+	DNSReason    string
+}
+
+// ConfigureDNS installs a process-local encrypted DNS fallback. Auto retains
+// the system resolver unless the resolver itself confirms it is unavailable.
+// An offline auto precheck gets a bounded fixed-address encrypted DNS query
+// before attempting fallback; explicit DoH and DoT always run their own probe.
+// It never rewrites host resolver files.
+func ConfigureDNS(ctx context.Context, mode string, preCheck *NetCheckResult) dnsresolver.Status {
+	requested := dnsresolver.ParseMode(mode)
+	status := dnsresolver.Status{Requested: requested, Active: dnsresolver.ModeUnavailable, Reason: "network unavailable"}
+	config := dnsresolver.Config{Mode: requested}
+	// Explicit encrypted modes remain useful when the generic connectivity
+	// probe has a false negative because it uses a different protocol or route.
+	if preCheck == nil || preCheck.Connected || requested == dnsresolver.ModeDoH || requested == dnsresolver.ModeDoT {
+		status = dnsConfigureFn(ctx, config)
+	} else if requested == dnsresolver.ModeAuto {
+		if _, reachable := dnsBootstrapReachableFn(ctx, config); reachable {
+			status = dnsConfigureFn(ctx, config)
+		} else {
+			status.Reason = "encrypted DNS endpoint unreachable"
+			dnsShutdownFn()
+		}
+	} else {
+		dnsShutdownFn()
+	}
+	applyDNSStatus(preCheck, status)
+	return status
+}
+
+// EnsureDNS configures DNS for API callers that did not already run the CLI
+// startup sequence, while preserving a matching resolver installed by it.
+func EnsureDNS(ctx context.Context, mode string, preCheck *NetCheckResult) dnsresolver.Status {
+	requested := dnsresolver.ParseMode(mode)
+	current := dnsCurrentStatusFn()
+	if preCheck == nil || !preCheck.Connected || current.Requested != requested || current.Active == "" || current.Active == dnsresolver.ModeUnavailable {
+		return ConfigureDNS(ctx, mode, preCheck)
+	}
+	applyDNSStatus(preCheck, current)
+	return current
+}
+
+// ShutdownDNS releases the optional loopback resolver. It is safe to call on
+// every process shutdown and restores the prior standard-library resolver.
+func ShutdownDNS() {
+	dnsShutdownFn()
+}
+
+func applyDNSStatus(preCheck *NetCheckResult, status dnsresolver.Status) {
+	if preCheck == nil {
+		return
+	}
+	preCheck.DNSRequested = string(status.Requested)
+	preCheck.DNSActive = string(status.Active)
+	preCheck.DNSFallback = status.Fallback
+	preCheck.DNSProvider = status.Provider
+	preCheck.DNSReason = status.Reason
+	if !preCheck.Connected && (status.Active == dnsresolver.ModeDoH || status.Active == dnsresolver.ModeDoT) {
+		preCheck.Connected = true
+		switch status.Stack {
+		case "IPv4":
+			preCheck.HasIPv4 = true
+		case "IPv6":
+			preCheck.HasIPv6 = true
+		}
+		if status.Stack != "" {
+			preCheck.StackType = status.Stack
+			StackType = status.Stack
+			butils.StackType = status.Stack
+		}
+	}
+}
+
+// DNSStatusText returns a concise, user-facing resolver state for CLI and TUI
+// surfaces. Empty means DNS has not been configured for this run yet.
+func DNSStatusText(preCheck NetCheckResult, language string) string {
+	if preCheck.DNSActive == "" {
+		return ""
+	}
+	provider := strings.TrimSpace(preCheck.DNSProvider)
+	suffix := ""
+	if provider != "" {
+		suffix = " (" + provider + ")"
+	}
+	if language == "zh" {
+		switch preCheck.DNSActive {
+		case "system":
+			if strings.TrimSpace(preCheck.DNSReason) != "" {
+				return "[DNS] 系统解析探测结果不确定，保留系统解析器"
+			}
+			return "[DNS] 使用系统解析器"
+		case "doh":
+			if preCheck.DNSFallback {
+				return "[DNS] 系统解析不可用，已启用内置 DoH 回退" + suffix
+			}
+			return "[DNS] 使用内置 DoH" + suffix
+		case "dot":
+			if preCheck.DNSFallback {
+				return "[DNS] 系统解析不可用，已启用内置 DoT 回退" + suffix
+			}
+			return "[DNS] 使用内置 DoT" + suffix
+		default:
+			if reason := strings.TrimSpace(preCheck.DNSReason); reason != "" {
+				return "[DNS] 解析不可用: " + reason
+			}
+			return "[DNS] 解析不可用"
+		}
+	}
+	switch preCheck.DNSActive {
+	case "system":
+		if strings.TrimSpace(preCheck.DNSReason) != "" {
+			return "[DNS] System resolver probe was inconclusive; preserving system resolver"
+		}
+		return "[DNS] Using the system resolver"
+	case "doh":
+		if preCheck.DNSFallback {
+			return "[DNS] System DNS unavailable; built-in DoH fallback active" + suffix
+		}
+		return "[DNS] Using built-in DoH" + suffix
+	case "dot":
+		if preCheck.DNSFallback {
+			return "[DNS] System DNS unavailable; built-in DoT fallback active" + suffix
+		}
+		return "[DNS] Using built-in DoT" + suffix
+	default:
+		if reason := strings.TrimSpace(preCheck.DNSReason); reason != "" {
+			return "[DNS] Resolver unavailable: " + reason
+		}
+		return "[DNS] Resolver unavailable"
+	}
 }
 
 func makeResolver(proto, dnsAddr string) *net.Resolver {

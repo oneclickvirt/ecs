@@ -304,6 +304,8 @@ func applyCustomResult(result tuiResult, preCheck utils.NetCheckResult, config *
 			config.UnlockTestShowIP = a.boolVal
 		case "unlockipver":
 			config.UnlockTestIPVersion = a.options[a.current].value
+		case "dnsmode":
+			config.DNSMode = a.options[a.current].value
 		case "utinterface":
 			config.UnlockTestInterface = strings.TrimSpace(a.textVal)
 		case "utdns":

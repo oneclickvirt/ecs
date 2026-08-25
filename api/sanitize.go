@@ -125,6 +125,12 @@ func sanitizeStructuredReport(report *StructuredReport) {
 	report.Data = nil
 	report.DataFiles = nil
 	report.Text = sanitizePublicOutput(report.Text)
+	if report.DNS != nil {
+		report.DNS.Requested = sanitizePublicText(report.DNS.Requested)
+		report.DNS.Active = sanitizePublicText(report.DNS.Active)
+		report.DNS.Provider = sanitizePublicText(report.DNS.Provider)
+		report.DNS.Reason = sanitizePublicReason(report.DNS.Reason)
+	}
 	for index := range report.Sections {
 		report.Sections[index].Reason = sanitizePublicReason(report.Sections[index].Reason)
 	}
