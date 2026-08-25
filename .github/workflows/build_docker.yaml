@@ -39,7 +39,13 @@ jobs:
           WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           set -euo pipefail
-          git show origin/master:.github/scripts/resolve-release-context.sh | bash
+          RESOLVER=".github/scripts/resolve-release-context.sh"
+          if [ -f "$RESOLVER" ]; then
+            bash "$RESOLVER"
+          else
+            git fetch --depth=1 origin master
+            git show FETCH_HEAD:"$RESOLVER" | bash
+          fi
       - name: Set up QEMU
         if: steps.release.outputs.publish == 'true'
         uses: docker/setup-qemu-action@v3

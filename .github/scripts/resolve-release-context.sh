@@ -31,9 +31,8 @@ case "$event_name" in
         release_sha="${WORKFLOW_RUN_HEAD_SHA:-}"
         [[ -n "$release_sha" ]] || fail "WORKFLOW_RUN_HEAD_SHA is required for workflow_run"
         release_tag="$(
-            git tag --points-at "$release_sha" |
+            git tag --points-at "$release_sha" --sort=version:refname |
                 grep -E "$TAG_PATTERN" |
-                sort -V |
                 tail -n 1 || true
         )"
         [[ -n "$release_tag" ]] || fail "No release tag points at workflow run commit $release_sha"
@@ -57,9 +56,8 @@ if [[ "$checkout_sha" != "$release_sha" ]]; then
 fi
 
 latest_tag="$(
-    git tag --list |
+    git tag --list --sort=version:refname |
         grep -E "$TAG_PATTERN" |
-        sort -V |
         tail -n 1 || true
 )"
 [[ -n "$latest_tag" ]] || fail "No stable release tags are available"

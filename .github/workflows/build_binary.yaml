@@ -48,7 +48,13 @@ jobs:
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           set -euo pipefail
-          git show origin/master:.github/scripts/resolve-release-context.sh | bash
+          RESOLVER=".github/scripts/resolve-release-context.sh"
+          if [ -f "$RESOLVER" ]; then
+            bash "$RESOLVER"
+          else
+            git fetch --depth=1 origin master
+            git show FETCH_HEAD:"$RESOLVER" | bash
+          fi
 
       - name: Prepare Go build directories
         run: |
@@ -305,7 +311,7 @@ jobs:
           git config --global --unset url."git@github.com:".insteadOf || true
           for attempt in 1 2 3; do
             git fetch --force --tags origin
-            LATEST_TAG="$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
+            LATEST_TAG="$(git tag --list --sort=version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1)"
             if [ "$RELEASE_TAG" != "$LATEST_TAG" ]; then
               echo "Skipping stale release $RELEASE_TAG; $LATEST_TAG is newer"
               exit 0
@@ -316,7 +322,14 @@ jobs:
 
             CURRENT_VERSION="$(sed -n -E 's/^[[:space:]]*ECS_VERSION="([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' "$FILE" | head -n 1)"
             [ -n "$CURRENT_VERSION" ] || { echo "Could not determine current ECS_VERSION" >&2; exit 1; }
-            if [ "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+            if ! python3 - "$CURRENT_VERSION" "$VERSION" <<'PY'
+          import sys
+
+          current = tuple(int(part) for part in sys.argv[1].split("."))
+          target = tuple(int(part) for part in sys.argv[2].split("."))
+          raise SystemExit(0 if current <= target else 1)
+          PY
+            then
               echo "Not downgrading $FILE from $CURRENT_VERSION to $VERSION"
               exit 0
             fi
