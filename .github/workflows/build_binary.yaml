@@ -54,6 +54,7 @@ jobs:
             RELEASE_TAG="${GITHUB_REF#refs/tags/}"
           fi
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid release tag: $RELEASE_TAG" >&2; exit 1; }
+          git fetch --force --tags origin
           TAG_COMMIT="$(git rev-list -n 1 "$RELEASE_TAG")"
           HEAD_COMMIT="$(git rev-parse HEAD)"
           if [[ "$TAG_COMMIT" != "$HEAD_COMMIT" ]]; then
