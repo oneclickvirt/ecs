@@ -20,7 +20,7 @@ require (
 	github.com/oneclickvirt/portchecker v0.0.7
 	github.com/oneclickvirt/privatespeedtest v0.0.9
 	github.com/oneclickvirt/security v0.0.19
-	github.com/oneclickvirt/speedtest v0.0.21
+	github.com/oneclickvirt/speedtest v0.0.22
 	golang.org/x/term v0.45.0
 )
 
