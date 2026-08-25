@@ -10,6 +10,18 @@ fail() {
     exit 1
 }
 
+latest_stable_tag() {
+    python3 -c '
+import re
+import sys
+
+pattern = re.compile(r"^v[0-9]+\.[0-9]+\.[0-9]+$")
+tags = [line.strip() for line in sys.stdin if pattern.fullmatch(line.strip())]
+if tags:
+    print(max(tags, key=lambda tag: tuple(int(part) for part in tag[1:].split("."))))
+'
+}
+
 event_name="${GITHUB_EVENT_NAME:-}"
 [[ -n "$event_name" ]] || fail "GITHUB_EVENT_NAME is required"
 [[ -n "${GITHUB_OUTPUT:-}" ]] || fail "GITHUB_OUTPUT is required"
@@ -31,9 +43,7 @@ case "$event_name" in
         release_sha="${WORKFLOW_RUN_HEAD_SHA:-}"
         [[ -n "$release_sha" ]] || fail "WORKFLOW_RUN_HEAD_SHA is required for workflow_run"
         release_tag="$(
-            git tag --points-at "$release_sha" --sort=version:refname |
-                grep -E "$TAG_PATTERN" |
-                tail -n 1 || true
+            git tag --points-at "$release_sha" | latest_stable_tag
         )"
         [[ -n "$release_tag" ]] || fail "No release tag points at workflow run commit $release_sha"
         ;;
@@ -56,9 +66,7 @@ if [[ "$checkout_sha" != "$release_sha" ]]; then
 fi
 
 latest_tag="$(
-    git tag --list --sort=version:refname |
-        grep -E "$TAG_PATTERN" |
-        tail -n 1 || true
+    git tag --list | latest_stable_tag
 )"
 [[ -n "$latest_tag" ]] || fail "No stable release tags are available"
 
