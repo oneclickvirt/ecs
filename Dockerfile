@@ -21,7 +21,8 @@ RUN apk add --no-cache uuidgen || \
 
 RUN export noninteractive=true
 # 下载并执行 goecs.sh 脚本
-RUN curl -L https://raw.githubusercontent.com/oneclickvirt/ecs/master/goecs.sh -o goecs.sh && \
+ARG GOECS_REF=master
+RUN curl --fail --location --silent --show-error --retry 3 "https://raw.githubusercontent.com/oneclickvirt/ecs/${GOECS_REF}/goecs.sh" -o goecs.sh && \
     chmod +x goecs.sh && \
     bash goecs.sh env && \
     bash goecs.sh install

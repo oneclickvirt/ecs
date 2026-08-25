@@ -14,9 +14,15 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     container:
       # 1.20 是 Windows 7/8 Server 2008/2012 最后一个支持版本
       image: goreleaser/goreleaser-cross:v1.20
@@ -34,22 +40,15 @@ jobs:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
           fetch-depth: 0
           fetch-tags: true
+          token: ${{ secrets.GHT }}
 
-      - name: Verify release ref
+      - name: Resolve release context
+        id: release
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
-            RELEASE_REF="${{ inputs.release_tag }}"
-          else
-            RELEASE_REF="${GITHUB_REF#refs/tags/}"
-          fi
-          git fetch --force --tags origin
-          git describe --exact-match --tags HEAD
-          TAG_COMMIT=$(git rev-list -n 1 "$RELEASE_REF")
-          HEAD_COMMIT=$(git rev-parse HEAD)
-          if [[ "$TAG_COMMIT" != "$HEAD_COMMIT" ]]; then
-            echo "Tag $RELEASE_REF points to $TAG_COMMIT but HEAD is $HEAD_COMMIT"
-            exit 1
-          fi
+          set -euo pipefail
+          git show origin/master:.github/scripts/resolve-release-context.sh | bash
 
       - name: Prepare Go build directories
         run: |
@@ -292,35 +291,47 @@ jobs:
           GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
 
       - name: Update goecs.sh with new version
+        if: steps.release.outputs.publish == 'true'
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
         run: |
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            VERSION="${{ inputs.release_tag }}"
-            VERSION="${VERSION#v}"
-          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/v}"
-          else
-            VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "0.1.37")
-          fi
+          set -euo pipefail
+          VERSION="${RELEASE_TAG#v}"
           echo "Using version: $VERSION"
           FILE="goecs.sh"
           BRANCH="master"
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global --unset url."git@github.com:".insteadOf || true
-          git fetch origin $BRANCH
-          git checkout $BRANCH
-          if [ ! -f "$FILE" ]; then
-            echo "Error: $FILE not found"
-            exit 1
-          fi
-          sed -i "s/\(_yellow \"Unable to get version info, using default version \).*\(\".*\)/\1$VERSION\2/" "$FILE"
-          sed -i "s/\(ECS_VERSION=\"\).*\(\"\)/\1$VERSION\2/" "$FILE"
-          if git diff --quiet "$FILE"; then
-            echo "No changes detected in $FILE"
-            exit 0
-          fi
-          git add "$FILE"
-          git commit -m "chore: update ECS_VERSION to $VERSION in goecs.sh"
-          git push origin $BRANCH
-        env:
-          GITHUB_TOKEN: ${{ secrets.GHT }}
+          for attempt in 1 2 3; do
+            git fetch --force --tags origin
+            LATEST_TAG="$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1)"
+            if [ "$RELEASE_TAG" != "$LATEST_TAG" ]; then
+              echo "Skipping stale release $RELEASE_TAG; $LATEST_TAG is newer"
+              exit 0
+            fi
+            git fetch origin "$BRANCH"
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+            [ -f "$FILE" ] || { echo "Error: $FILE not found" >&2; exit 1; }
+
+            CURRENT_VERSION="$(sed -n -E 's/^[[:space:]]*ECS_VERSION="([0-9]+\.[0-9]+\.[0-9]+)".*/\1/p' "$FILE" | head -n 1)"
+            [ -n "$CURRENT_VERSION" ] || { echo "Could not determine current ECS_VERSION" >&2; exit 1; }
+            if [ "$(printf '%s\n%s\n' "$CURRENT_VERSION" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]; then
+              echo "Not downgrading $FILE from $CURRENT_VERSION to $VERSION"
+              exit 0
+            fi
+
+            sed -i -E "s|^([[:space:]]*_yellow \"Unable to get version info, using default version )[0-9]+\.[0-9]+\.[0-9]+(\".*)$|\\1${VERSION}\\2|" "$FILE"
+            sed -i -E "s|^([[:space:]]*ECS_VERSION=\")[0-9]+\.[0-9]+\.[0-9]+(\".*)$|\\1${VERSION}\\2|" "$FILE"
+            if git diff --quiet "$FILE"; then
+              echo "No changes detected in $FILE"
+              exit 0
+            fi
+            git add "$FILE"
+            git commit -m "chore: update ECS_VERSION to $VERSION in goecs.sh"
+            if git push origin HEAD:"$BRANCH"; then
+              exit 0
+            fi
+            echo "master advanced while updating $FILE; retrying ($attempt/3)" >&2
+          done
+          exit 1

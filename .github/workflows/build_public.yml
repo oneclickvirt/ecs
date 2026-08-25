@@ -5,26 +5,49 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Existing release tag to publish, for example v0.1.181"
+        required: true
+        type: string
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: public-latest-release
+  cancel-in-progress: false
 
 jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v4
       with:
+        ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.release_tag }}
         fetch-depth: 0
+        fetch-tags: true
+    - name: Resolve release context
+      id: release
+      env:
+        RELEASE_TAG: ${{ inputs.release_tag }}
+        WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      run: |
+        set -euo pipefail
+        git show origin/master:.github/scripts/resolve-release-context.sh | bash
     - name: Set up Go
+      if: steps.release.outputs.publish == 'true'
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
         check-latest: true
-        
+
     - name: Create public branch
+      if: steps.release.outputs.publish == 'true'
       run: |
         # 删除本地 public 分支（如果存在）
         git branch -D public 2>/dev/null || true
@@ -32,6 +55,7 @@ jobs:
         git checkout -b public
         
     - name: Remove security package references
+      if: steps.release.outputs.publish == 'true'
       env:
         GOFLAGS: "-mod=mod -tags=ecs_public"
       run: |
@@ -47,6 +71,7 @@ jobs:
           exit 1
         fi
     - name: Build and Test
+      if: steps.release.outputs.publish == 'true'
       env:
         GOFLAGS: "-mod=mod -tags=ecs_public"
       run: |
@@ -84,6 +109,7 @@ jobs:
         rm -f maintest public-canary.json
         
     - name: Commit and push changes
+      if: steps.release.outputs.publish == 'true'
       run: |
         set -euo pipefail
         git config user.name "github-actions[bot]"
