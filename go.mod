@@ -20,8 +20,8 @@ require (
 	github.com/oneclickvirt/portchecker v0.0.7
 	github.com/oneclickvirt/privatespeedtest v0.0.9
 	github.com/oneclickvirt/security v0.0.19
-	github.com/oneclickvirt/speedtest v0.0.20
-	golang.org/x/term v0.44.0
+	github.com/oneclickvirt/speedtest v0.0.21
+	golang.org/x/term v0.45.0
 )
 
 require (
@@ -67,10 +67,10 @@ require (
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.24
+	github.com/mattn/go-runewidth v0.0.28
 	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -103,7 +103,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.17.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/shirou/gopsutil/v4 v4.25.6 // indirect
-	github.com/showwin/speedtest-go v1.7.11 // indirect
+	github.com/showwin/speedtest-go v1.8.1 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
@@ -125,7 +125,7 @@ require (
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
