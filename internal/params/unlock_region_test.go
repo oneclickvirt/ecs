@@ -23,3 +23,14 @@ func TestUnlockNetworkFlagsAreExplicitConfig(t *testing.T) {
 		t.Fatalf("unlock concurrency = %d, want clamp 100", config.UnlockTestConcurrency)
 	}
 }
+
+func TestDNSModeDoesNotReplaceExplicitUnlockDNS(t *testing.T) {
+	config := NewConfig("test")
+	config.ParseFlags([]string{"-dns-mode", "doh", "-ut-dns", "1.1.1.1:53"})
+	if config.DNSMode != "doh" {
+		t.Fatalf("DNS mode = %q, want doh", config.DNSMode)
+	}
+	if config.UnlockTestDNSServers != "1.1.1.1:53" {
+		t.Fatalf("explicit unlock DNS = %q, want 1.1.1.1:53", config.UnlockTestDNSServers)
+	}
+}
