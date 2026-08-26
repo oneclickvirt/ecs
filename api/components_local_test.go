@@ -423,6 +423,36 @@ func TestLocalSpeedComponentRunsPrivateHTTPThroughput(t *testing.T) {
 	}
 }
 
+func TestPrivateSpeedBenchmarksTryStandbyAfterPrimaryFailure(t *testing.T) {
+	registry := privatepst.RegistryReport{
+		SchemaVersion: "privatespeedtest.registry/v1",
+		Availability:  privatepst.ServerAvailable,
+		Selected: []privatepst.RegistryNode{{
+			ID: "primary", Name: "Primary", Availability: privatepst.ServerAvailable,
+			Server: privatepst.ServerConfig{ID: "primary", Name: "Primary"},
+		}},
+		Standby: []privatepst.RegistryNode{{
+			ID: "standby", Name: "Standby", Availability: privatepst.ServerCandidate,
+			Server: privatepst.ServerConfig{ID: "standby", Name: "Standby"},
+		}},
+	}
+	var attempted []string
+	selected, benchmarks := runPrivateSpeedBenchmarksFromRegistry(context.Background(), 1, registry,
+		func(_ context.Context, node privatepst.RegistryNode, _ *privatepst.ServerWithLatencyInfo) privatepst.SpeedTestResult {
+			attempted = append(attempted, node.ID)
+			if node.ID == "standby" {
+				return privatepst.SpeedTestResult{DownloadMbps: 100, UploadMbps: 50, Success: true}
+			}
+			return privatepst.SpeedTestResult{Error: "throughput transfer returned no data"}
+		})
+	if selected != 2 || len(benchmarks) != 2 || strings.Join(attempted, ",") != "primary,standby" {
+		t.Fatalf("standby fallback was not attempted: selected=%d benchmarks=%+v attempted=%v", selected, benchmarks, attempted)
+	}
+	if benchmarks[0].Status != "unavailable" || benchmarks[1].Status != "available" {
+		t.Fatalf("unexpected fallback benchmark status: %+v", benchmarks)
+	}
+}
+
 func TestLocalSecurityComponentUsesProviderAndDNSBLFixtures(t *testing.T) {
 	zones := []byte(`[{"zone":"clean.fixture.test","ipv4":true,"ipv6":false}]`)
 	report := collectSecurityComponentWithDeps(context.Background(), "198.51.100.10", "", zones,

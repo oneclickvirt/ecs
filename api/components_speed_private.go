@@ -95,6 +95,9 @@ func runPrivateSpeedBenchmarksWithLoader(ctx context.Context, limit int, loader 
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	if limit <= 0 {
+		limit = 2
+	}
 	loaded, err := loader(ctx)
 	if err != nil {
 		return privatepst.RegistryReport{
@@ -103,15 +106,37 @@ func runPrivateSpeedBenchmarksWithLoader(ctx context.Context, limit int, loader 
 		}, 0, nil
 	}
 	registry := privatepst.ResolveLoadedServerRegistry(ctx, loaded, limit, 2*time.Second, nil)
-	benchmarks := make([]privateSpeedBenchmark, 0, len(registry.Selected))
-	for _, selected := range registry.Selected {
+	selected, benchmarks := runPrivateSpeedBenchmarksFromRegistry(ctx, limit, registry, func(ctx context.Context, node privatepst.RegistryNode, latencyInfo *privatepst.ServerWithLatencyInfo) privatepst.SpeedTestResult {
+		return privatepst.RunSpeedTestContext(ctx, node.Server, false, false, 4, 5*time.Second, latencyInfo, false)
+	})
+	return registry, selected, benchmarks
+}
+
+type privateSpeedTestFunc func(context.Context, privatepst.RegistryNode, *privatepst.ServerWithLatencyInfo) privatepst.SpeedTestResult
+
+func runPrivateSpeedBenchmarksFromRegistry(ctx context.Context, limit int, registry privatepst.RegistryReport, speedTest privateSpeedTestFunc) (int, []privateSpeedBenchmark) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	attempts := make([]privatepst.RegistryNode, 0, len(registry.Selected)+len(registry.Standby))
+	attempts = append(attempts, registry.Selected...)
+	attempts = append(attempts, registry.Standby...)
+	benchmarks := make([]privateSpeedBenchmark, 0, len(attempts))
+	usable := 0
+	for _, selected := range attempts {
+		if usable >= limit {
+			break
+		}
 		if err := ctx.Err(); err != nil {
 			benchmarks = append(benchmarks, privateSpeedBenchmark{ID: selected.ID, Name: selected.Name, Source: "privatespeedtest", Status: speedContextStatus(err), Error: err.Error()})
-			continue
+			break
 		}
 		latency := time.Duration(selected.LatencyMS) * time.Millisecond
-		latencyInfo := &privatepst.ServerWithLatencyInfo{Server: selected.Server, Latency: latency, MinLatency: latency, MaxLatency: latency}
-		result := privatepst.RunSpeedTestContext(ctx, selected.Server, false, false, 4, 5*time.Second, latencyInfo, false)
+		latencyInfo := &privatepst.ServerWithLatencyInfo{
+			Server: selected.Server, Latency: latency, MinLatency: latency, MaxLatency: latency,
+			Availability: selected.Availability, ProbeMethod: selected.ProbeMethod, ProbeResults: selected.ProbeResults,
+		}
+		result := speedTest(ctx, selected, latencyInfo)
 		status := "unavailable"
 		switch {
 		case errors.Is(ctx.Err(), context.Canceled):
@@ -123,11 +148,14 @@ func runPrivateSpeedBenchmarksWithLoader(ctx context.Context, limit int, loader 
 		case result.DownloadMbps > 0 || result.UploadMbps > 0:
 			status = "partial"
 		}
+		if result.DownloadMbps > 0 || result.UploadMbps > 0 {
+			usable++
+		}
 		benchmarks = append(benchmarks, privateSpeedBenchmark{
 			ID: selected.ID, Name: selected.Name, Source: "privatespeedtest", Status: status,
 			LatencyMS: float64(result.PingLatency) / float64(time.Millisecond), DownloadMbps: result.DownloadMbps,
 			UploadMbps: result.UploadMbps, DurationMS: result.Duration.Milliseconds(), Error: result.Error,
 		})
 	}
-	return registry, len(registry.Selected), benchmarks
+	return len(benchmarks), benchmarks
 }

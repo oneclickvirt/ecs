@@ -561,6 +561,8 @@ TCP 握手测试只执行 DNS 解析和 TCP 建连，不下载网页内容，也
 
 由于 speedtest.net 和 speedtest.cn 平台公开的测速节点被刷BTPT的刷烂了(他们为了对等上传PCDN的流量狂刷下载)，所以这块本人独家融合的境内私有测速节点不再公开，优先使用私有的境内运营商测速节点进行测速，且写死限制每个IP每日仅支持获取测速数据10次，超限自动降级为使用公共测速节点进行测速
 
+私有三网节点以轻量 HTTP/HTTPS 和 TCP connect/TCPing 作为主要可用性依据，ICMP 仅作辅助。单次本机探测没有结论时节点会保留为候选：先测试已确认节点，只有尚未达到所需的有效吞吐数量时才按备用候选继续尝试；只有上游明确标记的失效节点才会直接排除。
+
 境内使用为主就看境内测速即可，境外使用看境外测速，官方测速点可以代表受测的宿主机本地带宽基准。
 
 一般来说中国境外的服务器的带宽100Mbps起步，中国境内的服务器1Mbps带宽起步，具体看线路优劣，带宽特别大有时候未必用得上，够用就行了。
@@ -970,6 +972,8 @@ Chinese output uses nearby and domestic carrier servers as before. English outpu
 
 Candidate servers are checked before selection, then download and upload tests run in sequence so other probes do not distort bandwidth. A dead node or a run without usable throughput is reported as unavailable rather than being presented as a successful static result.
 
+Private carrier nodes use lightweight HTTP/HTTPS and TCP connect/TCPing as their primary reachability signals; ICMP is diagnostic only. An inconclusive local probe remains a candidate behind confirmed nodes and is tried only until the requested number of usable throughput results is reached. Only an upstream node explicitly marked unavailable is excluded directly.
+
 Official speed test points can represent the local bandwidth baseline of the host machine being tested.
 
 In daily use, I prefer to use servers with 1Gbps bandwidth, at least the speed of downloading dependencies is fast enough.
@@ -1376,6 +1380,8 @@ IP情報は RDAP と制限付き WHOIS フォールバックを組み合わせ�
 中国語出力では従来どおり近隣および国内キャリアの測定サーバーを使用します。英語出力では代表的な国際サーバーを使用し、自動選択から中国大陸のサーバーを除外します。
 
 候補サーバーの利用可否を確認してから選択し、他のネットワーク検査が帯域結果に影響しないよう、ダウンロードとアップロードを順番に実行します。停止中のノードや有効なスループットが得られない実行は、静的情報だけで成功扱いせず利用不可として表示します。
+
+プライベート回線キャリアのノードは、軽量な HTTP/HTTPS と TCP connect/TCPing を主な到達性判定に使い、ICMP は補助情報に限定します。ローカルでの確認が一度不成立でも候補として保持し、確認済みノードで要求した有効スループット数に達するまで予備候補を試します。上流で明示的に利用不可とされたノードだけを直接除外します。
 
 公式測定ポイントは、テスト対象のホストマシンのローカル帯域幅ベースラインを表すことができます。
 
