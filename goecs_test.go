@@ -4,8 +4,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/oneclickvirt/basics/network/resolver"
 	"github.com/oneclickvirt/ecs/internal/params"
+	speedtestmodel "github.com/oneclickvirt/speedtest/model"
+	showwinspeedtest "github.com/showwin/speedtest-go/speedtest"
 )
+
+func TestSpeedtestDependencyContract(t *testing.T) {
+	if got := speedtestmodel.SpeedTestVersion; got != "v0.0.24" {
+		t.Fatalf("speedtest component version = %q, want v0.0.24", got)
+	}
+	if got := showwinspeedtest.Version(); got != "1.8.2" {
+		t.Fatalf("speedtest-go version = %q, want 1.8.2", got)
+	}
+}
+
+func TestEmbeddedResolverCatalogIncludesValidatedDoT(t *testing.T) {
+	for _, endpoint := range resolver.DefaultEndpoints() {
+		if endpoint.Name == "360 Public DNS" && endpoint.URL == "tls://dot.360.cn:853" {
+			return
+		}
+	}
+	t.Fatal("goecs did not load the validated 360 DoT endpoint from basics")
+}
 
 func TestApplyEnvironmentDefaultsPreservesMenuWhenNonInteractive(t *testing.T) {
 	// noninteractive env var should NOT disable the menu.

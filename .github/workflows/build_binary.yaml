@@ -246,6 +246,12 @@ jobs:
               exit 1
             fi
           done
+          SPEEDTEST_REF="${{ steps.component_refs.outputs.speedtest }}"
+          if ! git -C deps/speedtest tag --points-at HEAD | grep -Fx -- "$SPEEDTEST_REF" >/dev/null; then
+            echo "Checked out speedtest source is not the requested immutable tag: $SPEEDTEST_REF" >&2
+            exit 1
+          fi
+          test "$(go list -m -f '{{.Version}}' github.com/showwin/speedtest-go)" = "v1.8.2"
           go test -race ./...
           go vet ./...
           git diff --exit-code -- go.mod go.sum
