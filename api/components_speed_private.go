@@ -35,7 +35,7 @@ func loadTransferComponentData(ctx context.Context, offline bool) componentDataR
 	if offline {
 		loaded, err = privatetransfer.LoadEmbeddedRegistry()
 	} else {
-		loaded, err = privatetransfer.LoadRegistry(ctx, nil, privatetransfer.DefaultRegistrySources(), 5)
+		loaded, err = privatetransfer.LoadDefaultRegistry(ctx)
 	}
 	if err != nil {
 		return failedComponentData(ctx, transferDataFile, err)

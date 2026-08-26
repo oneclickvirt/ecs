@@ -80,3 +80,21 @@ func TestLoadPrivateSpeedRegistryHasValidatedFallback(t *testing.T) {
 		t.Fatalf("unexpected embedded fallback: %#v", loaded)
 	}
 }
+
+func TestSelectPrivateSpeedCandidatesUsesDistinctCityFallbacks(t *testing.T) {
+	candidates := []pst.ServerWithLatencyInfo{
+		{Server: pst.ServerConfig{ID: "beijing-first", City: "Beijing"}},
+		{Server: pst.ServerConfig{ID: "beijing-second", City: " beijing "}},
+		{Server: pst.ServerConfig{ID: "shanghai", City: "Shanghai"}},
+		{Server: pst.ServerConfig{ID: "guangzhou", City: "Guangzhou"}},
+	}
+	selected := selectPrivateSpeedCandidates(candidates, 2)
+	if len(selected) != 3 {
+		t.Fatalf("selected %d candidates, want 3: %+v", len(selected), selected)
+	}
+	for index, want := range []string{"beijing-first", "shanghai", "guangzhou"} {
+		if selected[index].Server.ID != want {
+			t.Fatalf("selected[%d] = %q, want %q", index, selected[index].Server.ID, want)
+		}
+	}
+}

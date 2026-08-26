@@ -38,19 +38,48 @@ curl_supports_doh() {
     command -v curl >/dev/null 2>&1 && curl --help all 2>/dev/null | grep -q -- "--doh-url"
 }
 
+# A single failed download does not prove DNS is missing: CDN, TLS, HTTP, and
+# routing failures must retain their original behavior. curl exit code 6 is the
+# only DNS-specific signal considered here, and it must recur against the known
+# bootstrap hostname before a process-local DoH retry is allowed.
+system_dns_stably_unavailable() {
+    local attempt=1
+    local probe_status
+
+    if command -v getent >/dev/null 2>&1 && getent ahosts cloudflare-dns.com >/dev/null 2>&1; then
+        return 1
+    fi
+
+    while [ "$attempt" -le 2 ]; do
+        curl -sS --head --connect-timeout 2 --max-time 4 "$DOH_URL" >/dev/null 2>&1
+        probe_status=$?
+        if [ "$probe_status" -ne 6 ]; then
+            return 1
+        fi
+        attempt=$((attempt + 1))
+        if [ "$attempt" -le 2 ]; then
+            sleep 1
+        fi
+    done
+    return 0
+}
+
 curl_fetch() {
-    if curl "$@"; then
+    curl "$@"
+    local curl_status=$?
+    if [ "$curl_status" -eq 0 ]; then
         return 0
     fi
-    if curl_supports_doh; then
+    if [ "$curl_status" -eq 6 ] && curl_supports_doh && system_dns_stably_unavailable; then
         curl --doh-url "$DOH_URL" --resolve "$DOH_RESOLVE" "$@"
         return $?
     fi
-    return 1
+    return "$curl_status"
 }
 
-# Unified HTTP GET to stdout. Use ordinary curl first, then retry through the
-# fixed-address DoH bootstrap only after it fails; wget remains available.
+# Unified HTTP GET to stdout. Use ordinary curl first; only a repeatedly
+# confirmed resolver failure may use the fixed-address DoH bootstrap.
+# wget remains available.
 # Usage: http_fetch URL [timeout_seconds]
 http_fetch() {
     local url="$1"
@@ -235,7 +264,7 @@ goecs_check() {
     os=$(uname -s 2>/dev/null || echo "Unknown")
     arch=$(uname -m 2>/dev/null || echo "Unknown")
     check_china
-    ECS_VERSION="0.1.186"
+    ECS_VERSION="0.1.187"
     for api in \
         "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
         "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" \
@@ -247,8 +276,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.186"
-        ECS_VERSION="0.1.186"
+        _yellow "Unable to get version info, using default version 0.1.187"
+        ECS_VERSION="0.1.187"
     fi
     version_output=""
     for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do
