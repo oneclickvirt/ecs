@@ -11,8 +11,8 @@ import (
 )
 
 func TestSpeedtestDependencyContract(t *testing.T) {
-	if got := speedtestmodel.SpeedTestVersion; got != "v0.0.24" {
-		t.Fatalf("speedtest component version = %q, want v0.0.24", got)
+	if got := speedtestmodel.SpeedTestVersion; got != "v0.0.25" {
+		t.Fatalf("speedtest component version = %q, want v0.0.25", got)
 	}
 	if got := showwinspeedtest.Version(); got != "1.8.2" {
 		t.Fatalf("speedtest-go version = %q, want 1.8.2", got)

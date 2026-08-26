@@ -235,7 +235,7 @@ goecs_check() {
     os=$(uname -s 2>/dev/null || echo "Unknown")
     arch=$(uname -m 2>/dev/null || echo "Unknown")
     check_china
-    ECS_VERSION="0.1.185"
+    ECS_VERSION="0.1.186"
     for api in \
         "https://api.github.com/repos/oneclickvirt/ecs/releases/latest" \
         "https://githubapi.spiritlhl.workers.dev/repos/oneclickvirt/ecs/releases/latest" \
@@ -247,8 +247,8 @@ goecs_check() {
         sleep 1
     done
     if [ -z "$ECS_VERSION" ]; then
-        _yellow "Unable to get version info, using default version 0.1.185"
-        ECS_VERSION="0.1.185"
+        _yellow "Unable to get version info, using default version 0.1.186"
+        ECS_VERSION="0.1.186"
     fi
     version_output=""
     for cmd_path in "goecs" "./goecs" "/usr/bin/goecs" "/usr/local/bin/goecs"; do
