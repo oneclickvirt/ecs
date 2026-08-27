@@ -110,48 +110,40 @@ def remove_code_block(lines, start_marker, end_condition='empty_line'):
 
 def modify_speed_go(filepath):
     """
-    Remove privatespeedtest-related code from speed.go.
-    Uses line-by-line processing for reliability.
+    Replace the private-only speed implementation with the public implementation.
+
+    The two files intentionally share the same API but use complementary build
+    tags. Copying the already-public implementation keeps this transformation
+    independent of comments or formatting in the private file.
     """
-    content = read_file(filepath)
-    lines = content.split('\n')
-    
-    # Remove specific code blocks by their comment markers
-    blocks_to_remove = [
-        '// formatString 格式化字符串到指定宽度',
-        '// printTableRow 打印表格行',
-        '// privateSpeedTest 使用 privatespeedtest 进行单个运营商测速',
-        '// privateSpeedTestWithFallback 使用私有测速，如果失败则回退到 global 节点',
-        '// 对于三网测速（cmcc、cu、ct）和 other，优先使用 privatespeedtest 进行私有测速',
-    ]
-    
-    for block_marker in blocks_to_remove:
-        lines = remove_code_block(lines, block_marker)
-    
-    # Reconstruct content
-    content = '\n'.join(lines)
-    
-    # Remove privatespeedtest import
-    content = re.sub(
-        r'\n\s*"github\.com/oneclickvirt/privatespeedtest/pst"\s*\n',
-        '\n',
+    public_filepath = os.path.join(os.path.dirname(filepath), 'speed_public.go')
+    if not os.path.exists(public_filepath):
+        raise FileNotFoundError(f"Public speed implementation not found: {public_filepath}")
+
+    content = read_file(public_filepath)
+    content, replacements = re.subn(
+        r'(?m)^//go:build\s+ecs_public\s*$',
+        '//go:build !ecs_public',
         content,
-        flags=re.MULTILINE
+        count=1,
     )
-    
-    # Remove time import (only used by privatespeedtest)
+    if replacements != 1:
+        raise ValueError(f"Unexpected build tag in {public_filepath}")
     content = re.sub(
-        r'\n\s*"time"\s*\n',
-        '\n',
+        r'(?m)^// \+build\s+ecs_public\s*$',
+        '// +build !ecs_public',
         content,
-        flags=re.MULTILINE
+        count=1,
     )
-    
-    # Clean up multiple consecutive empty lines (optional)
-    content = re.sub(r'\n{3,}', '\n\n', content)
-    
+    forbidden = re.compile(
+        r'privatespeedtest|privateSpeed|privatepst|private[_-]speed',
+        flags=re.IGNORECASE,
+    )
+    if forbidden.search(content):
+        raise ValueError(f"Public speed implementation contains restricted markers: {public_filepath}")
+
     write_file(filepath, content)
-    print(f"✓ Removed privatespeedtest from {filepath}")
+    print(f"✓ Replaced private speed implementation in {filepath}")
 
 def modify_utils_go(filepath):
     """
@@ -277,6 +269,53 @@ def modify_readme(filepath, is_english=False):
     print(f"✓ Modified {filepath}")
 
 
+def sanitize_public_markdown(root='.'):
+    """Remove restricted speed-test implementation details from public Markdown."""
+    standalone = re.compile(
+        r'^[^\r\n]*(?:privatespeedtest|private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
+        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|备用候选)[^\r\n]*(?:\r?\n|$)',
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    for directory, subdirectories, filenames in os.walk(root):
+        subdirectories[:] = [
+            name for name in subdirectories
+            if name not in {'.git', 'vendor', '.cache', '.tmp'}
+        ]
+        for filename in filenames:
+            if not filename.lower().endswith(('.md', '.mdx')):
+                continue
+            filepath = os.path.join(directory, filename)
+            content = read_file(filepath)
+            original = content
+
+            # Preserve the surrounding public speed-test sentence while dropping
+            # the restricted component name and its selection/registry details.
+            content = re.sub(
+                r'(?i)\s*Private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?\s+from\s+`?privatespeedtest[^.\r\n]*\.\s*',
+                ' ',
+                content,
+            )
+            content = re.sub(
+                r'，同时融合[^。\r\n]*(?:privatespeedtest|私有国内测速节点)[^。\r\n]*?；',
+                '；',
+                content,
+                flags=re.IGNORECASE,
+            )
+            content = re.sub(
+                r'(?i)\s*[（(](?:without private dependencies)[）)]',
+                '',
+                content,
+            )
+            content = re.sub(r'(?i)\bwithout private dependencies\b', '', content)
+            content = re.sub(r'不含私有依赖', '', content)
+            content = standalone.sub('', content)
+            content = re.sub(r'\n{3,}', '\n\n', content)
+
+            if content != original:
+                write_file(filepath, content)
+                print(f"✓ Sanitized public documentation: {filepath}")
+
+
 def main():
     """Main function to process all files."""
     print("Starting public branch creation process...")
@@ -292,6 +331,7 @@ def main():
     modify_speed_go('internal/tests/speed.go')
     modify_utils_go('utils/utils.go')
     modify_params_go('internal/params/params.go')
+    sanitize_public_markdown()
     print()
     
     # Modify go.mod

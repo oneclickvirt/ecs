@@ -165,5 +165,5 @@ jobs:
           echo "Public branch generator produced no changes" >&2
           exit 1
         fi
-        git commit -m "Auto update public version (no private packages)"
+        git commit -m "Auto update public version"
         git push -f origin public

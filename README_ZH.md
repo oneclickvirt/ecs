@@ -60,7 +60,7 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 - 邮件端口测试：[portchecker](https://github.com/oneclickvirt/portchecker)
 - 上游及回程路由线路检测：借鉴 [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace)，二次开发至 [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 - 三网路由测试：基于 [NTrace-core](https://github.com/nxtrace/NTrace-core)，二次开发至 [nt3](https://github.com/oneclickvirt/nt3)
-- 网速测试：基于 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)，同时融合 `privatespeedtest v0.0.13` 私有国内测速节点；私有节点以 HTTP/HTTPS、TCP connect/TCPing 为主、ICMP 为辅，本机探测无结论时保留有限备用候选，仅排除上游明确失效节点；上游 v1.8.2 为 speedtest.net 用户配置请求加入缓存旁路，避免共享 CDN 返回其他客户端配置
+- 网速测试：基于公开的 [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) 和 [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID) 数据，开发 [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest)；上游 v1.8.2 为 speedtest.net 用户配置请求加入缓存旁路，避免共享 CDN 返回其他客户端配置
 - 三网 Ping 值测试：借鉴 [ecsspeed](https://github.com/spiritLHLS/ecsspeed)，二次开发至 [pingtest](https://github.com/oneclickvirt/pingtest)
 - 支持root或admin环境下测试，支持非root或非admin环境下测试，支持离线环境下进行测试；在线且本地DNS确认缺失或不可用时可自动回退到内置DoH或DoT解析，不改写系统DNS文件；短暂DNS或网络错误会保留系统解析
 
@@ -356,7 +356,7 @@ docker run --rm crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/onec
 <details>
 <summary>展开查看编译说明</summary>
 
-1. 克隆仓库的 public 分支（不含私有依赖）
+1. 克隆仓库的 public 分支
 ```bash
 git clone -b public https://github.com/oneclickvirt/ecs.git
 cd ecs

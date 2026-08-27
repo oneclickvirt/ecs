@@ -79,9 +79,6 @@ func printTableRow(result pst.SpeedTestResult) {
 	fmt.Println()
 }
 
-// privateSpeedTest 使用 privatespeedtest 进行单个运营商测速
-// operator 参数：只支持 "cmcc"、"cu"、"ct"、"other"
-// 返回值：实际输出有效测速数据的节点数量和错误信息
 func privateSpeedTest(num int, operator string) (testedCount int, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -94,18 +91,14 @@ func privateSpeedTest(num int, operator string) (testedCount int, err error) {
 	*pst.Quiet = true
 	*pst.NoHeader = true
 	*pst.NoProjectURL = true
-	// A full run tests several carrier groups. Resolve the validated registry
-	// once and reuse it so one upstream failure cannot multiply retry delays.
 	serverList, err := privateSpeedServerList()
 	if err != nil {
 		return 0, fmt.Errorf("加载自定义服务器列表失败")
 	}
-	// 使用三网测速模式（每个运营商选择指定数量的最低延迟节点）
 	serversPerISP := num
 	if serversPerISP <= 0 || serversPerISP > 5 {
 		serversPerISP = 2
 	}
-	// 单个运营商测速：先过滤服务器列表
 	var carrierType string
 	switch strings.ToLower(operator) {
 	case "cmcc":
@@ -119,11 +112,7 @@ func privateSpeedTest(num int, operator string) (testedCount int, err error) {
 	default:
 		return 0, fmt.Errorf("不支持的运营商类型: %s", operator)
 	}
-	// 过滤出指定运营商的服务器
 	filteredServers := pst.FilterServersByISP(serverList.Servers, carrierType)
-	// Probe every candidate before city selection. A carrier's fastest few
-	// endpoints can be colocated, and trimming before deduplication would throw
-	// away distinct-city fallbacks that are usable from this host.
 	candidateServers, err := pst.FindBestServers(
 		filteredServers,
 		len(filteredServers),
@@ -138,9 +127,7 @@ func privateSpeedTest(num int, operator string) (testedCount int, err error) {
 	if len(bestServers) == 0 {
 		return 0, fmt.Errorf("去重后没有可用的服务器")
 	}
-	// 执行测速并逐个打印结果（不打印表头）
 	for i, serverInfo := range bestServers {
-		// 如果已经成功输出了足够的节点，则停止测试
 		if testedCount >= serversPerISP {
 			break
 		}
@@ -153,13 +140,10 @@ func privateSpeedTest(num int, operator string) (testedCount int, err error) {
 			&serverInfo,
 			false, // 不显示进度条
 		)
-		// Preserve a one-direction result. It is still a valid measurement and
-		// should not be silently replaced by an unrelated public endpoint.
 		if result.UploadMbps > 0 || result.DownloadMbps > 0 {
 			printTableRow(result)
 			testedCount++
 		}
-		// 在测试之间暂停（如果还需要继续测试的话）
 		if testedCount < serversPerISP && i < len(bestServers)-1 {
 			time.Sleep(1 * time.Second)
 		}
@@ -175,18 +159,14 @@ func selectPrivateSpeedCandidates(candidates []pst.ServerWithLatencyInfo, server
 	return pst.SelectDistinctCityServers(candidates, serversPerISP*2)
 }
 
-// privateSpeedTestWithFallback 使用私有测速，如果失败则回退到 global 节点
-// 主要用于 Other 类型的测速
 func privateSpeedTestWithFallback(num int, operator, language string) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintln(os.Stderr, "[WARN] preferred speedtest unavailable; using fallback")
 		}
 	}()
-	// 先尝试私有节点测速
 	testedCount, err := privateSpeedTest(num, operator)
 	if err != nil || testedCount == 0 {
-		// 私有节点失败，回退到 global 节点
 		var url, parseType string
 		url = model.NetGlobal
 		parseType = "id"
@@ -204,21 +184,16 @@ func CustomSP(platform, operator string, num int, language string) {
 			fmt.Fprintln(os.Stderr, "[WARN] custom speedtest unavailable")
 		}
 	}()
-	// 对于三网测速（cmcc、cu、ct）和 other，优先使用 privatespeedtest 进行私有测速
 	opLower := strings.ToLower(operator)
 	if opLower == "cmcc" || opLower == "cu" || opLower == "ct" || opLower == "other" {
 		testedCount, err := privateSpeedTest(num, opLower)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "[WARN] preferred speedtest unavailable; using fallback")
-			// 全部失败，继续使用原有的公共节点兜底方案
 		} else if testedCount >= num {
-			// 私有节点测速成功且数量达标，直接返回
 			return
 		} else if testedCount > 0 {
-			// 部分私有节点测速成功，但数量不足，用公共节点补充
 			fmt.Fprintf(os.Stderr, "[INFO] 私有节点仅测试了 %d 个，补充 %d 个公共节点\n", testedCount, num-testedCount)
-			num = num - testedCount // 只测剩余数量的公共节点
-			// 继续执行下面的公共节点测速逻辑
+			num = num - testedCount
 		} else {
 			// testedCount == 0，继续使用公共节点
 		}
@@ -258,7 +233,6 @@ func CustomSP(platform, operator string, num int, language string) {
 		} else if strings.ToLower(operator) == "sg" {
 			url = model.NetSG
 		} else if strings.ToLower(operator) == "global" || strings.ToLower(operator) == "other" {
-			// other 类型回退到 global 节点
 			url = model.NetGlobal
 		}
 		parseType = "id"

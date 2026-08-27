@@ -559,10 +559,6 @@ TCP 握手测试只执行 DNS 解析和 TCP 建连，不下载网页内容，也
 
 测速前会先检查候选节点并选择实际可用的目标，再依次进行下载和上传，避免其他网络探针影响带宽结果。节点失效或没有得到有效吞吐时会明确显示不可用，不会用静态节点信息代替真实测速结果；英文模式只使用有代表性的国际节点。
 
-由于 speedtest.net 和 speedtest.cn 平台公开的测速节点被刷BTPT的刷烂了(他们为了对等上传PCDN的流量狂刷下载)，所以这块本人独家融合的境内私有测速节点不再公开，优先使用私有的境内运营商测速节点进行测速，且写死限制每个IP每日仅支持获取测速数据10次，超限自动降级为使用公共测速节点进行测速
-
-私有三网节点以轻量 HTTP/HTTPS 和 TCP connect/TCPing 作为主要可用性依据，ICMP 仅作辅助。单次本机探测没有结论时节点会保留为候选：先测试已确认节点，只有尚未达到所需的有效吞吐数量时才按备用候选继续尝试；只有上游明确标记的失效节点才会直接排除。
-
 境内使用为主就看境内测速即可，境外使用看境外测速，官方测速点可以代表受测的宿主机本地带宽基准。
 
 一般来说中国境外的服务器的带宽100Mbps起步，中国境内的服务器1Mbps带宽起步，具体看线路优劣，带宽特别大有时候未必用得上，够用就行了。
@@ -971,8 +967,6 @@ Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.c
 Chinese output uses nearby and domestic carrier servers as before. English output uses representative international servers and excludes mainland-China servers from automatic selection.
 
 Candidate servers are checked before selection, then download and upload tests run in sequence so other probes do not distort bandwidth. A dead node or a run without usable throughput is reported as unavailable rather than being presented as a successful static result.
-
-Private carrier nodes use lightweight HTTP/HTTPS and TCP connect/TCPing as their primary reachability signals; ICMP is diagnostic only. An inconclusive local probe remains a candidate behind confirmed nodes and is tried only until the requested number of usable throughput results is reached. Only an upstream node explicitly marked unavailable is excluded directly.
 
 Official speed test points can represent the local bandwidth baseline of the host machine being tested.
 

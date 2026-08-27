@@ -35,7 +35,6 @@ func NearbySP() {
 }
 
 // CustomSP keeps public builds on the established public speedtest sources.
-// Private carrier registry support intentionally remains absent from this tag.
 func CustomSP(platform, operator string, num int, language string) {
 	defer func() {
 		if recover() != nil {
