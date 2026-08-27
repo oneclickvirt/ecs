@@ -271,10 +271,22 @@ def modify_readme(filepath, is_english=False):
 
 def sanitize_public_markdown(root='.'):
     """Remove restricted speed-test implementation details from public Markdown."""
-    standalone = re.compile(
-        r'^[^\r\n]*(?:privatespeedtest|private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
-        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|备用候选)[^\r\n]*(?:\r?\n|$)',
+    restricted_line = re.compile(
+        r'^[^\r\n]*(?:'
+        r'privatespeedtest|privateSpeed|privatepst|private[_-]speed|'
+        r'private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
+        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|备用候选|'
+        r'プライベート回線キャリア(?:のノード)?|'
+        r'Candidate servers are checked before selection|'
+        r'测速前会先检查候选节点|'
+        r'候補サーバーの利用可否を確認してから選択'
+        r')[^\r\n]*(?:\r?\n|$)',
         flags=re.IGNORECASE | re.MULTILINE,
+    )
+    unresolved_marker = re.compile(
+        r'privatespeedtest|private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
+        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|プライベート回線キャリア',
+        flags=re.IGNORECASE,
     )
     for directory, subdirectories, filenames in os.walk(root):
         subdirectories[:] = [
@@ -308,8 +320,11 @@ def sanitize_public_markdown(root='.'):
             )
             content = re.sub(r'(?i)\bwithout private dependencies\b', '', content)
             content = re.sub(r'不含私有依赖', '', content)
-            content = standalone.sub('', content)
+            content = restricted_line.sub('', content)
             content = re.sub(r'\n{3,}', '\n\n', content)
+
+            if unresolved_marker.search(content):
+                raise ValueError(f"Public Markdown still contains restricted speed-test details: {filepath}")
 
             if content != original:
                 write_file(filepath, content)

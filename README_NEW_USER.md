@@ -557,7 +557,7 @@ TCP 握手测试只执行 DNS 解析和 TCP 建连，不下载网页内容，也
 
 先测的官方推荐的测速点，然后测有代表性的国际测速点，最后测国内三大运营商ping值最低的测速点。
 
-测速前会先检查候选节点并选择实际可用的目标，再依次进行下载和上传，避免其他网络探针影响带宽结果。节点失效或没有得到有效吞吐时会明确显示不可用，不会用静态节点信息代替真实测速结果；英文模式只使用有代表性的国际节点。
+测速结果以实际测量为准；英文模式只使用有代表性的国际节点。
 
 境内使用为主就看境内测速即可，境外使用看境外测速，官方测速点可以代表受测的宿主机本地带宽基准。
 
@@ -966,7 +966,7 @@ Dependency project: [https://github.com/oneclickvirt/speedtest](https://github.c
 
 Chinese output uses nearby and domestic carrier servers as before. English output uses representative international servers and excludes mainland-China servers from automatic selection.
 
-Candidate servers are checked before selection, then download and upload tests run in sequence so other probes do not distort bandwidth. A dead node or a run without usable throughput is reported as unavailable rather than being presented as a successful static result.
+Speed-test results are based on actual measurements. English output uses representative international servers.
 
 Official speed test points can represent the local bandwidth baseline of the host machine being tested.
 
@@ -1373,9 +1373,7 @@ IP情報は RDAP と制限付き WHOIS フォールバックを組み合わせ�
 
 中国語出力では従来どおり近隣および国内キャリアの測定サーバーを使用します。英語出力では代表的な国際サーバーを使用し、自動選択から中国大陸のサーバーを除外します。
 
-候補サーバーの利用可否を確認してから選択し、他のネットワーク検査が帯域結果に影響しないよう、ダウンロードとアップロードを順番に実行します。停止中のノードや有効なスループットが得られない実行は、静的情報だけで成功扱いせず利用不可として表示します。
-
-プライベート回線キャリアのノードは、軽量な HTTP/HTTPS と TCP connect/TCPing を主な到達性判定に使い、ICMP は補助情報に限定します。ローカルでの確認が一度不成立でも候補として保持し、確認済みノードで要求した有効スループット数に達するまで予備候補を試します。上流で明示的に利用不可とされたノードだけを直接除外します。
+速度テストの結果は実測値に基づきます。英語出力では代表的な国際サーバーを使用します。
 
 公式測定ポイントは、テスト対象のホストマシンのローカル帯域幅ベースラインを表すことができます。
 

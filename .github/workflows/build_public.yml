@@ -116,6 +116,27 @@ jobs:
           echo "Public build dependency graph still loads private modules" >&2
           exit 1
         fi
+        python3 - <<'PY'
+        from pathlib import Path
+        import re
+
+        restricted = re.compile(
+            r"privatespeedtest|private[ _-]+carrier(?:[ _-]+speed)?[ _-]+nodes?|"
+            r"私有(?:国内|三网)?测速(?:节点)?|私有节点|プライベート回線キャリア",
+            re.IGNORECASE,
+        )
+        matches = []
+        for path in Path(".").rglob("*"):
+            if path.suffix.lower() not in {".md", ".mdx"}:
+                continue
+            if any(part in {".git", "vendor", ".cache", ".tmp"} for part in path.parts):
+                continue
+            text = path.read_text(encoding="utf-8")
+            if restricted.search(text):
+                matches.append(str(path))
+        if matches:
+            raise SystemExit("Public Markdown contains restricted speed-test details: " + ", ".join(matches))
+        PY
     - name: Build and Test
       if: steps.release.outputs.publish == 'true'
       env:
