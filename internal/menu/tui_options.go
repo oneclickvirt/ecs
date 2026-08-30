@@ -226,6 +226,7 @@ func defaultAdvSettings(config *params.Config) []advSetting {
 				option("19", "仅体育", "Sports Only", "仅检测体育类平台。", "Sports platforms only."),
 				option("20", "全部平台", "All Platforms", "检测所有地区全部平台（耗时最长）。", "Check all platforms across all regions (longest runtime)."),
 				option("21", "仅 AI 平台", "AI Only", "仅检测 AI 平台。", "Check AI platforms only."),
+				option("22", "仅东南亚", "Southeast Asia Only", "仅检测东南亚平台。", "Check Southeast Asia platforms only."),
 			},
 		},
 		{

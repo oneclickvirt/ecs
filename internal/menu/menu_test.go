@@ -289,10 +289,13 @@ func TestEnglishCustomPingScopeCannotSelectMainlandChina(t *testing.T) {
 	}
 }
 
-func TestCustomAdvancedIncludesAIOnlyUnlockRegion(t *testing.T) {
+func TestCustomAdvancedIncludesNewUnlockRegions(t *testing.T) {
 	setting := findAdvanced(t, defaultAdvSettings(params.NewConfig("test")), "unlockregion")
 	if optionIndexByValue(setting.options, "21") == 0 {
 		t.Fatalf("AI-only unlock region is missing: %#v", setting.options)
+	}
+	if optionIndexByValue(setting.options, "22") == 0 {
+		t.Fatalf("Southeast-Asia-only unlock region is missing: %#v", setting.options)
 	}
 }
 

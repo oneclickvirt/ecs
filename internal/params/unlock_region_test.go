@@ -10,6 +10,14 @@ func TestAIOnlyUnlockRegionIsValid(t *testing.T) {
 	}
 }
 
+func TestSoutheastAsiaOnlyUnlockRegionIsValid(t *testing.T) {
+	config := NewConfig("test")
+	config.ParseFlags([]string{"-utregion", "22"})
+	if config.UnlockTestRegion != "22" {
+		t.Fatalf("Southeast-Asia-only region was normalized to %q", config.UnlockTestRegion)
+	}
+}
+
 func TestUnlockNetworkFlagsAreExplicitConfig(t *testing.T) {
 	config := NewConfig("test")
 	config.ParseFlags([]string{

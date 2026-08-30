@@ -319,7 +319,7 @@ func WithNt3CheckType(checkType string) ConfigOption {
 }
 
 // WithUnlockTestRegion 设置流媒体解锁检测地区
-// region: "0" 到 "21"，其中 "21" 为仅 AI 平台
+// region: "0" 到 "22"，其中 "21" 为仅 AI 平台，"22" 为仅东南亚平台
 func WithUnlockTestRegion(region string) ConfigOption {
 	return func(c *Config) {
 		c.UnlockTestRegion = region

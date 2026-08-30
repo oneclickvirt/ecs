@@ -276,7 +276,7 @@ func (c *Config) ParseFlags(args []string) {
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3t", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.StringVar(&c.Nt3CheckType, "nt3-type", "ipv4", "Set NT3 test type (supported: both, ipv4, ipv6)")
 	c.GoecsFlag.IntVar(&c.SpNum, "spnum", 2, "Set the number of servers per operator for speed test")
-	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All, 21=AI only)")
+	c.GoecsFlag.StringVar(&c.UnlockTestRegion, "utregion", "0", "Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All, 21=AI only, 22=Southeast Asia only)")
 	c.GoecsFlag.BoolVar(&c.UnlockTestShowIP, "utshowip", false, "Deprecated compatibility flag; unlock output shows IP version in section headers automatically")
 	c.GoecsFlag.StringVar(&c.UnlockTestIPVersion, "utipver", "auto", "Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only)")
 	c.GoecsFlag.StringVar(&c.UnlockTestInterface, "ut-interface", "", "Bind unlock tests to an IP address or network interface")
@@ -815,7 +815,7 @@ func (c *Config) ValidateParams() {
 		"5": true, "6": true, "7": true, "8": true, "9": true,
 		"10": true, "11": true, "12": true, "13": true, "14": true,
 		"15": true, "16": true, "17": true, "18": true, "19": true,
-		"20": true, "21": true,
+		"20": true, "21": true, "22": true,
 	}
 	if !validUnlockRegions[c.UnlockTestRegion] {
 		if c.Language == "zh" {

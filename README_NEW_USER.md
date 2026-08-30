@@ -251,7 +251,7 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 
 默认只检测跨国平台解锁。
 
-检测范围包含 Dola AI 和 X (Twitter)。`RateLimited` 表示平台暂时限流，不等于无法解锁；超时、DNS 失败、无 IPv6 等网络状态也会与明确的不支持分开显示。需要只测 AI 平台或指定 IP 协议、网卡、DNS、代理和并发数时，可使用 `-utregion=21`、`-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy` 和 `-ut-concurrency`。
+检测范围包含 Dola AI 和 X (Twitter)，并新增东南亚平台组。`RateLimited` 表示平台暂时限流，不等于无法解锁；超时、DNS 失败、无 IPv6 等网络状态也会与明确的不支持分开显示。只测 AI 平台可使用 `-utregion=21`，只测东南亚平台可使用 `-utregion=22`；IP 协议、网卡、DNS、代理和并发数可通过 `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy` 和 `-ut-concurrency` 指定。
 
 一般来说，正常的情况下，一个IP多个平台的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被平台普通的数据库所识别修正地域。
 
@@ -765,7 +765,7 @@ Dependency project: [https://github.com/oneclickvirt/UnlockTests](https://github
 
 Default only checks cross-border platform unlocking.
 
-The platform list includes Dola AI and X (Twitter). `RateLimited` means the platform temporarily throttled the request, not that the IP is blocked. Timeouts, DNS failures, and missing IPv6 are also kept separate from a definite unsupported result. Use `-utregion=21` for AI-only checks and `-utipver`, `-ut-interface`, `-ut-dns`, `-ut-http-proxy`, `-ut-socks-proxy`, and `-ut-concurrency` to select the network path.
+The platform list includes Dola AI and X (Twitter), plus a Southeast Asia group. `RateLimited` means the platform temporarily throttled the request, not that the IP is blocked. Timeouts, DNS failures, and missing IPv6 are also kept separate from a definite unsupported result. Use `-utregion=21` for AI-only checks, `-utregion=22` for Southeast-Asia-only checks, and `-utipver`, `-ut-interface`, `-ut-dns`, `-ut-http-proxy`, `-ut-socks-proxy`, and `-ut-concurrency` to select the network path.
 
 Generally speaking, under normal circumstances, multiple platform services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by platform common databases. 
 
@@ -1172,7 +1172,7 @@ NVMe SSDの1M総スループットが1GB/s未満の場合、深刻なリソー�
 
 デフォルトでは国境を越えるプラットフォームのロック解除のみをチェックします。
 
-対象にはDola AIとX (Twitter)も含まれます。`RateLimited` はプラットフォームによる一時的なレート制限であり、ロック解除不可を意味しません。タイムアウト、DNS失敗、IPv6未対応も明確な非対応結果と分けて表示します。AIのみの検査には `-utregion=21`、通信経路の指定には `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy`、`-ut-concurrency` を使用できます。
+対象にはDola AIとX (Twitter)に加えて、東南アジアのプラットフォームグループも含まれます。`RateLimited` はプラットフォームによる一時的なレート制限であり、ロック解除不可を意味しません。タイムアウト、DNS失敗、IPv6未対応も明確な非対応結果と分けて表示します。AIのみの検査には `-utregion=21`、東南アジアのみの検査には `-utregion=22`、通信経路の指定には `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy`、`-ut-concurrency` を使用できます。
 
 一般的に、正常な状況下では、一つのIPの複数のプラットフォームのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、プラットフォームの一般的なデータベースに認識修正されていない可能性が高いです。
 

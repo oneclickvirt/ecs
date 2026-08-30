@@ -219,7 +219,7 @@ Usage: goecs [options]
   -utipver string
         Set unlock test IP version (auto=test all available, ipv4=IPv4 only, ipv6=IPv6 only) (default "auto")
   -utregion string
-        Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All) (default "0")
+        Set unlock test region (0=Global, 1=Global+TW, 2=Global+HK, 3=Global+JP, 4=Global+KR, 5=Global+NA, 6=Global+SA, 7=Global+EU, 8=Global+Africa, 9=Global+Oceania, 10=TW only, 11=HK only, 12=JP only, 13=KR only, 14=NA only, 15=SA only, 16=EU only, 17=Africa only, 18=Oceania only, 19=Sports only, 20=All, 21=AI only, 22=Southeast Asia only) (default "0")
   -utshowip
         Deprecated compatibility flag; unlock output shows IP version in section headers automatically
   -cpu
