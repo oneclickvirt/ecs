@@ -15,6 +15,7 @@
 - [内存测试](#内存测试)
 - [硬盘测试](#硬盘测试)
 - [平台解锁检测](#平台解锁检测)
+- [输出状态说明](#输出状态说明)
 - [IP质量检测](#IP质量检测)
 - [邮件端口检测](#邮件端口检测)
 - [上游及回程线路检测](#上游及回程线路检测)
@@ -30,6 +31,7 @@
 - [Memory Testing](#Memory-Testing)
 - [Disk Testing](#Disk-Testing)
 - [Platform Unlock Testing](#Platform-Unlock-Testing)
+- [Output Status Reference](#Output-Status-Reference)
 - [IP Quality Detection](#IP-Quality-Detection)
 - [Email Port Detection](#Email-Port-Detection)
 - [PING Testing](#PING-Testing)
@@ -43,6 +45,7 @@
 - [メモリテスト](#メモリテスト)
 - [ディスクテスト](#ディスクテスト)
 - [プラットフォームロック解除検出](#プラットフォームロック解除検出)
+- [出力状態の説明](#出力状態の説明)
 - [IP品質検出](#IP品質検出)
 - [メールポート検出](#メールポート検出)
 - [PING検出](#PING検出)
@@ -252,6 +255,25 @@ AMD的7950x单核满血性能得分在6500左右，AMD的5950x单核满血性能
 默认只检测跨国平台解锁。
 
 检测范围包含 Dola AI 和 X (Twitter)，并新增东南亚平台组。`RateLimited` 表示平台暂时限流，不等于无法解锁；超时、DNS 失败、无 IPv6 等网络状态也会与明确的不支持分开显示。只测 AI 平台可使用 `-utregion=21`，只测东南亚平台可使用 `-utregion=22`；IP 协议、网卡、DNS、代理和并发数可通过 `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy` 和 `-ut-concurrency` 指定。
+
+#### 输出状态说明
+
+平台解锁检测中的常见结果状态如下：
+
+| 状态 | 含义 |
+| --- | --- |
+| `YES` | 可访问或可解锁 |
+| `NO` | 不可解锁 |
+| `Restricted` | 仅部分内容可用 |
+| `Banned` | 当前出口被服务方封禁或限制 |
+| `TIMEOUT` | 单个平台检测超时 |
+| `Failed (Network Error)` | 网络连接错误 |
+| `N/A (DNS Resolve Failed)` | DNS 解析失败 |
+| `N/A (No IPv6 Support)` | 当前 IPv6 检测中，目标域名无 IPv6 支持 |
+| `CDN Relay Available` | 检测到 CDN Relay 可用 |
+| `Unknown` | 响应不符合已知判断逻辑 |
+
+部分支持区域判断的平台会显示 `Region`。部分项目会根据 DNS 检测结果标注 `Native`、`Via DNS` 或 `In Proxy`；这些字段描述区域或检测路径，不应单独视为成功或失败状态。
 
 一般来说，正常的情况下，一个IP多个平台的解锁地区都是一致的不会到处乱飘，如果发现多家平台解锁地区不一致，那么IP大概率来自IPXO等平台租赁或者是刚刚宣告和被使用，未被平台普通的数据库所识别修正地域。
 
@@ -767,6 +789,25 @@ Default only checks cross-border platform unlocking.
 
 The platform list includes Dola AI and X (Twitter), plus a Southeast Asia group. `RateLimited` means the platform temporarily throttled the request, not that the IP is blocked. Timeouts, DNS failures, and missing IPv6 are also kept separate from a definite unsupported result. Use `-utregion=21` for AI-only checks, `-utregion=22` for Southeast-Asia-only checks, and `-utipver`, `-ut-interface`, `-ut-dns`, `-ut-http-proxy`, `-ut-socks-proxy`, and `-ut-concurrency` to select the network path.
 
+#### Output Status Reference
+
+Common result statuses in platform unlock output are:
+
+| Status | Meaning |
+| --- | --- |
+| `YES` | Accessible or unlocked |
+| `NO` | Not unlocked |
+| `Restricted` | Only some content is available |
+| `Banned` | The current egress is blocked or restricted by the service |
+| `TIMEOUT` | The check for one platform timed out |
+| `Failed (Network Error)` | Network connection error |
+| `N/A (DNS Resolve Failed)` | DNS resolution failed |
+| `N/A (No IPv6 Support)` | During IPv6 testing, the target domain does not support IPv6 |
+| `CDN Relay Available` | A usable CDN relay was detected |
+| `Unknown` | The response did not match known decision logic |
+
+Some platforms report `Region` when regional support can be determined. Some checks also label the DNS path as `Native`, `Via DNS`, or `In Proxy`; these fields describe the region or detection path and are not success or failure states by themselves.
+
 Generally speaking, under normal circumstances, multiple platform services for one IP should have consistent unlock regions without scattered locations. If multiple platforms show inconsistent unlock regions, the IP likely comes from platforms like IPXO rentals or has been recently announced and used, not yet recognized and corrected by platform common databases. 
 
 Due to inconsistent IP database recognition speeds across platforms, sometimes some platforms unlock regions normally, some drift to certain router locations, and some drift to where the IP was before you used it.
@@ -1173,6 +1214,25 @@ NVMe SSDの1M総スループットが1GB/s未満の場合、深刻なリソー�
 デフォルトでは国境を越えるプラットフォームのロック解除のみをチェックします。
 
 対象にはDola AIとX (Twitter)に加えて、東南アジアのプラットフォームグループも含まれます。`RateLimited` はプラットフォームによる一時的なレート制限であり、ロック解除不可を意味しません。タイムアウト、DNS失敗、IPv6未対応も明確な非対応結果と分けて表示します。AIのみの検査には `-utregion=21`、東南アジアのみの検査には `-utregion=22`、通信経路の指定には `-utipver`、`-ut-interface`、`-ut-dns`、`-ut-http-proxy`、`-ut-socks-proxy`、`-ut-concurrency` を使用できます。
+
+#### 出力状態の説明
+
+プラットフォームロック解除検出でよく使われる結果状態は次のとおりです。
+
+| 状態 | 意味 |
+| --- | --- |
+| `YES` | アクセス可能またはロック解除済み |
+| `NO` | ロック解除不可 |
+| `Restricted` | 一部のコンテンツのみ利用可能 |
+| `Banned` | 現在の出口がサービス側からブロックまたは制限されている |
+| `TIMEOUT` | 1つのプラットフォームの検出がタイムアウトした |
+| `Failed (Network Error)` | ネットワーク接続エラー |
+| `N/A (DNS Resolve Failed)` | DNS解決に失敗した |
+| `N/A (No IPv6 Support)` | IPv6検出時に対象ドメインがIPv6に対応していない |
+| `CDN Relay Available` | 利用可能なCDN Relayを検出した |
+| `Unknown` | 応答が既知の判定ロジックに該当しない |
+
+地域対応を判定できるプラットフォームでは `Region` が表示されます。DNSの検出結果に応じて `Native`、`Via DNS`、`In Proxy` と表示される場合もあります。これらは地域や検出経路を示す情報であり、それだけで成功または失敗を意味するものではありません。
 
 一般的に、正常な状況下では、一つのIPの複数のプラットフォームのロック解除地域はすべて一致し、あちこち飛び回ることはありません。複数のプラットフォームでロック解除地域が一致しない場合、IPはIPXOなどのプラットフォームからのレンタルか、最近宣告され使用されたもので、プラットフォームの一般的なデータベースに認識修正されていない可能性が高いです。
 
