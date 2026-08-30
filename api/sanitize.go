@@ -60,6 +60,7 @@ func sanitizePublicReason(value string) string {
 // diagnostics. It is intentionally line based so ordinary benchmark targets
 // and project footer links are not rewritten.
 func sanitizePublicOutput(value string) string {
+	value = normalizeTraceOutputBoundaries(value)
 	lines := strings.Split(value, "\n")
 	for index, line := range lines {
 		if containsPublicCredential(line) {

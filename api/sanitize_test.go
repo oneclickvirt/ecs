@@ -19,6 +19,45 @@ func TestSanitizePublicTextRemovesPrivateDetails(t *testing.T) {
 	}
 }
 
+func TestSanitizePublicOutputSeparatesTraceStopReasonAndNextHeader(t *testing.T) {
+	input := "Trace Stopped: Destination Reached at Hop 19 (ICMP Echo Reply)广州移动 - ICMP v4 - traceroute to 120.196.165.24, 30 hops max"
+	got := sanitizePublicOutput(input)
+	if !strings.Contains(got, "ICMP Echo Reply)\n广州移动 - ICMP v4 - traceroute to") {
+		t.Fatalf("trace boundary was not repaired: %q", got)
+	}
+}
+
+func TestSanitizePublicOutputHandlesNestedStopReasonMarkers(t *testing.T) {
+	input := "Trace Stopped: No Continuing Route Observed at Hop 4 (ICMP Host Unreachable (!H))广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	want := "Trace Stopped: No Continuing Route Observed at Hop 4 (ICMP Host Unreachable (!H))\n广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	if got := sanitizePublicOutput(input); got != want {
+		t.Fatalf("nested trace boundary = %q, want %q", got, want)
+	}
+}
+
+func TestSanitizePublicOutputRepairsMultipleBoundariesOnOneLine(t *testing.T) {
+	input := "Trace Stopped: Destination Reached at Hop 1 (ICMP Echo Reply)广州移动 - ICMP v4 - traceroute to 120.196.165.24 Trace Stopped: Destination Reached at Hop 2 (ICMP Echo Reply)广州联通 - ICMP v4 - traceroute to 210.21.196.6"
+	got := sanitizePublicOutput(input)
+	if strings.Count(got, "\n") != 2 || !strings.Contains(got, ")\n广州移动") || !strings.Contains(got, ")\n广州联通") {
+		t.Fatalf("multiple trace boundaries = %q", got)
+	}
+}
+
+func TestSanitizePublicOutputHandlesStopReasonWithoutResponseParentheses(t *testing.T) {
+	input := "Trace Stopped: custom ICMP failure at Hop 5广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	want := "Trace Stopped: custom ICMP failure at Hop 5\n广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	if got := sanitizePublicOutput(input); got != want {
+		t.Fatalf("no-parentheses trace boundary = %q, want %q", got, want)
+	}
+}
+
+func TestSanitizePublicOutputPreservesAlreadySeparatedTraceLines(t *testing.T) {
+	input := "Trace Stopped: Destination Reached at Hop 19 (ICMP Echo Reply)\n广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	if got := sanitizePublicOutput(input); got != input {
+		t.Fatalf("already separated trace lines changed: %q", got)
+	}
+}
+
 func TestSanitizePublicOutputPreservesProjectLinksAndHidesRegistryDiagnostics(t *testing.T) {
 	input := " Go Project: https://github.com/oneclickvirt/ecs\n" +
 		" registry source: https://private.example/data?token=abc\n" +

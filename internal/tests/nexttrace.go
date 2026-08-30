@@ -81,17 +81,7 @@ func NextTrace3CheckText(language, nt3Location, nt3CheckType string) (output str
 			errorOccurred = true
 			continue
 		}
-		for _, res := range result.Output {
-			res = strings.TrimSpace(res)
-			if res == "" {
-				continue
-			}
-			if strings.Contains(res, "ICMP") {
-				builder.WriteString(res)
-			} else {
-				builder.WriteString(res + "\n")
-			}
-		}
+		builder.WriteString(formatNextTraceOutput(result.Output))
 	}
 	if errorOccurred {
 		if language == "zh" {
