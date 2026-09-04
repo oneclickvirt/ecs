@@ -667,11 +667,11 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 			select {
 			case result := <-resultChan:
 				uploadCancel()
-				if result.httpURL != "" || result.httpsURL != "" {
+				if result.httpsURL != "" {
 					if config.Language == "en" {
-						fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						fmt.Printf("Upload successfully!\nShare URL: %s\n", result.httpsURL)
 					} else {
-						fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", result.httpURL, result.httpsURL)
+						fmt.Printf("上传成功!\n分享链接: %s\n", result.httpsURL)
 					}
 				}
 				time.Sleep(100 * time.Millisecond)
@@ -700,13 +700,13 @@ func HandleSignalInterrupt(ctx context.Context, cancel context.CancelFunc, sig c
 // HandleUploadResults handles uploading results
 func HandleUploadResults(config *params.Config, output string) {
 	output = sanitizeRunnerOutput(output)
-	httpURL, httpsURL := utils.ProcessAndUpload(output, config.FilePath, config.EnableUpload, config.Language)
-	if httpURL != "" || httpsURL != "" {
+	_, httpsURL := utils.ProcessAndUpload(output, config.FilePath, config.EnableUpload, config.Language)
+	if httpsURL != "" {
 		if config.Language == "en" {
-			fmt.Printf("Upload successfully!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+			fmt.Printf("Upload successfully!\nShare URL: %s\n", httpsURL)
 			fmt.Println("Each Test Benchmark: https://bash.spiritlhl.net/ecsguide")
 		} else {
-			fmt.Printf("上传成功!\nHttp URL:  %s\nHttps URL: %s\n", httpURL, httpsURL)
+			fmt.Printf("上传成功!\n分享链接: %s\n", httpsURL)
 			fmt.Println("每项测试基准见: https://bash.spiritlhl.net/ecsguide")
 		}
 	}

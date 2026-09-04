@@ -19,6 +19,8 @@ var uploadTextContext = utils.UploadTextContext
 type FinalizeResult struct {
 	TextPath string `json:"text_path,omitempty"`
 	JSONPath string `json:"json_path,omitempty"`
+	// HTTPURL is retained as a compatibility field for API consumers; the
+	// service now populates it with the same canonical HTTPS URL as HTTPSURL.
 	HTTPURL  string `json:"http_url,omitempty"`
 	HTTPSURL string `json:"https_url,omitempty"`
 }

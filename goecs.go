@@ -157,8 +157,8 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "failed to finalize result")
 	}
-	if finalized.HTTPURL != "" || finalized.HTTPSURL != "" {
-		fmt.Printf("Http URL:  %s\nHttps URL: %s\n", finalized.HTTPURL, finalized.HTTPSURL)
+	if finalized.HTTPSURL != "" {
+		fmt.Printf("Share URL: %s\n", finalized.HTTPSURL)
 	}
 	if config.JSONPath == "-" {
 		fmt.Println(string(result.JSON))

@@ -60,7 +60,7 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 - Email port test: Self-developed [portchecker](https://github.com/oneclickvirt/portchecker)
 - Three-network return path test: Modified from [zhanghanyun/backtrace](https://github.com/zhanghanyun/backtrace) to [oneclickvirt/backtrace](https://github.com/oneclickvirt/backtrace)
 - Three-network route test: Modified from [NTrace-core](https://github.com/nxtrace/NTrace-core) to [nt3](https://github.com/oneclickvirt/nt3)
-- Speed test: Based on public data from [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) and [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID), developed to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest). The v1.8.2 upstream avoids shared-CDN user-profile cache reuse for speedtest.net requests.
+- Speed test: Based on public data from [speedtest.net](https://github.com/spiritLHLS/speedtest.net-CN-ID) and [speedtest.cn](https://github.com/spiritLHLS/speedtest.cn-CN-ID), developed to [oneclickvirt/speedtest](https://github.com/oneclickvirt/speedtest). The v1.8.3 upstream avoids shared-CDN user-profile cache reuse and follows temporary upload redirects.
 - Three-network Ping test: Modified from [ecsspeed](https://github.com/spiritLHLS/ecsspeed) to [pingtest](https://github.com/oneclickvirt/pingtest)
 - Supports root or admin environment testing, non-root or non-admin testing, and offline testing. When the host is online and local DNS is confirmed unavailable, it can automatically fall back to built-in DoH or DoT without rewriting resolver files; temporary DNS/network errors preserve system DNS.
 

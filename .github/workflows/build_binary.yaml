@@ -251,7 +251,7 @@ jobs:
             echo "Checked out speedtest source is not the requested immutable tag: $SPEEDTEST_REF" >&2
             exit 1
           fi
-          test "$(go list -m -f '{{.Version}}' github.com/showwin/speedtest-go)" = "v1.8.2"
+          test "$(go list -m -f '{{.Version}}' github.com/showwin/speedtest-go)" = "v1.8.3"
           go test -race ./...
           go vet ./...
           git diff --exit-code -- go.mod go.sum
