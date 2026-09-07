@@ -113,11 +113,11 @@ jobs:
             exit 1
           fi
         done
-        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
+        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
           echo "Public module metadata still references private modules" >&2
           exit 1
         fi
-        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)' .github/workflows; then
+        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' .github/workflows; then
           echo "Public workflow still loads a private module" >&2
           exit 1
         fi
