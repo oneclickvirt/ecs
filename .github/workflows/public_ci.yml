@@ -5,17 +5,27 @@ on:
     branches: [public]
   pull_request:
     branches: [public]
+  # A branch update pushed by GITHUB_TOKEN from Public Build does not emit a
+  # follow-up push workflow. Verify that generated tree from the publisher's
+  # completion instead, so every released public branch receives an
+  # independent validation run.
+  workflow_run:
+    workflows: ["Public Build"]
+    types: [completed]
 
 permissions:
   contents: read
 
 jobs:
   verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'public' || github.sha }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
