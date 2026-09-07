@@ -253,6 +253,7 @@ jobs:
             echo "Checked out speedtest source is not the requested immutable tag: $SPEEDTEST_REF" >&2
             exit 1
           fi
+          test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/speedtest)" = "v0.0.31"
           test "$(go list -m -f '{{.Version}}' github.com/showwin/speedtest-go)" = "v1.8.3"
           go test -race ./...
           go vet ./...
