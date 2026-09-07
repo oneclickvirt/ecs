@@ -127,8 +127,8 @@ github.com/oneclickvirt/UnlockTests v0.0.52 h1:ZqCd/deQysluPfpuLiH2O1YgDjsoJEJT1
 github.com/oneclickvirt/UnlockTests v0.0.52/go.mod h1:so031gwKNdLaeiUgYxO5v+zjq8r+xzB3rnAf+Wm5aSA=
 github.com/oneclickvirt/backtrace v0.0.21 h1:JYU+NEXShweePULyiA0GOAwf7tBNT87APblq9L1o5lg=
 github.com/oneclickvirt/backtrace v0.0.21/go.mod h1:dHUF1AYnK3MwRGmOwLFDoOKsH6Kv8cvys0b4Mqxhsdk=
-github.com/oneclickvirt/basics v0.0.37 h1:LSX/OyOrggOp7pJO7RwWMIp85HwUKWX3YYlpIPUBl0g=
-github.com/oneclickvirt/basics v0.0.37/go.mod h1:AqnE9cDa4ThZRvTq7UlUmLYSZBY6CPBzbUhxGT3JWyU=
+github.com/oneclickvirt/basics v0.0.38 h1:pfLm3/PCmRbyyRTsKjvYFtWv4zjfTbbruecc8+38/mE=
+github.com/oneclickvirt/basics v0.0.38/go.mod h1:AqnE9cDa4ThZRvTq7UlUmLYSZBY6CPBzbUhxGT3JWyU=
 github.com/oneclickvirt/cputest v0.0.18 h1:8pZUUmEDdRaeIDh9zKMGmAWheQKa9uN0h0abBRx4aus=
 github.com/oneclickvirt/cputest v0.0.18/go.mod h1:vjlH8tkPFft1tlLOpeNskXVvurxkHaJ3+dgFxQGLXY4=
 github.com/oneclickvirt/dd v0.0.2-20250808062818 h1:0KHrKkdpL5oBE1OHsrRd2siRw4/2k6f9LBaP7T4JpOc=
@@ -151,12 +151,12 @@ github.com/oneclickvirt/pingtest v0.0.28 h1:aBOpf9mfOOFFKyh8Nx7IrRQIBm96oduKYXTQ
 github.com/oneclickvirt/pingtest v0.0.28/go.mod h1:HdehjtQbr4R0BFC6pm1dqDvwyDj1DbLCRcEFYvFeBdc=
 github.com/oneclickvirt/portchecker v0.0.7 h1:D3Q01FZgjGTrTBJgWqRoeFbBWViJl4gE+v8alIlUeAM=
 github.com/oneclickvirt/portchecker v0.0.7/go.mod h1:9sjMDPCd4Z40wkYB0S9gQPGH8YPtnNE1ZJthVIuHUzA=
-github.com/oneclickvirt/privatespeedtest v0.0.19 h1:6hDJlZaOV3h6bkIIEclsTxVkctmJ1oULnfISCqQW/xQ=
-github.com/oneclickvirt/privatespeedtest v0.0.19/go.mod h1:sqB0rD3PytW/FUBNzA+W6GW3bm+l+dajZ8MWJEzQaL8=
+github.com/oneclickvirt/privatespeedtest v0.0.20 h1:mKAZUNbYoXylUy1seQiQ1fQZthyOSVYyWs3jQxDkgTY=
+github.com/oneclickvirt/privatespeedtest v0.0.20/go.mod h1:O/EQ5lPvttBjcRqjmzzHT6TarDOC9wARXV43B5J8a9Y=
 github.com/oneclickvirt/security v0.0.20 h1:C4zVbqFX+dSSwZ6faWfKp6VRuk5VFmmHyfZ/S754NTk=
 github.com/oneclickvirt/security v0.0.20/go.mod h1:U96qZYkmkZkVg/TcbxrHKyWrlIJQJ719p797UEaXsEA=
-github.com/oneclickvirt/speedtest v0.0.29 h1:F3J5LdnrFvuSrbuYWZ1Z1jEt/qFIER/h+BR1eXLe7SI=
-github.com/oneclickvirt/speedtest v0.0.29/go.mod h1:kAv43CaNMBtRcoFCsZGl5sqdDA9ZzllysAJ0D11Fw3o=
+github.com/oneclickvirt/speedtest v0.0.30 h1:IG+jdjHbHmdSGwaaRsaaLirxagfMI0sPn+0N23CzA/s=
+github.com/oneclickvirt/speedtest v0.0.30/go.mod h1:kAv43CaNMBtRcoFCsZGl5sqdDA9ZzllysAJ0D11Fw3o=
 github.com/oneclickvirt/stream v0.0.2-20250924154001 h1:GuJWdiPkoK84+y/+oHKr2Ghl3c/MzS9Z5m1nM+lMmy4=
 github.com/oneclickvirt/stream v0.0.2-20250924154001/go.mod h1:oWaizaHTC2VQciBC9RfaLbAOf8qeR6n20/gY7QxriDE=
 github.com/oschwald/maxminddb-golang v1.13.1 h1:G3wwjdN9JmIK2o/ermkHM+98oX5fS+k5MbwsmL4MRQE=

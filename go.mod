@@ -9,7 +9,7 @@ require (
 	github.com/imroc/req/v3 v3.61.0
 	github.com/oneclickvirt/UnlockTests v0.0.52
 	github.com/oneclickvirt/backtrace v0.0.21
-	github.com/oneclickvirt/basics v0.0.37
+	github.com/oneclickvirt/basics v0.0.38
 	github.com/oneclickvirt/cputest v0.0.18
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/disktest v0.0.24
@@ -18,9 +18,9 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.26
 	github.com/oneclickvirt/pingtest v0.0.28
 	github.com/oneclickvirt/portchecker v0.0.7
-	github.com/oneclickvirt/privatespeedtest v0.0.19
+	github.com/oneclickvirt/privatespeedtest v0.0.20
 	github.com/oneclickvirt/security v0.0.20
-	github.com/oneclickvirt/speedtest v0.0.29
+	github.com/oneclickvirt/speedtest v0.0.30
 	golang.org/x/term v0.45.0
 )
 

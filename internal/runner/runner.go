@@ -575,7 +575,7 @@ func captureChineseSpeedTests(ctx context.Context, config *params.Config, networ
 	if usesChineseFullSpeedProfile(config) {
 		// Options 1 and 2 retain the historical complete profile. Option 2
 		// changes scheduling only; it does not change the selected locations.
-		tests.NearbySPWithNetworkTo(writer, network)
+		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
 		tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
 		for _, operator := range []string{"cu", "ct", "cmcc"} {
 			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
@@ -583,13 +583,13 @@ func captureChineseSpeedTests(ctx context.Context, config *params.Config, networ
 	} else if usesChineseNearbyCarrierSpeedProfile(config) {
 		// Other built-in Chinese presets intentionally use one nearby
 		// speedtest.net result and one node for each mainland carrier.
-		tests.NearbySPWithNetworkTo(writer, network)
+		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
 		for _, operator := range []string{"ct", "cu", "cmcc"} {
 			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, 1, config.Language, network, preloads)
 		}
 	} else {
 		// Explicit/custom parameters retain their caller-selected node count.
-		tests.NearbySPWithNetworkTo(writer, network)
+		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
 		for _, operator := range []string{"cu", "ct", "cmcc"} {
 			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 		}
@@ -711,7 +711,7 @@ func captureEnglishSpeedTests(ctx context.Context, config *params.Config, networ
 	_, _ = buffer.WriteString(centeredTitleText("Speed-Test", config.Width))
 	tests.ShowHeadTo(&buffer, config.Language)
 	// English mode deliberately keeps the international registry profile.
-	tests.CustomSPWithNetworkTo(&buffer, "net", "global", max(4, config.SpNum), config.Language, network)
+	tests.CustomSPWithNetworkContextTo(ctx, &buffer, "net", "global", max(4, config.SpNum), config.Language, network)
 	value := buffer.String()
 	if display {
 		fmt.Print(value)

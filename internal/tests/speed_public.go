@@ -32,10 +32,14 @@ func NearbySP() {
 }
 
 func NearbySPWithNetwork(network string) {
-	NearbySPWithNetworkTo(os.Stdout, network)
+	NearbySPWithNetworkContextTo(context.Background(), os.Stdout, network)
 }
 
 func NearbySPWithNetworkTo(writer io.Writer, network string) {
+	NearbySPWithNetworkContextTo(context.Background(), writer, network)
+}
+
+func NearbySPWithNetworkContextTo(ctx context.Context, writer io.Writer, network string) {
 	defer func() {
 		if recover() != nil {
 			fmt.Fprintln(writerOrDiscard(writer), "[WARN] nearby speedtest unavailable")
@@ -43,10 +47,10 @@ func NearbySPWithNetworkTo(writer io.Writer, network string) {
 	}()
 	network = normalizeSpeedNetwork(network)
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		sp.NearbySpeedTestWithNetworkTo(writerOrDiscard(writer), network)
+		sp.NearbySpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), network)
 		return
 	}
-	sp.OfficialNearbySpeedTestWithNetworkTo(writerOrDiscard(writer), network)
+	sp.OfficialNearbySpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), network)
 }
 
 func writerOrDiscard(writer io.Writer) io.Writer {
@@ -62,10 +66,14 @@ func CustomSP(platform, operator string, num int, language string) {
 }
 
 func CustomSPWithNetwork(platform, operator string, num int, language, network string) {
-	CustomSPWithNetworkTo(os.Stdout, platform, operator, num, language, network)
+	CustomSPWithNetworkContextTo(context.Background(), os.Stdout, platform, operator, num, language, network)
 }
 
 func CustomSPWithNetworkTo(writer io.Writer, platform, operator string, num int, language, network string) {
+	CustomSPWithNetworkContextTo(context.Background(), writer, platform, operator, num, language, network)
+}
+
+func CustomSPWithNetworkContextTo(ctx context.Context, writer io.Writer, platform, operator string, num int, language, network string) {
 	defer func() {
 		if recover() != nil {
 			fmt.Fprintln(writerOrDiscard(writer), "[WARN] custom speedtest unavailable")
@@ -115,10 +123,10 @@ func CustomSPWithNetworkTo(writer io.Writer, platform, operator string, num int,
 		parseType = "id"
 	}
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		sp.CustomSpeedTestWithNetworkTo(writerOrDiscard(writer), url, parseType, num, language, network)
+		sp.CustomSpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), url, parseType, num, language, network)
 		return
 	}
-	sp.OfficialCustomSpeedTestWithNetworkTo(writerOrDiscard(writer), url, parseType, num, language, network)
+	sp.OfficialCustomSpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), url, parseType, num, language, network)
 }
 
 // PrivateSpeedPreloads is a no-op compatibility type for ecs_public builds,
@@ -135,6 +143,6 @@ func CustomSPWithNetworkAndPreloads(ctx context.Context, platform, operator stri
 	CustomSPWithNetworkAndPreloadsTo(os.Stdout, ctx, platform, operator, num, language, network, preloads)
 }
 
-func CustomSPWithNetworkAndPreloadsTo(writer io.Writer, _ context.Context, platform, operator string, num int, language, network string, _ *PrivateSpeedPreloads) {
-	CustomSPWithNetworkTo(writer, platform, operator, num, language, network)
+func CustomSPWithNetworkAndPreloadsTo(writer io.Writer, ctx context.Context, platform, operator string, num int, language, network string, _ *PrivateSpeedPreloads) {
+	CustomSPWithNetworkContextTo(ctx, writer, platform, operator, num, language, network)
 }
