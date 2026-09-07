@@ -91,6 +91,29 @@ jobs:
           check-latest: true
           cache: false
 
+      - name: Select configured Go toolchain in container
+        shell: bash
+        run: |
+          set -euo pipefail
+          go_version="$(awk '$1 == "go" { print $2; exit }' go.mod)"
+          case "$(uname -m)" in
+            x86_64) cache_arch="x64" ;;
+            aarch64|arm64) cache_arch="arm64" ;;
+            *) echo "Unsupported runner architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+          toolchain_root="/__t/go/${go_version}/${cache_arch}"
+          if [[ ! -x "${toolchain_root}/bin/go" ]]; then
+            echo "setup-go toolchain is not mounted in the build container: ${toolchain_root}" >&2
+            exit 1
+          fi
+          echo "${toolchain_root}/bin" >> "$GITHUB_PATH"
+          echo "GOROOT=${toolchain_root}" >> "$GITHUB_ENV"
+          export PATH="${toolchain_root}/bin:${PATH}"
+          export GOROOT="${toolchain_root}"
+          command -v go
+          go version
+          [[ "$(go env GOROOT)" == "${toolchain_root}" ]]
+
       - name: Resolve component refs from go.mod
         id: component_refs
         shell: bash
