@@ -14,7 +14,7 @@ import (
 var (
 	traceStopHeaderBoundaryPattern = regexp.MustCompile(`(?i)(Trace Stopped:[^\r\n]*\))((?:\x1b\[[0-?]*[ -/]*[@-~])*[^\r\n]*?[ \t]+-[ \t]+ICMP[ \t]+v[46][ \t]+-[ \t]*)`)
 	traceStopHeaderNoParenPattern  = regexp.MustCompile(`(?i)(Trace Stopped:[^\r\n]*?\bat[ \t]+Hop[ \t]+[0-9]+)((?:\x1b\[[0-?]*[ -/]*[@-~])*[^)\r\n]*?[ \t]+-[ \t]+ICMP[ \t]+v[46][ \t]+-[ \t]*)`)
-	traceDestinationReachedPattern = regexp.MustCompile(`(?i)Trace Stopped:[ \t]*Destination Reached\b[^\r\n]*?(?:\)|$)`)
+	traceBenignTerminalStopPattern = regexp.MustCompile(`(?i)Trace Stopped:[ \t]*(?:Destination Reached|Maximum Hops Reached)\b[^\r\n]*?(?:\)|$)`)
 )
 
 func normalizeTraceOutputBoundaries(value string) string {
@@ -28,16 +28,17 @@ func normalizeTraceOutputBoundaries(value string) string {
 	}
 }
 
-// filterTerminalTraceStops removes the normal ICMP terminal marker after
-// boundaries are repaired. Other stop reasons are diagnostic and remain
-// visible. Keeping this final defense here covers raw/older nt3 output that
-// bypasses the component formatter before it reaches API or GUI callers.
+// filterTerminalTraceStops removes normal terminal markers after boundaries
+// are repaired. A destination reply and the expected maximum-hop exhaustion
+// do not add diagnostic value to the completed route section. Other stop
+// reasons remain visible. Keeping this final defense here covers raw/older
+// nt3 output that bypasses the component formatter before API or GUI callers.
 func filterTerminalTraceStops(value string) string {
 	lines := strings.Split(value, "\n")
 	filtered := lines[:0]
 	for _, line := range lines {
-		hadTerminalStop := traceDestinationReachedPattern.MatchString(line)
-		line = traceDestinationReachedPattern.ReplaceAllString(line, "")
+		hadTerminalStop := traceBenignTerminalStopPattern.MatchString(line)
+		line = traceBenignTerminalStopPattern.ReplaceAllString(line, "")
 		if hadTerminalStop && strings.TrimSpace(line) == "" {
 			continue
 		}

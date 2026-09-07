@@ -1,0 +1,46 @@
+name: Verify Public Branch
+
+on:
+  push:
+    branches: [public]
+  pull_request:
+    branches: [public]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Verify dependency boundary and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          go mod download
+          if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
+            echo "Public source retained a private module reference" >&2
+            exit 1
+          fi
+          if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)' .github/workflows; then
+            echo "Public workflow still loads a private module" >&2
+            exit 1
+          fi
+          if go list -deps ./... | grep -E '^github\.com/oneclickvirt/(security|privatespeedtest)(/|$)'; then
+            echo "Public dependency graph still loads a private repository" >&2
+            exit 1
+          fi
+          go test ./...
+          go test -tags=ecs_public ./...
+          go build -ldflags="-checklinkname=0" -o goecs-public .
+          ./goecs-public -h >/dev/null

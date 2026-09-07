@@ -24,16 +24,17 @@ type bufferedTask struct {
 }
 
 type legacyWorkflowPlan struct {
-	basics          func(context.Context)
-	hardware        []bufferedTask
-	afterHardware   func(context.Context)
-	identityReady   func(context.Context)
-	preload         func(context.Context)
-	independent     []bufferedTask
-	speed           func(context.Context)
-	concurrentSpeed *bufferedTask
-	fullConcurrent  bool
-	emit            func(string)
+	basics           func(context.Context)
+	concurrentBasics *bufferedTask
+	hardware         []bufferedTask
+	afterHardware    func(context.Context)
+	identityReady    func(context.Context)
+	preload          func(context.Context)
+	independent      []bufferedTask
+	speed            func(context.Context)
+	concurrentSpeed  *bufferedTask
+	fullConcurrent   bool
+	emit             func(string)
 }
 
 var (
@@ -78,6 +79,12 @@ func runLegacyTests(ctx context.Context, preCheck utils.NetCheckResult, config *
 		basics: func(context.Context) {
 			*output = RunBasicTests(ctx, preCheck, config, basicInfo, securityInfo, *output, tempOutput, outputMutex)
 		},
+		// The concurrent suite cannot use RunBasicTests directly: that helper
+		// temporarily redirects process-wide stdout. Keep the same visible text
+		// in a buffered section so every test can start before any one completes.
+		concurrentBasics: &bufferedTask{name: "basics", run: func(taskCtx context.Context) string {
+			return bufferedBasicSection(taskCtx, preCheck, config, basicInfo, securityInfo, infoMutex)
+		}},
 		afterHardware: func(context.Context) {
 			if config.OnlyIpInfoCheck && !config.BasicStatus && network {
 				*output = RunIpInfoCheck(ctx, config, *output, tempOutput, outputMutex)
@@ -88,8 +95,9 @@ func runLegacyTests(ctx context.Context, preCheck utils.NetCheckResult, config *
 	}
 	if network && config.SpeedTestStatus && config.Language == "zh" {
 		// Candidate probes are lightweight but still use the network. Start them
-		// only after the serialized hardware stage, then let them overlap with
-		// non-throughput diagnostics. The speed stage waits before any transfer.
+		// only after the hardware stage, then hide selection latency behind the
+		// independent network diagnostics. The speed stage waits before opening
+		// any transfer stream.
 		plan.preload = func(taskCtx context.Context) {
 			speedPreloads = tests.StartPrivateSpeedPreloads(taskCtx, []string{"ct", "cu", "cmcc"}, speedNetwork)
 		}
@@ -206,6 +214,10 @@ func runLegacyWorkflowPlan(ctx context.Context, plan legacyWorkflowPlan) {
 	if plan.identityReady != nil {
 		plan.identityReady(ctx)
 	}
+	// Candidate selection is front-loaded relative to the transfer stage, but
+	// starts only after CPU, memory, and disk benchmarks have finished. It then
+	// overlaps independent network diagnostics; the speed stage joins it before
+	// opening its first throughput stream.
 	if plan.preload != nil && ctx.Err() == nil {
 		plan.preload(ctx)
 	}
@@ -215,17 +227,10 @@ func runLegacyWorkflowPlan(ctx context.Context, plan legacyWorkflowPlan) {
 	}
 }
 
-// runFullyConcurrentLegacyWorkflow starts all non-basic stages before waiting
-// for any result. The basic stage remains first because it establishes the IP
-// identity used by the rest of the workflow; its output is still rendered
-// first. Completed sections are emitted in the same order as option 1.
+// runFullyConcurrentLegacyWorkflow launches every enabled test before waiting
+// for any result. It is intentionally allowed to distort performance values;
+// its only output guarantee is the same chapter order as option 1.
 func runFullyConcurrentLegacyWorkflow(ctx context.Context, plan legacyWorkflowPlan) {
-	if plan.basics != nil {
-		plan.basics(ctx)
-	}
-	if plan.identityReady != nil {
-		plan.identityReady(ctx)
-	}
 	if plan.preload != nil && ctx.Err() == nil {
 		plan.preload(ctx)
 	}
@@ -233,20 +238,45 @@ func runFullyConcurrentLegacyWorkflow(ctx context.Context, plan legacyWorkflowPl
 		return
 	}
 
-	allTasks := make([]bufferedTask, 0, len(plan.hardware)+len(plan.independent)+1)
+	allTasks := make([]bufferedTask, 0, len(plan.hardware)+len(plan.independent)+2)
+	basicOffset := 0
+	if plan.concurrentBasics != nil {
+		basicTask := *plan.concurrentBasics
+		if plan.identityReady != nil {
+			originalRun := basicTask.run
+			basicTask.run = func(taskCtx context.Context) (value string) {
+				defer plan.identityReady(taskCtx)
+				return originalRun(taskCtx)
+			}
+		}
+		allTasks = append(allTasks, basicTask)
+		basicOffset = 1
+	} else if plan.basics != nil {
+		// Keep manually assembled legacy plans source-compatible. Production
+		// option 2 always supplies concurrentBasics above.
+		plan.basics(ctx)
+		if plan.identityReady != nil {
+			plan.identityReady(ctx)
+		}
+	}
 	allTasks = append(allTasks, plan.hardware...)
 	allTasks = append(allTasks, plan.independent...)
 	if plan.concurrentSpeed != nil {
 		allTasks = append(allTasks, *plan.concurrentSpeed)
 	}
-	values, completed := collectBufferedTaskResults(ctx, startBufferedTasks(ctx, allTasks))
+	channels := startBufferedTasks(ctx, allTasks)
+	values, completed := collectBufferedTaskResults(ctx, channels)
 	if !completed {
 		return
 	}
 
-	hardwareEnd := len(plan.hardware)
+	hardwareStart := basicOffset
+	hardwareEnd := hardwareStart + len(plan.hardware)
 	independentEnd := hardwareEnd + len(plan.independent)
-	for _, value := range values[:hardwareEnd] {
+	if basicOffset == 1 && values[0] != "" && plan.emit != nil {
+		plan.emit(values[0])
+	}
+	for _, value := range values[hardwareStart:hardwareEnd] {
 		if value != "" && plan.emit != nil {
 			plan.emit(value)
 		}
@@ -417,7 +447,7 @@ func bufferedDiskSection(ctx context.Context, config *params.Config) string {
 }
 
 func bufferedMediaSection(ctx context.Context, config *params.Config, mediaInfo *string, infoMutex *sync.Mutex) string {
-	if config == nil || ctx.Err() != nil {
+	if config == nil || ctx.Err() != nil || !waitIdentityReady(ctx) {
 		return ""
 	}
 	result := runLegacyMedia(config.Language, config.UnlockTestRegion, config.UnlockTestIPVersion, config.UnlockTestShowIP)
@@ -430,7 +460,7 @@ func bufferedMediaSection(ctx context.Context, config *params.Config, mediaInfo 
 }
 
 func bufferedSecuritySection(ctx context.Context, config *params.Config, securityInfo *string, infoMutex *sync.Mutex) string {
-	if config == nil || ctx.Err() != nil {
+	if config == nil || ctx.Err() != nil || !waitIdentityReady(ctx) {
 		return ""
 	}
 	result := runLegacySecurity(config.Language)
@@ -456,14 +486,14 @@ func bufferedEmailSection(ctx context.Context, config *params.Config, emailInfo 
 }
 
 func bufferedUpstreamSection(ctx context.Context, config *params.Config) string {
-	if config == nil || ctx.Err() != nil {
+	if config == nil || ctx.Err() != nil || !waitIdentityReady(ctx) {
 		return ""
 	}
 	return legacySectionText("上游及回程线路检测", config.Width, runLegacyUpstream(config.Language))
 }
 
 func bufferedRouteSection(ctx context.Context, config *params.Config) string {
-	if config == nil || ctx.Err() != nil {
+	if config == nil || ctx.Err() != nil || !waitIdentityReady(ctx) {
 		return ""
 	}
 	return legacySectionText("三网回程路由检测", config.Width, runLegacyRoute(config.Language, config.Nt3Location, config.Nt3CheckType))

@@ -148,11 +148,11 @@ func RunAllTestsContext(parent context.Context, preCheck utils.NetCheckResult, c
 	// structured adapters still collect machine-readable payloads below, but
 	// they must never replace the established option-1 sections with a second
 	// table layout.
-	legacyConfig := config
+	legacyConfig := legacyConfigForStructured(config)
 	if UsesStructuredComponents() {
 		configureStructuredLogging(config.EnableLogger)
 	}
-	identityReady := make(chan struct{}, 1)
+	identityReady := make(chan struct{})
 	workflowCtx := runner.WithIdentityReady(ctx, identityReady)
 	workflowDone := make(chan struct{})
 	go func() {

@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Script to create public branch by removing security dependencies and references.
-This script properly handles Go file modifications to ensure the code can compile.
-"""
+"""Create a public branch without loading private repository modules."""
 
 import re
 import os
@@ -52,60 +49,6 @@ def remove_vendor_tree(path='vendor'):
     if os.path.isdir(path):
         shutil.rmtree(path)
         print(f"✓ Removed {path}/ from public branch")
-
-
-def remove_code_block(lines, start_marker, end_condition='empty_line'):
-    """
-    Remove code block from lines starting with start_marker.
-    
-    Args:
-        lines: List of file lines
-        start_marker: String or list of strings to identify block start
-        end_condition: 'empty_line' (default) or 'closing_brace' or custom function
-    
-    Returns:
-        Modified lines with the block removed
-    """
-    if isinstance(start_marker, str):
-        start_marker = [start_marker]
-    
-    result = []
-    skip_mode = False
-    brace_depth = 0
-    
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        
-        # Check if we should start skipping
-        if not skip_mode:
-            for marker in start_marker:
-                if marker in line:
-                    skip_mode = True
-                    if end_condition == 'closing_brace':
-                        # Count opening braces on the function declaration line
-                        brace_depth = line.count('{') - line.count('}')
-                    break
-            
-            if not skip_mode:
-                result.append(line)
-        else:
-            # We're in skip mode
-            if end_condition == 'empty_line':
-                # Skip until we find an empty line
-                if line.strip() == '':
-                    skip_mode = False
-                    # Don't add the empty line, continue to next
-            elif end_condition == 'closing_brace':
-                # Track brace depth
-                brace_depth += line.count('{') - line.count('}')
-                if brace_depth == 0 and '}' in line:
-                    # Function ended, skip until next empty line
-                    end_condition = 'empty_line'
-        
-        i += 1
-    
-    return result
 
 
 def modify_speed_go(filepath):
@@ -183,7 +126,7 @@ def remove_private_go_sources():
 
 
 def remove_private_delivery_artifacts():
-    """Keep private publishing machinery out of the generated public tree."""
+    """Remove workflows that would load private modules in the public branch."""
     private_artifacts = [
         '.back/create_public_branch.py',
         '.github/workflows/build_binary.yaml',
@@ -217,12 +160,14 @@ def validate_public_go_sources(root='.'):
 
 
 def validate_public_delivery_tree(root='.'):
-    """Reject private module references outside module metadata after generation."""
+    """Reject private-module use from source and executable build inputs only."""
     private_reference = re.compile(
         r'github\.com/oneclickvirt/(?:privatespeedtest|security)(?:/|["`]|$)',
         flags=re.IGNORECASE,
     )
-    text_extensions = {'.go', '.json', '.md', '.mdx', '.mod', '.py', '.sh', '.yaml', '.yml'}
+    # Documentation and ordinary text may describe historical components. They
+    # are not Go dependencies and must remain intact in the public branch.
+    text_extensions = {'.go', '.mod', '.yaml', '.yml'}
     ignored_directories = {'.git', 'vendor', '.cache', '.tmp'}
     matches = []
     for directory, directories, filenames in os.walk(root):
@@ -241,16 +186,27 @@ def modify_utils_go(filepath):
     """
     Modify utils/utils.go to:
     1. Replace security/network import with basics/network
-    2. Replace SecurityUploadToken usage with hardcoded token
+    2. Preserve the existing upload-token behavior without that dependency
     """
     content = read_file(filepath)
     
-    # Replace import
-    content = re.sub(
-        r'"github\.com/oneclickvirt/security/network"',
-        r'"github.com/oneclickvirt/basics/network"',
-        content
+    # basics/network is already imported as bnetwork. Remove the private
+    # import rather than importing the same package twice under two aliases.
+    content, import_replacements = re.subn(
+        r'(?m)^\s*"github\.com/oneclickvirt/security/network"\r?\n',
+        '',
+        content,
     )
+    if import_replacements != 1:
+        raise ValueError(f"Expected one private network import in {filepath}")
+
+    content, check_replacements = re.subn(
+        r'(?<![A-Za-z0-9_])network\.NetworkCheck',
+        'bnetwork.NetworkCheck',
+        content,
+    )
+    if check_replacements != 1:
+        raise ValueError(f"Expected one private network check in {filepath}")
     
     # Replace token usage - find the exact line and replace it
     content = re.sub(
@@ -259,168 +215,8 @@ def modify_utils_go(filepath):
         content
     )
     
-    # Update title for public version
-    content = re.sub(
-        r'VPS融合怪测试',
-        r'VPS融合怪测试(非官方编译)',
-        content
-    )
-    content = re.sub(
-        r'VPS Fusion Monster Test',
-        r'VPS Fusion Monster Test (Unofficial)',
-        content
-    )
-    
     write_file(filepath, content)
     print(f"✓ Modified {filepath}")
-
-
-def modify_params_go(filepath):
-    """
-    Modify internal/params/params.go to change security flag default to false.
-    """
-    content = read_file(filepath)
-    
-    # Change default value in struct initialization
-    content = re.sub(
-        r'(\s+SecurityTestStatus:\s+)true,',
-        r'\1false,',
-        content
-    )
-    
-    # Change flag default value
-    content = re.sub(
-        r'(c\.GoecsFlag\.BoolVar\(&c\.SecurityTestStatus, "security", )true(, "Enable/Disable security test"\))',
-        r'\1false\2',
-        content
-    )
-    
-    write_file(filepath, content)
-    print(f"✓ Modified {filepath}")
-
-def sanitize_public_markdown(root='.'):
-    """Remove restricted speed-test implementation details from public Markdown."""
-    go_mod_content = read_file('go.mod')
-    go_version_match = re.search(r'^go (\d+\.\d+(?:\.\d+)?)', go_mod_content, re.MULTILINE)
-    if not go_version_match:
-        raise ValueError("Could not extract the Go version for public documentation")
-    go_version = go_version_match.group(1)
-    restricted_line = re.compile(
-        r'^[^\r\n]*(?:'
-        r'privatespeedtest|privateSpeed|privatepst|private[_-]speed|'
-        r'private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
-        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|备用候选|'
-        r'プライベート回線キャリア(?:のノード)?|'
-        r'Candidate servers are checked before selection|'
-        r'测速前会先检查候选节点|'
-        r'候補サーバーの利用可否を確認してから選択'
-        r')[^\r\n]*(?:\r?\n|$)',
-        flags=re.IGNORECASE | re.MULTILINE,
-    )
-    unresolved_marker = re.compile(
-        r'privatespeedtest|private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?|'
-        r'私有(?:国内|三网)?测速(?:节点)?|私有节点|プライベート回線キャリア',
-        flags=re.IGNORECASE,
-    )
-    for directory, subdirectories, filenames in os.walk(root):
-        subdirectories[:] = [
-            name for name in subdirectories
-            if name not in {'.git', 'vendor', '.cache', '.tmp'}
-        ]
-        for filename in filenames:
-            if not filename.lower().endswith(('.md', '.mdx')):
-                continue
-            filepath = os.path.join(directory, filename)
-            content = read_file(filepath)
-            original = content
-
-            content = re.sub(
-                r'(?m)^- IP quality/security information concurrent query:.*$',
-                '- IP quality/security information: unavailable in the public source build.',
-                content,
-            )
-            content = re.sub(
-                r'(?m)^- IP 质量/安全信息并发查询：.*$',
-                '- IP 质量/安全信息：公开源码构建中不可用。',
-                content,
-            )
-            content = re.sub(
-                r'(?m)^依赖项目：\[https://github\.com/oneclickvirt/securityCheck\]\(https://github\.com/oneclickvirt/securityCheck\)\s*$',
-                '公开源码构建不包含 IP 质量/安全信息组件；该项会显示为不可用。',
-                content,
-            )
-            content = re.sub(
-                r'(?m)^Dependency project: \[https://github\.com/oneclickvirt/securityCheck\]\(https://github\.com/oneclickvirt/securityCheck\)\s*$',
-                'The public source build does not include the IP quality/security component; this section is reported as unavailable.',
-                content,
-            )
-            content = re.sub(
-                r'(?m)^依存プロジェクト：\[https://github\.com/oneclickvirt/securityCheck\]\(https://github\.com/oneclickvirt/securityCheck\)\s*$',
-                '公開ソースビルドにはIP品質/セキュリティ情報コンポーネントは含まれず、この項目は利用不可として表示されます。',
-                content,
-            )
-            content = re.sub(
-                r'(?ms)^### \*\*IP质量检测\*\*\n.*?(?=^### |\Z)',
-                '### **IP质量检测**\n\n公开源码构建不包含 IP 质量/安全信息组件；该项会显示为不可用。\n\n',
-                content,
-            )
-            content = re.sub(
-                r'(?ms)^### IP Quality Detection\n.*?(?=^### |\Z)',
-                '### IP Quality Detection\n\nThe public source build does not include the IP quality/security component; this section is reported as unavailable.\n\n',
-                content,
-            )
-            content = re.sub(
-                r'(?ms)^### IP品質検出\n.*?(?=^### |\Z)',
-                '### IP品質検出\n\n公開ソースビルドにはIP品質/セキュリティ情報コンポーネントは含まれず、この項目は利用不可として表示されます。\n\n',
-                content,
-            )
-            content = re.sub(
-                r'(Enable/Disable security test \(default )true(\))',
-                r'\g<1>false\2',
-                content,
-            )
-            content = re.sub(
-                r'Select go \d+\.\d+\.\d+[ \t]+version to install[ \t]*',
-                f'Select go {go_version} version to install',
-                content,
-            )
-            content = re.sub(
-                r'选择 go \d+\.\d+\.\d+[ \t]+的版本进行安装[ \t]*',
-                f'选择 go {go_version} 的版本进行安装',
-                content,
-            )
-
-            # Preserve the surrounding public speed-test sentence while dropping
-            # the restricted component name and its selection/registry details.
-            content = re.sub(
-                r'(?i)\s*Private[ \t-]+carrier(?:[ \t-]+speed)?[ \t-]+nodes?\s+from\s+`?privatespeedtest[^.\r\n]*\.\s*',
-                ' ',
-                content,
-            )
-            content = re.sub(
-                r'，同时融合[^。\r\n]*(?:privatespeedtest|私有国内测速节点)[^。\r\n]*?；',
-                '；',
-                content,
-                flags=re.IGNORECASE,
-            )
-            content = re.sub(
-                r'(?i)\s*[（(](?:without private dependencies)[）)]',
-                '',
-                content,
-            )
-            content = re.sub(r'(?i)\bwithout private dependencies\b', '', content)
-            content = re.sub(r'不含私有依赖', '', content)
-            content = restricted_line.sub('', content)
-            content = re.sub(r'\n{3,}', '\n\n', content)
-
-            if unresolved_marker.search(content):
-                raise ValueError(f"Public Markdown still contains restricted speed-test details: {filepath}")
-            if re.search(r'(?i)securitycheck|Enable/Disable security test \(default true\)', content):
-                raise ValueError(f"Public Markdown still describes unavailable private security behavior: {filepath}")
-
-            if content != original:
-                write_file(filepath, content)
-                print(f"✓ Sanitized public documentation: {filepath}")
 
 
 def main():
@@ -439,7 +235,6 @@ def main():
     activate_public_component('api/components_public.go')
     remove_private_go_sources()
     modify_utils_go('utils/utils.go')
-    modify_params_go('internal/params/params.go')
     print()
     
     # Modify go.mod
@@ -448,8 +243,7 @@ def main():
     remove_vendor_tree()
     print()
 
-    print("Sanitizing public delivery files...")
-    sanitize_public_markdown()
+    print("Removing private-module delivery inputs...")
     remove_private_delivery_artifacts()
     validate_public_go_sources()
     validate_public_delivery_tree()

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/oneclickvirt/cputest/cpu"
 	"github.com/oneclickvirt/ecs/internal/analysis"
 	"github.com/oneclickvirt/ecs/internal/params"
@@ -21,30 +23,53 @@ import (
 
 type identityReadyContextKey struct{}
 
+type identityReadiness struct {
+	done chan struct{}
+	once sync.Once
+}
+
 var runLegacyCPUBurn = cpu.RunBurn
 
 // WithIdentityReady lets the orchestration layer wait until the legacy basic
-// stage has finished publishing its IP identity. This prevents structured
-// security/backtrace probes from racing the legacy global identity fields.
-// The channel should be buffered with capacity one.
+// stage has finished publishing its IP identity. Closing the channel broadcasts
+// that publication to every dependent concurrent task.
 func WithIdentityReady(ctx context.Context, ready chan struct{}) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	return context.WithValue(ctx, identityReadyContextKey{}, ready)
+	if ready == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, identityReadyContextKey{}, &identityReadiness{done: ready})
 }
 
 func signalIdentityReady(ctx context.Context) {
 	if ctx == nil {
 		return
 	}
-	ready, _ := ctx.Value(identityReadyContextKey{}).(chan struct{})
-	if ready == nil {
+	ready, _ := ctx.Value(identityReadyContextKey{}).(*identityReadiness)
+	if ready == nil || ready.done == nil {
 		return
 	}
+	ready.once.Do(func() { close(ready.done) })
+}
+
+// waitIdentityReady blocks only when this workflow has an identity-publishing
+// stage. It is a no-op for standalone helpers and custom plans that do not
+// use WithIdentityReady.
+func waitIdentityReady(ctx context.Context) bool {
+	if ctx == nil {
+		return true
+	}
+	ready, _ := ctx.Value(identityReadyContextKey{}).(*identityReadiness)
+	if ready == nil || ready.done == nil {
+		return true
+	}
 	select {
-	case ready <- struct{}{}:
-	default:
+	case <-ready.done:
+		return true
+	case <-ctx.Done():
+		return false
 	}
 }
 
@@ -145,6 +170,83 @@ func RunBasicTests(ctx context.Context, preCheck utils.NetCheckResult, config *p
 			}
 		}
 	}, tempOutput, output)
+}
+
+// bufferedBasicSection is the no-stdout-capture counterpart to RunBasicTests
+// for menu option 2. CaptureOutput redirects process-wide descriptors, which
+// would otherwise race the concurrently-running speed test. The underlying
+// basic/security probes already return text, so composing the established
+// header and section strings directly preserves option one's display order.
+func bufferedBasicSection(ctx context.Context, preCheck utils.NetCheckResult, config *params.Config, basicInfo, securityInfo *string, infoMutex *sync.Mutex) string {
+	if ctx.Err() != nil || config == nil {
+		return ""
+	}
+
+	var collectedBasic, collectedSecurity string
+	if config.BasicStatus || config.SecurityTestStatus {
+		checkType := config.Nt3CheckType
+		switch {
+		case preCheck.Connected && preCheck.StackType == "IPv4":
+			checkType = "ipv4"
+		case preCheck.Connected && preCheck.StackType == "IPv6":
+			checkType = "ipv6"
+		case !preCheck.Connected:
+			checkType = ""
+		}
+		ipv4, ipv6, basic, security, resolvedCheckType := utils.BasicsAndSecurityCheck(config.Language, checkType, false)
+		tests.IPV4, tests.IPV6 = ipv4, ipv6
+		if strings.TrimSpace(resolvedCheckType) != "" {
+			config.Nt3CheckType = resolvedCheckType
+		}
+		if !preCheck.Connected {
+			config.SecurityTestStatus = false
+		}
+		collectedBasic, collectedSecurity = basic, security
+		setBufferedInfo(basicInfo, collectedBasic, infoMutex)
+		setBufferedInfo(securityInfo, collectedSecurity, infoMutex)
+	}
+
+	var output strings.Builder
+	if config.Language == "zh" {
+		output.WriteString(centeredTitleText("VPS融合怪测试", config.Width))
+		output.WriteString(reserveLeadingCell(fmt.Sprintf("版本：%s\n测评频道: https://t.me/+UHVoo2U4VyA5NTQ1\nGo项目地址：https://github.com/oneclickvirt/ecs\nShell项目地址：https://github.com/spiritLHLS/ecs\n", config.EcsVersion)))
+	} else {
+		output.WriteString(centeredTitleText("VPS Fusion Monster Test", config.Width))
+		output.WriteString(reserveLeadingCell(fmt.Sprintf("Version: %s\nReview Channel: https://t.me/+UHVoo2U4VyA5NTQ1\nGo Project: https://github.com/oneclickvirt/ecs\nShell Project: https://github.com/spiritLHLS/ecs\n", config.EcsVersion)))
+	}
+	if config.BasicStatus {
+		title := "System-Basic-Information"
+		if config.Language == "zh" {
+			title = "系统基础信息"
+		}
+		output.WriteString(centeredTitleText(title, config.Width))
+		output.WriteString(reserveLeadingCell(collectedBasic))
+	} else if shouldPrintBriefIPLinesInBasicStage(config) {
+		var brief strings.Builder
+		scanner := bufio.NewScanner(strings.NewReader(collectedBasic))
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.Contains(line, "IPV") {
+				brief.WriteString(line)
+				brief.WriteByte('\n')
+			}
+		}
+		output.WriteString(reserveLeadingCell(brief.String()))
+	}
+	return output.String()
+}
+
+func centeredTitleText(title string, width int) string {
+	if width <= 0 {
+		width = 80
+	}
+	titleWidth := runewidth.StringWidth(title)
+	totalPadding := width - titleWidth
+	if totalPadding < 0 {
+		totalPadding = 0
+	}
+	left := totalPadding / 2
+	return strings.Repeat("-", left) + title + strings.Repeat("-", left) + strings.Repeat("-", totalPadding%2) + "\n"
 }
 
 // shouldPrintBriefIPLinesInBasicStage decides whether to print brief IPV lines
@@ -454,46 +556,98 @@ func RunSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output
 }
 
 func captureChineseSpeedTests(ctx context.Context, config *params.Config, network string, preloads *tests.PrivateSpeedPreloads, display bool) string {
-	capture := utils.CaptureOutputSilent
-	if display {
-		capture = utils.CaptureOutput
+	if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
+		return ""
 	}
-	return capture(func() {
-		if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
-			return
+	// Every dependency involved in this chapter receives the buffer directly.
+	// A process-wide stdout replacement cannot safely coexist with option 2's
+	// other concurrently running chapters.
+	var buffer bytes.Buffer
+	writer := &buffer
+	if preloads != nil {
+		_ = preloads.WaitAll(ctx)
+		if ctx.Err() != nil {
+			return ""
 		}
-		utils.PrintCenteredTitle("就近节点测速", config.Width)
-		tests.ShowHead(config.Language)
-		if usesChinesePresetSpeedProfile(config) {
-			// Built-in Chinese profiles intentionally avoid global/other node
-			// groups: one nearby Ookla measurement and one representative from
-			// each mainland carrier are both easier to interpret and predictable.
-			tests.NearbySPWithNetwork(network)
-			for _, operator := range []string{"ct", "cu", "cmcc"} {
-				tests.CustomSPWithNetworkAndPreloads(ctx, "net", operator, 1, config.Language, network, preloads)
-			}
-		} else {
-			// Explicit/custom parameters retain their caller-selected node count.
-			tests.NearbySPWithNetwork(network)
-			for _, operator := range []string{"cu", "ct", "cmcc"} {
-				tests.CustomSPWithNetworkAndPreloads(ctx, "net", operator, config.SpNum, config.Language, network, preloads)
-			}
+	}
+	_, _ = writer.WriteString(centeredTitleText("就近节点测速", config.Width))
+	tests.ShowHeadTo(writer, config.Language)
+	if usesChineseFullSpeedProfile(config) {
+		// Options 1 and 2 retain the historical complete profile. Option 2
+		// changes scheduling only; it does not change the selected locations.
+		tests.NearbySPWithNetworkTo(writer, network)
+		tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
+		for _, operator := range []string{"cu", "ct", "cmcc"} {
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 		}
-		// Wait for third-party writers before restoring the temporary stream.
-		time.Sleep(500 * time.Millisecond)
-	})
+	} else if usesChineseNearbyCarrierSpeedProfile(config) {
+		// Other built-in Chinese presets intentionally use one nearby
+		// speedtest.net result and one node for each mainland carrier.
+		tests.NearbySPWithNetworkTo(writer, network)
+		for _, operator := range []string{"ct", "cu", "cmcc"} {
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, 1, config.Language, network, preloads)
+		}
+	} else {
+		// Explicit/custom parameters retain their caller-selected node count.
+		tests.NearbySPWithNetworkTo(writer, network)
+		for _, operator := range []string{"cu", "ct", "cmcc"} {
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
+		}
+	}
+	value := buffer.String()
+	if display {
+		fmt.Print(value)
+	}
+	return value
 }
 
-func usesChinesePresetSpeedProfile(config *params.Config) bool {
+func normalizedSpeedNodeCount(value int) int {
+	if value <= 0 {
+		return 2
+	}
+	if value > 20 {
+		return 20
+	}
+	return value
+}
+
+// usesChineseFullSpeedProfile identifies only the two complete Chinese
+// profiles. A non-menu invocation has historically used the complete profile
+// as well, so an empty choice with MenuMode disabled keeps that compatibility.
+func usesChineseFullSpeedProfile(config *params.Config) bool {
 	if config == nil {
 		return false
 	}
 	switch strings.TrimSpace(config.Choice) {
-	case "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11":
+	case "1", "2":
+		return true
+	case "":
+		return !config.MenuMode
+	default:
+		return false
+	}
+}
+
+// usesChineseNearbyCarrierSpeedProfile covers the fixed non-custom Chinese
+// presets. Their speed output is deliberately limited to nearby + one node
+// per mainland carrier; custom callers keep their requested SpNum instead.
+func usesChineseNearbyCarrierSpeedProfile(config *params.Config) bool {
+	if config == nil {
+		return false
+	}
+	switch strings.TrimSpace(config.Choice) {
+	case "3", "4", "5", "6", "7":
 		return true
 	default:
 		return false
 	}
+}
+
+// usesChinesePresetSpeedProfile is retained for package-level compatibility
+// with older tests and callers. It now means any fixed Chinese preset, while
+// the two helpers above distinguish the complete and nearby profiles.
+func usesChinesePresetSpeedProfile(config *params.Config) bool {
+	return usesChineseFullSpeedProfile(config) || usesChineseNearbyCarrierSpeedProfile(config)
 }
 
 // RunEnglishNetworkTests runs network tests (English mode)
@@ -550,21 +704,19 @@ func RunEnglishSpeedTestsWithNetwork(ctx context.Context, config *params.Config,
 }
 
 func captureEnglishSpeedTests(ctx context.Context, config *params.Config, network string, display bool) string {
-	capture := utils.CaptureOutputSilent
-	if display {
-		capture = utils.CaptureOutput
+	if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
+		return ""
 	}
-	return capture(func() {
-		if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
-			return
-		}
-		utils.PrintCenteredTitle("Speed-Test", config.Width)
-		tests.ShowHead(config.Language)
-		// English mode deliberately keeps the international registry profile.
-		tests.CustomSPWithNetwork("net", "global", max(4, config.SpNum), config.Language, network)
-		// Wait for third-party writers before restoring the temporary stream.
-		time.Sleep(500 * time.Millisecond)
-	})
+	var buffer bytes.Buffer
+	_, _ = buffer.WriteString(centeredTitleText("Speed-Test", config.Width))
+	tests.ShowHeadTo(&buffer, config.Language)
+	// English mode deliberately keeps the international registry profile.
+	tests.CustomSPWithNetworkTo(&buffer, "net", "global", max(4, config.SpNum), config.Language, network)
+	value := buffer.String()
+	if display {
+		fmt.Print(value)
+	}
+	return value
 }
 
 // AppendTimeInfo appends timing information

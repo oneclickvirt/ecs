@@ -60,6 +60,7 @@ type structuredComponentTask struct {
 type structuredCollectionPlan struct {
 	basics     func(context.Context) []ComponentReport
 	hardware   func(context.Context) []ComponentReport
+	preload    func(context.Context)
 	concurrent []structuredComponentTask
 	speed      *structuredComponentTask
 	// fullConcurrent is menu option 2. It starts every enabled stage before
@@ -96,6 +97,13 @@ func runStructuredCollectionPlan(ctx context.Context, plan structuredCollectionP
 	if plan.hardware != nil {
 		components = append(components, plan.hardware(ctx)...)
 	}
+	// Candidate reachability probes are deliberately started only after the
+	// serialized hardware benchmarks. They can overlap other network
+	// diagnostics, but the speed stage waits for them before any throughput
+	// transfer begins.
+	if plan.preload != nil && ctx.Err() == nil {
+		plan.preload(ctx)
+	}
 	var tcp []TCPReport
 	for _, result := range runStructuredConcurrentTasks(ctx, plan.concurrent) {
 		components = append(components, result.components...)
@@ -121,6 +129,9 @@ func runStructuredCollectionPlan(ctx context.Context, plan structuredCollectionP
 // hardware and network throughput can distort benchmark values. Results are
 // still joined in the same component order as the accurate full-suite path.
 func runFullyConcurrentStructuredCollectionPlan(ctx context.Context, plan structuredCollectionPlan) ([]ComponentReport, []TCPReport) {
+	if plan.preload != nil && ctx.Err() == nil {
+		plan.preload(ctx)
+	}
 	basicsDone := startStructuredComponentStage(ctx, "basics", plan.basics)
 	hardwareDone := startStructuredComponentStage(ctx, "hardware", plan.hardware)
 	networkDone := startStructuredConcurrentTaskBatch(ctx, plan.concurrent)
@@ -454,10 +465,17 @@ func collectPublishedComponentReportsWithTCP(ctx context.Context, config *Config
 		}})
 	}
 	if config.SpeedTestStatus && inputs.Network {
+		speedPreload := newStructuredSpeedPreload(config, inputs)
+		plan.preload = func(taskCtx context.Context) {
+			speedPreload.Start(taskCtx)
+		}
 		plan.speed = &structuredComponentTask{section: "speed", run: func(taskCtx context.Context) structuredTaskResult {
 			started := time.Now()
-			privateRunner := privateSpeedRunnerForConfigWithNetwork(config.Language, config.DataOffline)
-			report := withComponentDuration(collectSpeedComponentFromRegistryForLanguageWithNetwork(taskCtx, inputs.SpeedtestServers, inputs.TransferTargets, config.Language, config.SpNum, inputs.SpeedNetwork, privateRunner), started)
+			probedServers, privateRunner := speedPreload.Wait(taskCtx)
+			if privateRunner == nil {
+				privateRunner = privateSpeedRunnerForStructuredConfig(config)
+			}
+			report := withComponentDuration(collectSpeedComponentForConfigWithNetwork(taskCtx, config, inputs.SpeedtestServers, inputs.TransferTargets, inputs.SpeedNetwork, privateRunner, probedServers), started)
 			return structuredTaskResult{components: []ComponentReport{report}}
 		}}
 	}
@@ -1627,6 +1645,7 @@ type speedNodeResult struct {
 	Availability string `json:"availability"`
 	LatencyMS    int64  `json:"latency_ms,omitempty"`
 	Error        string `json:"error,omitempty"`
+	Network      string `json:"network,omitempty"`
 	URL          string `json:"-"`
 }
 
@@ -1677,6 +1696,87 @@ type privateSpeedRunner func(context.Context, int) (any, int, []privateSpeedBenc
 
 type privateSpeedRunnerWithNetwork func(context.Context, int, speedmodel.Network) (any, int, []privateSpeedBenchmark)
 
+// structuredPrivateSpeedPreload is implemented by the private-component
+// build and becomes a no-op in ecs_public. It exposes only a runner closure,
+// keeping private registry types out of the common API surface.
+type structuredPrivateSpeedPreload struct {
+	start func(context.Context)
+	wait  func(context.Context) privateSpeedRunnerWithNetwork
+}
+
+func (preload *structuredPrivateSpeedPreload) Start(ctx context.Context) {
+	if preload != nil && preload.start != nil {
+		preload.start(ctx)
+	}
+}
+
+func (preload *structuredPrivateSpeedPreload) Wait(ctx context.Context) privateSpeedRunnerWithNetwork {
+	if preload == nil || preload.wait == nil {
+		return nil
+	}
+	return preload.wait(ctx)
+}
+
+// structuredSpeedPreload owns the non-throughput candidate checks started
+// between the hardware stage and the final speed stage. A channel provides a
+// happens-before boundary so a speed transfer never overlaps those probes.
+type structuredSpeedPreload struct {
+	candidates []speedmodel.ServerMetadata
+	network    speedmodel.Network
+	done       chan struct{}
+	once       sync.Once
+	private    *structuredPrivateSpeedPreload
+}
+
+func newStructuredSpeedPreload(config *Config, inputs componentInputs) *structuredSpeedPreload {
+	return &structuredSpeedPreload{
+		candidates: structuredSpeedCandidatesForConfig(config, inputs.SpeedtestServers),
+		network:    inputs.SpeedNetwork,
+		done:       make(chan struct{}),
+		private:    newPrivateStructuredSpeedPreload(config, inputs),
+	}
+}
+
+func structuredSpeedCandidatesForConfig(config *Config, servers []speedmodel.ServerMetadata) []speedmodel.ServerMetadata {
+	candidates := append([]speedmodel.ServerMetadata(nil), servers...)
+	if config != nil && strings.EqualFold(strings.TrimSpace(config.Language), "en") {
+		return internationalSpeedServers(candidates)
+	}
+	return candidates
+}
+
+func (preload *structuredSpeedPreload) Start(ctx context.Context) {
+	if preload == nil {
+		return
+	}
+	preload.once.Do(func() {
+		if ctx == nil {
+			ctx = context.Background()
+		}
+		preload.private.Start(ctx)
+		go func() {
+			defer close(preload.done)
+			preload.candidates = speedmodel.ProbeServersWithNetwork(ctx, preload.candidates, 2*time.Second, 8, nil, preload.network)
+		}()
+	})
+}
+
+func (preload *structuredSpeedPreload) Wait(ctx context.Context) ([]speedmodel.ServerMetadata, privateSpeedRunnerWithNetwork) {
+	if preload == nil {
+		return nil, nil
+	}
+	preload.Start(ctx)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	select {
+	case <-preload.done:
+		return append([]speedmodel.ServerMetadata(nil), preload.candidates...), preload.private.Wait(ctx)
+	case <-ctx.Done():
+		return nil, nil
+	}
+}
+
 func privateSpeedRunnerForConfig(language string, offline bool) privateSpeedRunner {
 	if language == "en" {
 		if offline {
@@ -1701,6 +1801,16 @@ func privateSpeedRunnerForConfigWithNetwork(language string, offline bool) priva
 		return runEmbeddedPrivateSpeedBenchmarksWithNetwork
 	}
 	return runPrivateSpeedBenchmarksWithNetwork
+}
+
+func privateSpeedRunnerForStructuredConfig(config *Config) privateSpeedRunnerWithNetwork {
+	if config != nil && !strings.EqualFold(strings.TrimSpace(config.Language), "en") && usesChineseFullStructuredSpeedProfile(config) {
+		return chineseFullPrivateSpeedRunnerForConfigWithNetwork(config.DataOffline)
+	}
+	if config == nil {
+		return privateSpeedRunnerForConfigWithNetwork("zh", false)
+	}
+	return privateSpeedRunnerForConfigWithNetwork(config.Language, config.DataOffline)
 }
 
 func isMainlandChinaCountry(country string) bool {
@@ -1761,14 +1871,100 @@ func collectSpeedComponentFromRegistryForLanguageWithNetwork(ctx context.Context
 	return collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx, servers, transfers, limit, nil, nil, nil, privateRunner, international, network)
 }
 
-func collectSpeedComponentFromRegistryWithSelection(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, representative bool) ComponentReport {
-	return collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx, servers, transfers, limit, dial, throughput, privateRunner, nil, representative, speedmodel.NetworkAuto)
+// collectSpeedComponentForConfigWithNetwork applies the same speed geography
+// contract as the terminal runner without changing the public API helpers:
+// English stays international; Chinese full suites keep global plus carrier
+// coverage; Chinese presets 3-7 use nearby/carrier representatives.
+func collectSpeedComponentForConfigWithNetwork(ctx context.Context, config *Config, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, network speedmodel.Network, privateRunner privateSpeedRunnerWithNetwork, probedServers []speedmodel.ServerMetadata) ComponentReport {
+	if config == nil {
+		config = NewDefaultConfig()
+	}
+	if probedServers == nil {
+		probedServers = speedmodel.ProbeServersWithNetwork(ctx, structuredSpeedCandidatesForConfig(config, servers), 2*time.Second, 8, nil, network)
+	}
+	if privateRunner == nil {
+		privateRunner = privateSpeedRunnerForStructuredConfig(config)
+	}
+	if strings.EqualFold(strings.TrimSpace(config.Language), "en") {
+		return collectSpeedComponentFromProbedServersWithSelectionAndNetwork(ctx, probedServers, internationalTransferTargets(transfers), config.SpNum, nil, nil, privateRunner, true, network)
+	}
+	if usesChineseFullStructuredSpeedProfile(config) {
+		// The historical complete suite tests each mainland carrier separately.
+		// Keep that quota in the structured private registry path as well, rather
+		// than treating SpNum as one combined cross-carrier limit.
+		return collectChineseFullSpeedComponentWithNetwork(ctx, probedServers, transfers, normalizedStructuredSpeedCount(config.SpNum), network, privateRunner)
+	}
+	if usesChineseNearbyCarrierStructuredSpeedProfile(config) {
+		return collectChineseNearbyCarrierSpeedComponentWithNetwork(ctx, probedServers, transfers, network, privateRunner)
+	}
+	return collectSpeedComponentFromProbedServersWithSelectionAndNetwork(ctx, probedServers, transfers, config.SpNum, nil, nil, privateRunner, false, network)
 }
 
-func collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, privateRunnerWithNetwork privateSpeedRunnerWithNetwork, representative bool, network speedmodel.Network) ComponentReport {
+func usesChineseFullStructuredSpeedProfile(config *Config) bool {
+	if config == nil {
+		return false
+	}
+	switch strings.TrimSpace(config.Choice) {
+	case "1", "2":
+		return true
+	case "":
+		return !config.MenuMode
+	default:
+		return false
+	}
+}
+
+func usesChineseNearbyCarrierStructuredSpeedProfile(config *Config) bool {
+	if config == nil {
+		return false
+	}
+	switch strings.TrimSpace(config.Choice) {
+	case "3", "4", "5", "6", "7":
+		return true
+	default:
+		return false
+	}
+}
+
+func normalizedStructuredSpeedCount(value int) int {
+	if value <= 0 {
+		return 2
+	}
+	return value
+}
+
+func collectChineseFullSpeedComponentWithNetwork(ctx context.Context, probedServers []speedmodel.ServerMetadata, transfers []transferTargetInput, perCarrier int, network speedmodel.Network, privateRunner privateSpeedRunnerWithNetwork) ComponentReport {
 	started := time.Now()
-	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(servers))}
-	probedServers := speedmodel.ProbeServersWithNetwork(ctx, servers, 2*time.Second, 8, speedmodel.ServerDialFunc(dial), network)
+	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(probedServers))}
+	payload.Nodes = appendProbedSpeedRegistryNodes(payload.Nodes, probedServers)
+	payload.Nodes = appendTransferSpeedNodes(payload.Nodes, transfers)
+	// appendSpeedRegistryNodes performs the family-pinned candidate probe.  Do
+	// not probe the same registry a second time here: besides doubling latency,
+	// the duplicate connection burst can affect the first throughput sample.
+	available := availableSpeedNodes(payload.Nodes)
+	selected := selectChineseFullSpeedNodes(available, perCarrier)
+	payload.Selected = append(payload.Selected, selected...)
+	return finishSpeedComponentWithNetwork(ctx, payload, perCarrier, privateRunner, network, started)
+}
+
+func collectChineseNearbyCarrierSpeedComponentWithNetwork(ctx context.Context, probedServers []speedmodel.ServerMetadata, transfers []transferTargetInput, network speedmodel.Network, privateRunner privateSpeedRunnerWithNetwork) ComponentReport {
+	started := time.Now()
+	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(probedServers))}
+	payload.Nodes = appendProbedSpeedRegistryNodes(payload.Nodes, probedServers)
+	payload.Nodes = appendTransferSpeedNodes(payload.Nodes, transfers)
+	// The registry probe has already completed in appendSpeedRegistryNodes.
+	available := availableSpeedNodes(payload.Nodes)
+	selected := selectChineseNearbyCarrierSpeedNodes(available)
+	payload.Selected = append(payload.Selected, selected...)
+	return finishSpeedComponentWithNetwork(ctx, payload, 1, privateRunner, network, started)
+}
+
+func appendSpeedRegistryNodes(ctx context.Context, nodes []speedNodeResult, servers []speedmodel.ServerMetadata, network speedmodel.Network) []speedNodeResult {
+	probedServers := speedmodel.ProbeServersWithNetwork(ctx, servers, 2*time.Second, 8, nil, network)
+	return appendProbedSpeedRegistryNodes(nodes, probedServers)
+}
+
+func appendProbedSpeedRegistryNodes(nodes []speedNodeResult, probedServers []speedmodel.ServerMetadata) []speedNodeResult {
 	for _, server := range probedServers {
 		host := strings.TrimSpace(server.Host)
 		port := 0
@@ -1779,26 +1975,227 @@ func collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx context.Contex
 		if availability == "" {
 			availability = "candidate"
 		}
-		payload.Nodes = append(payload.Nodes, speedNodeResult{
+		nodes = append(nodes, speedNodeResult{
 			ID: server.ID, Host: host, Port: port, Provider: server.Provider,
 			Country: server.Country, City: server.City, Source: "speedtest",
 			Availability: availability, LatencyMS: server.LatencyMS,
-			Error: server.Error, URL: server.URL,
+			Error: server.Error, Network: server.Network, URL: server.URL,
 		})
 	}
+	return nodes
+}
+
+func appendTransferSpeedNodes(nodes []speedNodeResult, transfers []transferTargetInput) []speedNodeResult {
 	for _, target := range transfers {
 		availability := strings.ToLower(strings.TrimSpace(target.Status))
 		if availability == "" || availability == "available" {
 			availability = "candidate"
 		}
 		host := net.JoinHostPort(strings.Trim(target.Host, "[]"), strconv.Itoa(target.PortFrom))
-		payload.Nodes = append(payload.Nodes, speedNodeResult{
+		nodes = append(nodes, speedNodeResult{
 			ID: target.ID, Host: host, Port: target.PortFrom, Provider: target.Provider,
-			Country: target.Country, City: target.City, Source: "openspeedtest",
-			Availability: availability,
+			Country: target.Country, City: target.City, Source: "openspeedtest", Availability: availability,
 		})
 	}
-	return collectSpeedComponentFromNodesWithNetwork(ctx, payload, limit, dial, throughput, privateRunner, privateRunnerWithNetwork, representative, started, network)
+	return nodes
+}
+
+func availableSpeedNodes(nodes []speedNodeResult) []speedNodeResult {
+	available := make([]speedNodeResult, 0, len(nodes))
+	for _, node := range nodes {
+		if node.Availability == "available" && node.Source == "speedtest" && strings.TrimSpace(node.URL) != "" {
+			available = append(available, node)
+		}
+	}
+	sort.SliceStable(available, func(i, j int) bool {
+		if available[i].LatencyMS == available[j].LatencyMS {
+			return available[i].ID < available[j].ID
+		}
+		return available[i].LatencyMS < available[j].LatencyMS
+	})
+	return available
+}
+
+func selectChineseFullSpeedNodes(nodes []speedNodeResult, perCarrier int) []speedNodeResult {
+	selected := make([]speedNodeResult, 0, 3*perCarrier+3)
+	used := make(map[string]struct{})
+	add := func(node speedNodeResult) {
+		key := node.ID + "\x00" + node.Host + "\x00" + node.URL
+		if _, exists := used[key]; exists {
+			return
+		}
+		used[key] = struct{}{}
+		selected = append(selected, node)
+	}
+	if nearby, ok := firstMatchingSpeedNode(nodes, func(node speedNodeResult) bool {
+		return isNearbySpeedNode(node)
+	}, used); ok {
+		add(nearby)
+	}
+	globalCount := 0
+	for _, node := range nodes {
+		if globalCount >= 2 {
+			break
+		}
+		if isGlobalSpeedNode(node) {
+			before := len(selected)
+			add(node)
+			if len(selected) > before {
+				globalCount++
+			}
+		}
+	}
+	// Keep the established complete-suite order: nearby, global, Unicom,
+	// Telecom, then Mobile. The compact Chinese profiles intentionally retain
+	// their separate Telecom/Unicom/Mobile ordering below.
+	for _, carrier := range []string{"cu", "ct", "cm"} {
+		count := 0
+		for _, node := range nodes {
+			if count >= perCarrier {
+				break
+			}
+			if isGlobalSpeedNode(node) || !matchesSpeedCarrier(node, carrier) {
+				continue
+			}
+			before := len(selected)
+			add(node)
+			if len(selected) > before {
+				count++
+			}
+		}
+	}
+	return selected
+}
+
+func selectChineseNearbyCarrierSpeedNodes(nodes []speedNodeResult) []speedNodeResult {
+	selected := make([]speedNodeResult, 0, 4)
+	used := make(map[string]struct{})
+	add := func(node speedNodeResult) {
+		key := node.ID + "\x00" + node.Host + "\x00" + node.URL
+		if _, exists := used[key]; exists {
+			return
+		}
+		used[key] = struct{}{}
+		selected = append(selected, node)
+	}
+	if nearby, ok := firstMatchingSpeedNode(nodes, func(node speedNodeResult) bool {
+		return isNearbySpeedNode(node)
+	}, used); ok {
+		add(nearby)
+	}
+	for _, carrier := range []string{"ct", "cu", "cm"} {
+		if node, ok := firstMatchingSpeedNode(nodes, func(node speedNodeResult) bool {
+			return !isGlobalSpeedNode(node) && matchesSpeedCarrier(node, carrier)
+		}, used); ok {
+			add(node)
+		}
+	}
+	return selected
+}
+
+func firstMatchingSpeedNode(nodes []speedNodeResult, match func(speedNodeResult) bool, used map[string]struct{}) (speedNodeResult, bool) {
+	for _, node := range nodes {
+		key := node.ID + "\x00" + node.Host + "\x00" + node.URL
+		if _, exists := used[key]; exists || !match(node) {
+			continue
+		}
+		return node, true
+	}
+	return speedNodeResult{}, false
+}
+
+func isGlobalSpeedNode(node speedNodeResult) bool {
+	return strings.HasPrefix(strings.ToLower(strings.TrimSpace(node.ID)), "global-") || !isMainlandChinaCountry(node.Country)
+}
+
+// isNearbySpeedNode identifies the mainland candidate used for the
+// Speedtest.net-nearby slot.  A global/non-mainland entry must never consume
+// that slot merely because it has a lower measured latency.
+func isNearbySpeedNode(node speedNodeResult) bool {
+	return !isGlobalSpeedNode(node)
+}
+
+func matchesSpeedCarrier(node speedNodeResult, carrier string) bool {
+	provider := strings.ToLower(strings.TrimSpace(node.Provider))
+	switch carrier {
+	case "ct":
+		return provider == "ct" || strings.Contains(provider, "telecom")
+	case "cu":
+		return provider == "cu" || strings.Contains(provider, "unicom")
+	case "cm":
+		return provider == "cm" || provider == "cmcc" || strings.Contains(provider, "mobile")
+	default:
+		return false
+	}
+}
+
+func finishSpeedComponentWithNetwork(ctx context.Context, payload speedComponentPayload, privateLimit int, privateRunner privateSpeedRunnerWithNetwork, network speedmodel.Network, started time.Time) ComponentReport {
+	benchmarkServers := make([]speedmodel.ServerMetadata, 0, len(payload.Selected))
+	for _, selected := range payload.Selected {
+		benchmarkServers = append(benchmarkServers, speedmodel.ServerMetadata{
+			ID: selected.ID, Name: selected.City, Host: selected.Host, URL: selected.URL,
+			Provider: selected.Provider, Country: selected.Country, City: selected.City,
+		})
+	}
+	payload.Benchmarks = speedmodel.BenchmarkServersWithNetwork(ctx, benchmarkServers, len(benchmarkServers), nil, network)
+	completed := 0
+	for _, benchmark := range payload.Benchmarks {
+		if benchmark.Status == speedmodel.ThroughputAvailable {
+			completed++
+		}
+	}
+	privateSelected := 0
+	if privateRunner != nil && (ctx == nil || ctx.Err() == nil) {
+		registry, selected, benchmarks := privateRunner(ctx, privateLimit, network)
+		payload.PrivateRegistry = registry
+		payload.PrivateBenchmarks = benchmarks
+		privateSelected = selected
+		for _, benchmark := range benchmarks {
+			if benchmark.Status == "available" {
+				completed++
+			}
+		}
+	}
+	totalSelected := len(payload.Selected) + privateSelected
+	status := ReportStatusOK
+	if totalSelected == 0 || completed == 0 {
+		status = ReportStatusUnavailable
+	} else if completed != len(payload.Benchmarks)+len(payload.PrivateBenchmarks) {
+		status = ReportStatusPartial
+	}
+	if ctx != nil && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		status = ReportStatusTimeout
+	}
+	if ctx != nil && errors.Is(ctx.Err(), context.Canceled) {
+		status = ReportStatusCanceled
+	}
+	report := componentPayload("speed.registry", payload.SchemaVersion, status, started, payload, nil)
+	if report.Status != ReportStatusOK {
+		report.Reason = fmt.Sprintf("%d/%d selected nodes completed throughput", completed, totalSelected)
+	}
+	return report
+}
+
+func collectSpeedComponentFromRegistryWithSelection(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, representative bool) ComponentReport {
+	return collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx, servers, transfers, limit, dial, throughput, privateRunner, nil, representative, speedmodel.NetworkAuto)
+}
+
+func collectSpeedComponentFromRegistryWithSelectionAndNetwork(ctx context.Context, servers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, privateRunnerWithNetwork privateSpeedRunnerWithNetwork, representative bool, network speedmodel.Network) ComponentReport {
+	probedServers := speedmodel.ProbeServersWithNetwork(ctx, servers, 2*time.Second, 8, speedmodel.ServerDialFunc(dial), network)
+	if privateRunnerWithNetwork == nil && privateRunner != nil {
+		privateRunnerWithNetwork = func(runnerCtx context.Context, runnerLimit int, _ speedmodel.Network) (any, int, []privateSpeedBenchmark) {
+			return privateRunner(runnerCtx, runnerLimit)
+		}
+	}
+	return collectSpeedComponentFromProbedServersWithSelectionAndNetwork(ctx, probedServers, transfers, limit, dial, throughput, privateRunnerWithNetwork, representative, network)
+}
+
+func collectSpeedComponentFromProbedServersWithSelectionAndNetwork(ctx context.Context, probedServers []speedmodel.ServerMetadata, transfers []transferTargetInput, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunnerWithNetwork, representative bool, network speedmodel.Network) ComponentReport {
+	started := time.Now()
+	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(probedServers))}
+	payload.Nodes = appendProbedSpeedRegistryNodes(payload.Nodes, probedServers)
+	payload.Nodes = appendTransferSpeedNodes(payload.Nodes, transfers)
+	return collectSpeedComponentFromNodesWithNetwork(ctx, payload, limit, dial, throughput, nil, privateRunner, representative, started, network)
 }
 
 func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData, openData []byte, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner) ComponentReport {
@@ -1985,7 +2382,11 @@ func probeSpeedNodesWithNetwork(ctx context.Context, nodes []speedNodeResult, di
 				}
 				started := time.Now()
 				probeCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-				conn, err := dial(probeCtx, "tcp", node.Host)
+				dialNetwork := string(network)
+				if dialNetwork == "" {
+					dialNetwork = "tcp"
+				}
+				conn, err := dial(probeCtx, dialNetwork, node.Host)
 				node.LatencyMS = time.Since(started).Milliseconds()
 				cancel()
 				if err != nil {

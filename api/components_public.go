@@ -31,6 +31,10 @@ func loadTransferComponentData(ctx context.Context, _ bool) componentDataResult 
 	return failedComponentData(ctx, transferDataFile, err)
 }
 
+func newPrivateStructuredSpeedPreload(*Config, componentInputs) *structuredPrivateSpeedPreload {
+	return nil
+}
+
 func collectSecurityComponent(context.Context, string, string, []dnsblZoneInput) ComponentReport {
 	report := componentPayload("security.evidence", "goecs.security/v1", ReportStatusUnavailable, time.Now(), nil, nil)
 	report.Reason = "security component unavailable in public build"
@@ -70,4 +74,11 @@ func runInternationalPrivateSpeedBenchmarksWithNetwork(ctx context.Context, limi
 
 func runEmbeddedInternationalPrivateSpeedBenchmarksWithNetwork(ctx context.Context, limit int, _ speedmodel.Network) (any, int, []privateSpeedBenchmark) {
 	return runEmbeddedInternationalPrivateSpeedBenchmarks(ctx, limit)
+}
+
+// chineseFullPrivateSpeedRunnerForConfigWithNetwork keeps the complete Chinese
+// profile's per-carrier public-node selection buildable without linking the
+// private registry. Public builds intentionally return no private benchmarks.
+func chineseFullPrivateSpeedRunnerForConfigWithNetwork(bool) privateSpeedRunnerWithNetwork {
+	return runPrivateSpeedBenchmarksWithNetwork
 }

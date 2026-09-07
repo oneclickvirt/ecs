@@ -20,6 +20,7 @@ import (
 	menu "github.com/oneclickvirt/ecs/internal/menu"
 	params "github.com/oneclickvirt/ecs/internal/params"
 	"github.com/oneclickvirt/ecs/internal/runner"
+	"github.com/oneclickvirt/ecs/internal/updater"
 	"github.com/oneclickvirt/ecs/utils"
 	gostunmodel "github.com/oneclickvirt/gostun/model"
 	memorytestmodel "github.com/oneclickvirt/memorytest/memory"
@@ -165,7 +166,52 @@ func runStructuredCLI(preCheck utils.NetCheckResult, config *params.Config) {
 	}
 }
 
+func runSelfUpdate(language string) {
+	if language == "en" {
+		fmt.Println("Checking the official GoECS release for an update...")
+	} else {
+		fmt.Println("正在检查官方 GoECS Release 更新...")
+	}
+	result, err := updater.Update(context.Background(), updater.Options{CurrentVersion: configs.EcsVersion})
+	if err != nil {
+		if language == "en" {
+			fmt.Fprintf(os.Stderr, "GoECS update failed: %v\n", err)
+		} else {
+			fmt.Fprintf(os.Stderr, "GoECS 自动升级失败: %v\n", err)
+		}
+		return
+	}
+	switch result.Status {
+	case updater.StatusUpToDate:
+		if language == "en" {
+			fmt.Printf("GoECS is already up to date (%s).\n", result.CurrentVersion)
+		} else {
+			fmt.Printf("GoECS 已是最新版本（%s）。\n", result.CurrentVersion)
+		}
+	case updater.StatusUpdated:
+		if result.Deferred {
+			if language == "en" {
+				fmt.Printf("GoECS %s has been verified and will replace the current executable after it exits.\n", result.LatestVersion)
+			} else {
+				fmt.Printf("GoECS %s 已校验完成，程序退出后将替换当前可执行文件。\n", result.LatestVersion)
+			}
+			return
+		}
+		if language == "en" {
+			fmt.Printf("GoECS updated to %s. Run it again to use the new version.\n", result.LatestVersion)
+		} else {
+			fmt.Printf("GoECS 已更新至 %s，请重新运行程序。\n", result.LatestVersion)
+		}
+	}
+}
+
 func main() {
+	if handled, err := updater.HandleHelper(os.Args[1:]); handled {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "GoECS update helper failed:", err)
+		}
+		return
+	}
 	runner.IsolateProcessGroup()
 	configs.ParseFlags(os.Args[1:])
 	applyEnvironmentDefaults(configs)
@@ -200,6 +246,10 @@ func main() {
 			fmt.Println(status)
 		}
 		configs.OnlyIpInfoCheck = true
+	}
+	if configs.Choice == "12" {
+		runSelfUpdate(configs.Language)
+		return
 	}
 	handleLanguageSpecificSettings()
 	if !preCheck.Connected {

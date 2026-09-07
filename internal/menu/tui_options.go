@@ -12,7 +12,7 @@ import (
 func defaultMainItems() []mainMenuItem {
 	return []mainMenuItem{
 		{id: "1", zh: "融合怪完全体", en: "Full Suite", descZh: "能测全测，性能检测顺序检测，其余项目并发，适合精确测试需求。", descEn: "Complete coverage with sequential performance tests and concurrent remaining diagnostics.", needNet: false},
-		{id: "2", zh: "融合怪并发完全态", en: "Full Concurrent Suite", descZh: "能测全测，但仅限性能强劲时使用，最短耗时但性能测试不精确。", descEn: "Complete coverage with every test concurrent. Fastest, but performance measurements are not precise.", needNet: false},
+		{id: "2", zh: "融合怪并发完全体", en: "Full Concurrent Suite", descZh: "能测全测，但仅限性能强劲时使用，最短耗时但性能测试不精确。", descEn: "Complete coverage with every test concurrent. Fastest, but performance measurements are not precise.", needNet: false},
 		{id: "3", zh: "极简版", en: "Minimal Suite", descZh: "系统信息+CPU+内存+磁盘+测速节点×4，不含解锁/网络/路由测试。", descEn: "System info + CPU + memory + disk + 5 speed nodes. No unlock/network/routing tests.", needNet: false},
 		{id: "4", zh: "精简版", en: "Standard Suite", descZh: "系统信息+CPU+内存+磁盘+跨国平台解锁+三网回程路由+TCP握手+测速节点×4。", descEn: "System info + CPU + memory + disk + streaming unlock + routing + TCP handshake + 5 speed nodes.", needNet: false},
 		{id: "5", zh: "精简网络版", en: "Network Suite", descZh: "系统信息+CPU+内存+磁盘+上游及三网回程路由+TCP握手+测速节点×4。", descEn: "System info + CPU + memory + disk + backtrace routing + TCP handshake + 5 speed nodes.", needNet: false},
@@ -24,6 +24,7 @@ func defaultMainItems() []mainMenuItem {
 		{id: "11", zh: "三网回程线路", en: "3-Network Route", descZh: "三网回程、NT3路由、延迟、TCP握手、TGDC、网站延迟专项。", descEn: "3-network backtrace + NT3 route + latency, TCP handshake, TGDC and website checks.", needNet: true},
 		{id: "custom", zh: ">>> 高级自定义(全参数模式)", en: ">>> Advanced Custom (Full Parameters)", descZh: "按参数逐项配置，支持测试项、方法、路径、上传和结果分析。", descEn: "Configure per-parameter with test toggles, methods, paths, upload and analysis.", needNet: false},
 		{id: "0", zh: "退出程序", en: "Exit Program", descZh: "退出当前程序。", descEn: "Exit program.", needNet: false},
+		{id: "12", zh: "自动升级本体", en: "Update GoECS", descZh: "从官方 GitHub Release 下载并安全替换当前 GoECS，本次不执行测试。", descEn: "Download and safely replace GoECS from the official GitHub Release; no tests run this time.", needNet: true},
 	}
 }
 

@@ -403,6 +403,59 @@ func TestTypedSpeedRegistryKeepsLogicalSourceSelectable(t *testing.T) {
 	}
 }
 
+func TestChineseStructuredSpeedProfilesKeepFullAndNearbySelectionScopes(t *testing.T) {
+	nodes := []speedNodeResult{
+		// Keep a global node faster than the mainland node to prove that latency
+		// ordering cannot make a global entry occupy the nearby slot.
+		{ID: "nearby", Host: "nearby.test:8080", URL: "https://nearby.test/upload", Provider: "CT", Country: "China", Availability: "available", LatencyMS: 10},
+		{ID: "global-1", Host: "global-one.test:8080", URL: "https://global-one.test/upload", Country: "Japan", Availability: "available", LatencyMS: 1},
+		{ID: "global-2", Host: "global-two.test:8080", URL: "https://global-two.test/upload", Country: "Singapore", Availability: "available", LatencyMS: 3},
+		{ID: "ct-2", Host: "ct-two.test:8080", URL: "https://ct-two.test/upload", Provider: "CT", Country: "China", Availability: "available", LatencyMS: 4},
+		{ID: "ct-3", Host: "ct-three.test:8080", URL: "https://ct-three.test/upload", Provider: "CT", Country: "China", Availability: "available", LatencyMS: 5},
+		{ID: "cu-1", Host: "cu-one.test:8080", URL: "https://cu-one.test/upload", Provider: "CU", Country: "China", Availability: "available", LatencyMS: 6},
+		{ID: "cu-2", Host: "cu-two.test:8080", URL: "https://cu-two.test/upload", Provider: "CU", Country: "China", Availability: "available", LatencyMS: 7},
+		{ID: "cm-1", Host: "cm-one.test:8080", URL: "https://cm-one.test/upload", Provider: "CM", Country: "China", Availability: "available", LatencyMS: 8},
+		{ID: "cm-2", Host: "cm-two.test:8080", URL: "https://cm-two.test/upload", Provider: "CM", Country: "China", Availability: "available", LatencyMS: 9},
+	}
+	full := selectChineseFullSpeedNodes(nodes, 2)
+	if len(full) != 9 {
+		t.Fatalf("full profile selected %d nodes, want nearby + 2 global + 2 per carrier = 9: %#v", len(full), full)
+	}
+	nearby := selectChineseNearbyCarrierSpeedNodes(nodes)
+	if len(nearby) != 4 {
+		t.Fatalf("nearby profile selected %d nodes, want nearby + one per carrier = 4: %#v", len(nearby), nearby)
+	}
+	for _, node := range nearby {
+		if strings.HasPrefix(node.ID, "global-") {
+			t.Fatalf("nearby profile included global node: %#v", nearby)
+		}
+	}
+	if len(nearby) == 0 {
+		t.Fatalf("nearby slot was empty, want mainland nearby node")
+	}
+	if nearby[0].ID != "nearby" {
+		t.Fatalf("nearby slot selected %q, want mainland nearby node", nearby[0].ID)
+	}
+	for _, node := range full {
+		if strings.HasPrefix(node.ID, "global-") {
+			continue
+		}
+		if !isMainlandChinaCountry(node.Country) {
+			t.Fatalf("full profile selected non-mainland non-global node: %#v", node)
+		}
+	}
+
+	if !usesChineseFullStructuredSpeedProfile(&Config{Choice: "1", Language: "zh"}) || !usesChineseFullStructuredSpeedProfile(&Config{Choice: "2", Language: "zh"}) {
+		t.Fatal("full structured profile does not include choices 1 and 2")
+	}
+	if usesChineseFullStructuredSpeedProfile(&Config{Choice: "3", Language: "zh"}) || !usesChineseNearbyCarrierStructuredSpeedProfile(&Config{Choice: "3", Language: "zh"}) {
+		t.Fatal("choice 3 structured speed profile classification is wrong")
+	}
+	if usesChineseNearbyCarrierStructuredSpeedProfile(&Config{Choice: "8", Language: "zh"}) {
+		t.Fatal("a preset without a speed test should not receive a fixed speed profile")
+	}
+}
+
 func TestLocalSpeedComponentRunsPrivateHTTPThroughput(t *testing.T) {
 	report := collectSpeedComponentWithAllDependencies(context.Background(), nil, nil, 1, nil, nil,
 		func(context.Context, int) (any, int, []privateSpeedBenchmark) {
@@ -450,6 +503,48 @@ func TestPrivateSpeedBenchmarksTryStandbyAfterPrimaryFailure(t *testing.T) {
 	}
 	if benchmarks[0].Status != "unavailable" || benchmarks[1].Status != "available" {
 		t.Fatalf("unexpected fallback benchmark status: %+v", benchmarks)
+	}
+}
+
+func TestChineseFullPrivateSpeedKeepsPerCarrierQuotasWithOneLoadedRegistry(t *testing.T) {
+	loaded := privatepst.RegistryLoadResult{
+		Source: "fixture",
+		List: &privatepst.ServerList{Servers: []privatepst.ServerConfig{
+			{ID: "cu", Name: "Unicom", CarrierType: "Unicom"},
+			{ID: "ct", Name: "Telecom", CarrierType: "Telecom"},
+			{ID: "cm", Name: "Mobile", CarrierType: "Mobile"},
+		}},
+	}
+	var resolved []string
+	resolver := func(_ context.Context, carrierLoaded privatepst.RegistryLoadResult, limit int, _ speedmodel.Network) privatepst.RegistryReport {
+		if limit != 2 {
+			t.Fatalf("carrier limit = %d, want 2", limit)
+		}
+		if carrierLoaded.List == nil || len(carrierLoaded.List.Servers) != 1 {
+			t.Fatalf("carrier registry was not filtered: %#v", carrierLoaded.List)
+		}
+		server := carrierLoaded.List.Servers[0]
+		resolved = append(resolved, server.CarrierType)
+		return privatepst.RegistryReport{Selected: []privatepst.RegistryNode{{
+			ID: server.ID, Name: server.Name, Availability: privatepst.ServerAvailable, Server: server,
+		}}}
+	}
+	speedTest := func(_ context.Context, node privatepst.RegistryNode, _ *privatepst.ServerWithLatencyInfo) privatepst.SpeedTestResult {
+		return privatepst.SpeedTestResult{Success: true, DownloadMbps: 100, UploadMbps: 50, ServerName: node.Name}
+	}
+	registry, selected, benchmarks := runChineseFullPrivateSpeedBenchmarksFromLoaded(context.Background(), 2, loaded, speedmodel.NetworkIPv4, resolver, speedTest)
+	if selected != 3 || len(benchmarks) != 3 {
+		t.Fatalf("full private speed result = selected %d, benchmarks %#v", selected, benchmarks)
+	}
+	if got, want := strings.Join(resolved, ","), "Unicom,Telecom,Mobile"; got != want {
+		t.Fatalf("carrier resolution order = %q, want %q", got, want)
+	}
+	report, ok := registry.(chineseFullPrivateSpeedRegistryReport)
+	if !ok || len(report.Carriers) != 3 {
+		t.Fatalf("full private registry report = %#v", registry)
+	}
+	if report.Carriers[0].Carrier != "unicom" || report.Carriers[1].Carrier != "telecom" || report.Carriers[2].Carrier != "mobile" {
+		t.Fatalf("carrier registry order = %#v", report.Carriers)
 	}
 }
 
@@ -661,6 +756,7 @@ func TestStructuredPlanHonorsBarriersConcurrencyOrderAndSpeedIsolation(t *testin
 		stateMutex   sync.Mutex
 		basicsDone   bool
 		hardwareDone bool
+		preloadDone  bool
 		progress     []string
 	)
 	ctx := WithProgressObserver(context.Background(), func(event ProgressEvent) {
@@ -671,8 +767,8 @@ func TestStructuredPlanHonorsBarriersConcurrencyOrderAndSpeedIsolation(t *testin
 	task := func(name string, result structuredTaskResult) structuredComponentTask {
 		return structuredComponentTask{section: name, run: func(context.Context) structuredTaskResult {
 			stateMutex.Lock()
-			if !basicsDone || !hardwareDone {
-				t.Errorf("%s started before basics/hardware barrier", name)
+			if !basicsDone || !hardwareDone || !preloadDone {
+				t.Errorf("%s started before basics/hardware/preload barrier", name)
 			}
 			stateMutex.Unlock()
 			started <- name
@@ -696,6 +792,14 @@ func TestStructuredPlanHonorsBarriersConcurrencyOrderAndSpeedIsolation(t *testin
 			}
 			hardwareDone = true
 			return []ComponentReport{{Name: "cputest", Status: ReportStatusOK}}
+		},
+		preload: func(context.Context) {
+			stateMutex.Lock()
+			defer stateMutex.Unlock()
+			if !hardwareDone {
+				t.Error("candidate preload started before hardware completed")
+			}
+			preloadDone = true
 		},
 		concurrent: []structuredComponentTask{
 			task("media", structuredTaskResult{components: []ComponentReport{{Name: "unlocktests.media", Status: ReportStatusOK}}}),
@@ -773,7 +877,7 @@ func TestStructuredPlanHonorsBarriersConcurrencyOrderAndSpeedIsolation(t *testin
 }
 
 func TestStructuredFullConcurrentPlanStartsAllStagesAndPreservesOrder(t *testing.T) {
-	started := make(chan string, 4)
+	started := make(chan string, 5)
 	releases := map[string]chan struct{}{
 		"basics":   make(chan struct{}),
 		"hardware": make(chan struct{}),
@@ -796,8 +900,11 @@ func TestStructuredFullConcurrentPlanStartsAllStagesAndPreservesOrder(t *testing
 	}
 	plan := structuredCollectionPlan{
 		fullConcurrent: true,
-		basics:         stage("basics", []ComponentReport{{Name: "basics", Status: ReportStatusOK}}),
-		hardware:       stage("hardware", []ComponentReport{{Name: "cputest", Status: ReportStatusOK}}),
+		preload: func(context.Context) {
+			started <- "preload"
+		},
+		basics:   stage("basics", []ComponentReport{{Name: "basics", Status: ReportStatusOK}}),
+		hardware: stage("hardware", []ComponentReport{{Name: "cputest", Status: ReportStatusOK}}),
 		concurrent: []structuredComponentTask{
 			task("network", []ComponentReport{{Name: "ping.icmp", Status: ReportStatusOK}}),
 		},
@@ -816,8 +923,8 @@ func TestStructuredFullConcurrentPlanStartsAllStagesAndPreservesOrder(t *testing
 		done <- collectionResult{components: components, tcp: tcp}
 	}()
 
-	seen := make(map[string]bool, 4)
-	for range 4 {
+	seen := make(map[string]bool, 5)
+	for range 5 {
 		select {
 		case name := <-started:
 			seen[name] = true
@@ -825,7 +932,7 @@ func TestStructuredFullConcurrentPlanStartsAllStagesAndPreservesOrder(t *testing
 			t.Fatalf("full-concurrent plan did not start every stage: %v", seen)
 		}
 	}
-	for _, name := range []string{"basics", "hardware", "network", "speed"} {
+	for _, name := range []string{"preload", "basics", "hardware", "network", "speed"} {
 		if !seen[name] {
 			t.Fatalf("full-concurrent stage %q did not start: %v", name, seen)
 		}
@@ -845,6 +952,36 @@ func TestStructuredFullConcurrentPlanStartsAllStagesAndPreservesOrder(t *testing
 	}
 	if got, want := strings.Join(gotNames, ","), "basics,cputest,ping.icmp,speed.registry"; got != want {
 		t.Fatalf("full-concurrent component order = %q, want %q", got, want)
+	}
+}
+
+func TestStructuredSpeedPreloadFiltersEnglishCandidatesBeforeSpeedStage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	defer server.Close()
+
+	cfg := NewDefaultConfig()
+	cfg.Language = "en"
+	cfg.Choice = "3"
+	cfg.DataOffline = true
+	preload := newStructuredSpeedPreload(cfg, componentInputs{
+		SpeedNetwork: speedmodel.NetworkIPv4,
+		SpeedtestServers: []speedmodel.ServerMetadata{
+			{ID: "cn", Host: "203.0.113.1:80", URL: "https://cn.example/upload", Country: "China", Availability: speedmodel.ServerCandidate},
+			{ID: "jp", Host: strings.TrimPrefix(server.URL, "http://"), URL: server.URL + "/upload", Country: "Japan", Availability: speedmodel.ServerCandidate},
+		},
+		PrivateSpeedData: privatepst.RegistryLoadResult{List: &privatepst.ServerList{}},
+	})
+	preload.Start(context.Background())
+	servers, privateRunner := preload.Wait(context.Background())
+	if privateRunner == nil {
+		t.Fatal("private candidate preload did not provide a cached runner")
+	}
+	if len(servers) != 1 || servers[0].ID != "jp" || servers[0].Availability != speedmodel.ServerAvailable {
+		t.Fatalf("English candidate preload = %+v, want only the available international server", servers)
+	}
+	nodes := appendProbedSpeedRegistryNodes(nil, servers)
+	if len(nodes) != 1 || nodes[0].Network != string(speedmodel.NetworkIPv4) {
+		t.Fatalf("preloaded candidate lost the IPv4 network evidence: %+v", nodes)
 	}
 }
 

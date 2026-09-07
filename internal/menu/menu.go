@@ -51,7 +51,7 @@ func GetMenuChoice(language string) string {
 		if re.MatchString(input) {
 			inChoice := input
 			switch inChoice {
-			case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11":
+			case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12":
 				return inChoice
 			default:
 				if language == "zh" {
@@ -126,7 +126,7 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 			fmt.Printf("使用统计: %s\n", statsInfo)
 		}
 		fmt.Println("1. 融合怪完全体(能测全测，性能检测顺序检测，其余项目并发，适合精确测试需求)")
-		fmt.Println("2. 融合怪并发完全态(能测全测，但仅限性能强劲时使用，最短耗时但性能测试不精确)")
+		fmt.Println("2. 融合怪并发完全体(能测全测，但仅限性能强劲时使用，最短耗时但性能测试不精确)")
 		fmt.Println("3. 极简版(系统信息+CPU+内存+磁盘+测速节点4个)")
 		fmt.Println("4. 精简版(系统信息+CPU+内存+磁盘+跨国平台解锁+路由+TCP握手+测速节点4个)")
 		fmt.Println("5. 精简网络版(系统信息+CPU+内存+磁盘+回程+路由+TCP握手+测速节点4个)")
@@ -137,6 +137,7 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 		fmt.Println("10. IP质量检测(15个数据库的IP质量检测+邮件端口检测)")
 		fmt.Println("11. 三网回程线路检测+三网回程详细路由(北京上海广州成都)+全国延迟+TCP握手+TGDC+网站延迟")
 		fmt.Println("0. 退出程序")
+		fmt.Println("12. 自动升级本体(从官方 GitHub Release 安全更新 GoECS，本次不执行测试)")
 	case "en":
 		fmt.Printf("VPS Fusion Monster Test Version: %s\n", config.EcsVersion)
 		if preCheck.Connected {
@@ -158,6 +159,7 @@ func PrintMenuOptions(preCheck utils.NetCheckResult, config *params.Config) {
 		fmt.Println("10. IP Quality Test (IP Test with 15 Databases + Email Port Test)")
 		fmt.Println("11. 3-Network Backtrace + Detailed Routes (Beijing/Shanghai/Guangzhou/Chengdu) + National Latency + TCP Handshake + TGDC + Websites")
 		fmt.Println("0. Exit Program")
+		fmt.Println("12. Update GoECS (safely update from the official GitHub Release; no tests run)")
 	}
 }
 
@@ -223,6 +225,11 @@ func applyMenuResult(preCheck utils.NetCheckResult, config *params.Config, resul
 	case "11":
 		config.Nt3Location = "ALL"
 		SetRouteTestStatus(config)
+	case "12":
+		// The main package handles the update after the menu returns. Keep the
+		// choice in the config so both the Bubble Tea and classic menu paths
+		// share the same dispatch point and never start benchmark stages.
+		return
 	}
 	config.RestoreUserSetParams(savedParams)
 	config.AnalyzeResult = result.mainAnalyze

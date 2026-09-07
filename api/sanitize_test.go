@@ -20,7 +20,7 @@ func TestSanitizePublicTextRemovesPrivateDetails(t *testing.T) {
 }
 
 func TestSanitizePublicOutputSeparatesTraceStopReasonAndNextHeader(t *testing.T) {
-	input := "Trace Stopped: Destination Reached at Hop 19 (ICMP Echo Reply)广州移动 - ICMP v4 - traceroute to 120.196.165.24, 30 hops max"
+	input := "Trace Stopped: Destination Reached at Hop 19 (ICMP Echo Reply from 120.196.165.24)广州移动 - ICMP v4 - traceroute to 120.196.165.24, 30 hops max"
 	got := sanitizePublicOutput(input)
 	if strings.Contains(got, "Trace Stopped: Destination Reached") {
 		t.Fatalf("destination-reached trace marker was not filtered: %q", got)
@@ -59,6 +59,22 @@ func TestSanitizePublicOutputPreservesAlreadySeparatedTraceLines(t *testing.T) {
 	want := "广州移动 - ICMP v4 - traceroute to 120.196.165.24"
 	if got := sanitizePublicOutput(input); got != want {
 		t.Fatalf("already separated destination-reached line was not filtered: %q", got)
+	}
+}
+
+func TestSanitizePublicOutputFiltersMaximumHopsReachedMarkers(t *testing.T) {
+	input := "Trace Stopped: Maximum Hops Reached at Hop 30 (No Destination Response)广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	want := "广州移动 - ICMP v4 - traceroute to 120.196.165.24"
+	if got := sanitizePublicOutput(input); got != want {
+		t.Fatalf("maximum-hop terminal marker = %q, want %q", got, want)
+	}
+}
+
+func TestSanitizePublicOutputFiltersMultipleMaximumHopsMarkers(t *testing.T) {
+	input := "Trace Stopped: Maximum Hops Reached at Hop 30 (No Destination Response)广州移动 - ICMP v4 - traceroute to 120.196.165.24 Trace Stopped: Maximum Hops Reached at Hop 30 (No Destination Response)广州联通 - ICMP v4 - traceroute to 210.21.196.6"
+	got := sanitizePublicOutput(input)
+	if strings.Contains(got, "Maximum Hops Reached") || !strings.Contains(got, "广州移动 - ICMP v4 -") || !strings.Contains(got, "广州联通 - ICMP v4 -") {
+		t.Fatalf("multiple maximum-hop markers were not filtered: %q", got)
 	}
 }
 

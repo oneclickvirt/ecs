@@ -51,6 +51,28 @@ func TestApplyMenuResultQuickOptionsSurviveSavedParamsRestore(t *testing.T) {
 	}
 }
 
+func TestMainMenuNamesFullConcurrentAndSelfUpdateLast(t *testing.T) {
+	items := defaultMainItems()
+	if len(items) < 2 || items[0].id != "1" || items[0].zh != "融合怪完全体" || items[1].id != "2" || items[1].zh != "融合怪并发完全体" {
+		t.Fatalf("full menu labels are incorrect: %#v", items[:min(2, len(items))])
+	}
+	last := items[len(items)-1]
+	if last.id != "12" || last.zh != "自动升级本体" || last.en != "Update GoECS" || !last.needNet {
+		t.Fatalf("self-update must be the final network menu item: %#v", last)
+	}
+}
+
+func TestSelfUpdateMenuChoiceDoesNotEnableBenchmarks(t *testing.T) {
+	cfg := params.NewConfig("test")
+	applyMenuResult(utils.NetCheckResult{Connected: true}, cfg, tuiResult{choice: "12", language: "zh"}, nil)
+	if cfg.Choice != "12" {
+		t.Fatalf("self-update choice = %q, want 12", cfg.Choice)
+	}
+	if cfg.BasicStatus || cfg.CpuTestStatus || cfg.MemoryTestStatus || cfg.DiskTestStatus || cfg.SpeedTestStatus {
+		t.Fatalf("self-update choice enabled benchmark stages: %#v", cfg)
+	}
+}
+
 func TestApplyMenuResultRestoresExplicitTestFlagForPreset(t *testing.T) {
 	cfg := params.NewConfig("test")
 	cfg.CpuTestStatus = false

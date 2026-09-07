@@ -111,15 +111,30 @@ func TestSpeedNetworkForStackPinsDualStackToIPv4(t *testing.T) {
 	}
 }
 
-func TestChinesePresetSpeedProfileExcludesGlobalNodes(t *testing.T) {
-	for _, choice := range []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"} {
-		if !usesChinesePresetSpeedProfile(&params.Config{Choice: choice}) {
-			t.Fatalf("preset choice %q should use the nearby plus three-carrier profile", choice)
+func TestChinesePresetSpeedProfilesKeepCompleteAndNearbyScopes(t *testing.T) {
+	for _, choice := range []string{"1", "2"} {
+		if !usesChineseFullSpeedProfile(&params.Config{Choice: choice}) {
+			t.Fatalf("complete preset choice %q was not recognized", choice)
+		}
+		if usesChineseNearbyCarrierSpeedProfile(&params.Config{Choice: choice}) {
+			t.Fatalf("complete preset choice %q was classified as nearby-only", choice)
 		}
 	}
-	for _, choice := range []string{"", "custom", "manual"} {
-		if usesChinesePresetSpeedProfile(&params.Config{Choice: choice}) {
-			t.Fatalf("non-preset choice %q should retain its custom speed profile", choice)
+	for _, choice := range []string{"3", "4", "5", "6", "7"} {
+		if !usesChineseNearbyCarrierSpeedProfile(&params.Config{Choice: choice}) {
+			t.Fatalf("preset choice %q should use the nearby plus three-carrier profile", choice)
+		}
+		if usesChineseFullSpeedProfile(&params.Config{Choice: choice}) {
+			t.Fatalf("nearby preset choice %q was classified as complete", choice)
+		}
+	}
+	if !usesChineseFullSpeedProfile(&params.Config{Choice: "", MenuMode: false}) {
+		t.Fatal("non-menu empty choice should retain the historical complete profile")
+	}
+	for _, choice := range []string{"", "custom", "manual", "8", "9", "10", "11"} {
+		cfg := &params.Config{Choice: choice, MenuMode: true}
+		if usesChinesePresetSpeedProfile(cfg) {
+			t.Fatalf("custom/menu choice %q should retain its custom speed profile", choice)
 		}
 	}
 }
@@ -469,6 +484,159 @@ func TestLegacyWorkflowBarriersOrderedDrainAndSpeedIsolation(t *testing.T) {
 		t.Fatalf("buffered output interleaved: got %q want %q", gotOutput, want)
 	}
 }
+
+func TestLegacyWorkflowStartsCandidatePreloadAfterHardware(t *testing.T) {
+	hardwareStarted := make(chan struct{}, 1)
+	hardwareRelease := make(chan struct{})
+	preloadStarted := make(chan struct{}, 1)
+
+	plan := legacyWorkflowPlan{
+		basics: func(context.Context) {},
+		hardware: []bufferedTask{{name: "cpu", run: func(context.Context) string {
+			hardwareStarted <- struct{}{}
+			<-hardwareRelease
+			return "CPU\n"
+		}}},
+		preload: func(context.Context) { preloadStarted <- struct{}{} },
+	}
+	done := make(chan struct{})
+	go func() {
+		runLegacyWorkflowPlan(context.Background(), plan)
+		close(done)
+	}()
+
+	select {
+	case <-hardwareStarted:
+	case <-time.After(time.Second):
+		t.Fatal("hardware stage did not start")
+	}
+	select {
+	case <-preloadStarted:
+		t.Fatal("candidate preload started while a hardware benchmark was active")
+	default:
+	}
+	close(hardwareRelease)
+	select {
+	case <-preloadStarted:
+	case <-time.After(time.Second):
+		t.Fatal("candidate preload did not start after hardware completed")
+	}
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("workflow did not complete")
+	}
+}
+
+func TestFullConcurrentLegacyWorkflowStartsBasicAndEveryOtherStageTogether(t *testing.T) {
+	started := make(chan string, 4)
+	release := map[string]chan struct{}{
+		"basic": make(chan struct{}),
+		"cpu":   make(chan struct{}),
+		"ping":  make(chan struct{}),
+		"speed": make(chan struct{}),
+	}
+	block := func(name, value string) bufferedTask {
+		return bufferedTask{name: name, run: func(context.Context) string {
+			started <- name
+			<-release[name]
+			return value
+		}}
+	}
+	var (
+		output   strings.Builder
+		outputMu sync.Mutex
+	)
+	identityReady := make(chan struct{}, 1)
+	plan := legacyWorkflowPlan{
+		fullConcurrent:   true,
+		concurrentBasics: ptrBufferedTask(block("basic", "BASIC\n")),
+		hardware:         []bufferedTask{block("cpu", "CPU\n")},
+		independent:      []bufferedTask{block("ping", "PING\n")},
+		concurrentSpeed:  ptrBufferedTask(block("speed", "SPEED\n")),
+		identityReady: func(context.Context) {
+			identityReady <- struct{}{}
+		},
+		emit: func(value string) {
+			outputMu.Lock()
+			output.WriteString(value)
+			outputMu.Unlock()
+		},
+	}
+	done := make(chan struct{})
+	go func() {
+		runLegacyWorkflowPlan(context.Background(), plan)
+		close(done)
+	}()
+
+	seen := make(map[string]bool, len(release))
+	for range release {
+		select {
+		case name := <-started:
+			seen[name] = true
+		case <-time.After(time.Second):
+			t.Fatalf("full concurrent workflow did not launch every stage before basic completed: %v", seen)
+		}
+	}
+	for name := range release {
+		if !seen[name] {
+			t.Fatalf("full concurrent workflow did not start %q: %v", name, seen)
+		}
+	}
+	for _, name := range []string{"basic", "cpu", "ping", "speed"} {
+		close(release[name])
+	}
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("full concurrent workflow did not finish")
+	}
+	select {
+	case <-identityReady:
+	default:
+		t.Fatal("identity readiness was not signaled after the concurrent workflow")
+	}
+	outputMu.Lock()
+	got := output.String()
+	outputMu.Unlock()
+	if want := "BASIC\nCPU\nPING\nSPEED\n"; got != want {
+		t.Fatalf("full concurrent output order = %q, want %q", got, want)
+	}
+}
+
+func TestIdentityReadinessBroadcastsToEveryDependentTask(t *testing.T) {
+	ready := make(chan struct{})
+	ctx := WithIdentityReady(context.Background(), ready)
+	const waiters = 4
+	finished := make(chan struct{}, waiters)
+	for range waiters {
+		go func() {
+			if !waitIdentityReady(ctx) {
+				t.Error("identity wait unexpectedly canceled")
+				return
+			}
+			finished <- struct{}{}
+		}()
+	}
+	select {
+	case <-finished:
+		t.Fatal("dependent task passed identity barrier before publication")
+	case <-time.After(25 * time.Millisecond):
+	}
+	signalIdentityReady(ctx)
+	// A duplicate publication must be harmless and all waiters must observe the
+	// same completion edge rather than competing for a single channel token.
+	signalIdentityReady(ctx)
+	for range waiters {
+		select {
+		case <-finished:
+		case <-time.After(time.Second):
+			t.Fatal("dependent task did not observe identity publication")
+		}
+	}
+}
+
+func ptrBufferedTask(value bufferedTask) *bufferedTask { return &value }
 
 func TestOrderedBufferedTaskPanicCannotBlockFollowingChapter(t *testing.T) {
 	emitted := make(chan string, 1)

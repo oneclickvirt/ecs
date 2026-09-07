@@ -73,8 +73,10 @@ jobs:
           set -euo pipefail
           VERSION="${RELEASE_TAG#v}"
           grep -Fq "DefaultVersion = \"v$VERSION\"" api/api.go
-          [ "$(grep -Fc "ECS_VERSION=\"$VERSION\"" goecs.sh)" -eq 2 ]
-          grep -Fq "using default version $VERSION" goecs.sh
+          # GoECS releases and the legacy Shell implementation are versioned
+          # independently. The Shell repository is intentionally not changed
+          # as part of a GoECS release, so a matching Shell fallback version is
+          # not a valid release gate here.
 
       - name: Prepare Go build directories
         run: |

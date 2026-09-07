@@ -47,6 +47,7 @@ type componentInputs struct {
 	ProvinceRoutes   []nt3model.ProvinceRoute
 	SpeedtestServers []speedmodel.ServerMetadata
 	TransferTargets  []transferTargetInput
+	PrivateSpeedData any
 	DNSBLZones       []dnsblZoneInput
 	MediaProviders   []unlockexecutor.ProviderMetadata
 	BGPASNMap        []bgptools.ASNMetadata
