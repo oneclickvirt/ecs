@@ -21,7 +21,13 @@ concurrency:
 
 jobs:
   sync-release:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Only a tag push has an immutable release SHA for automatic fan-out.
+    # Manual release reruns are dispatched explicitly below with release_tag.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
