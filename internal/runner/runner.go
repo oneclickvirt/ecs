@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"strings"
@@ -29,6 +30,32 @@ type identityReadiness struct {
 }
 
 var runLegacyCPUBurn = cpu.RunBurn
+
+const speedTestStageTimeout = 5 * time.Minute
+
+// boundedSpeedTestContext prevents an unreachable registry or throughput
+// endpoint from holding the complete suite indefinitely. A parent deadline
+// remains authoritative when it is shorter.
+func boundedSpeedTestContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithTimeout(ctx, speedTestStageTimeout)
+}
+
+func speedCaptureWriter(buffer *bytes.Buffer, display bool) io.Writer {
+	return speedCaptureWriterTo(buffer, display, os.Stdout)
+}
+
+func speedCaptureWriterTo(buffer *bytes.Buffer, display bool, stream io.Writer) io.Writer {
+	if buffer == nil {
+		return io.Discard
+	}
+	if !display || stream == nil {
+		return buffer
+	}
+	return io.MultiWriter(buffer, stream)
+}
 
 // WithIdentityReady lets the orchestration layer wait until the legacy basic
 // stage has finished publishing its IP identity. Closing the channel broadcasts
@@ -546,6 +573,9 @@ func RunSpeedTests(ctx context.Context, config *params.Config, output, tempOutpu
 // RunSpeedTestsWithNetwork runs the Chinese speed profile with one explicit
 // family policy. A nil preload batch remains safe for direct API callers.
 func RunSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string, preloads *tests.PrivateSpeedPreloads) string {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if ctx.Err() != nil {
 		return output
 	}
@@ -556,22 +586,26 @@ func RunSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output
 }
 
 func captureChineseSpeedTests(ctx context.Context, config *params.Config, network string, preloads *tests.PrivateSpeedPreloads, display bool) string {
-	if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
+	if config == nil || !config.SpeedTestStatus {
+		return ""
+	}
+	ctx, cancel := boundedSpeedTestContext(ctx)
+	defer cancel()
+	if ctx.Err() != nil {
 		return ""
 	}
 	// Every dependency involved in this chapter receives the buffer directly.
 	// A process-wide stdout replacement cannot safely coexist with option 2's
 	// other concurrently running chapters.
 	var buffer bytes.Buffer
-	writer := &buffer
+	writer := speedCaptureWriter(&buffer, display)
+	_, _ = writer.Write([]byte(centeredTitleText("就近节点测速", config.Width)))
+	tests.ShowHeadTo(writer, config.Language)
 	if preloads != nil {
-		_ = preloads.WaitAll(ctx)
-		if ctx.Err() != nil {
-			return ""
+		if err := preloads.WaitAll(ctx); err != nil {
+			return buffer.String()
 		}
 	}
-	_, _ = writer.WriteString(centeredTitleText("就近节点测速", config.Width))
-	tests.ShowHeadTo(writer, config.Language)
 	if usesChineseFullSpeedProfile(config) {
 		// Options 1 and 2 retain the historical complete profile. Option 2
 		// changes scheduling only; it does not change the selected locations.
@@ -594,11 +628,7 @@ func captureChineseSpeedTests(ctx context.Context, config *params.Config, networ
 			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 		}
 	}
-	value := buffer.String()
-	if display {
-		fmt.Print(value)
-	}
-	return value
+	return buffer.String()
 }
 
 func normalizedSpeedNodeCount(value int) int {
@@ -694,6 +724,9 @@ func RunEnglishSpeedTests(ctx context.Context, config *params.Config, output, te
 // RunEnglishSpeedTestsWithNetwork preserves the international selection logic
 // while pinning every lookup and transfer when the caller knows the family.
 func RunEnglishSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string) string {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if ctx.Err() != nil {
 		return output
 	}
@@ -704,19 +737,21 @@ func RunEnglishSpeedTestsWithNetwork(ctx context.Context, config *params.Config,
 }
 
 func captureEnglishSpeedTests(ctx context.Context, config *params.Config, network string, display bool) string {
-	if config == nil || !config.SpeedTestStatus || ctx.Err() != nil {
+	if config == nil || !config.SpeedTestStatus {
+		return ""
+	}
+	ctx, cancel := boundedSpeedTestContext(ctx)
+	defer cancel()
+	if ctx.Err() != nil {
 		return ""
 	}
 	var buffer bytes.Buffer
-	_, _ = buffer.WriteString(centeredTitleText("Speed-Test", config.Width))
-	tests.ShowHeadTo(&buffer, config.Language)
+	writer := speedCaptureWriter(&buffer, display)
+	_, _ = writer.Write([]byte(centeredTitleText("Speed-Test", config.Width)))
+	tests.ShowHeadTo(writer, config.Language)
 	// English mode deliberately keeps the international registry profile.
-	tests.CustomSPWithNetworkContextTo(ctx, &buffer, "net", "global", max(4, config.SpNum), config.Language, network)
-	value := buffer.String()
-	if display {
-		fmt.Print(value)
-	}
-	return value
+	tests.CustomSPWithNetworkContextTo(ctx, writer, "net", "global", max(4, config.SpNum), config.Language, network)
+	return buffer.String()
 }
 
 // AppendTimeInfo appends timing information

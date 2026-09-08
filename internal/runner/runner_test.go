@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"strings"
@@ -13,6 +14,36 @@ import (
 	pingmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
 )
+
+func TestSpeedCaptureWriterStreamsAndBuffers(t *testing.T) {
+	var report, terminal bytes.Buffer
+	writer := speedCaptureWriterTo(&report, true, &terminal)
+	if _, err := writer.Write([]byte("speed row\n")); err != nil {
+		t.Fatal(err)
+	}
+	if report.String() != "speed row\n" {
+		t.Fatalf("report buffer = %q", report.String())
+	}
+	if terminal.String() != report.String() {
+		t.Fatalf("terminal output = %q, report = %q", terminal.String(), report.String())
+	}
+}
+
+func TestBoundedSpeedTestContextRespectsEarlierParentDeadline(t *testing.T) {
+	parentDeadline := time.Now().Add(2 * time.Second)
+	parent, parentCancel := context.WithDeadline(context.Background(), parentDeadline)
+	defer parentCancel()
+
+	child, childCancel := boundedSpeedTestContext(parent)
+	defer childCancel()
+	childDeadline, ok := child.Deadline()
+	if !ok {
+		t.Fatal("bounded speed context has no deadline")
+	}
+	if childDeadline.After(parentDeadline) {
+		t.Fatalf("speed deadline %s exceeded parent deadline %s", childDeadline, parentDeadline)
+	}
+}
 
 func TestShouldPrintBriefIPLinesInBasicStage(t *testing.T) {
 	tests := []struct {

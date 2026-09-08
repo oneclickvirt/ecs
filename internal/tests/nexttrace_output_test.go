@@ -27,6 +27,20 @@ func TestFormatNextTraceOutputSeparatesStopReasonAndNextHeader(t *testing.T) {
 	}
 }
 
+func TestFormatNextTraceOutputFiltersMaximumHopsReached(t *testing.T) {
+	got := formatNextTraceOutput([]string{
+		"Trace Stopped: Maximum Hops Reached at Hop 30 (No Destination Response)",
+		"广州电信 - ICMP v6 -",
+		"traceroute to 240e:e1:aa00:4000::24, 30 hops max, 52 byte packets",
+	})
+	if strings.Contains(got, "Maximum Hops Reached") {
+		t.Fatalf("maximum-hop stop line should be filtered: %q", got)
+	}
+	if !strings.Contains(got, "广州电信 - ICMP v6 -traceroute to") {
+		t.Fatalf("next trace header/body was not preserved: %q", got)
+	}
+}
+
 func TestFormatNextTraceOutputTerminatesHeaderOnlyAndErrorLines(t *testing.T) {
 	got := formatNextTraceOutput([]string{
 		"广州电信 - ICMP v4 -",
