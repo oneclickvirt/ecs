@@ -192,7 +192,7 @@ func applyMenuResult(preCheck utils.NetCheckResult, config *params.Config, resul
 		config.Choice = "custom"
 		applyCustomResult(result, preCheck, config)
 		if config.SpeedTestStatus {
-			config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
+			config.OnlyChinaTest = utils.CheckChinaWithNetwork(config.EnableLogger, config.Language, speedNetworkForMenu(preCheck.StackType))
 		}
 		config.ValidateParams()
 		return
@@ -235,9 +235,20 @@ func applyMenuResult(preCheck utils.NetCheckResult, config *params.Config, resul
 	config.AnalyzeResult = result.mainAnalyze
 	config.EnableUpload = result.mainUpload
 	if (result.choice == "1" || result.choice == "2") && config.SpeedTestStatus {
-		config.OnlyChinaTest = utils.CheckChina(config.EnableLogger, config.Language)
+		config.OnlyChinaTest = utils.CheckChinaWithNetwork(config.EnableLogger, config.Language, speedNetworkForMenu(preCheck.StackType))
 	}
 	config.ValidateParams()
+}
+
+func speedNetworkForMenu(stack string) string {
+	switch strings.ToLower(strings.TrimSpace(stack)) {
+	case "dualstack", "ipv4":
+		return "tcp4"
+	case "ipv6":
+		return "tcp6"
+	default:
+		return ""
+	}
 }
 
 // HandleMenuMode handles menu selection using the interactive TUI

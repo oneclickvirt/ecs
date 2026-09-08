@@ -12,25 +12,54 @@ import (
 )
 
 var (
-	privateSpeedRegistryOnce   sync.Once
-	privateSpeedRegistry       *pst.ServerList
-	privateSpeedRegistryErr    error
+	privateSpeedRegistryMu     sync.Mutex
+	privateSpeedRegistries     = make(map[pst.Network]*privateSpeedRegistryEntry)
 	privateSpeedRegistryLoader = loadPrivateSpeedRegistry
 )
 
-func loadPrivateSpeedRegistry() (*pst.ServerList, error) {
+type privateSpeedRegistryEntry struct {
+	once sync.Once
+	list *pst.ServerList
+	err  error
+}
+
+func loadPrivateSpeedRegistry(network pst.Network) (*pst.ServerList, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	loaded, err := pst.LoadServerListWithMetadataContext(ctx)
+	loaded, err := pst.LoadServerListWithMetadataContextWithNetwork(ctx, network)
 	if err != nil || loaded.List == nil {
 		return nil, fmt.Errorf("speedtest registry unavailable")
 	}
 	return loaded.List, nil
 }
 
-func privateSpeedServerList() (*pst.ServerList, error) {
-	privateSpeedRegistryOnce.Do(func() {
-		privateSpeedRegistry, privateSpeedRegistryErr = privateSpeedRegistryLoader()
+func normalizedPrivateSpeedRegistryNetwork(network pst.Network) pst.Network {
+	switch network {
+	case pst.NetworkIPv4, pst.NetworkIPv6:
+		return network
+	default:
+		return pst.NetworkAuto
+	}
+}
+
+func privateSpeedServerListWithNetwork(network pst.Network) (*pst.ServerList, error) {
+	network = normalizedPrivateSpeedRegistryNetwork(network)
+	privateSpeedRegistryMu.Lock()
+	entry := privateSpeedRegistries[network]
+	if entry == nil {
+		entry = &privateSpeedRegistryEntry{}
+		privateSpeedRegistries[network] = entry
+	}
+	privateSpeedRegistryMu.Unlock()
+
+	entry.once.Do(func() {
+		entry.list, entry.err = privateSpeedRegistryLoader(network)
 	})
-	return privateSpeedRegistry, privateSpeedRegistryErr
+	return entry.list, entry.err
+}
+
+// privateSpeedServerList preserves the historical automatic entrypoint for
+// callers that have not selected a measurement address family.
+func privateSpeedServerList() (*pst.ServerList, error) {
+	return privateSpeedServerListWithNetwork(pst.NetworkAuto)
 }

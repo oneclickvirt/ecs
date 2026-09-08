@@ -22,6 +22,7 @@ import (
 	"github.com/oneclickvirt/UnlockTests/executor"
 	bnetwork "github.com/oneclickvirt/basics/network"
 	dnsresolver "github.com/oneclickvirt/basics/network/resolver"
+	networkutils "github.com/oneclickvirt/basics/network/utils"
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
@@ -191,13 +192,20 @@ func PrintHead(language string, width int, ecsVersion string) {
 }
 
 func CheckChina(enableLogger bool, language string) bool {
+	return CheckChinaWithNetwork(enableLogger, language, "")
+}
+
+// CheckChinaWithNetwork keeps the geolocation request on the same address
+// family as a selected speed test. This avoids AAAA-first DNS responses making
+// an IPv4 benchmark choose the IPv6 address's regional profile on dual-stack
+// hosts. Automatic mode intentionally preserves the historical behavior.
+func CheckChinaWithNetwork(enableLogger bool, language, network string) bool {
 	if enableLogger {
 		InitLogger()
 		defer Logger.Sync()
 	}
 	var selectChina bool
-	client := req.C()
-	client.SetTimeout(6 * time.Second)
+	client := chinaIPInfoClient(network)
 	client.R().
 		SetRetryCount(2).
 		SetRetryBackoffInterval(1*time.Second, 3*time.Second).
@@ -264,6 +272,23 @@ func CheckChina(enableLogger bool, language string) bool {
 		}
 	}
 	return selectChina
+}
+
+func chinaIPInfoClient(network string) *req.Client {
+	client := req.C().SetTimeout(6 * time.Second)
+	network, err := networkutils.NormalizeNetwork(network)
+	if err != nil || network == "" {
+		return client
+	}
+	dial, err := networkutils.DialContext(network)
+	if err != nil {
+		return client
+	}
+	// A proxy decides the origin-side family itself, so it cannot preserve the
+	// selected benchmark family or identify the tested host's public address.
+	client.SetProxy(nil)
+	client.SetDial(dial)
+	return client
 }
 
 // OnlyBasicsIpInfo 仅检查和输出IP信息

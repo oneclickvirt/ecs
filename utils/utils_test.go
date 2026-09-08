@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -32,6 +34,23 @@ func TestPrecheckFamilyDialContextDoesNotFollowAAAAFirstResult(t *testing.T) {
 				t.Fatalf("dial = %q %q, want %q %q", gotNetwork, gotAddress, family, "aaaa-first.example:443")
 			}
 		})
+	}
+}
+
+func TestChinaIPInfoClientPinsExplicitAddressFamily(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(writer, `{"country_name":"China"}`)
+	}))
+	defer server.Close()
+
+	response, err := chinaIPInfoClient("tcp4").R().Get(server.URL)
+	if err != nil {
+		t.Fatalf("IPv4 client request: %v", err)
+	}
+	_ = response.Body.Close()
+
+	if _, err := chinaIPInfoClient("tcp6").R().Get(server.URL); err == nil {
+		t.Fatal("IPv6 client unexpectedly reached an IPv4-only listener")
 	}
 }
 

@@ -179,7 +179,7 @@ func StartPrivateSpeedPreloads(ctx context.Context, operators []string, network 
 
 func (p *PrivateSpeedPreloads) load(ctx context.Context, operators []string) {
 	defer close(p.done)
-	serverList, err := privateSpeedServerList()
+	serverList, err := privateSpeedServerListWithNetwork(p.network)
 	if err != nil {
 		for _, operator := range operators {
 			operator = strings.ToLower(strings.TrimSpace(operator))
@@ -329,7 +329,7 @@ func privateSpeedTestWithNetworkTo(ctx context.Context, num int, operator, netwo
 	if preloads != nil {
 		candidateServers, err = preloads.Wait(ctx, operator)
 	} else {
-		serverList, loadErr := privateSpeedServerList()
+		serverList, loadErr := privateSpeedServerListWithNetwork(privateSpeedNetwork(network))
 		if loadErr != nil {
 			return 0, fmt.Errorf("加载自定义服务器列表失败")
 		}

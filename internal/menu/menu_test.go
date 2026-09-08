@@ -73,6 +73,19 @@ func TestSelfUpdateMenuChoiceDoesNotEnableBenchmarks(t *testing.T) {
 	}
 }
 
+func TestSpeedNetworkForMenuPinsDualStackToIPv4(t *testing.T) {
+	for stack, want := range map[string]string{
+		"DualStack": "tcp4",
+		"IPv4":      "tcp4",
+		"IPv6":      "tcp6",
+		"None":      "",
+	} {
+		if got := speedNetworkForMenu(stack); got != want {
+			t.Fatalf("speedNetworkForMenu(%q) = %q, want %q", stack, got, want)
+		}
+	}
+}
+
 func TestApplyMenuResultRestoresExplicitTestFlagForPreset(t *testing.T) {
 	cfg := params.NewConfig("test")
 	cfg.CpuTestStatus = false

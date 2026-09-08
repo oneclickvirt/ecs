@@ -11,17 +11,17 @@ import (
 	"github.com/oneclickvirt/privatespeedtest/pst"
 )
 
-func resetPrivateSpeedRegistryForTest(t *testing.T, loader func() (*pst.ServerList, error)) {
+func resetPrivateSpeedRegistryForTest(t *testing.T, loader func(pst.Network) (*pst.ServerList, error)) {
 	t.Helper()
+	privateSpeedRegistryMu.Lock()
+	defer privateSpeedRegistryMu.Unlock()
 	originalLoader := privateSpeedRegistryLoader
-	privateSpeedRegistryOnce = sync.Once{}
-	privateSpeedRegistry = nil
-	privateSpeedRegistryErr = nil
+	privateSpeedRegistries = make(map[pst.Network]*privateSpeedRegistryEntry)
 	privateSpeedRegistryLoader = loader
 	t.Cleanup(func() {
-		privateSpeedRegistryOnce = sync.Once{}
-		privateSpeedRegistry = nil
-		privateSpeedRegistryErr = nil
+		privateSpeedRegistryMu.Lock()
+		defer privateSpeedRegistryMu.Unlock()
+		privateSpeedRegistries = make(map[pst.Network]*privateSpeedRegistryEntry)
 		privateSpeedRegistryLoader = originalLoader
 	})
 }
@@ -29,7 +29,10 @@ func resetPrivateSpeedRegistryForTest(t *testing.T, loader func() (*pst.ServerLi
 func TestPrivateSpeedServerListLoadsOnceAcrossCarrierGroups(t *testing.T) {
 	var calls atomic.Int32
 	want := &pst.ServerList{TotalServers: 1}
-	resetPrivateSpeedRegistryForTest(t, func() (*pst.ServerList, error) {
+	resetPrivateSpeedRegistryForTest(t, func(network pst.Network) (*pst.ServerList, error) {
+		if network != pst.NetworkIPv4 {
+			t.Errorf("registry network = %q, want %q", network, pst.NetworkIPv4)
+		}
 		calls.Add(1)
 		return want, nil
 	})
@@ -40,7 +43,7 @@ func TestPrivateSpeedServerListLoadsOnceAcrossCarrierGroups(t *testing.T) {
 	for range callers {
 		go func() {
 			defer wg.Done()
-			got, err := privateSpeedServerList()
+			got, err := privateSpeedServerListWithNetwork(pst.NetworkIPv4)
 			if err != nil || got != want {
 				t.Errorf("privateSpeedServerList() = %#v, %v", got, err)
 			}
@@ -55,7 +58,10 @@ func TestPrivateSpeedServerListLoadsOnceAcrossCarrierGroups(t *testing.T) {
 func TestPrivateSpeedServerListCachesStableFailure(t *testing.T) {
 	var calls atomic.Int32
 	wantErr := errors.New("registry unavailable")
-	resetPrivateSpeedRegistryForTest(t, func() (*pst.ServerList, error) {
+	resetPrivateSpeedRegistryForTest(t, func(network pst.Network) (*pst.ServerList, error) {
+		if network != pst.NetworkAuto {
+			t.Errorf("registry network = %q, want automatic", network)
+		}
 		calls.Add(1)
 		return nil, wantErr
 	})
@@ -68,6 +74,32 @@ func TestPrivateSpeedServerListCachesStableFailure(t *testing.T) {
 	}
 	if got := calls.Load(); got != 1 {
 		t.Fatalf("registry loader calls = %d, want 1", got)
+	}
+}
+
+func TestPrivateSpeedServerListSeparatesAddressFamilyCaches(t *testing.T) {
+	var calls atomic.Int32
+	registries := map[pst.Network]*pst.ServerList{
+		pst.NetworkAuto: {TotalServers: 1},
+		pst.NetworkIPv4: {TotalServers: 4},
+		pst.NetworkIPv6: {TotalServers: 6},
+	}
+	resetPrivateSpeedRegistryForTest(t, func(network pst.Network) (*pst.ServerList, error) {
+		calls.Add(1)
+		return registries[network], nil
+	})
+
+	for _, network := range []pst.Network{pst.NetworkIPv4, pst.NetworkIPv6, pst.NetworkIPv4, pst.NetworkAuto, pst.NetworkIPv6} {
+		got, err := privateSpeedServerListWithNetwork(network)
+		if err != nil {
+			t.Fatalf("load %q: %v", network, err)
+		}
+		if got != registries[network] {
+			t.Fatalf("registry for %q = %#v, want %#v", network, got, registries[network])
+		}
+	}
+	if got := calls.Load(); got != 3 {
+		t.Fatalf("registry loader calls = %d, want one per address family", got)
 	}
 }
 
