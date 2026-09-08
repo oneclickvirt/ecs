@@ -96,4 +96,13 @@ jobs:
           git remote add target https://cnb.cool/oneclickvirt/ecs.git
           printf 'machine cnb.cool\nlogin %s\npassword %s\n' "$CNB_USERNAME" "$CNB_TOKEN" > "$NETRC_PATH"
           chmod 600 "$NETRC_PATH"
-          git push -f target main
+          for attempt in 1 2 3; do
+            if git -c http.version=HTTP/1.1 push --force target HEAD:refs/heads/main; then
+              exit 0
+            fi
+            if [[ "$attempt" == 3 ]]; then
+              echo "CNB release sync failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            sleep "$((attempt * 15))"
+          done
