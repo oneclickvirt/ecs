@@ -573,6 +573,13 @@ func RunSpeedTests(ctx context.Context, config *params.Config, output, tempOutpu
 // RunSpeedTestsWithNetwork runs the Chinese speed profile with one explicit
 // family policy. A nil preload batch remains safe for direct API callers.
 func RunSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string, preloads *tests.PrivateSpeedPreloads) string {
+	return runSpeedTestsWithNetworkAndPreload(ctx, config, output, tempOutput, outputMutex, network, preloads, nil)
+}
+
+// runSpeedTestsWithNetworkAndPreload adds the public global-candidate phase
+// used by Chinese complete suites. Keeping the exported compatibility helper
+// above avoids changing direct callers that do not orchestrate preloads.
+func runSpeedTestsWithNetworkAndPreload(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string, preloads *tests.PrivateSpeedPreloads, globalPreload *tests.GlobalSpeedPreload) string {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -582,10 +589,10 @@ func RunSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	_ = tempOutput
-	return output + captureChineseSpeedTests(ctx, config, network, preloads, true)
+	return output + captureChineseSpeedTests(ctx, config, network, preloads, globalPreload, true)
 }
 
-func captureChineseSpeedTests(ctx context.Context, config *params.Config, network string, preloads *tests.PrivateSpeedPreloads, display bool) string {
+func captureChineseSpeedTests(ctx context.Context, config *params.Config, network string, preloads *tests.PrivateSpeedPreloads, globalPreload *tests.GlobalSpeedPreload, display bool) string {
 	if config == nil || !config.SpeedTestStatus {
 		return ""
 	}
@@ -610,7 +617,15 @@ func captureChineseSpeedTests(ctx context.Context, config *params.Config, networ
 		// Options 1 and 2 retain the historical complete profile. Option 2
 		// changes scheduling only; it does not change the selected locations.
 		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
-		tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
+		if globalPreload != nil {
+			if err := tests.RunGlobalSpeedTestWithPreloadTo(ctx, writer, 2, config.Language, network, globalPreload); err != nil {
+				// Candidate preloading is an optimization. If it cannot provide
+				// a usable list, retain the established direct global path.
+				tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
+			}
+		} else {
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
+		}
 		for _, operator := range []string{"cu", "ct", "cmcc"} {
 			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 		}
@@ -678,6 +693,24 @@ func usesChineseNearbyCarrierSpeedProfile(config *params.Config) bool {
 // the two helpers above distinguish the complete and nearby profiles.
 func usesChinesePresetSpeedProfile(config *params.Config) bool {
 	return usesChineseFullSpeedProfile(config) || usesChineseNearbyCarrierSpeedProfile(config)
+}
+
+// shouldPreloadGlobalSpeedCandidates restricts the legacy public/global
+// candidate phase to the profiles that actually render it. Chinese complete
+// suites retain their two global nodes, while all English profiles keep their
+// established international-only selection.
+func shouldPreloadGlobalSpeedCandidates(config *params.Config) bool {
+	if config == nil {
+		return false
+	}
+	switch strings.ToLower(strings.TrimSpace(config.Language)) {
+	case "en":
+		return true
+	case "", "zh":
+		return usesChineseFullSpeedProfile(config)
+	default:
+		return false
+	}
 }
 
 // RunEnglishNetworkTests runs network tests (English mode)

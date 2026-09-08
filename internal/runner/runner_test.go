@@ -170,6 +170,30 @@ func TestChinesePresetSpeedProfilesKeepCompleteAndNearbyScopes(t *testing.T) {
 	}
 }
 
+func TestGlobalSpeedCandidatePreloadMatchesRenderedProfiles(t *testing.T) {
+	tests := []struct {
+		name string
+		cfg  *params.Config
+		want bool
+	}{
+		{name: "nil", cfg: nil, want: false},
+		{name: "Chinese complete", cfg: &params.Config{Language: "zh", Choice: "1"}, want: true},
+		{name: "Chinese concurrent complete", cfg: &params.Config{Language: "zh", Choice: "2"}, want: true},
+		{name: "Chinese compact", cfg: &params.Config{Language: "zh", Choice: "3"}, want: false},
+		{name: "Chinese custom", cfg: &params.Config{Language: "zh", Choice: "custom", MenuMode: true}, want: false},
+		{name: "Chinese non-menu legacy", cfg: &params.Config{Language: "zh", MenuMode: false}, want: true},
+		{name: "English compact", cfg: &params.Config{Language: "en", Choice: "3"}, want: true},
+		{name: "unsupported language", cfg: &params.Config{Language: "ja", Choice: "1"}, want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldPreloadGlobalSpeedCandidates(tt.cfg); got != tt.want {
+				t.Fatalf("shouldPreloadGlobalSpeedCandidates(%+v) = %t, want %t", tt.cfg, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestShouldPrintPingInfoSection(t *testing.T) {
 	tests := []struct {
 		name string

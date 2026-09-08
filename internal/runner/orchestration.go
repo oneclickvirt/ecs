@@ -102,7 +102,8 @@ func runLegacyTests(ctx context.Context, preCheck utils.NetCheckResult, config *
 		plan.preload = func(taskCtx context.Context) {
 			if config.Language == "zh" {
 				speedPreloads = tests.StartPrivateSpeedPreloads(taskCtx, []string{"ct", "cu", "cmcc"}, speedNetwork)
-			} else if config.Language == "en" {
+			}
+			if shouldPreloadGlobalSpeedCandidates(config) {
 				globalSpeedPreload = tests.StartGlobalSpeedPreload(taskCtx, speedNetwork)
 			}
 		}
@@ -182,14 +183,14 @@ func runLegacyTests(ctx context.Context, preCheck utils.NetCheckResult, config *
 				plan.fullConcurrent = true
 				plan.concurrentSpeed = &bufferedTask{name: "speed", run: func(taskCtx context.Context) string {
 					if config.Language == "zh" {
-						return captureChineseSpeedTests(taskCtx, config, speedNetwork, speedPreloads, false)
+						return captureChineseSpeedTests(taskCtx, config, speedNetwork, speedPreloads, globalSpeedPreload, false)
 					}
 					return captureEnglishSpeedTests(taskCtx, config, speedNetwork, globalSpeedPreload, false)
 				}}
 			} else {
 				plan.speed = func(context.Context) {
 					if config.Language == "zh" {
-						*output = RunSpeedTestsWithNetwork(ctx, config, *output, tempOutput, outputMutex, speedNetwork, speedPreloads)
+						*output = runSpeedTestsWithNetworkAndPreload(ctx, config, *output, tempOutput, outputMutex, speedNetwork, speedPreloads, globalSpeedPreload)
 					} else {
 						*output = RunEnglishSpeedTestsWithNetworkAndPreload(ctx, config, *output, tempOutput, outputMutex, speedNetwork, globalSpeedPreload)
 					}
