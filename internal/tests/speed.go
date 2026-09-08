@@ -124,6 +124,34 @@ type PrivateSpeedPreloads struct {
 	done       chan struct{}
 }
 
+// GlobalSpeedPreload caches the legacy international candidate phase. It is
+// intentionally separate from PrivateSpeedPreloads so English mode never
+// loads or exposes the managed private registry.
+type GlobalSpeedPreload struct {
+	preload *sp.CustomSpeedTestPreload
+}
+
+func StartGlobalSpeedPreload(ctx context.Context, network string) *GlobalSpeedPreload {
+	return &GlobalSpeedPreload{preload: sp.StartCustomSpeedTestPreload(ctx, model.NetGlobal, "id", normalizeSpeedNetwork(network))}
+}
+
+func (p *GlobalSpeedPreload) Wait(ctx context.Context) error {
+	if p == nil || p.preload == nil {
+		return fmt.Errorf("国际测速候选预加载不可用")
+	}
+	return p.preload.Wait(ctx)
+}
+
+func RunGlobalSpeedTestWithPreloadTo(ctx context.Context, writer io.Writer, num int, language, network string, preload *GlobalSpeedPreload) error {
+	if preload == nil || preload.preload == nil {
+		return fmt.Errorf("国际测速候选预加载不可用")
+	}
+	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
+		return preload.preload.RunCustomSpeedTestContextTo(ctx, writer, num, language)
+	}
+	return preload.preload.RunOfficialCustomSpeedTestContextTo(ctx, writer, num, language)
+}
+
 const privateSpeedPreloadDeadline = 20 * time.Second
 
 func privateSpeedNetwork(network string) pst.Network {

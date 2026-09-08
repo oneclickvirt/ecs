@@ -129,6 +129,33 @@ func CustomSPWithNetworkContextTo(ctx context.Context, writer io.Writer, platfor
 	sp.OfficialCustomSpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), url, parseType, num, language, network)
 }
 
+// GlobalSpeedPreload uses the public speedtest candidate phase without adding
+// a managed/private registry dependency to the public build.
+type GlobalSpeedPreload struct {
+	preload *sp.CustomSpeedTestPreload
+}
+
+func StartGlobalSpeedPreload(ctx context.Context, network string) *GlobalSpeedPreload {
+	return &GlobalSpeedPreload{preload: sp.StartCustomSpeedTestPreload(ctx, model.NetGlobal, "id", normalizeSpeedNetwork(network))}
+}
+
+func (p *GlobalSpeedPreload) Wait(ctx context.Context) error {
+	if p == nil || p.preload == nil {
+		return fmt.Errorf("global speedtest candidate preload is unavailable")
+	}
+	return p.preload.Wait(ctx)
+}
+
+func RunGlobalSpeedTestWithPreloadTo(ctx context.Context, writer io.Writer, num int, language, network string, preload *GlobalSpeedPreload) error {
+	if preload == nil || preload.preload == nil {
+		return fmt.Errorf("global speedtest candidate preload is unavailable")
+	}
+	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
+		return preload.preload.RunCustomSpeedTestContextTo(ctx, writer, num, language)
+	}
+	return preload.preload.RunOfficialCustomSpeedTestContextTo(ctx, writer, num, language)
+}
+
 // PrivateSpeedPreloads is a no-op compatibility type for ecs_public builds,
 // which intentionally do not link the managed private speed registry.
 type PrivateSpeedPreloads struct{}

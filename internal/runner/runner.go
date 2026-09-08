@@ -724,6 +724,13 @@ func RunEnglishSpeedTests(ctx context.Context, config *params.Config, output, te
 // RunEnglishSpeedTestsWithNetwork preserves the international selection logic
 // while pinning every lookup and transfer when the caller knows the family.
 func RunEnglishSpeedTestsWithNetwork(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string) string {
+	return RunEnglishSpeedTestsWithNetworkAndPreload(ctx, config, output, tempOutput, outputMutex, network, nil)
+}
+
+// RunEnglishSpeedTestsWithNetworkAndPreload keeps the established international
+// profile while reusing a candidate phase started by the orchestration layer.
+// A nil preload remains compatible with direct API callers.
+func RunEnglishSpeedTestsWithNetworkAndPreload(ctx context.Context, config *params.Config, output, tempOutput string, outputMutex *sync.Mutex, network string, preload *tests.GlobalSpeedPreload) string {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -733,10 +740,10 @@ func RunEnglishSpeedTestsWithNetwork(ctx context.Context, config *params.Config,
 	outputMutex.Lock()
 	defer outputMutex.Unlock()
 	_ = tempOutput
-	return output + captureEnglishSpeedTests(ctx, config, network, true)
+	return output + captureEnglishSpeedTests(ctx, config, network, preload, true)
 }
 
-func captureEnglishSpeedTests(ctx context.Context, config *params.Config, network string, display bool) string {
+func captureEnglishSpeedTests(ctx context.Context, config *params.Config, network string, preload *tests.GlobalSpeedPreload, display bool) string {
 	if config == nil || !config.SpeedTestStatus {
 		return ""
 	}
@@ -750,7 +757,15 @@ func captureEnglishSpeedTests(ctx context.Context, config *params.Config, networ
 	_, _ = writer.Write([]byte(centeredTitleText("Speed-Test", config.Width)))
 	tests.ShowHeadTo(writer, config.Language)
 	// English mode deliberately keeps the international registry profile.
-	tests.CustomSPWithNetworkContextTo(ctx, writer, "net", "global", max(4, config.SpNum), config.Language, network)
+	if preload != nil {
+		if err := tests.RunGlobalSpeedTestWithPreloadTo(ctx, writer, max(4, config.SpNum), config.Language, network, preload); err != nil {
+			// Candidate preloading is an optimization. Preserve the historical
+			// direct path when the bounded preload cannot produce candidates.
+			tests.CustomSPWithNetworkContextTo(ctx, writer, "net", "global", max(4, config.SpNum), config.Language, network)
+		}
+	} else {
+		tests.CustomSPWithNetworkContextTo(ctx, writer, "net", "global", max(4, config.SpNum), config.Language, network)
+	}
 	return buffer.String()
 }
 
