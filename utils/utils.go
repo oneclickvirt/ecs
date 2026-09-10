@@ -26,11 +26,10 @@ import (
 	"github.com/oneclickvirt/basics/system"
 	butils "github.com/oneclickvirt/basics/utils"
 	. "github.com/oneclickvirt/defaultset"
-	"github.com/oneclickvirt/security/network"
 )
 
 var (
-	networkCheckFn          = network.NetworkCheck
+	networkCheckFn          = bnetwork.NetworkCheck
 	dnsConfigureFn          = dnsresolver.Configure
 	dnsCurrentStatusFn      = dnsresolver.CurrentStatus
 	dnsShutdownFn           = dnsresolver.Shutdown
@@ -572,7 +571,7 @@ func UploadTextContext(ctx context.Context, absPath string) (string, string, err
 	// returns a redirect, which is intentionally not used for authenticated
 	// uploads because some clients/proxies will drop Authorization on redirect.
 	primaryURL := "https://paste.spiritlhl.net/api/UL/upload"
-	token := network.SecurityUploadToken
+	token := "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"
 	client := req.C().SetTimeout(6 * time.Second)
 	client.R().
 		SetRetryCount(2).
