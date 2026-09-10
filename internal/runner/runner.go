@@ -609,41 +609,77 @@ func captureChineseSpeedTests(ctx context.Context, config *params.Config, networ
 	_, _ = writer.Write([]byte(centeredTitleText("就近节点测速", config.Width)))
 	tests.ShowHeadTo(writer, config.Language)
 	if preloads != nil {
-		if err := preloads.WaitAll(ctx); err != nil {
-			return buffer.String()
-		}
+		// A preload miss is not an availability verdict. The carrier path below
+		// falls back to a fresh ordered candidate list and actual throughput.
+		_ = preloads.WaitAll(ctx)
 	}
 	if usesChineseFullSpeedProfile(config) {
 		// Options 1 and 2 retain the historical complete profile. Option 2
 		// changes scheduling only; it does not change the selected locations.
-		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
-		if globalPreload != nil {
-			if err := tests.RunGlobalSpeedTestWithPreloadTo(ctx, writer, 2, config.Language, network, globalPreload); err != nil {
-				// Candidate preloading is an optimization. If it cannot provide
-				// a usable list, retain the established direct global path.
-				tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
+		runSpeedGroup(ctx, 5, func(groupCtx context.Context) {
+			tests.NearbySPWithNetworkContextTo(groupCtx, writer, network)
+		})
+		runSpeedGroup(ctx, 4, func(groupCtx context.Context) {
+			if globalPreload != nil {
+				if err := tests.RunGlobalSpeedTestWithPreloadTo(groupCtx, writer, 2, config.Language, network, globalPreload); err == nil {
+					return
+				}
 			}
-		} else {
-			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", "global", 2, config.Language, network, nil)
-		}
-		for _, operator := range []string{"cu", "ct", "cmcc"} {
-			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
-		}
+			// Candidate preloading is an optimization. If it cannot provide a
+			// usable list, retain the established direct global path.
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, groupCtx, "net", "global", 2, config.Language, network, nil)
+		})
+		runChineseCarrierSpeedGroups(ctx, writer, []string{"cu", "ct", "cmcc"}, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 	} else if usesChineseNearbyCarrierSpeedProfile(config) {
 		// Other built-in Chinese presets intentionally use one nearby
 		// speedtest.net result and one node for each mainland carrier.
-		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
-		for _, operator := range []string{"ct", "cu", "cmcc"} {
-			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, 1, config.Language, network, preloads)
-		}
+		runSpeedGroup(ctx, 4, func(groupCtx context.Context) {
+			tests.NearbySPWithNetworkContextTo(groupCtx, writer, network)
+		})
+		runChineseCarrierSpeedGroups(ctx, writer, []string{"ct", "cu", "cmcc"}, 1, config.Language, network, preloads)
 	} else {
 		// Explicit/custom parameters retain their caller-selected node count.
-		tests.NearbySPWithNetworkContextTo(ctx, writer, network)
-		for _, operator := range []string{"cu", "ct", "cmcc"} {
-			tests.CustomSPWithNetworkAndPreloadsTo(writer, ctx, "net", operator, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
-		}
+		runSpeedGroup(ctx, 4, func(groupCtx context.Context) {
+			tests.NearbySPWithNetworkContextTo(groupCtx, writer, network)
+		})
+		runChineseCarrierSpeedGroups(ctx, writer, []string{"cu", "ct", "cmcc"}, normalizedSpeedNodeCount(config.SpNum), config.Language, network, preloads)
 	}
 	return buffer.String()
+}
+
+func runChineseCarrierSpeedGroups(ctx context.Context, writer io.Writer, operators []string, count int, language, network string, preloads *tests.PrivateSpeedPreloads) {
+	for index, operator := range operators {
+		remaining := len(operators) - index
+		runSpeedGroup(ctx, remaining, func(groupCtx context.Context) {
+			tests.CustomSPWithNetworkAndPreloadsTo(writer, groupCtx, "net", operator, count, language, network, preloads)
+		})
+	}
+}
+
+func runSpeedGroup(ctx context.Context, remainingGroups int, run func(context.Context)) {
+	groupCtx, cancel := fairSpeedGroupContext(ctx, remainingGroups)
+	defer cancel()
+	if run != nil {
+		run(groupCtx)
+	}
+}
+
+func fairSpeedGroupContext(ctx context.Context, remainingGroups int) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if remainingGroups <= 1 {
+		return context.WithCancel(ctx)
+	}
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return context.WithCancel(ctx)
+	}
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, remaining/time.Duration(remainingGroups))
 }
 
 func normalizedSpeedNodeCount(value int) int {

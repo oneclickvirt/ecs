@@ -9,7 +9,7 @@ import (
 )
 
 func TestPrivateSpeedtestDependencyContract(t *testing.T) {
-	if got := privatepst.PrivateSpeedTestVersion; got != "v0.0.22" {
-		t.Fatalf("private speedtest component version = %q, want v0.0.22", got)
+	if got := privatepst.PrivateSpeedTestVersion; got != "v0.0.24" {
+		t.Fatalf("private speedtest component version = %q, want v0.0.24", got)
 	}
 }

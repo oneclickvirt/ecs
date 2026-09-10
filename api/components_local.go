@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -1938,13 +1939,23 @@ func collectChineseFullSpeedComponentWithNetwork(ctx context.Context, probedServ
 	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(probedServers))}
 	payload.Nodes = appendProbedSpeedRegistryNodes(payload.Nodes, probedServers)
 	payload.Nodes = appendTransferSpeedNodes(payload.Nodes, transfers)
-	// appendSpeedRegistryNodes performs the family-pinned candidate probe.  Do
-	// not probe the same registry a second time here: besides doubling latency,
-	// the duplicate connection burst can affect the first throughput sample.
+	// Prechecks only rank each location pool. Real transfers keep the historical
+	// nearby/global/per-carrier quotas and may try up to twice each quota.
 	available := availableSpeedNodes(payload.Nodes)
-	selected := selectChineseFullSpeedNodes(available, perCarrier)
-	payload.Selected = append(payload.Selected, selected...)
-	return finishSpeedComponentWithNetwork(ctx, payload, perCarrier, privateRunner, network, started)
+	groups := []speedNodeBenchmarkGroup{
+		{candidates: matchingSpeedNodes(available, func(node speedNodeResult) bool { return isNearbySpeedNode(node) }), successTarget: 1},
+		{candidates: matchingSpeedNodes(available, isGlobalSpeedNode), successTarget: 2},
+	}
+	for _, carrier := range []string{"cu", "ct", "cm"} {
+		carrier := carrier
+		groups = append(groups, speedNodeBenchmarkGroup{
+			candidates: matchingSpeedNodes(available, func(node speedNodeResult) bool {
+				return !isGlobalSpeedNode(node) && matchesSpeedCarrier(node, carrier)
+			}),
+			successTarget: perCarrier,
+		})
+	}
+	return finishGroupedSpeedComponentWithNetwork(ctx, payload, groups, perCarrier, privateRunner, network, started)
 }
 
 func collectChineseNearbyCarrierSpeedComponentWithNetwork(ctx context.Context, probedServers []speedmodel.ServerMetadata, transfers []transferTargetInput, network speedmodel.Network, privateRunner privateSpeedRunnerWithNetwork) ComponentReport {
@@ -1952,11 +1963,35 @@ func collectChineseNearbyCarrierSpeedComponentWithNetwork(ctx context.Context, p
 	payload := speedComponentPayload{SchemaVersion: "goecs.speed/v1", Nodes: make([]speedNodeResult, 0, len(probedServers))}
 	payload.Nodes = appendProbedSpeedRegistryNodes(payload.Nodes, probedServers)
 	payload.Nodes = appendTransferSpeedNodes(payload.Nodes, transfers)
-	// The registry probe has already completed in appendSpeedRegistryNodes.
 	available := availableSpeedNodes(payload.Nodes)
-	selected := selectChineseNearbyCarrierSpeedNodes(available)
-	payload.Selected = append(payload.Selected, selected...)
-	return finishSpeedComponentWithNetwork(ctx, payload, 1, privateRunner, network, started)
+	groups := []speedNodeBenchmarkGroup{{
+		candidates: matchingSpeedNodes(available, func(node speedNodeResult) bool { return isNearbySpeedNode(node) }), successTarget: 1,
+	}}
+	for _, carrier := range []string{"ct", "cu", "cm"} {
+		carrier := carrier
+		groups = append(groups, speedNodeBenchmarkGroup{
+			candidates: matchingSpeedNodes(available, func(node speedNodeResult) bool {
+				return !isGlobalSpeedNode(node) && matchesSpeedCarrier(node, carrier)
+			}),
+			successTarget: 1,
+		})
+	}
+	return finishGroupedSpeedComponentWithNetwork(ctx, payload, groups, 1, privateRunner, network, started)
+}
+
+type speedNodeBenchmarkGroup struct {
+	candidates    []speedNodeResult
+	successTarget int
+}
+
+func matchingSpeedNodes(nodes []speedNodeResult, match func(speedNodeResult) bool) []speedNodeResult {
+	matched := make([]speedNodeResult, 0, len(nodes))
+	for _, node := range nodes {
+		if match == nil || match(node) {
+			matched = append(matched, node)
+		}
+	}
+	return matched
 }
 
 func appendSpeedRegistryNodes(ctx context.Context, nodes []speedNodeResult, servers []speedmodel.ServerMetadata, network speedmodel.Network) []speedNodeResult {
@@ -2003,17 +2038,38 @@ func appendTransferSpeedNodes(nodes []speedNodeResult, transfers []transferTarge
 func availableSpeedNodes(nodes []speedNodeResult) []speedNodeResult {
 	available := make([]speedNodeResult, 0, len(nodes))
 	for _, node := range nodes {
-		if node.Availability == "available" && node.Source == "speedtest" && strings.TrimSpace(node.URL) != "" {
+		if node.Source != "speedtest" || !validSpeedNodeURL(node.URL) {
+			continue
+		}
+		switch strings.ToLower(strings.TrimSpace(node.Availability)) {
+		case "available", "candidate", "":
 			available = append(available, node)
 		}
 	}
 	sort.SliceStable(available, func(i, j int) bool {
+		leftRank := speedNodeAvailabilityRank(available[i].Availability)
+		rightRank := speedNodeAvailabilityRank(available[j].Availability)
+		if leftRank != rightRank {
+			return leftRank < rightRank
+		}
 		if available[i].LatencyMS == available[j].LatencyMS {
 			return available[i].ID < available[j].ID
 		}
 		return available[i].LatencyMS < available[j].LatencyMS
 	})
 	return available
+}
+
+func validSpeedNodeURL(value string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(value))
+	return err == nil && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Hostname() != ""
+}
+
+func speedNodeAvailabilityRank(value string) int {
+	if strings.EqualFold(strings.TrimSpace(value), "available") {
+		return 0
+	}
+	return 1
 }
 
 func selectChineseFullSpeedNodes(nodes []speedNodeResult, perCarrier int) []speedNodeResult {
@@ -2129,19 +2185,37 @@ func matchesSpeedCarrier(node speedNodeResult, carrier string) bool {
 	}
 }
 
-func finishSpeedComponentWithNetwork(ctx context.Context, payload speedComponentPayload, privateLimit int, privateRunner privateSpeedRunnerWithNetwork, network speedmodel.Network, started time.Time) ComponentReport {
-	benchmarkServers := make([]speedmodel.ServerMetadata, 0, len(payload.Selected))
-	for _, selected := range payload.Selected {
-		benchmarkServers = append(benchmarkServers, speedmodel.ServerMetadata{
-			ID: selected.ID, Name: selected.City, Host: selected.Host, URL: selected.URL,
-			Provider: selected.Provider, Country: selected.Country, City: selected.City,
-		})
-	}
-	payload.Benchmarks = speedmodel.BenchmarkServersWithNetwork(ctx, benchmarkServers, len(benchmarkServers), nil, network)
+func finishGroupedSpeedComponentWithNetwork(ctx context.Context, payload speedComponentPayload, groups []speedNodeBenchmarkGroup, privateLimit int, privateRunner privateSpeedRunnerWithNetwork, network speedmodel.Network, started time.Time) ComponentReport {
+	attempted := make(map[string]struct{})
 	completed := 0
-	for _, benchmark := range payload.Benchmarks {
-		if benchmark.Status == speedmodel.ThroughputAvailable {
-			completed++
+	for index, group := range groups {
+		candidates := make([]speedNodeResult, 0, len(group.candidates))
+		for _, candidate := range group.candidates {
+			if _, exists := attempted[speedNodeKey(candidate)]; !exists {
+				candidates = append(candidates, candidate)
+			}
+		}
+		candidates = boundedSpeedCandidates(candidates, group.successTarget)
+		if len(candidates) == 0 {
+			continue
+		}
+		remainingGroups := len(groups) - index
+		if privateRunner != nil {
+			remainingGroups++
+		}
+		groupCtx, cancel := fairStructuredSpeedGroupContext(ctx, remainingGroups)
+		benchmarks := speedmodel.BenchmarkServersWithNetwork(groupCtx, speedMetadataForNodes(candidates), group.successTarget, nil, network)
+		cancel()
+		attemptCount := min(len(benchmarks), len(candidates))
+		for _, candidate := range candidates[:attemptCount] {
+			attempted[speedNodeKey(candidate)] = struct{}{}
+			payload.Selected = append(payload.Selected, candidate)
+		}
+		payload.Benchmarks = append(payload.Benchmarks, benchmarks...)
+		for _, benchmark := range benchmarks {
+			if benchmark.Status == speedmodel.ThroughputAvailable {
+				completed++
+			}
 		}
 	}
 	privateSelected := 0
@@ -2156,7 +2230,7 @@ func finishSpeedComponentWithNetwork(ctx context.Context, payload speedComponent
 			}
 		}
 	}
-	totalSelected := len(payload.Selected) + privateSelected
+	totalSelected := len(payload.Benchmarks) + privateSelected
 	status := ReportStatusOK
 	if totalSelected == 0 || completed == 0 {
 		status = ReportStatusUnavailable
@@ -2217,8 +2291,8 @@ func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData
 			return componentPayload("speed.registry", payload.SchemaVersion, ReportStatusError, started, payload, fmt.Errorf("decode %s nodes: %w", source, err))
 		}
 		for _, input := range inputs {
-			if strings.TrimSpace(input.Host) == "" || strings.EqualFold(input.Status, "unavailable") {
-				payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: input.Host, Port: input.PortFrom, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "unavailable", Error: "static node unavailable", URL: input.URL})
+			if strings.TrimSpace(input.Host) == "" {
+				payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: input.Host, Port: input.PortFrom, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "unavailable", Error: "missing host", URL: input.URL})
 				continue
 			}
 			port := input.PortFrom
@@ -2233,7 +2307,11 @@ func collectSpeedComponentWithAllDependencies(ctx context.Context, speedtestData
 					fmt.Sscanf(parsedPort, "%d", &port)
 				}
 			}
-			payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: host, Port: port, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "candidate", URL: input.URL})
+			errorMessage := ""
+			if strings.EqualFold(strings.TrimSpace(input.Status), "unavailable") {
+				errorMessage = "static node marked unavailable; rechecking"
+			}
+			payload.Nodes = append(payload.Nodes, speedNodeResult{ID: input.ID, Host: host, Port: port, Provider: input.Provider, Country: input.Country, City: input.City, Source: source, Availability: "candidate", Error: errorMessage, URL: input.URL})
 		}
 	}
 	return collectSpeedComponentFromNodes(ctx, payload, limit, dial, throughput, privateRunner, false, started)
@@ -2245,35 +2323,25 @@ func collectSpeedComponentFromNodes(ctx context.Context, payload speedComponentP
 
 func collectSpeedComponentFromNodesWithNetwork(ctx context.Context, payload speedComponentPayload, limit int, dial speedDialFunc, throughput speedmodel.ThroughputProbe, privateRunner privateSpeedRunner, privateRunnerWithNetwork privateSpeedRunnerWithNetwork, representative bool, started time.Time, network speedmodel.Network) ComponentReport {
 	probeSpeedNodesWithNetwork(ctx, payload.Nodes, dial, network)
-	available := make([]speedNodeResult, 0, len(payload.Nodes))
-	for _, node := range payload.Nodes {
-		if node.Availability == "available" && node.Source == "speedtest" && strings.TrimSpace(node.URL) != "" {
-			available = append(available, node)
-		}
-	}
-	sort.SliceStable(available, func(i, j int) bool {
-		if available[i].LatencyMS == available[j].LatencyMS {
-			return available[i].ID < available[j].ID
-		}
-		return available[i].LatencyMS < available[j].LatencyMS
-	})
+	available := availableSpeedNodes(payload.Nodes)
 	if limit <= 0 {
 		limit = 2
 	}
 	if representative {
-		available = selectRepresentativeSpeedNodes(available, limit)
-	} else if len(available) > limit {
-		available = available[:limit]
+		available = prioritizeRepresentativeSpeedNodes(available, limit)
 	}
+	available = boundedSpeedCandidates(available, limit)
 	payload.Selected = append(payload.Selected, available...)
-	benchmarkServers := make([]speedmodel.ServerMetadata, 0, len(payload.Selected))
-	for _, selected := range payload.Selected {
-		benchmarkServers = append(benchmarkServers, speedmodel.ServerMetadata{
-			ID: selected.ID, Name: selected.City, Host: selected.Host, URL: selected.URL,
-			Provider: selected.Provider, Country: selected.Country, City: selected.City,
-		})
+	publicCtx := ctx
+	publicCancel := func() {}
+	if privateRunner != nil || privateRunnerWithNetwork != nil {
+		publicCtx, publicCancel = fairStructuredSpeedGroupContext(ctx, 2)
 	}
-	payload.Benchmarks = speedmodel.BenchmarkServersWithNetwork(ctx, benchmarkServers, len(benchmarkServers), throughput, network)
+	payload.Benchmarks = speedmodel.BenchmarkServersWithNetwork(publicCtx, speedMetadataForNodes(payload.Selected), limit, throughput, network)
+	publicCancel()
+	if len(payload.Benchmarks) < len(payload.Selected) {
+		payload.Selected = payload.Selected[:len(payload.Benchmarks)]
+	}
 	completed := 0
 	for _, benchmark := range payload.Benchmarks {
 		if benchmark.Status == speedmodel.ThroughputAvailable {
@@ -2299,7 +2367,7 @@ func collectSpeedComponentFromNodesWithNetwork(ctx context.Context, payload spee
 			}
 		}
 	}
-	totalSelected := len(payload.Selected) + privateSelected
+	totalSelected := len(payload.Benchmarks) + privateSelected
 	status := ReportStatusOK
 	if totalSelected == 0 || completed == 0 {
 		status = ReportStatusUnavailable
@@ -2317,6 +2385,47 @@ func collectSpeedComponentFromNodesWithNetwork(ctx context.Context, payload spee
 		report.Reason = fmt.Sprintf("%d/%d selected nodes completed throughput", completed, totalSelected)
 	}
 	return report
+}
+
+func speedMetadataForNodes(nodes []speedNodeResult) []speedmodel.ServerMetadata {
+	servers := make([]speedmodel.ServerMetadata, 0, len(nodes))
+	for _, node := range nodes {
+		servers = append(servers, speedmodel.ServerMetadata{
+			ID: node.ID, Name: node.City, Host: node.Host, URL: node.URL,
+			Provider: node.Provider, Country: node.Country, City: node.City,
+			Network: node.Network,
+		})
+	}
+	return servers
+}
+
+func boundedSpeedCandidates(nodes []speedNodeResult, successTarget int) []speedNodeResult {
+	if successTarget <= 0 || len(nodes) == 0 {
+		return nil
+	}
+	attemptLimit := successTarget * 2
+	if attemptLimit > len(nodes) {
+		attemptLimit = len(nodes)
+	}
+	return append([]speedNodeResult(nil), nodes[:attemptLimit]...)
+}
+
+func fairStructuredSpeedGroupContext(ctx context.Context, remainingGroups int) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if remainingGroups <= 1 {
+		return context.WithCancel(ctx)
+	}
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return context.WithCancel(ctx)
+	}
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, remaining/time.Duration(remainingGroups))
 }
 
 func selectRepresentativeSpeedNodes(nodes []speedNodeResult, limit int) []speedNodeResult {
@@ -2342,6 +2451,36 @@ func selectRepresentativeSpeedNodes(nodes []speedNodeResult, limit int) []speedN
 		}
 	}
 	return result
+}
+
+// prioritizeRepresentativeSpeedNodes keeps the established international
+// geographic spread at the front, then retains latency-ranked fallbacks. The
+// caller applies the shared 2*limit attempt cap after this ordering step.
+func prioritizeRepresentativeSpeedNodes(nodes []speedNodeResult, limit int) []speedNodeResult {
+	primary := selectRepresentativeSpeedNodes(nodes, limit)
+	ordered := make([]speedNodeResult, 0, len(nodes))
+	seen := make(map[string]struct{}, len(nodes))
+	for _, node := range primary {
+		key := speedNodeKey(node)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		ordered = append(ordered, node)
+	}
+	for _, node := range nodes {
+		key := speedNodeKey(node)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		ordered = append(ordered, node)
+	}
+	return ordered
+}
+
+func speedNodeKey(node speedNodeResult) string {
+	return node.ID + "\x00" + node.Host + "\x00" + node.URL
 }
 
 func speedContextStatus(err error) string {
@@ -2390,7 +2529,9 @@ func probeSpeedNodesWithNetwork(ctx context.Context, nodes []speedNodeResult, di
 				node.LatencyMS = time.Since(started).Milliseconds()
 				cancel()
 				if err != nil {
-					node.Availability, node.Error = "unavailable", classifySpeedProbeError(err)
+					// TCP reachability is only a ranking hint. Preserve a valid URL as
+					// a candidate so the real HTTP transfer can make the decision.
+					node.Availability, node.Error = "candidate", classifySpeedProbeError(err)
 					continue
 				}
 				node.Availability = "available"

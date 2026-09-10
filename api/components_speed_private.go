@@ -186,17 +186,20 @@ func runChineseFullPrivateSpeedBenchmarksFromLoaded(ctx context.Context, limit i
 	benchmarks := make([]privateSpeedBenchmark, 0, 3*limit)
 	selected := 0
 	// This is the same carrier ordering as the old complete terminal profile.
-	for _, carrier := range []struct {
+	carriers := []struct {
 		label string
 		isp   string
 	}{
 		{label: "unicom", isp: "Unicom"},
 		{label: "telecom", isp: "Telecom"},
 		{label: "mobile", isp: "Mobile"},
-	} {
+	}
+	for index, carrier := range carriers {
+		carrierCtx, cancel := fairPrivateSpeedGroupContext(ctx, len(carriers)-index)
 		carrierLoaded := filterPrivateRegistryByCarrier(loaded, carrier.isp)
-		registry := resolver(ctx, carrierLoaded, limit, network)
-		count, carrierBenchmarks := runPrivateSpeedBenchmarksFromRegistry(ctx, limit, registry, speedTest)
+		registry := resolver(carrierCtx, carrierLoaded, limit, network)
+		count, carrierBenchmarks := runPrivateSpeedBenchmarksFromRegistry(carrierCtx, limit, registry, speedTest)
+		cancel()
 		report.Carriers = append(report.Carriers, chineseFullPrivateSpeedCarrierSet{Carrier: carrier.label, Registry: registry})
 		selected += count
 		benchmarks = append(benchmarks, carrierBenchmarks...)
@@ -316,7 +319,9 @@ func newPrivateStructuredSpeedPreload(config *Config, inputs componentInputs) *s
 func preloadStructuredPrivateSpeedRunner(ctx context.Context, config *Config, inputs componentInputs, network speedmodel.Network) privateSpeedRunnerWithNetwork {
 	loaded, err := structuredPrivateSpeedRegistry(ctx, config, inputs, network)
 	if err != nil {
-		return unavailablePreloadedPrivateSpeedRunner(err)
+		// A failed preload is not an availability verdict. Retry registry loading
+		// and real throughput when the speed stage begins.
+		return privateSpeedRunnerForStructuredConfig(config)
 	}
 	limit := structuredPrivateSpeedLimit(config)
 	if config != nil && !strings.EqualFold(strings.TrimSpace(config.Language), "en") && usesChineseFullStructuredSpeedProfile(config) {
@@ -347,18 +352,6 @@ func structuredPrivateSpeedLimit(config *Config) int {
 		return 1
 	}
 	return config.SpNum
-}
-
-func unavailablePreloadedPrivateSpeedRunner(err error) privateSpeedRunnerWithNetwork {
-	return func(context.Context, int, speedmodel.Network) (any, int, []privateSpeedBenchmark) {
-		return privatepst.RegistryReport{
-			SchemaVersion: "privatespeedtest.registry/v1",
-			Fallback:      true,
-			Availability:  privatepst.ServerUnavailable,
-			Servers:       []privatepst.RegistryNode{},
-			Error:         err.Error(),
-		}, 0, nil
-	}
 }
 
 func preloadedPrivateSpeedRunner(registry privatepst.RegistryReport, network speedmodel.Network) privateSpeedRunnerWithNetwork {
@@ -425,8 +418,10 @@ func preloadChineseFullPrivateSpeedRunner(ctx context.Context, loaded privatepst
 		benchmarks := make([]privateSpeedBenchmark, 0, len(carriers)*runnerLimit)
 		selected := 0
 		for index, carrier := range carriers {
+			carrierCtx, cancel := fairPrivateSpeedGroupContext(runnerCtx, len(carriers)-index)
 			registry := registries[index]
-			count, carrierBenchmarks := runPrivateSpeedBenchmarksFromRegistry(runnerCtx, runnerLimit, registry, privateSpeedTestForNetwork(effectiveNetwork))
+			count, carrierBenchmarks := runPrivateSpeedBenchmarksFromRegistry(carrierCtx, runnerLimit, registry, privateSpeedTestForNetwork(effectiveNetwork))
+			cancel()
 			report.Carriers = append(report.Carriers, chineseFullPrivateSpeedCarrierSet{Carrier: carrier.label, Registry: registry})
 			selected += count
 			benchmarks = append(benchmarks, carrierBenchmarks...)
@@ -444,6 +439,10 @@ func runPrivateSpeedBenchmarksFromRegistry(ctx context.Context, limit int, regis
 	attempts := make([]privatepst.RegistryNode, 0, len(registry.Selected)+len(registry.Standby))
 	attempts = append(attempts, registry.Selected...)
 	attempts = append(attempts, registry.Standby...)
+	attemptLimit := limit * 2
+	if attemptLimit < len(attempts) {
+		attempts = attempts[:attemptLimit]
+	}
 	benchmarks := make([]privateSpeedBenchmark, 0, len(attempts))
 	usable := 0
 	for _, selected := range attempts {
@@ -481,4 +480,22 @@ func runPrivateSpeedBenchmarksFromRegistry(ctx context.Context, limit int, regis
 		})
 	}
 	return len(benchmarks), benchmarks
+}
+
+func fairPrivateSpeedGroupContext(ctx context.Context, remainingGroups int) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if remainingGroups <= 1 {
+		return context.WithCancel(ctx)
+	}
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return context.WithCancel(ctx)
+	}
+	remaining := time.Until(deadline)
+	if remaining <= 0 {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, remaining/time.Duration(remainingGroups))
 }

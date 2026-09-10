@@ -47,10 +47,10 @@ func NearbySPWithNetworkContextTo(ctx context.Context, writer io.Writer, network
 	}()
 	network = normalizeSpeedNetwork(network)
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		sp.NearbySpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), network)
+		renderNearbySpeedtest(ctx, writer, network, sp.NearbySpeedTestWithNetworkContextTo)
 		return
 	}
-	sp.OfficialNearbySpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), network)
+	renderNearbySpeedtest(ctx, writer, network, sp.OfficialNearbySpeedTestWithNetworkContextTo)
 }
 
 func writerOrDiscard(writer io.Writer) io.Writer {
@@ -123,10 +123,14 @@ func CustomSPWithNetworkContextTo(ctx context.Context, writer io.Writer, platfor
 		parseType = "id"
 	}
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		sp.CustomSpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), url, parseType, num, language, network)
+		renderFilteredSpeedtest(writer, func(output io.Writer) {
+			sp.CustomSpeedTestWithNetworkContextTo(ctx, output, url, parseType, num, language, network)
+		})
 		return
 	}
-	sp.OfficialCustomSpeedTestWithNetworkContextTo(ctx, writerOrDiscard(writer), url, parseType, num, language, network)
+	renderFilteredSpeedtest(writer, func(output io.Writer) {
+		sp.OfficialCustomSpeedTestWithNetworkContextTo(ctx, output, url, parseType, num, language, network)
+	})
 }
 
 // GlobalSpeedPreload uses the public speedtest candidate phase without adding
@@ -151,9 +155,13 @@ func RunGlobalSpeedTestWithPreloadTo(ctx context.Context, writer io.Writer, num 
 		return fmt.Errorf("global speedtest candidate preload is unavailable")
 	}
 	if runtime.GOOS == "windows" || sp.OfficialAvailableTest() != nil {
-		return preload.preload.RunCustomSpeedTestContextTo(ctx, writer, num, language)
+		return renderFilteredSpeedtestWithError(writer, func(output io.Writer) error {
+			return preload.preload.RunCustomSpeedTestContextTo(ctx, output, num, language)
+		})
 	}
-	return preload.preload.RunOfficialCustomSpeedTestContextTo(ctx, writer, num, language)
+	return renderFilteredSpeedtestWithError(writer, func(output io.Writer) error {
+		return preload.preload.RunOfficialCustomSpeedTestContextTo(ctx, output, num, language)
+	})
 }
 
 // PrivateSpeedPreloads is a no-op compatibility type for ecs_public builds,

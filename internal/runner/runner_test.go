@@ -45,6 +45,21 @@ func TestBoundedSpeedTestContextRespectsEarlierParentDeadline(t *testing.T) {
 	}
 }
 
+func TestFairSpeedGroupContextReservesTimeForRemainingGroups(t *testing.T) {
+	parent, parentCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer parentCancel()
+	child, childCancel := fairSpeedGroupContext(parent, 3)
+	defer childCancel()
+	childDeadline, ok := child.Deadline()
+	if !ok {
+		t.Fatal("fair speed group context has no deadline")
+	}
+	remaining := time.Until(childDeadline)
+	if remaining < 9*time.Second || remaining > 11*time.Second {
+		t.Fatalf("first of three groups received %s, want about one third of remaining time", remaining)
+	}
+}
+
 func TestShouldPrintBriefIPLinesInBasicStage(t *testing.T) {
 	tests := []struct {
 		name string

@@ -4,6 +4,7 @@ package tests
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -121,12 +122,23 @@ func TestSelectPrivateSpeedCandidatesUsesDistinctCityFallbacks(t *testing.T) {
 		{Server: pst.ServerConfig{ID: "guangzhou", City: "Guangzhou"}},
 	}
 	selected := selectPrivateSpeedCandidates(candidates, 2)
-	if len(selected) != 3 {
-		t.Fatalf("selected %d candidates, want 3: %+v", len(selected), selected)
+	if len(selected) != 4 {
+		t.Fatalf("selected %d candidates, want all 4 fallbacks: %+v", len(selected), selected)
 	}
-	for index, want := range []string{"beijing-first", "shanghai", "guangzhou"} {
+	for index, want := range []string{"beijing-first", "shanghai", "guangzhou", "beijing-second"} {
 		if selected[index].Server.ID != want {
 			t.Fatalf("selected[%d] = %q, want %q", index, selected[index].Server.ID, want)
 		}
+	}
+}
+
+func TestSelectPrivateSpeedCandidatesCapsAttemptsAtTwiceLimit(t *testing.T) {
+	candidates := make([]pst.ServerWithLatencyInfo, 0, 8)
+	for index := 0; index < 8; index++ {
+		candidates = append(candidates, pst.ServerWithLatencyInfo{Server: pst.ServerConfig{ID: fmt.Sprintf("node-%d", index), City: fmt.Sprintf("city-%d", index)}})
+	}
+	selected := selectPrivateSpeedCandidates(candidates, 2)
+	if len(selected) != 4 {
+		t.Fatalf("selected %d candidates, want 2*limit = 4", len(selected))
 	}
 }

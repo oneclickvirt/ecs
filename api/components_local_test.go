@@ -360,8 +360,35 @@ func TestLocalSpeedComponentProbesAndSelectsAvailableNodes(t *testing.T) {
 	if len(payload.Nodes) != 3 || len(payload.Selected) != 1 || payload.Selected[0].ID != "good" || len(payload.Benchmarks) != 1 || payload.Benchmarks[0].DownloadMbps != 100 {
 		t.Fatalf("unexpected speed payload: %+v", payload)
 	}
-	if payload.Nodes[1].Availability != "unavailable" || payload.Nodes[2].Host != "open.test:5201" {
-		t.Fatalf("static/dial failures were not retained: %+v", payload.Nodes)
+	if payload.Nodes[1].Availability != "candidate" || payload.Nodes[2].Availability != "candidate" || payload.Nodes[2].Host != "open.test:5201" {
+		t.Fatalf("static/dial failures were not retained as ranked candidates: %+v", payload.Nodes)
+	}
+}
+
+func TestSpeedCandidatesKeepPrecheckFailuresAndCapFormalAttempts(t *testing.T) {
+	nodes := []speedNodeResult{
+		{ID: "confirmed", Host: "confirmed.test:80", URL: "https://confirmed.test/upload", Source: "speedtest", Availability: "available", LatencyMS: 30},
+		{ID: "precheck-failed", Host: "candidate.test:80", URL: "https://candidate.test/upload", Source: "speedtest", Availability: "candidate", LatencyMS: 1},
+		{ID: "third", Host: "third.test:80", URL: "https://third.test/upload", Source: "speedtest", Availability: "candidate", LatencyMS: 2},
+	}
+	ordered := availableSpeedNodes(nodes)
+	if len(ordered) != 3 || ordered[0].ID != "confirmed" || ordered[1].ID != "precheck-failed" {
+		t.Fatalf("precheck ordering = %+v, want confirmed then retained candidates", ordered)
+	}
+	bounded := boundedSpeedCandidates(ordered, 1)
+	if len(bounded) != 2 || bounded[1].ID != "precheck-failed" {
+		t.Fatalf("bounded candidates = %+v, want at most 2*limit", bounded)
+	}
+	var attempted []string
+	benchmarks := speedmodel.BenchmarkServers(context.Background(), speedMetadataForNodes(bounded), 1, func(_ context.Context, server speedmodel.ServerMetadata) speedmodel.ThroughputResult {
+		attempted = append(attempted, server.ID)
+		if server.ID == "confirmed" {
+			return speedmodel.ThroughputResult{ID: server.ID, Status: speedmodel.ThroughputUnavailable}
+		}
+		return speedmodel.ThroughputResult{ID: server.ID, Status: speedmodel.ThroughputAvailable, DownloadMbps: 100, UploadMbps: 50}
+	})
+	if len(benchmarks) != 2 || strings.Join(attempted, ",") != "confirmed,precheck-failed" {
+		t.Fatalf("formal attempts = %v benchmarks=%+v", attempted, benchmarks)
 	}
 }
 
@@ -503,6 +530,19 @@ func TestPrivateSpeedBenchmarksTryStandbyAfterPrimaryFailure(t *testing.T) {
 	}
 	if benchmarks[0].Status != "unavailable" || benchmarks[1].Status != "available" {
 		t.Fatalf("unexpected fallback benchmark status: %+v", benchmarks)
+	}
+}
+
+func TestPrivateSpeedBenchmarksCapAttemptsAtTwiceLimit(t *testing.T) {
+	registry := privatepst.RegistryReport{Selected: []privatepst.RegistryNode{{ID: "one"}}, Standby: []privatepst.RegistryNode{{ID: "two"}, {ID: "three"}}}
+	var attempted []string
+	selected, benchmarks := runPrivateSpeedBenchmarksFromRegistry(context.Background(), 1, registry,
+		func(_ context.Context, node privatepst.RegistryNode, _ *privatepst.ServerWithLatencyInfo) privatepst.SpeedTestResult {
+			attempted = append(attempted, node.ID)
+			return privatepst.SpeedTestResult{Error: "fixture failure"}
+		})
+	if selected != 2 || len(benchmarks) != 2 || strings.Join(attempted, ",") != "one,two" {
+		t.Fatalf("selected=%d benchmarks=%+v attempted=%v, want two attempts", selected, benchmarks, attempted)
 	}
 }
 
