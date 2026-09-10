@@ -39,7 +39,7 @@ jobs:
           set -euo pipefail
           go mod download
           test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/basics)" = "v0.0.39"
-          test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/speedtest)" = "v0.0.33"
+          test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/speedtest)" = "v0.0.34"
           if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
             echo "Public source retained a private module reference" >&2
             exit 1

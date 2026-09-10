@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -11,11 +12,16 @@ import (
 )
 
 func TestSpeedtestDependencyContract(t *testing.T) {
-	if got := speedtestmodel.SpeedTestVersion; got != "v0.0.33" {
-		t.Fatalf("speedtest component version = %q, want v0.0.33", got)
+	if got := speedtestmodel.SpeedTestVersion; got != "v0.0.34" {
+		t.Fatalf("speedtest component version = %q, want v0.0.34", got)
 	}
 	if got := showwinspeedtest.Version(); got != "1.8.3" {
 		t.Fatalf("speedtest-go version = %q, want 1.8.3", got)
+	}
+	client := speedtestmodel.NewThroughputHTTPClient(speedtestmodel.NetworkIPv4, time.Second)
+	transport, ok := client.Transport.(*http.Transport)
+	if !ok || !transport.DisableKeepAlives {
+		t.Fatalf("speedtest throughput transport = %#v, want isolated HTTP connections", client.Transport)
 	}
 }
 
