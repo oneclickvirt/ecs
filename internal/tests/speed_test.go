@@ -3,14 +3,32 @@
 package tests
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/oneclickvirt/privatespeedtest/pst"
 )
+
+func TestPrintTableRowToAlignsPrivateLocationWithSharedTable(t *testing.T) {
+	var output bytes.Buffer
+	printTableRowTo(&output, pst.SpeedTestResult{
+		City:         "Beijing",
+		CarrierType:  "Unicom",
+		UploadMbps:   1.25,
+		DownloadMbps: 2.5,
+		PingLatency:  3 * time.Millisecond,
+	})
+
+	want := " 联通Beijing     1.25 Mbps       2.50 Mbps       3.00 ms         N/A             \n"
+	if got := output.String(); got != want {
+		t.Fatalf("private speedtest row = %q, want %q", got, want)
+	}
+}
 
 func resetPrivateSpeedRegistryForTest(t *testing.T, loader func(pst.Network) (*pst.ServerList, error)) {
 	t.Helper()

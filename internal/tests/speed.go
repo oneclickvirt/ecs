@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/oneclickvirt/privatespeedtest/pst"
 	"github.com/oneclickvirt/speedtest/model"
 	"github.com/oneclickvirt/speedtest/sp"
@@ -72,7 +73,11 @@ func writerOrDiscard(writer io.Writer) io.Writer {
 
 // formatString 格式化字符串到指定宽度
 func formatString(s string, width int) string {
-	return fmt.Sprintf("%-*s", width, s)
+	padding := width - runewidth.StringWidth(s)
+	if padding <= 0 {
+		return s
+	}
+	return s + strings.Repeat(" ", padding)
 }
 
 // printTableRow 打印表格行
@@ -110,7 +115,7 @@ func printTableRowTo(writer io.Writer, result pst.SpeedTestResult) {
 	}
 	latency := fmt.Sprintf("%.2f ms", result.PingLatency.Seconds()*1000)
 	packetLoss := "N/A"
-	fmt.Fprint(writer, formatString(location, 15))
+	fmt.Fprint(writer, " "+formatString(location, 16))
 	fmt.Fprint(writer, formatString(upload, 16))
 	fmt.Fprint(writer, formatString(download, 16))
 	fmt.Fprint(writer, formatString(latency, 16))
