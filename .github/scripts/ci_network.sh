@@ -68,6 +68,7 @@ curl() {
   for ((i=0; i<${#curl_args[@]}; i++)); do
     argument="${curl_args[i]}"
     case "$argument" in
+      --fail-with-body) curl_args[i]=--fail ;;
       --data*|-d*|--form*|-F*|--upload-file*|-T*) mutating=true ;;
       POST|PATCH|PUT|DELETE|-XPOST|-XPATCH|-XPUT|-XDELETE|--request=POST|--request=PATCH|--request=PUT|--request=DELETE) mutating=true ;;
       https://*) source_index=$i ;;
@@ -75,7 +76,7 @@ curl() {
   done
   if $mutating; then
     # A timed-out mutation may already have reached the server.
-    command curl --fail-with-body --connect-timeout 15 --max-time 600 "${curl_args[@]}"
+    command curl --fail --connect-timeout 15 --max-time 600 "${curl_args[@]}"
     return
   fi
   if [[ "$source_index" -ge 0 ]]; then
@@ -89,7 +90,7 @@ curl() {
   fi
   stdout_file=$(mktemp)
   stderr_file=$(mktemp)
-  if command curl --fail-with-body --connect-timeout 15 --max-time 1200 --retry 3 --retry-max-time 180 --retry-connrefused "${curl_args[@]}" >"$stdout_file" 2>"$stderr_file"; then
+  if command curl --fail --connect-timeout 15 --max-time 1200 --retry 3 --retry-max-time 180 --retry-connrefused "${curl_args[@]}" >"$stdout_file" 2>"$stderr_file"; then
     cat "$stdout_file"
     cat "$stderr_file" >&2
     rm -f "$stdout_file" "$stderr_file"
@@ -99,7 +100,7 @@ curl() {
   fi
   if [[ -n "$backup" ]]; then
     curl_args[source_index]="$backup"
-    if command curl --fail-with-body --connect-timeout 15 --max-time 1200 --retry 3 --retry-max-time 180 --retry-connrefused "${curl_args[@]}" >"$stdout_file" 2>"$stderr_file"; then
+    if command curl --fail --connect-timeout 15 --max-time 1200 --retry 3 --retry-max-time 180 --retry-connrefused "${curl_args[@]}" >"$stdout_file" 2>"$stderr_file"; then
       cat "$stdout_file"
       cat "$stderr_file" >&2
       rm -f "$stdout_file" "$stderr_file"
