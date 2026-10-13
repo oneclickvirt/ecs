@@ -225,12 +225,15 @@ def recover_release(kind, tag, state):
     if release_complete(kind, tag):
         return
     branch, workflow = CONSUMERS[kind]
-    runs = api('/repos/' + full + '/actions/workflows/' + workflow + '/runs?head_sha=' + obj['sha'] + '&per_page=20')['workflow_runs']
+    run_query = '?per_page=20' if kind == 'ecs-gui' else '?head_sha=' + obj['sha'] + '&per_page=20'
+    runs = api('/repos/' + full + '/actions/workflows/' + workflow + '/runs' + run_query)['workflow_runs']
     if any(r['status'] != 'completed' for r in runs):
         return
     payload = {'ref': tag}
     if kind == 'ecs':
         payload['inputs'] = {'release_tag': tag}
+    elif kind == 'ecs-gui':
+        payload = {'ref': branch, 'inputs': {'release_tag': tag}}
     api('/repos/' + full + '/actions/workflows/' + workflow + '/dispatches', 'POST', payload)
 
 

@@ -47,6 +47,17 @@ class Tests(unittest.TestCase):
    m.recover_release('ecs','v0.2.13',{'version':'v0.2.13','fingerprints':{}})
   dispatch=next(c for c in calls if c[1]=='POST')
   self.assertEqual(dispatch[2],{'ref':'v0.2.13','inputs':{'release_tag':'v0.2.13'}})
+ def test_gui_recovery_uses_current_controls_and_immutable_application_source(self):
+  calls=[]
+  def request(path,method='GET',body=None,**kwargs):
+   calls.append((path,method,body))
+   if '/git/ref/tags/' in path:return {'object':{'type':'commit','sha':'immutable'}}
+   if '/runs?' in path:return {'workflow_runs':[]}
+   return None
+  with patch.object(m,'command',return_value='current'),patch.object(m,'api',side_effect=request),patch.object(m,'release_complete',return_value=False):
+   m.recover_release('ecs-gui','v0.2.15',{'version':'v0.2.15','fingerprints':{}})
+  dispatch=next(c for c in calls if c[1]=='POST')
+  self.assertEqual(dispatch[2],{'ref':'main','inputs':{'release_tag':'v0.2.15'}})
  def test_workspace_commands_override_the_module_only_environment(self):
   with tempfile.TemporaryDirectory() as folder:
    Path(folder,'go.mod').write_text('module fixture\n\ngo 1.24.4\n')
