@@ -4,12 +4,12 @@
     "github.com/oneclickvirt/backtrace": "v0.0.21",
     "github.com/oneclickvirt/basics": "v0.0.39",
     "github.com/oneclickvirt/cputest": "v0.0.18",
-    "github.com/oneclickvirt/dd": "v0.0.2-20250808062818",
+    "github.com/oneclickvirt/dd": "v0.0.2-20261013105459",
     "github.com/oneclickvirt/defaultset": "v0.0.2-20240624082446",
     "github.com/oneclickvirt/disktest": "v0.0.24",
-    "github.com/oneclickvirt/fio": "v0.0.2-20250808045755",
+    "github.com/oneclickvirt/fio": "v0.0.2-20261013103342",
     "github.com/oneclickvirt/gostun": "v0.0.10",
-    "github.com/oneclickvirt/mbw": "v0.0.1-20250808061222",
+    "github.com/oneclickvirt/mbw": "v0.0.1-20261013103252",
     "github.com/oneclickvirt/memorytest": "v0.0.14",
     "github.com/oneclickvirt/nt3": "v0.0.26",
     "github.com/oneclickvirt/pingtest": "v0.0.28",
@@ -17,13 +17,13 @@
     "github.com/oneclickvirt/privatespeedtest": "v0.0.25",
     "github.com/oneclickvirt/security": "v0.0.21",
     "github.com/oneclickvirt/speedtest": "v0.0.37",
-    "github.com/oneclickvirt/stream": "v0.0.2-20250924154001"
+    "github.com/oneclickvirt/stream": "v0.0.2-20261013105356"
   },
   "fingerprints": {
-    "api/api.go": "3c3e16e6efe31e5ffcaa1657ac9d3412a7b73833d884f746ff8a5f2e497edd93",
-    "go.mod": "ddad3d8c155f8000f5b60f58d0065dfc1b17f47f36da7171abd1ad4cc2668834",
-    "go.sum": "25d08f25040ffb5780bd85096512f896cdcd7a05af4033865d94efb90e6f587e"
+    "api/api.go": "8e8832d0ef78b5a5a2a7770386a3aaaf6a32f081ce396254effc2acc6061484d",
+    "go.mod": "956eb05d381e2511e8d68fa06245ea9401c3cac6a7c76affc12f702bb5bb70f8",
+    "go.sum": "984c60104e9adebb771951526ac93a39fc4fb801eb80bec625a7cd42093bd650"
   },
   "format": 1,
-  "version": "v0.2.13"
+  "version": "v0.2.14"
 }

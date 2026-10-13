@@ -79,10 +79,10 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/nxtrace/NTrace-core v1.7.3
-	github.com/oneclickvirt/dd v0.0.2-20250808062818 // indirect
-	github.com/oneclickvirt/fio v0.0.2-20250808045755 // indirect
-	github.com/oneclickvirt/mbw v0.0.1-20250808061222 // indirect
-	github.com/oneclickvirt/stream v0.0.2-20250924154001 // indirect
+	github.com/oneclickvirt/dd v0.0.2-20261013105459 // indirect
+	github.com/oneclickvirt/fio v0.0.2-20261013103342 // indirect
+	github.com/oneclickvirt/mbw v0.0.1-20261013103252 // indirect
+	github.com/oneclickvirt/stream v0.0.2-20261013105356 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect
