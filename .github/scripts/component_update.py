@@ -69,8 +69,15 @@ def valid_release(release, binary=None):
                                         ('darwin', ['amd64', 'arm64']), ('freebsd', ['amd64', '386', 'arm64', 'armv7']),
                                         ('windows', ['amd64', '386', 'arm64'])] for arch in arches}
         return expected <= {a['name'] for a in assets if a.get('size', 0) > 0 and a.get('state', 'uploaded') == 'uploaded'}
-    # ECS's cross builds publish archives, not the component raw binary names.
-    return len([a for a in assets if a.get('size', 0) > 0 and a.get('state', 'uploaded') == 'uploaded']) >= 18
+    # ECS publishes 21 platform archives plus their checksum manifest.
+    # Counts alone can mistake auxiliary files for missing platform builds.
+    expected = {'goecs_' + goos + '_' + arch + '.zip'
+                for goos, arches in [('linux', ['amd64', '386', 'arm', 'arm64', 'riscv64', 'mips', 'mipsle', 'mips64', 'mips64le', 'ppc64', 'ppc64le', 's390x']),
+                                    ('darwin', ['amd64', 'arm64']),
+                                    ('freebsd', ['amd64', '386', 'arm', 'arm64']),
+                                    ('windows', ['amd64', '386', 'arm64'])] for arch in arches}
+    expected.add('checksums.txt')
+    return expected <= {a['name'] for a in assets if a.get('size', 0) > 0 and a.get('state', 'uploaded') == 'uploaded'}
 
 
 def latest_component(module, current):
@@ -184,7 +191,13 @@ def release_complete(kind, tag):
         raise
     if kind == 'ecs':
         return valid_release(release)
-    return not release['draft'] and len([a for a in release.get('assets', []) if a.get('size', 0) > 0 and '.ci-stage-' not in a['name'] and '.ci-backup-' not in a['name']]) >= 7
+    expected = {'ecs-gui-' + platform + '-' + tag + suffix
+                for platform, suffix in [('android-arm64', '.apk'), ('android-x86_64', '.apk'),
+                                         ('linux-amd64', '.tar.xz'), ('linux-arm64', '.tar.xz'),
+                                         ('macos-amd64', '.tar.gz'), ('macos-arm64', '.tar.gz'),
+                                         ('windows-amd64', '.exe'), ('windows-arm64', '.exe')]}
+    return (not release.get('draft') and not release.get('prerelease') and
+            expected <= {a['name'] for a in release.get('assets', []) if a.get('size', 0) > 0 and a.get('state', 'uploaded') == 'uploaded'})
 
 
 def recover_release(kind, tag, state):

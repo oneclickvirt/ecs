@@ -65,4 +65,21 @@ class Tests(unittest.TestCase):
     observed=os.umask(0o077)
     self.assertEqual(observed,0o077)
   finally:os.umask(previous)
+ def test_ecs_release_requires_every_platform_not_just_an_asset_count(self):
+  assets=[{'name':'goecs_'+os_name+'_'+arch+'.zip','size':123,'state':'uploaded'} for os_name,architectures in [('linux',['amd64','386','arm','arm64','riscv64','mips','mipsle','mips64','mips64le','ppc64','ppc64le','s390x']),('darwin',['amd64','arm64']),('freebsd',['amd64','386','arm','arm64']),('windows',['amd64','386','arm64'])] for arch in architectures]
+  assets.append({'name':'checksums.txt','size':100})
+  release={'tag_name':'v0.2.15','draft':False,'prerelease':False,'assets':assets}
+  self.assertTrue(m.valid_release(release))
+  assets[0]={'name':'extra-documentation.txt','size':123}
+  self.assertFalse(m.valid_release(release))
+ def test_gui_release_cannot_replace_a_missing_platform_with_an_auxiliary_asset(self):
+  tag='v0.2.15'
+  assets=[{'name':'ecs-gui-'+platform+'-'+tag+extension,'size':123,'state':'uploaded'} for platform,extension in [('android-arm64','.apk'),('android-x86_64','.apk'),('linux-amd64','.tar.xz'),('linux-arm64','.tar.xz'),('macos-amd64','.tar.gz'),('macos-arm64','.tar.gz'),('windows-amd64','.exe'),('windows-arm64','.exe')]]
+  release={'tag_name':tag,'draft':False,'prerelease':False,'assets':assets}
+  with patch.object(m,'api',return_value=release):
+   self.assertTrue(m.release_complete('ecs-gui',tag))
+   assets[0]={'name':'checksums.txt','size':100}
+   self.assertFalse(m.release_complete('ecs-gui',tag))
+   assets[0]={'name':'ecs-gui-android-arm64-'+tag+'.apk','size':123,'state':'new'}
+   self.assertFalse(m.release_complete('ecs-gui',tag))
 if __name__=='__main__':unittest.main(verbosity=2)
