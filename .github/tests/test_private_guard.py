@@ -67,6 +67,18 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(console.getvalue(), '')
         self.assertIn('中文诊断 ✓', next(guard.root().glob('step-*.log')).read_text(encoding='utf-8'))
 
+    @unittest.skipIf(os.name == 'nt', 'POSIX file creation permissions')
+    def test_build_permissions_do_not_inherit_controller_umask(self):
+        previous = os.umask(0o077)
+        try:
+            state = guard.root()
+            guard.execute("touch build-fixture\n", cwd=state)
+            self.assertEqual((state / 'build-fixture').stat().st_mode & 0o777, 0o644)
+            self.assertEqual(state.stat().st_mode & 0o777, 0o700)
+            self.assertEqual(next(state.glob('step-*.log')).stat().st_mode & 0o777, 0o600)
+        finally:
+            os.umask(previous)
+
     def test_source_and_keystore_archives_rejected(self):
         path = Path(self.temp.name) / 'release.zip'
         for name in ['deps/private/source.go', 'source.ts', 'source.java', 'signing.jks', '../outside', 'build.log']:

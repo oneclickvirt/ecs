@@ -205,6 +205,10 @@ def execute(script, cwd=None, container=False, shell='bash'):
     script_path = state / ('step-' + str(index) + ('.ps1' if shell == 'pwsh' else '.sh'))
     if shell == 'pwsh':
         script = "$ErrorActionPreference='Stop'\n$ProgressPreference='SilentlyContinue'\n$PSNativeCommandUseErrorActionPreference=$true\n" + script
+    else:
+        # The controller uses 077 for diagnostics. Give native build fixtures
+        # their usual creation permissions; the enclosing state stays private.
+        script = 'umask 022\n' + script
     script_path.write_text(script, encoding='utf-8', newline='\n')
     os.chmod(script_path, 0o600)
     log = state / ('step-' + str(index).zfill(3) + '.log')
