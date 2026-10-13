@@ -39,6 +39,8 @@ def command(args, cwd=None):
     env = git_env()
     env.update({'GOPRIVATE': PRIVATE, 'GONOSUMDB': PRIVATE + ',' + PREFIX + 'ecs,' + PREFIX + 'speedtest',
                 'GOPROXY': 'https://proxy.golang.org|direct', 'GOWORK': 'off', 'GIT_TERMINAL_PROMPT': '0'})
+    if args[:2] == ['go', 'work']:
+        env.pop('GOWORK', None)
     return quiet(args, cwd=cwd, env=env, timeout=3600)
 
 

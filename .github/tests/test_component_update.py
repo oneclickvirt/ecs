@@ -2,6 +2,8 @@ import importlib.util
 from pathlib import Path
 import sys
 import unittest
+import os
+import tempfile
 from unittest.mock import patch
 sys.path.insert(0,str(Path('.github/scripts').resolve()))
 import component_update as m
@@ -40,4 +42,12 @@ class Tests(unittest.TestCase):
    m.recover_release('ecs','v0.2.13',{'version':'v0.2.13','fingerprints':{}})
   dispatch=next(c for c in calls if c[1]=='POST')
   self.assertEqual(dispatch[2],{'ref':'v0.2.13','inputs':{'release_tag':'v0.2.13'}})
+ def test_workspace_commands_override_the_module_only_environment(self):
+  with tempfile.TemporaryDirectory() as folder:
+   Path(folder,'go.mod').write_text('module fixture\n\ngo 1.24.4\n')
+   with patch.object(m,'git_env',return_value=dict(os.environ)):
+    m.command(['go','work','init','.'],folder)
+    m.command(['go','work','use','.'],folder)
+    m.command(['go','work','edit','-go=1.24.4'],folder)
+   self.assertTrue(Path(folder,'go.work').exists())
 if __name__=='__main__':unittest.main(verbosity=2)
