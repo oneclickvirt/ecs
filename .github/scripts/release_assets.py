@@ -89,12 +89,16 @@ class Publisher:
                 if value.get('name') != name:
                     raise RuntimeError('asset rename did not retain the requested name')
                 return value
-            except (urllib.error.URLError, TimeoutError):
-                if self.request(endpoint)['name'] == name:
-                    return
-                if attempt == 2:
+            except urllib.error.HTTPError as exc:
+                if exc.code not in (408, 429, 500, 502, 503, 504):
                     raise
-                time.sleep(2 ** attempt)
+            except (urllib.error.URLError, TimeoutError):
+                pass
+            if self.request(endpoint)['name'] == name:
+                return
+            if attempt == 2:
+                raise RuntimeError('asset rename failed')
+            time.sleep(2 ** attempt)
 
     def delete(self, asset_id):
         endpoint = self.base + '/releases/assets/' + str(asset_id)

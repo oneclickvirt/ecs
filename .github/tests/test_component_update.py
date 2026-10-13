@@ -29,4 +29,15 @@ class Tests(unittest.TestCase):
    with self.assertRaises(RuntimeError):m.update('ecs')
    recover.assert_not_called()
   self.assertFalse(any(c[:2]==['git','commit'] or c[:2]==['git','push'] for c in calls))
+ def test_ecs_recovery_dispatch_includes_required_immutable_release_tag(self):
+  calls=[]
+  def request(path,method='GET',body=None,**kwargs):
+   calls.append((path,method,body))
+   if '/git/ref/tags/' in path:return {'object':{'type':'commit','sha':'immutable'}}
+   if '/runs?' in path:return {'workflow_runs':[]}
+   return None
+  with patch.object(m,'command',return_value='current'),patch.object(m,'api',side_effect=request),patch.object(m,'release_complete',return_value=False):
+   m.recover_release('ecs','v0.2.13',{'version':'v0.2.13','fingerprints':{}})
+  dispatch=next(c for c in calls if c[1]=='POST')
+  self.assertEqual(dispatch[2],{'ref':'v0.2.13','inputs':{'release_tag':'v0.2.13'}})
 if __name__=='__main__':unittest.main(verbosity=2)
