@@ -111,12 +111,14 @@ jobs:
         go-version-file: go.mod
         check-latest: true
         cache: false
+      id: setup_go
     - name: Select configured Go toolchain in container
       shell: bash
       run: |
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" run <<'PRIVATE_STEP'
         set -euo pipefail
-        go_version="$(awk '$1 == "go" { print $2; exit }' go.mod)"
+        go_version="${{ steps.setup_go.outputs.go-version }}"
+        go_version="${go_version#go}"
         case "$(uname -m)" in
           x86_64) cache_arch="x64" ;;
           aarch64|arm64) cache_arch="arm64" ;;

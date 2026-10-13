@@ -208,7 +208,10 @@ def recover_release(kind, tag, state):
     runs = api('/repos/' + full + '/actions/workflows/' + workflow + '/runs?head_sha=' + obj['sha'] + '&per_page=20')['workflow_runs']
     if any(r['status'] != 'completed' for r in runs):
         return
-    api('/repos/' + full + '/actions/workflows/' + workflow + '/dispatches', 'POST', {'ref': tag})
+    payload = {'ref': tag}
+    if kind == 'ecs':
+        payload['inputs'] = {'release_tag': tag}
+    api('/repos/' + full + '/actions/workflows/' + workflow + '/dispatches', 'POST', payload)
 
 
 def update(kind):

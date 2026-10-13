@@ -141,6 +141,11 @@ def remove_private_delivery_artifacts():
         print(f"✓ Removed private delivery artifact: {filepath}")
 
 
+    for filepath in ['.github/component-state.json', '.github/tests/test_component_update.py']:
+        if os.path.isfile(filepath):
+            os.remove(filepath)
+
+
 def validate_public_go_sources(root='.'):
     """Fail closed when a new private Go import was missed by the generator."""
     private_import = re.compile(
