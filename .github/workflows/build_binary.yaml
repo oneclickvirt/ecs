@@ -1,6 +1,7 @@
 name: Build and Release
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  PYTHONUTF8: '1'
 concurrency:
   group: release-publish
   cancel-in-progress: false
@@ -28,7 +29,7 @@ jobs:
         mkdir -p "$TMPDIR" "$GOTMPDIR" "$GOCACHE" "$GOMODCACHE"
         apt-get update -qq
         apt-get install -y --no-install-recommends python3 gh ca-certificates
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
         ref: master
@@ -38,7 +39,7 @@ jobs:
         mkdir -p "$RUNNER_TEMP/private-ci-control"
         cp .github/scripts/private_guard.py "$RUNNER_TEMP/private-ci-control/private_guard.py"
     - name: Checkout
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
         fetch-depth: 0
@@ -98,7 +99,7 @@ jobs:
         CI_ALLOWED_ENV: ''
         CI_ALLOWED_OUTPUT: APP_VERSION,ECS_VERSION,GUI_VERSION,RELEASE_TAG,VERSION,backtrace,basics,cputest,defaultset,disktest,gostun,memorytest,nt3,pingtest,portchecker,privatespeedtest,release_tag,security,speedtest,tag,unlocktests,version
     - name: Set up Go
-      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
         check-latest: true
@@ -177,77 +178,77 @@ jobs:
         CI_ALLOWED_ENV: encoding,file,text
         CI_ALLOWED_OUTPUT: APP_VERSION,ECS_VERSION,GUI_VERSION,RELEASE_TAG,VERSION,backtrace,basics,cputest,defaultset,disktest,encoding,file,gostun,memorytest,nt3,pingtest,portchecker,privatespeedtest,release_tag,security,speedtest,tag,text,unlocktests,version
     - name: Checkout structured component sources
-      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/UnlockTests
         ref: ${{ steps.component_refs.outputs.unlocktests }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/UnlockTests
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/backtrace
         ref: ${{ steps.component_refs.outputs.backtrace }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/backtrace
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/basics
         ref: ${{ steps.component_refs.outputs.basics }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/basics
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/cputest
         ref: ${{ steps.component_refs.outputs.cputest }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/cputest
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/defaultset
         ref: ${{ steps.component_refs.outputs.defaultset }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/defaultset
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/disktest
         ref: ${{ steps.component_refs.outputs.disktest }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/disktest
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/gostun
         ref: ${{ steps.component_refs.outputs.gostun }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/gostun
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/memorytest
         ref: ${{ steps.component_refs.outputs.memorytest }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/memorytest
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/nt3
         ref: ${{ steps.component_refs.outputs.nt3 }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/nt3
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/pingtest
         ref: ${{ steps.component_refs.outputs.pingtest }}
         token: ${{ secrets.PRIVATE_CI_TOKEN }}
         path: deps/pingtest
         persist-credentials: false
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/portchecker
         ref: ${{ steps.component_refs.outputs.portchecker }}
@@ -268,7 +269,7 @@ jobs:
       shell: bash
       run: python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" clone --repository "$CI_CLONE_REPO" --destination
         "$CI_CLONE_PATH" --ref "$CI_CLONE_REF"
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/speedtest
         ref: ${{ steps.component_refs.outputs.speedtest }}
@@ -403,6 +404,7 @@ jobs:
         RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
         CI_ALLOWED_ENV: GH_TOKEN,skip
         CI_ALLOWED_OUTPUT: APP_VERSION,ECS_VERSION,GH_TOKEN,GUI_VERSION,RELEASE_TAG,VERSION,backtrace,basics,cputest,defaultset,disktest,gostun,memorytest,nt3,pingtest,portchecker,privatespeedtest,release_tag,security,skip,speedtest,tag,unlocktests,version
+        GOFLAGS: -trimpath -buildvcs=false
       shell: bash
       run: |
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" run <<'PRIVATE_STEP'

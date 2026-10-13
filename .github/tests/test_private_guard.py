@@ -60,6 +60,13 @@ class GuardTests(unittest.TestCase):
         with patch.dict(os.environ, {'ProgramFiles': str(folder)}):
             self.assertEqual(guard.bash_path(platform='nt'), str(binary))
 
+    def test_unicode_script_and_output_preserved_privately(self):
+        console = io.StringIO()
+        with contextlib.redirect_stdout(console), contextlib.redirect_stderr(console):
+            guard.execute("printf '中文诊断 ✓\\n'\n")
+        self.assertEqual(console.getvalue(), '')
+        self.assertIn('中文诊断 ✓', next(guard.root().glob('step-*.log')).read_text(encoding='utf-8'))
+
     def test_source_and_keystore_archives_rejected(self):
         path = Path(self.temp.name) / 'release.zip'
         for name in ['deps/private/source.go', 'source.ts', 'source.java', 'signing.jks', '../outside', 'build.log']:

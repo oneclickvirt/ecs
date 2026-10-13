@@ -63,6 +63,13 @@ def git_env():
         'GIT_CONFIG_VALUE_0': 'Authorization: Basic ' + base64.b64encode(('x-access-token:' + token()).encode()).decode(),
         'GIT_CONFIG_KEY_1': 'credential.helper', 'GIT_CONFIG_VALUE_1': '',
         'GIT_CONFIG_KEY_2': 'core.hooksPath', 'GIT_CONFIG_VALUE_2': empty_hooks.as_posix()})
+    workspace = Path(os.environ.get('GITHUB_WORKSPACE', os.getcwd())).resolve()
+    candidates = [workspace] + [item.parent.resolve() for item in (workspace / 'deps').glob('*/.git')]
+    directories = [directory for directory in candidates if directory == workspace or workspace in directory.parents]
+    for index, directory in enumerate(directories, start=3):
+        env['GIT_CONFIG_KEY_' + str(index)] = 'safe.directory'
+        env['GIT_CONFIG_VALUE_' + str(index)] = directory.as_posix()
+    env['GIT_CONFIG_COUNT'] = str(3 + len(directories))
     return env
 
 
@@ -190,11 +197,15 @@ def bash_path(platform=None):
     raise RuntimeError('trusted Bash installation unavailable')
 
 
-def execute(script, cwd=None, container=False):
+def execute(script, cwd=None, container=False, shell='bash'):
     state = root()
     index = len(list(state.glob('step-*.log')))
-    script_path = state / ('step-' + str(index) + '.sh')
-    script_path.write_text(script)
+    if shell not in ('bash', 'pwsh') or (container and shell != 'bash'):
+        raise RuntimeError('unsupported private shell')
+    script_path = state / ('step-' + str(index) + ('.ps1' if shell == 'pwsh' else '.sh'))
+    if shell == 'pwsh':
+        script = "$ErrorActionPreference='Stop'\n$ProgressPreference='SilentlyContinue'\n$PSNativeCommandUseErrorActionPreference=$true\n" + script
+    script_path.write_text(script, encoding='utf-8', newline='\n')
     os.chmod(script_path, 0o600)
     log = state / ('step-' + str(index).zfill(3) + '.log')
     env_file = state / ('env-' + str(index))
@@ -205,6 +216,11 @@ def execute(script, cwd=None, container=False):
         env.update({k: v for k, v in git_env().items() if k.startswith('GIT_')})
     env['GITHUB_ENV'], env['GITHUB_OUTPUT'], env['GITHUB_PATH'] = env_file.as_posix(), output_file.as_posix(), path_file.as_posix()
     command = [bash_path(), '--noprofile', '--norc', '-e', '-o', 'pipefail', script_path.as_posix()]
+    if shell == 'pwsh':
+        executable = shutil.which('pwsh')
+        if not executable:
+            raise RuntimeError('PowerShell unavailable')
+        command = [executable, '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(script_path)]
     if container:
         context = state / 'image'
         context.mkdir(exist_ok=True)
@@ -286,6 +302,7 @@ def main():
     parser.add_argument('--repositories', default='')
     parser.add_argument('--cwd')
     parser.add_argument('--container', action='store_true')
+    parser.add_argument('--shell', choices=['bash', 'pwsh'], default='bash')
     parser.add_argument('--status', default='completed')
     parser.add_argument('--assets', nargs='+')
     args = parser.parse_args()
@@ -293,7 +310,7 @@ def main():
         if args.operation == 'clone':
             clone(args.repository, args.destination, args.ref)
         elif args.operation == 'run':
-            execute(sys.stdin.read(), args.cwd, args.container)
+            execute(sys.stdin.buffer.read().decode('utf-8'), args.cwd, args.container, args.shell)
         elif args.operation == 'archive':
             finalize(args.repositories, args.status)
         elif args.operation == 'clean':
