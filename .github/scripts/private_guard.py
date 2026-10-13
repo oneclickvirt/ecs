@@ -235,7 +235,7 @@ def finalize(repositories, status='completed'):
 
 
 def verify_assets(patterns):
-    forbidden = re.compile(r'(?:^|/)(?:\.git|\.env|[^/]+\.(?:go|py|sh|yml|yaml|jks|keystore|pem|key|log))(?:$|/)', re.I)
+    forbidden = re.compile(r'(?:^|/)(?:\.git|\.env|[^/]+\.(?:go|rs|c|cpp|h|hpp|java|kt|kts|js|jsx|ts|tsx|py|sh|yml|yaml|jks|keystore|pem|key|log))(?:$|/)', re.I)
     paths = [Path(p) for pattern in patterns for p in glob.glob(pattern)]
     if not paths:
         raise RuntimeError('release assets missing')
@@ -247,7 +247,7 @@ def verify_assets(patterns):
                 for member in archive.infolist():
                     if member.filename.startswith('/') or '..' in Path(member.filename).parts or forbidden.search(member.filename) or (member.external_attr >> 16) & 0o170000 == 0o120000:
                         raise RuntimeError('private material in archive')
-        elif path.name.endswith(('.tar.gz', '.tgz')):
+        elif path.name.endswith(('.tar.gz', '.tgz', '.tar.xz', '.tar.bz2', '.tar')):
             with tarfile.open(path) as archive:
                 for member in archive:
                     if member.name.startswith('/') or '..' in Path(member.name).parts or forbidden.search(member.name) or member.issym() or member.islnk():
