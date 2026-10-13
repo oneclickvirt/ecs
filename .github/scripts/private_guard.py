@@ -2,6 +2,7 @@
 """Keep private build output out of the Actions log and public caches."""
 import argparse
 import base64
+import datetime
 import gzip
 import hashlib
 import json
@@ -134,10 +135,17 @@ def archive(repository, status='completed'):
             target.mkdir(parents=True, exist_ok=True)
             (target / (job_key + '.log.gz')).write_bytes(payload)
             (target / (job_key + '.json')).write_text(json.dumps({'status': status, 'public_repository': os.environ.get('GITHUB_REPOSITORY', ''), 'run_id': run_id, 'attempt': attempt, 'job': job_key}, indent=2))
-            runs = sorted((p.name for p in (folder / 'runs').iterdir() if p.is_dir()), key=lambda x: tuple(int(v) for v in x.split('-')), reverse=True)
+            (target / 'run.json').write_text(json.dumps({'updated_at': datetime.datetime.now(datetime.timezone.utc).isoformat()}, indent=2))
+            def log_order(name):
+                record = folder / 'runs' / name / 'run.json'
+                timestamp = json.loads(record.read_text()).get('updated_at', '') if record.exists() else ''
+                return timestamp, tuple(int(v) for v in name.split('-'))
+            # Retrying an old run is a new execution and must remain traceable.
+            # Legacy entries without timestamps keep their original ID order.
+            runs = sorted((p.name for p in (folder / 'runs').iterdir() if p.is_dir()), key=log_order, reverse=True)
             for key in runs[5:]:
                 shutil.rmtree(folder / 'runs' / key)
-            (folder / 'manifest.json').write_text(json.dumps({'format': 'oneclickvirt.private-ci/v1', 'retained_runs': runs[:5], 'retention': 5, 'history': 'one parentless snapshot'}, indent=2))
+            (folder / 'manifest.json').write_text(json.dumps({'format': 'oneclickvirt.private-ci/v1', 'retained_runs': runs[:5], 'retention': 5, 'retention_order': 'last saved execution', 'history': 'one parentless snapshot'}, indent=2))
             env.update({'GIT_AUTHOR_NAME': 'github-actions[bot]', 'GIT_AUTHOR_EMAIL': '41898282+github-actions[bot]@users.noreply.github.com',
                         'GIT_COMMITTER_NAME': 'github-actions[bot]', 'GIT_COMMITTER_EMAIL': '41898282+github-actions[bot]@users.noreply.github.com'})
             quiet(['git', 'read-tree', '--empty'], cwd=folder, env=env)

@@ -125,6 +125,27 @@ class GuardTests(unittest.TestCase):
         count = subprocess.check_output(['git', '--git-dir', str(remote), 'rev-list', '--count', 'ci-private-logs'], text=True).strip()
         self.assertEqual(count, '1')
 
+    def test_retry_of_older_run_is_retained_as_latest_execution(self):
+        remote = Path(self.temp.name) / 'retry-remote.git'
+        subprocess.run(['git', 'init', '-q', '--bare', str(remote)], check=True)
+        original = guard.quiet
+        def local(command, *args, **kwargs):
+            command = [str(remote) if x == 'https://github.com/oneclickvirt/security.git' else x for x in command]
+            return original(command, *args, **kwargs)
+        with patch.object(guard, 'api', return_value={'private': True}), patch.object(guard, 'quiet', side_effect=local):
+            for run in range(1, 7):
+                os.environ['GITHUB_RUN_ID'] = str(run)
+                (guard.root() / 'fixture.log').write_text('controlled private fixture')
+                guard.archive('security', 'success')
+            os.environ['GITHUB_RUN_ID'] = '1'
+            os.environ['GITHUB_RUN_ATTEMPT'] = '2'
+            (guard.root() / 'fixture.log').write_text('latest retry diagnostic')
+            guard.archive('security', 'failure')
+        raw = subprocess.check_output(['git', '--git-dir', str(remote), 'show', 'ci-private-logs:manifest.json'], text=True)
+        manifest = json.loads(raw)
+        self.assertEqual(manifest['retained_runs'][0], '1-2')
+        self.assertEqual(set(manifest['retained_runs']), {'3-1', '4-1', '5-1', '6-1', '1-2'})
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
