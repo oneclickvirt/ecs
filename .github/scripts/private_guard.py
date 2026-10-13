@@ -42,15 +42,23 @@ def token():
 
 
 def api(path, method='GET', body=None, credential=None):
-    req = urllib.request.Request('https://api.github.com' + path, method=method,
-        data=None if body is None else json.dumps(body).encode(),
-        headers={'Authorization': 'Bearer ' + (credential or token()),
-                 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json',
-                 'X-GitHub-Api-Version': '2022-11-28'})
-    with urllib.request.urlopen(req, timeout=45) as response:
-        data = response.read()
-    return json.loads(data) if data else None
-
+    for attempt in range(3):
+        req = urllib.request.Request('https://api.github.com' + path, method=method,
+            data=None if body is None else json.dumps(body).encode(),
+            headers={'Authorization': 'Bearer ' + (credential or token()),
+                     'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json',
+                     'X-GitHub-Api-Version': '2022-11-28'})
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                data = response.read()
+            return json.loads(data) if data else None
+        except urllib.error.HTTPError as exc:
+            if method != 'GET' or exc.code not in (408, 429, 500, 502, 503, 504) or attempt == 2:
+                raise
+        except (TimeoutError, urllib.error.URLError):
+            if method != 'GET' or attempt == 2:
+                raise
+        time.sleep(2 ** attempt)
 
 def git_env():
     empty_config = root() / 'empty-gitconfig'
@@ -167,13 +175,30 @@ def clone(repository, destination, ref='main'):
         raise RuntimeError('repository not allowlisted')
     if not re.fullmatch(r'[A-Za-z0-9_.-]+', ref):
         raise RuntimeError('invalid source ref')
-    dest = Path(destination).resolve()
-    if dest.exists():
+    dest = Path(destination).absolute()
+    if dest.exists() or dest.is_symlink():
         raise RuntimeError('checkout destination already exists')
     dest.parent.mkdir(parents=True, exist_ok=True)
-    quiet(['git', 'clone', '-q', '--depth=1', '--branch', ref, '--single-branch',
-           'https://github.com/' + repository + '.git', str(dest)], env=git_env())
-
+    for attempt in range(3):
+        with tempfile.TemporaryDirectory(prefix=dest.name + '-clone-', dir=dest.parent) as temp:
+            checkout = Path(temp) / 'source'
+            try:
+                quiet(['git', 'clone', '-q', '--depth=1', '--branch', ref, '--single-branch',
+                       'https://github.com/' + repository + '.git', str(checkout)], env=git_env(), timeout=300)
+                if dest.exists() or dest.is_symlink():
+                    raise RuntimeError('checkout destination already exists')
+                checkout.rename(dest)
+                return
+            except subprocess.TimeoutExpired:
+                retry = True
+            except RuntimeError:
+                diagnostic = (root() / 'control.log').read_bytes()[-65536:] if (root() / 'control.log').exists() else b''
+                retry = bool(re.search(rb'HTTP[^0-9]*(408|429|500|502|503|504)|timed? out|timeout|connection (reset|refused|closed)|temporary failure|TLS handshake|unexpected EOF|could not resolve host|failed to connect|remote end hung up', diagnostic, re.I))
+                if not retry:
+                    raise
+            if attempt == 2:
+                raise RuntimeError('source download failed')
+        time.sleep(2 ** attempt)
 
 def exports(path, destination, allowed):
     if not path.exists() or not destination:

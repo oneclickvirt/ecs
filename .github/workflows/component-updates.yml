@@ -1,0 +1,50 @@
+name: Update released components
+'on':
+  schedule:
+  - cron: 41 * * * *
+  workflow_dispatch: null
+  repository_dispatch:
+    types:
+    - components-released
+permissions:
+  contents: write
+concurrency:
+  group: component-update
+  cancel-in-progress: false
+jobs:
+  update:
+    if: github.repository_owner == 'oneclickvirt' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      PRIVATE_CI_TOKEN: ${{ secrets.PRIVATE_CI_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
+      CI_JOB_KEY: component-update
+      GOPRIVATE: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest
+      GONOSUMDB: github.com/oneclickvirt/security,github.com/oneclickvirt/privatespeedtest,github.com/oneclickvirt/ecs,github.com/oneclickvirt/speedtest
+      GOPROXY: https://proxy.golang.org|direct
+      PYTHONUTF8: '1'
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: master
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+        cache: false
+    - name: Verify update controller and private recovery
+      run: python3 -m unittest discover -s .github/tests -v
+    - name: Validate components and update application
+      run: python3 .github/scripts/component_update.py --kind ecs
+    - name: Save private update diagnostics
+      if: always()
+      env:
+        CI_JOB_STATUS: ${{ job.status }}
+      run: python3 .github/scripts/private_guard.py archive --repositories security,privatespeedtest --status "$CI_JOB_STATUS"
+    - name: Remove private update workspace
+      if: always()
+      run: |
+        python3 .github/scripts/private_guard.py clean
+        rm -rf deps go.work go.work.sum

@@ -147,5 +147,42 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(set(manifest['retained_runs']), {'3-1', '4-1', '5-1', '6-1', '1-2'})
 
 
+    def test_private_api_transient_read_retried_but_auth_and_mutation_are_not(self):
+        import urllib.error
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b'{"ok": true}'
+        transient = urllib.error.HTTPError('fixture', 503, 'unavailable', {}, None)
+        with patch.object(guard.urllib.request, 'urlopen', side_effect=[transient, response]) as request, patch.object(guard.time, 'sleep'):
+            self.assertEqual(guard.api('/fixture'), {'ok': True})
+            self.assertEqual(request.call_count, 2)
+        for method, status in [('GET', 403), ('POST', 503)]:
+            with patch.object(guard.urllib.request, 'urlopen', side_effect=urllib.error.HTTPError('fixture', status, 'error', {}, None)) as request:
+                with self.assertRaises(urllib.error.HTTPError):
+                    guard.api('/fixture', method=method)
+                self.assertEqual(request.call_count, 1)
+
+    def test_private_clone_retries_partial_checkout_without_overwriting_existing(self):
+        destination = Path(self.temp.name) / 'checkout'
+        attempts = []
+        def command(args, **kwargs):
+            checkout = Path(args[-1])
+            checkout.mkdir()
+            attempts.append(checkout)
+            if len(attempts) == 1:
+                (checkout/'partial').write_text('private')
+                (guard.root()/'control.log').write_text('connection reset')
+                raise RuntimeError('command failed')
+            self.assertFalse((checkout/'partial').exists())
+            (checkout/'complete').write_text('private fixture')
+        with patch.object(guard, 'quiet', side_effect=command), patch.object(guard.time, 'sleep'):
+            guard.clone('oneclickvirt/security', destination)
+            with self.assertRaises(RuntimeError):
+                guard.clone('oneclickvirt/security', destination)
+        self.assertEqual(len(attempts), 2)
+        self.assertTrue((destination/'complete').exists())
+        self.assertFalse(attempts[0].exists())
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

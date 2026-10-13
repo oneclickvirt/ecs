@@ -26,3 +26,5 @@ jobs:
     - name: Verify private output isolation
       run: |
         if [[ -d .github/tests ]]; then python3 -m unittest discover -s .github/tests -p "test_*.py"; fi
+    env:
+      GOPROXY: https://proxy.golang.org|direct

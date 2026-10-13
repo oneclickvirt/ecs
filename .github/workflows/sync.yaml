@@ -1,108 +1,107 @@
 name: Sync Latest Release
-
-on:
-  workflow_run:
-    workflows: ["Build and Release"]
-    types:
-      - completed
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: "Existing release tag to sync, for example v0.1.181"
-        required: true
-        type: string
-
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 concurrency:
   group: sync-latest-release
   cancel-in-progress: false
-
 jobs:
   sync-release:
-    # Only a tag push has an immutable release SHA for automatic fan-out.
-    # Manual release reruns are dispatched explicitly below with release_tag.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+    if: |-
+      github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Checkout source repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.release_tag }}
-          fetch-depth: 0
-          fetch-tags: true
-      - name: Resolve release context
-        id: release
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-          WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          set -euo pipefail
-          RESOLVER=".github/scripts/resolve-release-context.sh"
-          if [ -f "$RESOLVER" ]; then
-            bash "$RESOLVER"
-          else
-            git fetch --depth=1 origin master
-            git show FETCH_HEAD:"$RESOLVER" | bash
+    - name: Load trusted network recovery helpers
+      shell: bash
+      run: |
+        set -euo pipefail
+        curl --fail --silent --show-error --location --connect-timeout 15 --max-time 90 --retry 3 --retry-max-time 180 --retry-connrefused "https://raw.githubusercontent.com/oneclickvirt/ecs/master/.github/scripts/ci_network.sh" -o "$RUNNER_TEMP/ci-network.sh"
+    - name: Checkout source repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.release_tag
+          }}
+        fetch-depth: 0
+        fetch-tags: true
+    - name: Resolve release context
+      id: release
+      env:
+        RELEASE_TAG: ${{ inputs.release_tag }}
+        WORKFLOW_RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+      run: |
+        set -euo pipefail
+        RESOLVER=".github/scripts/resolve-release-context.sh"
+        if [ -f "$RESOLVER" ]; then
+          bash "$RESOLVER"
+        else
+          git fetch --depth=1 origin master
+          git show FETCH_HEAD:"$RESOLVER" | bash
+        fi
+    - name: Create temporary directory
+      if: steps.release.outputs.publish == 'true'
+      run: |
+        mkdir -p temp_repo
+        cd temp_repo
+        git init
+        git config --local user.name "GitHub Action"
+        git config --local user.email "action@github.com"
+    - name: Copy repository files
+      if: steps.release.outputs.publish == 'true'
+      run: |
+        cp goecs.sh temp_repo/
+        cp README.md temp_repo/
+        [ -f "README_EN.md" ] && cp README_EN.md temp_repo/ || true
+        [ -f "README_ZH.md" ] && cp README_ZH.md temp_repo/ || true
+        cp LICENSE temp_repo/
+    - name: Download release assets
+      if: steps.release.outputs.publish == 'true'
+      env:
+        RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        source "$RUNNER_TEMP/ci-network.sh"
+        cd temp_repo
+        gh release download "$RELEASE_TAG" --repo "${{ github.repository }}" --dir .
+      shell: bash
+    - name: Push to target repository
+      if: steps.release.outputs.publish == 'true'
+      env:
+        RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
+        CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+      run: |
+        set -euo pipefail
+        NETRC_PATH="$HOME/.netrc"
+        trap 'rm -f "$NETRC_PATH"' EXIT
+        cd temp_repo
+        git add .
+        git commit -m "Sync release $RELEASE_TAG from ${{ github.repository }}"
+        git branch -M main
+        git remote add target https://cnb.cool/oneclickvirt/ecs.git
+        printf 'machine cnb.cool\nlogin %s\npassword %s\n' "$CNB_USERNAME" "$CNB_TOKEN" > "$NETRC_PATH"
+        chmod 600 "$NETRC_PATH"
+        for attempt in 1 2 3; do
+          if git -c http.version=HTTP/1.1 push --force target HEAD:refs/heads/main; then
+            exit 0
           fi
-      - name: Create temporary directory
-        if: steps.release.outputs.publish == 'true'
-        run: |
-          mkdir -p temp_repo
-          cd temp_repo
-          git init
-          git config --local user.name "GitHub Action"
-          git config --local user.email "action@github.com"
-          
-      - name: Copy repository files
-        if: steps.release.outputs.publish == 'true'
-        run: |
-          cp goecs.sh temp_repo/
-          cp README.md temp_repo/
-          [ -f "README_EN.md" ] && cp README_EN.md temp_repo/ || true
-          [ -f "README_ZH.md" ] && cp README_ZH.md temp_repo/ || true
-          cp LICENSE temp_repo/
-          
-      - name: Download release assets
-        if: steps.release.outputs.publish == 'true'
-        env:
-          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd temp_repo
-          gh release download "$RELEASE_TAG" --repo "${{ github.repository }}" --dir .
-          
-      - name: Push to target repository
-        if: steps.release.outputs.publish == 'true'
-        env:
-          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
-          CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
-          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
-        run: |
-          set -euo pipefail
-          NETRC_PATH="$HOME/.netrc"
-          trap 'rm -f "$NETRC_PATH"' EXIT
-          cd temp_repo
-          git add .
-          git commit -m "Sync release $RELEASE_TAG from ${{ github.repository }}"
-          git branch -M main
-          git remote add target https://cnb.cool/oneclickvirt/ecs.git
-          printf 'machine cnb.cool\nlogin %s\npassword %s\n' "$CNB_USERNAME" "$CNB_TOKEN" > "$NETRC_PATH"
-          chmod 600 "$NETRC_PATH"
-          for attempt in 1 2 3; do
-            if git -c http.version=HTTP/1.1 push --force target HEAD:refs/heads/main; then
-              exit 0
-            fi
-            if [[ "$attempt" == 3 ]]; then
-              echo "CNB release sync failed after ${attempt} attempts" >&2
-              exit 1
-            fi
-            sleep "$((attempt * 15))"
-          done
+          if [[ "$attempt" == 3 ]]; then
+            echo "CNB release sync failed after ${attempt} attempts" >&2
+            exit 1
+          fi
+          sleep "$((attempt * 15))"
+        done
+'on':
+  workflow_run:
+    workflows:
+    - Build and Release
+    types:
+    - completed
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to sync, for example v0.1.181
+        required: true
+        type: string

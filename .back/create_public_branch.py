@@ -130,6 +130,8 @@ def remove_private_delivery_artifacts():
     private_artifacts = [
         '.back/create_public_branch.py',
         '.github/workflows/build_binary.yaml',
+        '.github/workflows/component-updates.yml',
+        '.github/scripts/component_update.py',
         '.github/workflows/build_public.yml',
     ]
     for filepath in private_artifacts:
