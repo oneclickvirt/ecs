@@ -196,7 +196,7 @@ def modify_utils_go(filepath):
     2. Preserve the existing upload-token behavior without that dependency
     """
     content = read_file(filepath)
-    
+
     # basics/network is already imported as bnetwork. Remove the private
     # import rather than importing the same package twice under two aliases.
     content, import_replacements = re.subn(
@@ -214,14 +214,14 @@ def modify_utils_go(filepath):
     )
     if check_replacements != 1:
         raise ValueError(f"Expected one private network check in {filepath}")
-    
+
     # Replace token usage - find the exact line and replace it
     content = re.sub(
         r'\ttoken := network\.SecurityUploadToken',
         r'\ttoken := "OvwKx5qgJtf7PZgCKbtyojSU.MTcwMTUxNzY1MTgwMw"',
         content
     )
-    
+
     write_file(filepath, content)
     print(f"✓ Modified {filepath}")
 
@@ -230,12 +230,12 @@ def main():
     """Main function to process all files."""
     print("Starting public branch creation process...")
     print()
-    
+
     # Check if we're in the right directory
     if not os.path.exists('go.mod'):
         print("Error: go.mod not found. Please run this script from the project root.")
         sys.exit(1)
-    
+
     # Modify Go source files
     print("Modifying Go source files...")
     modify_speed_go('internal/tests/speed.go')
@@ -243,7 +243,7 @@ def main():
     remove_private_go_sources()
     modify_utils_go('utils/utils.go')
     print()
-    
+
     # Modify go.mod
     print("Modifying go.mod...")
     modify_go_mod('go.mod')
@@ -255,7 +255,7 @@ def main():
     validate_public_go_sources()
     validate_public_delivery_tree()
     print()
-        
+
     print("✓ All modifications completed successfully!")
     print()
     print("Next steps:")
