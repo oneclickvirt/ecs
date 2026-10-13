@@ -25,6 +25,7 @@ jobs:
     - name: Install CI control tools
       shell: bash
       run: |
+        mkdir -p "$TMPDIR" "$GOTMPDIR" "$GOCACHE" "$GOMODCACHE"
         apt-get update -qq
         apt-get install -y --no-install-recommends python3 gh ca-certificates
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -417,15 +418,20 @@ jobs:
       shell: bash
       env:
         CI_JOB_STATUS: ${{ job.status }}
-      run: python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" archive --repositories security,privatespeedtest
-        --status "$CI_JOB_STATUS"
+      run: |
+        if [[ -f "$RUNNER_TEMP/private-ci-control/private_guard.py" ]]; then
+        python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" archive --repositories security,privatespeedtest --status "$CI_JOB_STATUS"
+        fi
     - name: Remove private workspace
       if: always()
       shell: bash
       run: |
+        if [[ -f "$RUNNER_TEMP/private-ci-control/private_guard.py" ]]; then
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" clean
         rm -rf deps keystore
         find . -maxdepth 1 -type f -name "*.jks" -delete
+
+        fi
     if: github.repository_owner == 'oneclickvirt' && github.event_name != 'pull_request' && (github.ref == 'refs/heads/master'
       || startsWith(github.ref, 'refs/tags/v'))
 'on':

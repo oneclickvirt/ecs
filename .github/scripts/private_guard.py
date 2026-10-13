@@ -175,6 +175,21 @@ def exports(path, destination, allowed):
         handle.write('\n'.join(lines) + ('\n' if lines else ''))
 
 
+def bash_path(platform=None):
+    if (platform or os.name) != 'nt':
+        value = shutil.which('bash')
+        if value:
+            return value
+    else:
+        # Windows System32/bash.exe starts WSL, not the Git Bash used by Actions.
+        for parent in (os.environ.get('ProgramFiles', r'C:\Program Files'), os.environ.get('ProgramW6432', r'C:\Program Files')):
+            for suffix in ('Git/bin/bash.exe', 'Git/usr/bin/bash.exe'):
+                candidate = Path(parent) / suffix
+                if candidate.is_file():
+                    return str(candidate)
+    raise RuntimeError('trusted Bash installation unavailable')
+
+
 def execute(script, cwd=None, container=False):
     state = root()
     index = len(list(state.glob('step-*.log')))
@@ -189,7 +204,7 @@ def execute(script, cwd=None, container=False):
     if os.environ.get('PRIVATE_CI_TOKEN') and not container:
         env.update({k: v for k, v in git_env().items() if k.startswith('GIT_')})
     env['GITHUB_ENV'], env['GITHUB_OUTPUT'], env['GITHUB_PATH'] = env_file.as_posix(), output_file.as_posix(), path_file.as_posix()
-    command = ['bash', '--noprofile', '--norc', '-e', '-o', 'pipefail', script_path.as_posix()]
+    command = [bash_path(), '--noprofile', '--norc', '-e', '-o', 'pipefail', script_path.as_posix()]
     if container:
         context = state / 'image'
         context.mkdir(exist_ok=True)

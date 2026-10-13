@@ -52,6 +52,14 @@ class GuardTests(unittest.TestCase):
         self.assertNotIn(b'private-material', result)
         self.assertNotIn(b'github_pat_', result)
 
+    def test_windows_uses_git_bash_instead_of_wsl_alias(self):
+        folder = Path(self.temp.name) / 'Program Files'
+        binary = folder / 'Git/bin/bash.exe'
+        binary.parent.mkdir(parents=True)
+        binary.write_bytes(b'controlled executable fixture')
+        with patch.dict(os.environ, {'ProgramFiles': str(folder)}):
+            self.assertEqual(guard.bash_path(platform='nt'), str(binary))
+
     def test_source_and_keystore_archives_rejected(self):
         path = Path(self.temp.name) / 'release.zip'
         for name in ['deps/private/source.go', 'source.ts', 'source.java', 'signing.jks', '../outside', 'build.log']:
