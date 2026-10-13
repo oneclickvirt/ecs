@@ -1,0 +1,28 @@
+name: Action policy
+'on':
+  pull_request:
+    paths:
+    - .github/**
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Validate Actions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version: '1.26'
+        cache: false
+    - name: Validate workflows
+      run: |
+        go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+        "$(go env GOPATH)/bin/actionlint" -shellcheck= -pyflakes= -ignore 'label .* is unknown'
+    - name: Verify private output isolation
+      run: |
+        if [[ -d .github/tests ]]; then python3 -m unittest discover -s .github/tests -p "test_*.py"; fi

@@ -1,38 +1,20 @@
 name: Public Build
-on:
-  workflow_run:
-    workflows: ["Build and Release"]
-    types:
-      - completed
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: "Existing release tag to publish, for example v0.1.181"
-        required: true
-        type: string
-
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 concurrency:
   group: public-latest-release
   cancel-in-progress: false
-
 jobs:
   build:
-    # Only a tag push has an immutable release SHA for automatic fan-out.
-    # Manual release reruns are dispatched explicitly below with release_tag.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+    if: |-
+      github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || inputs.release_tag }}
         fetch-depth: 0
@@ -53,11 +35,11 @@ jobs:
         fi
     - name: Set up Go
       if: steps.release.outputs.publish == 'true'
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
         check-latest: true
-
+        cache: false
     - name: Resolve embedded resolver catalog ref
       id: resolver_catalog
       if: steps.release.outputs.publish == 'true'
@@ -67,16 +49,14 @@ jobs:
         BASICS_REF="$(go mod edit -json | python3 -c 'import json, sys; required = {item["Path"]: item["Version"] for item in json.load(sys.stdin).get("Require", [])}; print(required["github.com/oneclickvirt/basics"])')"
         [[ "$BASICS_REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Invalid basics release ref: $BASICS_REF" >&2; exit 1; }
         echo "ref=$BASICS_REF" >> "$GITHUB_OUTPUT"
-
     - name: Checkout immutable resolver catalog
       if: steps.release.outputs.publish == 'true'
-      uses: actions/checkout@v4
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         repository: oneclickvirt/basics
         ref: ${{ steps.resolver_catalog.outputs.ref }}
         path: .release-basics
-        token: ${{ secrets.GHT }}
-
+        token: ${{ secrets.PRIVATE_CI_TOKEN }}
     - name: Verify immutable resolver catalog
       if: steps.release.outputs.publish == 'true'
       shell: bash
@@ -92,12 +72,10 @@ jobs:
         go -C .release-basics test -count=1 ./network/resolver ./cmd/update-resolver-endpoints
         printf 'Embedded resolver catalog from basics %s: ' "$BASICS_REF" >> "$GITHUB_STEP_SUMMARY"
         sha256sum .release-basics/network/resolver/endpoints_embed.json >> "$GITHUB_STEP_SUMMARY"
-
     - name: Remove temporary resolver catalog checkout
       if: steps.release.outputs.publish == 'true'
       shell: bash
       run: rm -rf .release-basics
-
     - name: Create public branch
       if: steps.release.outputs.publish == 'true'
       run: |
@@ -105,7 +83,6 @@ jobs:
         git branch -D public 2>/dev/null || true
         # 基于当前分支创建新的 public 分支（完全覆盖）
         git checkout -b public
-        
     - name: Generate dependency-clean public tree
       if: steps.release.outputs.publish == 'true'
       run: |
@@ -148,7 +125,6 @@ jobs:
         go build -tags=ecs_public -ldflags="-checklinkname=0" -o maintest-ecs-public
         ./maintest-ecs-public -h >/dev/null
         rm -f maintest maintest-ecs-public public-canary.json
-        
     - name: Commit and push changes
       if: steps.release.outputs.publish == 'true'
       run: |
@@ -162,3 +138,15 @@ jobs:
         fi
         git commit -m "Auto update public version"
         git push -f origin public
+'on':
+  workflow_run:
+    workflows:
+    - Build and Release
+    types:
+    - completed
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to publish, for example v0.1.181
+        required: true
+        type: string

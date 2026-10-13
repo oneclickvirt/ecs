@@ -1,58 +1,54 @@
 name: Verify Public Branch
-
-on:
-  push:
-    branches: [public]
-  pull_request:
-    branches: [public]
-  # A branch update pushed by GITHUB_TOKEN from Public Build does not emit a
-  # follow-up push workflow. Verify that generated tree from the publisher's
-  # completion instead, so every released public branch receives an
-  # independent validation run.
-  workflow_run:
-    workflows: ["Public Build"]
-    types: [completed]
-
 permissions:
   contents: read
-
 jobs:
   verify:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'workflow_run' && 'public' || github.sha }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          check-latest: true
-
-      - name: Verify dependency boundary and build
-        shell: bash
-        run: |
-          set -euo pipefail
-          go mod download
-          test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/basics)" = "v0.0.39"
-          test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/speedtest)" = "v0.0.37"
-          if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
-            echo "Public source retained a private module reference" >&2
-            exit 1
-          fi
-          if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' .github/workflows; then
-            echo "Public workflow still loads a private module" >&2
-            exit 1
-          fi
-          if go list -deps ./... | grep -E '^github\.com/oneclickvirt/(security|privatespeedtest)(/|$)'; then
-            echo "Public dependency graph still loads a private repository" >&2
-            exit 1
-          fi
-          go test ./...
-          go test -tags=ecs_public ./...
-          go build -ldflags="-checklinkname=0" -o goecs-public .
-          ./goecs-public -h >/dev/null
+    - name: Checkout source
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        ref: ${{ github.event_name == 'workflow_run' && 'public' || github.sha }}
+    - name: Set up Go
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      with:
+        go-version-file: go.mod
+        check-latest: true
+        cache: false
+    - name: Verify dependency boundary and build
+      shell: bash
+      run: |
+        set -euo pipefail
+        go mod download
+        test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/basics)" = "v0.0.39"
+        test "$(go list -m -f '{{.Version}}' github.com/oneclickvirt/speedtest)" = "v0.0.37"
+        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' --glob '*.go' --glob 'go.mod' --glob 'go.sum' .; then
+          echo "Public source retained a private module reference" >&2
+          exit 1
+        fi
+        if rg -n 'github\.com/oneclickvirt/(security|privatespeedtest)(/|[[:space:]]|"|\x60|$)' .github/workflows; then
+          echo "Public workflow still loads a private module" >&2
+          exit 1
+        fi
+        if go list -deps ./... | grep -E '^github\.com/oneclickvirt/(security|privatespeedtest)(/|$)'; then
+          echo "Public dependency graph still loads a private repository" >&2
+          exit 1
+        fi
+        go test ./...
+        go test -tags=ecs_public ./...
+        go build -ldflags="-checklinkname=0" -o goecs-public .
+        ./goecs-public -h >/dev/null
+'on':
+  push:
+    branches:
+    - public
+  pull_request:
+    branches:
+    - public
+  workflow_run:
+    workflows:
+    - Public Build
+    types:
+    - completed
