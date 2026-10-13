@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
+import tarfile
 
 spec = importlib.util.spec_from_file_location('guard', '.github/scripts/private_guard.py')
 guard = importlib.util.module_from_spec(spec)
@@ -53,11 +54,25 @@ class GuardTests(unittest.TestCase):
 
     def test_source_and_keystore_archives_rejected(self):
         path = Path(self.temp.name) / 'release.zip'
-        for name in ['deps/private/source.go', 'signing.jks', '../outside', 'build.log']:
+        for name in ['deps/private/source.go', 'source.ts', 'source.java', 'signing.jks', '../outside', 'build.log']:
             with zipfile.ZipFile(path, 'w') as z:
                 z.writestr(name, 'private')
             with self.assertRaises(RuntimeError):
                 guard.verify_assets([str(path)])
+
+    def test_linux_xz_package_verified_and_private_members_rejected(self):
+        path = Path(self.temp.name) / 'release.tar.xz'
+        for name, accepted in [('usr/bin/application', True), ('source.go', False), ('keys/signing.jks', False), ('../outside', False)]:
+            with tarfile.open(path, 'w:xz') as archive:
+                info = tarfile.TarInfo(name)
+                payload = b'\x7fELFcontrolled-fixture'
+                info.size = len(payload)
+                archive.addfile(info, io.BytesIO(payload))
+            if accepted:
+                guard.verify_assets([str(path)])
+            else:
+                with self.assertRaises(RuntimeError):
+                    guard.verify_assets([str(path)])
 
     def test_public_log_destination_rejected_before_git(self):
         with patch.object(guard, 'api', return_value={'private': False}), patch.object(guard, 'quiet') as command:
