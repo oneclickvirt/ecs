@@ -152,6 +152,11 @@ def workspace():
         handle.write('\n/deps/\n/go.work\n/go.work.sum\n')
 
 
+def consumer_command(args, env):
+    # Diagnostics stay in the private parent; native test fixtures use their usual creation modes.
+    return quiet(['bash', '-c', 'umask 022; exec "$@"', 'consumer-check', *args], env=env, timeout=3600)
+
+
 def test_consumer(kind):
     env = git_env()
     env.update({'GOPRIVATE': PRIVATE, 'GONOSUMDB': PRIVATE + ',' + PREFIX + 'ecs,' + PREFIX + 'speedtest',
@@ -162,8 +167,8 @@ def test_consumer(kind):
         commands += [['go', 'test', '-race', '-count=1', '-tags=ecs_structured', './...'],
                      ['go', 'vet', '-tags=ecs_structured', './...']]
     for args in commands:
-        quiet(args, env=env, timeout=3600)
-    quiet(['go', 'build', '-trimpath', '-buildvcs=false', '-ldflags=-checklinkname=0', '-o', str(root()/'consumer-check'), '.'], env=env, timeout=3600)
+        consumer_command(args, env)
+    consumer_command(['go', 'build', '-trimpath', '-buildvcs=false', '-ldflags=-checklinkname=0', '-o', str(root()/'consumer-check'), '.'], env)
 
 
 def fingerprints(paths):

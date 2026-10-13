@@ -50,4 +50,14 @@ class Tests(unittest.TestCase):
     m.command(['go','work','use','.'],folder)
     m.command(['go','work','edit','-go=1.24.4'],folder)
    self.assertTrue(Path(folder,'go.work').exists())
+ def test_native_permissions_are_preserved_without_changing_parent_log_umask(self):
+  previous=os.umask(0o077)
+  try:
+   with tempfile.TemporaryDirectory() as folder:
+    path=str(Path(folder,'fixture'))
+    m.consumer_command(['python3','-c','import os,sys; os.close(os.open(sys.argv[1],os.O_CREAT|os.O_WRONLY,0o751))',path],dict(os.environ))
+    self.assertEqual(Path(path).stat().st_mode & 0o777,0o751)
+    observed=os.umask(0o077)
+    self.assertEqual(observed,0o077)
+  finally:os.umask(previous)
 if __name__=='__main__':unittest.main(verbosity=2)
