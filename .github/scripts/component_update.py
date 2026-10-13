@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate immutable components, bump the consumer, then recover its release."""
 import argparse
+import datetime
 import base64
 import hashlib
 import json
@@ -73,8 +74,24 @@ def valid_release(release, binary=None):
 def latest_component(module, current):
     old = version(current)
     if old is None:
-        # Legacy timestamp pre-releases remain pinned until an explicit migration.
-        return current
+        match = re.fullmatch(r'(v\d+\.\d+\.\d+)-(\d{14})', current)
+        if not match:
+            return current
+        tags = rows('/repos/oneclickvirt/' + module[len(PREFIX):] + '/tags')
+        stamps = [current]
+        stable = []
+        for item in tags:
+            candidate = item['name']
+            stamp = re.fullmatch(re.escape(match[1]) + r'-(\d{14})', candidate)
+            if stamp:
+                try:
+                    datetime.datetime.strptime(stamp[1], '%Y%m%d%H%M%S')
+                except ValueError:
+                    continue
+                stamps.append(candidate)
+            if version(candidate) and version(candidate)[0] == version(match[1])[0] and version(candidate) >= version(match[1]):
+                stable.append(candidate)
+        return max(stable, key=version) if stable else max(stamps)
     name = module[len(PREFIX):]
     tags = rows('/repos/oneclickvirt/' + name + '/tags')
     candidates = [t['name'] for t in tags if version(t['name']) and version(t['name'])[0] == old[0] and version(t['name']) > old]

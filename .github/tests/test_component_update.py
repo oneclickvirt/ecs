@@ -13,7 +13,11 @@ class Tests(unittest.TestCase):
  def test_prerelease_major_and_legacy_are_not_auto_adopted(self):
   with patch.object(m,'rows',return_value=[{'name':'v0.0.21-rc1'},{'name':'v1.0.0'},{'name':'v0.0.20'}]):
    self.assertEqual(m.latest_component(m.PREFIX+'basics','v0.0.20'),'v0.0.20')
+  with patch.object(m,'rows',return_value=[{'name':'v0.0.2-20240624082446'},{'name':'v0.0.2-20200101000000'}]):
    self.assertEqual(m.latest_component(m.PREFIX+'defaultset','v0.0.2-20240624082446'),'v0.0.2-20240624082446')
+ def test_timestamp_updates_are_monotonic_and_calendar_valid(self):
+  with patch.object(m,'rows',return_value=[{'name':'v0.0.2-20261013123456'},{'name':'v0.0.2-99999999999999'},{'name':'v0.0.2-20200101000000'}]):
+   self.assertEqual(m.latest_component(m.PREFIX+'defaultset','v0.0.2-20240624082446'),'v0.0.2-20261013123456')
  def test_private_component_not_used_until_all_platforms_are_published(self):
   release={'tag_name':'v0.0.21','draft':True,'prerelease':False,'assets':[]}
   with patch.object(m,'rows',side_effect=[[{'name':'v0.0.21'}],[release]]):

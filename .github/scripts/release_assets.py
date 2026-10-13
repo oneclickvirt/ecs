@@ -11,22 +11,27 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 
 
 class Publisher:
-    def __init__(self, repository, credential):
+    def __init__(self, repository, credential, release=None):
         if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository) or not credential:
             raise ValueError('missing publication configuration')
         self.base = '/repos/' + repository
         self.credential = credential
-        self.key = os.environ.get('GITHUB_RUN_ID', 'local') + '-' + os.environ.get('GITHUB_RUN_ATTEMPT', '1')
+        self.release = release
+        self.key = os.environ.get('GITHUB_RUN_ID', 'local') + '-' + os.environ.get('GITHUB_RUN_ATTEMPT', '1') + '-' + uuid.uuid4().hex[:12]
 
     def request(self, path, method='GET', body=None):
         for attempt in range(3):
-            req = urllib.request.Request('https://api.github.com' + path, method=method,
+            target = path
+            if method == 'GET':
+                target += ('&' if '?' in target else '?') + '_ci_read=' + str(time.time_ns())
+            req = urllib.request.Request('https://api.github.com' + target, method=method,
                 data=None if body is None else json.dumps(body).encode(), headers={
                     'Authorization': 'Bearer ' + self.credential, 'Accept': 'application/vnd.github+json',
-                    'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28'})
+                    'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28', 'Cache-Control': 'no-cache'})
             try:
                 with urllib.request.urlopen(req, timeout=45) as response:
                     data = response.read()
@@ -49,12 +54,25 @@ class Publisher:
         raise RuntimeError('asset pagination limit exceeded')
 
     def ensure_release(self, tag):
+        if self.release is not None:
+            if self.release['tag_name'] != tag:
+                raise ValueError('publication release tag mismatch')
+            return self.release
         endpoint = self.base + '/releases/tags/' + urllib.parse.quote(tag, safe='')
         try:
             return self.request(endpoint)
         except urllib.error.HTTPError as exc:
             if exc.code != 404:
                 raise
+        # Draft releases without an existing tag can be absent from the tag endpoint.
+        # Reuse the authenticated draft instead of creating a second release.
+        for page in range(1, 21):
+            releases = self.request(self.base + f'/releases?per_page=100&page={page}')
+            matches = [r for r in releases if r['tag_name'] == tag]
+            if matches:
+                return max(matches, key=lambda r: r['id'])
+            if len(releases) < 100:
+                break
         try:
             return self.request(self.base + '/releases', 'POST', {
                 'tag_name': tag, 'name': tag, 'body': 'Validated automated binaries',
@@ -67,7 +85,10 @@ class Publisher:
         endpoint = self.base + '/releases/assets/' + str(asset_id)
         for attempt in range(3):
             try:
-                return self.request(endpoint, 'PATCH', {'name': name})
+                value = self.request(endpoint, 'PATCH', {'name': name})
+                if value.get('name') != name:
+                    raise RuntimeError('asset rename did not retain the requested name')
+                return value
             except (urllib.error.URLError, TimeoutError):
                 if self.request(endpoint)['name'] == name:
                     return
@@ -99,6 +120,9 @@ class Publisher:
         for attempt in range(3):
             existing = self.assets(release_id).get(name)
             if existing:
+                existing = self.request(self.base + '/releases/assets/' + str(existing['id']))
+                if existing['name'] != name:
+                    raise RuntimeError('asset identity changed during staging')
                 if existing.get('state') == 'uploaded' and existing['size'] == size and existing.get('digest') == 'sha256:' + digest:
                     return existing
                 self.delete(existing['id'])
