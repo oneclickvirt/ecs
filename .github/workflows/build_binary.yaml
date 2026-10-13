@@ -408,8 +408,14 @@ jobs:
       shell: bash
       run: |
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" run <<'PRIVATE_STEP'
-        go install github.com/goreleaser/goreleaser/v2@v2.18.3
-        "$(go env GOPATH)/bin/goreleaser" release --clean --parallelism 1 --skip=publish
+        tool_dir="$RUNNER_TEMP/private-ci-tools/goreleaser-v2.18.3"
+        mkdir -p "$tool_dir"
+        curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
+          https://github.com/goreleaser/goreleaser/releases/download/v2.18.3/goreleaser_Linux_x86_64.tar.gz \
+          -o "$tool_dir/goreleaser.tar.gz"
+        printf '%s  %s\n' b8dee4728bca1aba0d71a832a17cd0a3799f75372878e7ffa36aef2343bce0bc "$tool_dir/goreleaser.tar.gz" | sha256sum -c -
+        tar -xzf "$tool_dir/goreleaser.tar.gz" --no-same-owner -C "$tool_dir" goreleaser
+        "$tool_dir/goreleaser" release --clean --parallelism 1 --skip=publish
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" verify-assets --assets "dist/*.zip" dist/checksums.txt
         export GH_TOKEN="$GITHUB_TOKEN"
         gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
