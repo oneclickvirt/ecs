@@ -91,7 +91,7 @@ def latest_component(module, current):
                 except ValueError:
                     continue
                 stamps.append(candidate)
-            if version(candidate) and version(candidate)[0] == version(match[1])[0] and version(candidate) >= version(match[1]):
+            if version(candidate) and version(candidate)[0] == version(match[1])[0] and version(candidate) > version(match[1]):
                 stable.append(candidate)
         return max(stable, key=version) if stable else max(stamps)
     name = module[len(PREFIX):]

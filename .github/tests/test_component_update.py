@@ -17,6 +17,11 @@ class Tests(unittest.TestCase):
    self.assertEqual(m.latest_component(m.PREFIX+'basics','v0.0.20'),'v0.0.20')
   with patch.object(m,'rows',return_value=[{'name':'v0.0.2-20240624082446'},{'name':'v0.0.2-20200101000000'}]):
    self.assertEqual(m.latest_component(m.PREFIX+'defaultset','v0.0.2-20240624082446'),'v0.0.2-20240624082446')
+ def test_equal_base_stable_tag_cannot_downgrade_legacy_native_release(self):
+  with patch.object(m,'rows',return_value=[{'name':'v0.0.2'},{'name':'v0.0.2-20261013123456'}]):
+   self.assertEqual(m.latest_component(m.PREFIX+'dd','v0.0.2-20250808062818'),'v0.0.2-20261013123456')
+  with patch.object(m,'rows',return_value=[{'name':'v0.0.3'},{'name':'v0.0.2-20261013123456'}]):
+   self.assertEqual(m.latest_component(m.PREFIX+'dd','v0.0.2-20250808062818'),'v0.0.3')
  def test_timestamp_updates_are_monotonic_and_calendar_valid(self):
   with patch.object(m,'rows',return_value=[{'name':'v0.0.2-20261013123456'},{'name':'v0.0.2-99999999999999'},{'name':'v0.0.2-20200101000000'}]):
    self.assertEqual(m.latest_component(m.PREFIX+'defaultset','v0.0.2-20240624082446'),'v0.0.2-20261013123456')
