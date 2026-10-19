@@ -11,7 +11,7 @@ require (
 	github.com/oneclickvirt/backtrace v0.0.21
 	github.com/oneclickvirt/basics v0.0.39
 	github.com/oneclickvirt/cputest v0.0.18
-	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
+	github.com/oneclickvirt/defaultset v0.0.2-20261019011310
 	github.com/oneclickvirt/disktest v0.0.24
 	github.com/oneclickvirt/gostun v0.0.10
 	github.com/oneclickvirt/memorytest v0.0.14
@@ -79,8 +79,8 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/nxtrace/NTrace-core v1.7.3
-	github.com/oneclickvirt/dd v0.0.3 // indirect
-	github.com/oneclickvirt/fio v0.0.3 // indirect
+	github.com/oneclickvirt/dd v0.0.4 // indirect
+	github.com/oneclickvirt/fio v0.0.4 // indirect
 	github.com/oneclickvirt/mbw v0.0.3 // indirect
 	github.com/oneclickvirt/stream v0.0.3 // indirect
 	github.com/oschwald/maxminddb-golang v1.13.1 // indirect
