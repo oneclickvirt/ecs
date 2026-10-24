@@ -328,7 +328,7 @@ docker run --rm spiritlhl/goecs:latest -menu=false -l=en
 
 Using Docker to execute tests will result in some hardware testing bias and virtualization architecture detection failure. Direct testing is recommended over Docker testing.
 
-Mirror image: https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
+CNB mirror image: https://cnb.cool/oneclickvirt/ecs/-/packages/docker/ecs
 
 Please ensure Docker is installed on your machine before executing the following commands
 
