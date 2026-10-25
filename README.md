@@ -184,21 +184,6 @@ The following commands control whether dependencies are installed, whether the p
 
 </details>
 
----
-
-#### **DNS resolver fallback**
-
-The default `-dns-mode=auto` preserves system DNS unless independent probes confirm that the local resolver is unavailable. A successful response or NXDOMAIN keeps system DNS active; timeouts, SERVFAIL, packet loss, and other temporary errors are inconclusive and do not switch resolvers. After confirmed local DNS failure, goecs selects the lowest-latency built-in encrypted endpoint by measuring a real fixed-address TLS DNS query. If the existing public-connectivity preflight has no positive result, auto first performs the same bounded encrypted DNS validation before continuing. Fixed addresses bootstrap only the resolver endpoints; ordinary test domains still resolve dynamically through the selected DNS service.
-
-- `-dns-mode=auto`: default. Preserve system DNS and fall back to the fastest validated built-in DoH or DoT endpoint only after confirmed local resolver failure.
-- `-dns-mode=system`: use system DNS only. The existing Android/Termux resolver-file repair path remains available only in this mode.
-- `-dns-mode=doh`: always use built-in DoH.
-- `-dns-mode=dot`: always use built-in DoT.
-
-The fallback never changes `/etc/resolv.conf` or `/etc/hosts`; it needs access to at least one built-in encrypted resolver. The vetted, non-filtering endpoint catalog is embedded in the `basics` dependency and refreshed before its release tags through fixed-address TLS/DNS validation. `-ut-dns` remains the streaming-unlock module's explicit DNS override and is never replaced by this fallback. Leave it empty for that module to inherit the process resolver.
-
----
-
 #### **Command parameterization**
 
 <details>

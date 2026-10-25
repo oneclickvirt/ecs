@@ -185,21 +185,6 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 </details>
 
----
-
-#### **DNS 解析回退**
-
-默认 `-dns-mode=auto` 会保留系统解析，只有多个独立探测均确认本地解析器不可用时，才在当前进程内启用内置加密解析。成功响应或 NXDOMAIN 都会保留系统 DNS；超时、SERVFAIL、丢包和其他短暂网络错误均为不确定结果，不会切换解析器。确认本地 DNS 失效后，会以固定地址完成真实 TLS DNS 查询并选择延迟最低的内置 DoH 或 DoT 上游。若原有公网预检没有得到可达结果，auto 模式会先执行同样有时限的加密 DNS 校验，确认端点可用后才继续；原有公网预检本身保持不变。固定地址只用于引导上游，普通测试域名仍按选中服务的实时 DNS 回应解析。
-
-- `-dns-mode=auto`：默认行为，保留系统 DNS；只有确认本地解析器失效时，才自动回退到已校验且延迟最低的内置 DoH 或 DoT。
-- `-dns-mode=system`：只使用系统 DNS；Android/Termux 仍保留原有的 resolver 文件修复路径。
-- `-dns-mode=doh`：始终使用内置 DoH。
-- `-dns-mode=dot`：始终使用内置 DoT。
-
-回退只作用于本次程序运行，不会修改 `/etc/resolv.conf` 或 `/etc/hosts`，且需要能够访问至少一个内置加密 DNS 上游。经过审核的非过滤公共端点清单随 `basics` 依赖嵌入，并在其发布 tag 前通过固定地址 TLS/DNS 查询校验更新。`-ut-dns` 仍是流媒体解锁模块的显式 DNS 覆盖，本机制不会替换它；留空时该模块会继承当前程序的解析器。
-
----
-
 #### **命令参数化**
 
 <details>
