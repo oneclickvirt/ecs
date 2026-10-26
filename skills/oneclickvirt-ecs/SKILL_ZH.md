@@ -13,7 +13,7 @@ metadata:
 执行有明确范围的 Go 融合怪检测，解读结果并选择后续测试。
 
 - 使用当前维护的 Go ECS 程序，区分已停止新功能开发的 Shell 版和 GUI 版。
-- system 预设关闭性能基准、流媒体、IP 质量、测速、日志和公开上传；扩展测试前明确资源与流量范围。
+- system 预设关闭性能基准、流媒体、IP 质量、测速、日志和公开上传。ECS 仍会执行程序自身的基础网络预检和 NAT/STUN 检查，整体限时 25 秒；保留 partial、unavailable 和 timeout 结果，扩展测试前明确范围。
 - 同一次安装只解析一次正式版本，并校验标签对应的 SHA-256。即使 output 标签不变，缓存也必须按摘要校验。
 
 ## 安装和更新
@@ -29,7 +29,7 @@ python3 install_agent.py --client codex
 
 ## MCP
 
-运行需要 Python 3.9 以上版本；MCP 使用本机已有程序及其权限，不自动安装虚拟化环境。将安装目录内 `mcp.example.json` 合并到客户端配置。远端宿主机应通过无交互 SSH 运行该主机上的适配器。
+运行需要 Python 3.9 以上版本；MCP 使用本机已有程序及其权限，不自动安装虚拟化环境。将安装目录内对应客户端的 `mcp.codex.toml`、`mcp.claude.json` 或 `mcp.openclaw.json` 合并到已有配置。远端宿主机应通过无交互 SSH 运行该主机上的适配器。
 
 ```bash
 python3 install_agent.py --client codex --install-binary
@@ -41,7 +41,7 @@ python3 install_agent.py --client codex --install-binary
 
 可用检测预设：
 
-- `system`: `goecs -menu=false -upload=false -log=false -basic=true -cpu=false -memory=false -disk=false -ut=false -security=false -email=false -backtrace=false -nt3=false -speed=false -ping=false -tgdc=false -web=false`
+- `system`: `goecs -menu=false -upload=false -log=false -basic=true -cpu=false -memory=false -disk=false -ut=false -security=false -email=false -backtrace=false -nt3=false -speed=false -ping=false -tgdc=false -web=false -json - -dns-mode system -timeout 25s -privacy=true`
 
 `release_assets` 返回实际版本、文件名、大小、摘要及下载地址；需要固定版本时传完整标签。更新产物后应重新安装并验证帮助和实际调用，不能只因文件存在便判定可用。
 

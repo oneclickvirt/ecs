@@ -80,7 +80,7 @@ def execute(argv, timeout=30, cwd=None, parse_json=True):
         stdout, stderr = out.read(LIMIT + 1), err.read(16385)
         if proc.returncode:
             raise ValueError("Command failed (exit %s): %s" % (
-                proc.returncode, stderr[:16384].decode("utf-8", "replace")))
+                proc.returncode, (stderr[:16384] or stdout[:16384]).decode("utf-8", "replace")))
         if len(stdout) > LIMIT:
             raise ValueError("Command result exceeds 1 MiB; narrow the request")
         text = stdout.decode("utf-8", "replace").strip()

@@ -5,7 +5,7 @@
   "purpose": "Collect a bounded VPS Fusion Monster system report, interpret results and select explicit follow-up tests.",
   "notes": [
     "Use the maintained Go ECS binary, not the retired Shell edition or GUI executable.",
-    "The system preset disables benchmarks, media/IP checks, network speed tests, logs and public uploads. Additional tests require choosing their resource/traffic scope.",
+    "The system preset disables benchmarks, media/IP quality checks, speed tests, logs and public uploads. ECS still performs its own basic network preflight and NAT/STUN checks within a 25-second deadline; preserve partial, unavailable and timeout results. Choose the scope before running further tests.",
     "Resolve the published ECS release once; retain its exact tag and SHA-256. A cached file under a mutable output tag must still be verified."
   ],
   "guide": "https://www.spiritlhl.net/guide/agent_integrations.html",
@@ -33,9 +33,16 @@
         "-speed=false",
         "-ping=false",
         "-tgdc=false",
-        "-web=false"
+        "-web=false",
+        "-json",
+        "-",
+        "-dns-mode",
+        "system",
+        "-timeout",
+        "25s",
+        "-privacy=true"
       ],
-      "timeout": 120
+      "timeout": 40
     }
   },
   "help_args": [
@@ -49,7 +56,7 @@
   "purpose_zh": "执行有明确范围的 Go 融合怪检测，解读结果并选择后续测试。",
   "notes_zh": [
     "使用当前维护的 Go ECS 程序，区分已停止新功能开发的 Shell 版和 GUI 版。",
-    "system 预设关闭性能基准、流媒体、IP 质量、测速、日志和公开上传；扩展测试前明确资源与流量范围。",
+    "system 预设关闭性能基准、流媒体、IP 质量、测速、日志和公开上传。ECS 仍会执行程序自身的基础网络预检和 NAT/STUN 检查，整体限时 25 秒；保留 partial、unavailable 和 timeout 结果，扩展测试前明确范围。",
     "同一次安装只解析一次正式版本，并校验标签对应的 SHA-256。即使 output 标签不变，缓存也必须按摘要校验。"
   ]
 }

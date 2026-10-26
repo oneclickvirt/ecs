@@ -177,6 +177,15 @@ def install(manifest, payload, skill_dir, mcp_dir, record, skill_only=False, bin
         config = {"mcpServers": {SKILL_NAME: {"command": sys.executable,
                     "args": [str(mcp_dir / "server.py")], "env": env}}}
         writes[skill_dir / "mcp.example.json"] = (json.dumps(config, ensure_ascii=False, indent=2) + "\n").encode()
+        writes[skill_dir / "mcp.claude.json"] = writes[skill_dir / "mcp.example.json"]
+        server = dict(config["mcpServers"][SKILL_NAME], requestTimeoutMs=180000)
+        writes[skill_dir / "mcp.openclaw.json"] = (json.dumps({"mcp": {"servers": {SKILL_NAME: server}}}, ensure_ascii=False, indent=2) + "\n").encode()
+        toml = "[mcp_servers." + SKILL_NAME + "]\ncommand = " + json.dumps(sys.executable, ensure_ascii=False)
+        toml += "\nargs = " + json.dumps([str(mcp_dir / "server.py")], ensure_ascii=False) + "\ntool_timeout_sec = 180\n"
+        if env:
+            toml += "\n[mcp_servers." + SKILL_NAME + ".env]\n"
+            toml += "".join(key + " = " + json.dumps(value, ensure_ascii=False) + "\n" for key, value in env.items())
+        writes[skill_dir / "mcp.codex.toml"] = toml.encode("utf-8")
     record = dict(record, repository=REPOSITORY, skill_name=SKILL_NAME, mcp_installed=bool(has_mcp),
                   files=manifest["files"])
     writes[skill_dir / "install.json"] = (json.dumps(record, indent=2) + "\n").encode()
@@ -239,7 +248,8 @@ def main():
                      args.skill_only, binary, binary_content)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if result["mcp_installed"]:
-        print("Merge mcp.example.json into your client's MCP settings. Existing settings and tokens were not modified.")
+        filename = {"codex": "mcp.codex.toml", "claude": "mcp.claude.json", "openclaw": "mcp.openclaw.json"}[args.client]
+        print("Merge " + filename + " into your client's MCP settings. Existing settings and tokens were not modified.")
     else:
         print("Installed Skill files. This repository does not install an MCP server in this mode.")
 
