@@ -195,6 +195,8 @@ def install(manifest, payload, skill_dir, mcp_dir, record, skill_only=False, bin
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--client", choices=["claude", "codex", "openclaw"], default="claude")
     parser.add_argument("--source", choices=["github", "cnb"], default="github")

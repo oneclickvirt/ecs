@@ -333,11 +333,14 @@ def serve(adapter, input_stream=sys.stdin, output_stream=sys.stdout):
                 reply["error"] = {"code": -32601, "message": "Method not found"}
         except (ValueError, TypeError) as exc:
             reply["error"] = {"code": -32602, "message": str(exc)}
-        output_stream.write(json.dumps(reply, ensure_ascii=False) + "\n")
+        output_stream.write(json.dumps(reply, ensure_ascii=True) + "\n")
         output_stream.flush()
 
 
 def main():
+    for stream in (sys.stdin, sys.stdout):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", type=Path, default=Path(__file__).with_name("profile.json"))
     parser.add_argument("--version", action="version", version=VERSION)
