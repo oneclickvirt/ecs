@@ -56,6 +56,14 @@ jobs:
         [ -f "README_EN.md" ] && cp README_EN.md temp_repo/ || true
         [ -f "README_ZH.md" ] && cp README_ZH.md temp_repo/ || true
         cp LICENSE temp_repo/
+    - name: Copy current public Skill and knowledge metadata
+      if: steps.release.outputs.publish == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        git fetch --no-tags --depth=1 origin +refs/heads/master:refs/remotes/origin/master
+        git show refs/remotes/origin/master:.github/scripts/copy-cnb-agent-metadata.sh > "$RUNNER_TEMP/copy-cnb-agent-metadata.sh"
+        bash "$RUNNER_TEMP/copy-cnb-agent-metadata.sh" refs/remotes/origin/master temp_repo
     - name: Download release assets
       if: steps.release.outputs.publish == 'true'
       env:

@@ -59,3 +59,30 @@ jobs:
             push --atomic --force cnb \
               refs/remotes/origin/master:refs/heads/master \
               refs/remotes/origin/public:refs/heads/public
+
+      - name: Update public Skill and knowledge metadata alongside CNB artifacts
+        env:
+          CNB_USERNAME: ${{ secrets.CNB_USERNAME }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          set -euo pipefail
+          bash .github/scripts/test-cnb-agent-metadata.sh
+          metadata_tmp=$(mktemp -d)
+          trap 'rm -rf "$metadata_tmp"' EXIT
+          cnb_git() {
+            git -c credential.helper= \
+              -c credential.helper='!f() { test "$1" = get || exit 0; printf "%s\n" "username=${CNB_USERNAME}" "password=${CNB_TOKEN}"; }; f' \
+              "$@"
+          }
+          cnb_git clone --quiet --depth=1 --single-branch --branch main "$CNB_REPOSITORY" "$metadata_tmp/artifacts"
+          artifact_head=$(git -C "$metadata_tmp/artifacts" rev-parse HEAD)
+          bash .github/scripts/copy-cnb-agent-metadata.sh refs/remotes/origin/master "$metadata_tmp/artifacts"
+          cd "$metadata_tmp/artifacts"
+          git add -- SKILL.md SKILL_ZH.md .cnb.yml .cnb/settings.yml agent/profile.json agent/manifest.json agent/server.py scripts/install_agent.py skills/oneclickvirt-ecs/SKILL.md skills/oneclickvirt-ecs/SKILL_ZH.md
+          if git diff --cached --quiet; then
+            echo "Public agent metadata is current; artifact files preserved."
+            exit 0
+          fi
+          git -c user.name=oneclickvirt-sync -c user.email=oneclickvirt-sync@users.noreply.github.com -c commit.gpgsign=false commit -m "sync: public Skill and knowledge metadata"
+          cnb_git push "--force-with-lease=refs/heads/main:$artifact_head" origin HEAD:refs/heads/main
