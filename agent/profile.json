@@ -1,0 +1,55 @@
+{
+  "repository": "oneclickvirt/ecs",
+  "branch": "master",
+  "skill_name": "oneclickvirt-ecs",
+  "purpose": "Collect a bounded VPS Fusion Monster system report, interpret results and select explicit follow-up tests.",
+  "notes": [
+    "Use the maintained Go ECS binary, not the retired Shell edition or GUI executable.",
+    "The system preset disables benchmarks, media/IP checks, network speed tests, logs and public uploads. Additional tests require choosing their resource/traffic scope.",
+    "Resolve the published ECS release once; retain its exact tag and SHA-256. A cached file under a mutable output tag must still be verified."
+  ],
+  "guide": "https://www.spiritlhl.net/guide/agent_integrations.html",
+  "releases": true,
+  "mcp": true,
+  "release_repository": "oneclickvirt/ecs",
+  "binary": "goecs",
+  "asset_prefix": "goecs",
+  "asset_separator": "_",
+  "presets": {
+    "system": {
+      "args": [
+        "-menu=false",
+        "-upload=false",
+        "-log=false",
+        "-basic=true",
+        "-cpu=false",
+        "-memory=false",
+        "-disk=false",
+        "-ut=false",
+        "-security=false",
+        "-email=false",
+        "-backtrace=false",
+        "-nt3=false",
+        "-speed=false",
+        "-ping=false",
+        "-tgdc=false",
+        "-web=false"
+      ],
+      "timeout": 120
+    }
+  },
+  "help_args": [
+    "-h"
+  ],
+  "source_files": [
+    "go.mod",
+    "goecs.sh",
+    "scripts/embed_geekbench.sh"
+  ],
+  "purpose_zh": "执行有明确范围的 Go 融合怪检测，解读结果并选择后续测试。",
+  "notes_zh": [
+    "使用当前维护的 Go ECS 程序，区分已停止新功能开发的 Shell 版和 GUI 版。",
+    "system 预设关闭性能基准、流媒体、IP 质量、测速、日志和公开上传；扩展测试前明确资源与流量范围。",
+    "同一次安装只解析一次正式版本，并校验标签对应的 SHA-256。即使 output 标签不变，缓存也必须按摘要校验。"
+  ]
+}
