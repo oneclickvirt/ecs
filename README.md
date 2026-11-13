@@ -447,7 +447,7 @@ Thanks also to the following platforms for editorial and testing support
 
 ## Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/oneclickvirt/ecs.svg?variant=adaptive)](https://www.spiritlhl.net)
+[![Stargazers over time](https://api.star-history.com/chart?repos=oneclickvirt/ecs&type=date)](https://www.spiritlhl.net)
 
 ## License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Foneclickvirt%2Fecs?ref=badge_large)
