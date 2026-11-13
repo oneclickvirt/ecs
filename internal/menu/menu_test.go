@@ -120,6 +120,33 @@ func TestFullPresetKeepsTCPProbeOptional(t *testing.T) {
 	}
 }
 
+func TestMenuRouteLocationKeepsLegacyDefaultsAndExplicitOverrides(t *testing.T) {
+	for _, choice := range []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"} {
+		for _, explicit := range []string{"", "BJ", "SH", "CD", "ALL"} {
+			t.Run(choice+"/"+explicit, func(t *testing.T) {
+				cfg := params.NewConfig("test")
+				want := "GZ"
+				if choice == "11" {
+					want = "ALL"
+				}
+				if explicit != "" {
+					cfg.ParseFlags([]string{"-nt3loc", explicit})
+					if choice != "11" {
+						want = explicit
+					}
+				}
+				applyMenuResult(utils.NetCheckResult{}, cfg, tuiResult{choice: choice, language: "zh"}, cfg.SaveUserSetParams())
+				if cfg.Nt3Location != want {
+					t.Fatalf("route location = %q, want %q", cfg.Nt3Location, want)
+				}
+				if cfg.Choice != choice {
+					t.Fatalf("menu choice = %q, want %q", cfg.Choice, choice)
+				}
+			})
+		}
+	}
+}
+
 func TestFullPresetRespectsExplicitEnhancedFlagOverrides(t *testing.T) {
 	cfg := params.NewConfig("test")
 	cfg.ParseFlags([]string{"-deep=false", "-diskmc=false", "-tcp=true", "-tcp-format=full", "-utshowip=false", "-deep-burn-duration=0s"})

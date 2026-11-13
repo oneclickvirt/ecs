@@ -15,7 +15,6 @@ import (
 	"github.com/oneclickvirt/ecs/utils"
 	pingmodel "github.com/oneclickvirt/pingtest/model"
 	"github.com/oneclickvirt/pingtest/pt"
-	"github.com/oneclickvirt/portchecker/email"
 )
 
 type bufferedTask struct {
@@ -43,7 +42,7 @@ var (
 	runLegacyDisk         = tests.DiskTest
 	runLegacyMedia        = tests.MediaTest
 	runLegacySecurity     = utils.SecurityInfoCheck
-	runLegacyEmail        = email.EmailCheck
+	runLegacyEmail        = tests.EmailCheckContext
 	runLegacyUpstream     = tests.UpstreamsCheckText
 	runLegacyRoute        = tests.NextTrace3CheckText
 	runLegacyTelegram     = pt.TelegramDCTest
@@ -323,13 +322,17 @@ func runSequentialBufferedTasks(ctx context.Context, tasks []bufferedTask, emit 
 // private result channel in display order. A later chapter may finish early,
 // but it cannot overtake the next chapter expected by the renderer.
 func runOrderedBufferedTasks(ctx context.Context, tasks []bufferedTask, emit func(string)) {
-	values, completed := collectBufferedTaskResults(ctx, startBufferedTasks(ctx, tasks))
-	if !completed {
-		return
-	}
-	for _, value := range values {
-		if value != "" && emit != nil && ctx.Err() == nil {
-			emit(value)
+	// Match v0.1.174: independent diagnostics may run concurrently, but each
+	// chapter is displayed as soon as its turn completes. Only option 2 waits
+	// for the complete batch before publishing any buffered result.
+	for _, result := range startBufferedTasks(ctx, tasks) {
+		select {
+		case value := <-result:
+			if value != "" && emit != nil && ctx.Err() == nil {
+				emit(value)
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }
@@ -482,7 +485,7 @@ func bufferedEmailSection(ctx context.Context, config *params.Config, emailInfo 
 	if config == nil || ctx.Err() != nil {
 		return ""
 	}
-	result := runLegacyEmail()
+	result := runLegacyEmail(ctx)
 	setBufferedInfo(emailInfo, result, infoMutex)
 	title := "Email-Port-Check"
 	if config.Language == "zh" {
