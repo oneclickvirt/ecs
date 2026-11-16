@@ -106,7 +106,7 @@ jobs:
     needs: build
     if: needs.build.outputs.publish == 'true' && needs.build.outputs.digest != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: ${{ matrix.job_timeout }}
     permissions:
       contents: read
       packages: write
@@ -116,10 +116,16 @@ jobs:
         include:
         - registry: ghcr.io
           image: ghcr.io/oneclickvirt/goecs
+          copy_timeout: 15
+          job_timeout: 20
         - registry: docker.cnb.cool
           image: docker.cnb.cool/oneclickvirt/ecs
+          copy_timeout: 15
+          job_timeout: 20
         - registry: crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com
           image: crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs
+          copy_timeout: 55
+          job_timeout: 60
     steps:
     - name: Install registry copy tool
       run: |
@@ -152,7 +158,7 @@ jobs:
         fi
     - name: Copy every platform without rebuilding
       if: steps.current.outputs.publish == 'true'
-      timeout-minutes: 15
+      timeout-minutes: ${{ matrix.copy_timeout }}
       env:
         SOURCE_DIGEST: ${{ needs.build.outputs.digest }}
         TARGET_IMAGE: ${{ matrix.image }}
