@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+    outputs:
+      publish: ${{ steps.release.outputs.publish }}
+      digest: ${{ steps.docker_build.outputs.digest || steps.existing.outputs.digest }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -39,7 +41,7 @@ jobs:
           git show FETCH_HEAD:"$RESOLVER" | bash
         fi
     - name: Set up QEMU
-      if: steps.release.outputs.publish == 'true'
+      if: steps.release.outputs.publish == 'true' && !inputs.mirror_only
       uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       with:
         platforms: all
@@ -53,29 +55,37 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Login to Aliyun Container Registry
-      if: steps.release.outputs.publish == 'true'
-      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-      with:
-        registry: crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com
-        username: ${{ secrets.ALIYUN_USERNAME }}
-        password: ${{ secrets.ALIYUN_PASSWORD }}
-    - name: Log in to GitHub Container Registry
-      if: steps.release.outputs.publish == 'true'
-      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Log in to CNB Container Registry
-      if: steps.release.outputs.publish == 'true'
-      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-      with:
-        registry: docker.cnb.cool
-        username: ${{ secrets.CNB_USERNAME }}
-        password: ${{ secrets.CNB_TOKEN }}
-    - name: Build and push Docker images
-      if: steps.release.outputs.publish == 'true'
+    - name: Verify existing Docker Hub release for mirror recovery
+      if: steps.release.outputs.publish == 'true' && inputs.mirror_only
+      id: existing
+      env:
+        EXPECTED_VERSION: ${{ steps.release.outputs.release_tag }}
+        EXPECTED_REVISION: ${{ steps.release.outputs.release_sha }}
+      run: |
+        set -euo pipefail
+        docker buildx imagetools inspect spiritlhl/goecs:latest --raw > "$RUNNER_TEMP/goecs-index.json"
+        goecs_digest="sha256:$(sha256sum "$RUNNER_TEMP/goecs-index.json" | cut -d' ' -f1)"
+        docker buildx imagetools inspect "spiritlhl/goecs@$goecs_digest" --format '{{json .Image}}' > "$RUNNER_TEMP/goecs-images.json"
+        python3 - <<'PY'
+        import hashlib, json, os
+        from pathlib import Path
+        root = Path(os.environ['RUNNER_TEMP'])
+        images = json.loads((root / 'goecs-images.json').read_text())
+        expected = {'linux/amd64', 'linux/arm/v6', 'linux/arm/v7', 'linux/arm64', 'linux/386', 'linux/riscv64'}
+        if set(images) != expected:
+            raise SystemExit('Docker Hub release does not contain the expected six platforms')
+        for platform, image in images.items():
+            labels = image.get('config', {}).get('Labels', {})
+            if labels.get('org.opencontainers.image.version') != os.environ['EXPECTED_VERSION'] or labels.get('org.opencontainers.image.revision') != os.environ['EXPECTED_REVISION']:
+                raise SystemExit('Docker Hub release version/revision mismatch: ' + platform)
+        digest = 'sha256:' + hashlib.sha256((root / 'goecs-index.json').read_bytes()).hexdigest()
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+            print('digest=' + digest, file=output)
+        print('Verified all six platforms of ' + os.environ['EXPECTED_VERSION'] + ': ' + digest)
+        PY
+    - name: Build and push Docker Hub image
+      if: steps.release.outputs.publish == 'true' && !inputs.mirror_only
+      id: docker_build
       uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
       with:
         context: .
@@ -91,9 +101,67 @@ jobs:
           org.opencontainers.image.version=${{ steps.release.outputs.release_tag }}
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/goecs:latest
-          crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs:latest
-          ghcr.io/${{ github.repository_owner }}/goecs:latest
-          docker.cnb.cool/oneclickvirt/ecs:latest
+  mirror:
+    name: Mirror image to ${{ matrix.registry }}
+    needs: build
+    if: needs.build.outputs.publish == 'true' && needs.build.outputs.digest != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - registry: ghcr.io
+          image: ghcr.io/oneclickvirt/goecs
+        - registry: docker.cnb.cool
+          image: docker.cnb.cool/oneclickvirt/ecs
+        - registry: crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com
+          image: crpi-8tmognxgyb86bm61.cn-guangzhou.personal.cr.aliyuncs.com/oneclickvirt/ecs
+    steps:
+    - name: Install registry copy tool
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends skopeo
+    - name: Log in to Docker Hub
+      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Log in to destination registry
+      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+      with:
+        registry: ${{ matrix.registry }}
+        username: ${{ matrix.registry == 'ghcr.io' && github.actor || matrix.registry == 'docker.cnb.cool' && secrets.CNB_USERNAME || secrets.ALIYUN_USERNAME }}
+        password: ${{ matrix.registry == 'ghcr.io' && secrets.GITHUB_TOKEN || matrix.registry == 'docker.cnb.cool' && secrets.CNB_TOKEN || secrets.ALIYUN_PASSWORD }}
+    - name: Preserve newer releases on retry
+      id: current
+      env:
+        SOURCE_DIGEST: ${{ needs.build.outputs.digest }}
+      run: |
+        set -euo pipefail
+        skopeo inspect --authfile "$HOME/.docker/config.json" --raw docker://docker.io/spiritlhl/goecs:latest > "$RUNNER_TEMP/goecs-current-index.json"
+        goecs_current="sha256:$(sha256sum "$RUNNER_TEMP/goecs-current-index.json" | cut -d' ' -f1)"
+        if [[ "$goecs_current" != "$SOURCE_DIGEST" ]]; then
+          echo '::notice::Docker Hub latest has changed; preserving the newer release.'
+          echo 'publish=false' >> "$GITHUB_OUTPUT"
+        else
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
+        fi
+    - name: Copy every platform without rebuilding
+      if: steps.current.outputs.publish == 'true'
+      timeout-minutes: 15
+      env:
+        SOURCE_DIGEST: ${{ needs.build.outputs.digest }}
+        TARGET_IMAGE: ${{ matrix.image }}
+      run: |
+        set -euo pipefail
+        skopeo copy --all --preserve-digests --retry-times 3 --authfile "$HOME/.docker/config.json" \
+          "docker://docker.io/spiritlhl/goecs@$SOURCE_DIGEST" "docker://$TARGET_IMAGE:latest"
+        skopeo inspect --authfile "$HOME/.docker/config.json" --raw "docker://$TARGET_IMAGE:latest" > "$RUNNER_TEMP/goecs-mirror-index.json"
+        test "sha256:$(sha256sum "$RUNNER_TEMP/goecs-mirror-index.json" | cut -d' ' -f1)" = "$SOURCE_DIGEST"
 'on':
   workflow_run:
     workflows:
@@ -106,3 +174,7 @@ jobs:
         description: Existing release tag to build, for example v0.1.181
         required: true
         type: string
+      mirror_only:
+        description: Recover registry mirrors from an already verified Docker Hub release without rebuilding
+        type: boolean
+        default: false
