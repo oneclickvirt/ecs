@@ -1,5 +1,3 @@
-//go:build ecs_public
-
 package api
 
 import (
