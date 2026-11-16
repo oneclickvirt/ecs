@@ -361,7 +361,7 @@ dsh plugin --profile web add dsh-plugin-goecs
 
 `dsh-plugin-goecs` 在 DSH 内提供本机／SSH 测试及 TXT、HTML、Markdown、JSON 报告阅读模式。仍调用原有 GoECS 程序和菜单预设，选项 2 保持并发模式。能力分类：开发与运维。
 
-支持的宿主通过 bundle 自动启用页面，更新后重启对应 profile；旧版宿主可执行 `dsh web --patch /完整路径/该profile/node_modules/dsh-plugin-goecs/agent/dsh.patch.yml`，已启用 bundle 时不再附加 `--patch`；Desktop 从插件页面安装。需要 Node.js 22.6+、DSH `>=0.2.2-rc.1 <0.2.3-0`，已核对 rc.1／rc.3。适配 Linux、macOS、Windows，Windows 实机验证待完成。headless／TUI／ACP／SDK 宿主提供 `tools` 服务时可使用 `goecs_info`、`goecs_run`、`goecs_task`，不依赖网页。
+支持的宿主通过 bundle 自动启用页面，更新后重启对应 profile；旧版宿主可执行 `dsh web --patch /完整路径/该profile/node_modules/dsh-plugin-goecs/agent/dsh.patch.yml`，已启用 bundle 时不再附加 `--patch`；Desktop 从插件页面安装。需要 Node.js 22.6+、DSH `>=0.2.2-rc.1 <0.3.0-0`，已核对 rc.1／rc.3。适配 Linux、macOS、Windows，Windows 实机验证待完成。SSH 使用插件随附的纯 JavaScript 回退实现，安装插件时不需要放行 `ssh2`／`cpu-features` 的原生构建脚本。headless／TUI／ACP／SDK 宿主提供 `tools` 服务时可使用 `goecs_info`、`goecs_run`、`goecs_task`，不依赖网页。
 
 侧栏入口与管理员提醒可在设置中关闭；无 root／管理员权限仍提交完整所选测试，不自动提权。检测到代理时需选择代理或直连，原生 TCP／ICMP／路由仍受系统路由控制。SSH 首次连接需核对主机指纹，密码及私钥口令仅保存在进程内存。下载本体使用 GitHub Release 并核对 SHA-256；插件与本体独立更新。
 

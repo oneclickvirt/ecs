@@ -4,8 +4,19 @@ import { fileURLToPath } from 'node:url'
 const root = new URL('../', import.meta.url)
 const pkg = JSON.parse(await readFile(new URL('package.json', root), 'utf8'))
 if (pkg.name !== 'dsh-plugin-goecs' || pkg.private || !pkg.engines.dsh || pkg.license !== 'GPL-3.0-only') throw new Error('Invalid public DSH package metadata')
+if (JSON.stringify(pkg.dsh?.bundle?.platforms) !== JSON.stringify(['darwin', 'linux', 'win32'])) throw new Error('DSH bundle must declare Linux, macOS and Windows support')
+const lock = JSON.parse(await readFile(new URL('package-lock.json', root), 'utf8'))
+const buildPackages = Object.entries(lock.packages || {}).filter(([, value]) => value && value.hasInstallScript === true).map(([name]) => name)
+if (buildPackages.length) throw new Error('DSH package dependencies must not require install-time build scripts: ' + buildPackages.join(', '))
 const files = pkg.files.filter(file => !file.startsWith('README'))
-if (files.some(file => /\*|vendor|\.back|\.go$|test|secret|token/i.test(file))) throw new Error('Package must use a public runtime-file allowlist')
+const bundledVendor = 'agent/vendor/ssh2'
+if (files.some(file => file !== bundledVendor && /\*|vendor|\.back|\.go$|test|secret|token/i.test(file))) throw new Error('Package must use a public runtime-file allowlist')
+if (!files.includes(bundledVendor)) throw new Error('The bundled SSH fallback must be included explicitly')
+const bundledSSH = JSON.parse(await readFile(new URL(bundledVendor + '/package.json', root), 'utf8'))
+if (bundledSSH.name !== 'ssh2' || bundledSSH.version !== '1.17.0' || bundledSSH.type !== 'commonjs' || bundledSSH.license !== 'MIT') throw new Error('Unexpected bundled SSH fallback metadata')
+for (const file of ['agent/vendor/ssh2/lib/protocol/crypto/binding.gyp', 'agent/vendor/ssh2/lib/protocol/crypto/src/binding.cc']) {
+  try { await access(new URL(file, root)); throw new Error('Native SSH build source must not be shipped') } catch (error) { if (error?.code !== 'ENOENT') throw error }
+}
 for (const file of files) {
   await access(new URL(file, root))
   if (/\.(?:m?js)$/.test(file)) {

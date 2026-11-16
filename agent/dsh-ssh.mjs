@@ -1,4 +1,4 @@
-import ssh2 from 'ssh2'
+import ssh2 from './vendor/ssh2/lib/index.js'
 import { readFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { GoECSError, normalizeTarget, proxyURL, systemProxies } from './dsh-platform.mjs'
