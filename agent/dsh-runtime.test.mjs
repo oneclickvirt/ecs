@@ -46,6 +46,31 @@ test('history sorts timestamps instead of UUID filenames', async t => {
   for (const [id, date] of [['zzzz', '2020-01-01'], ['aaaa', '2026-11-16']]) await writeFile(path.join(service.directory, 'report-' + id + '.json'), JSON.stringify({ metadata: { startedAt: date } }))
   assert.deepEqual((await service.history()).map(r => r.id), ['aaaa', 'zzzz'])
 })
+test('history reports persist remarks and support single or batch deletion', async t => {
+  const service = await fixture(t)
+  const imported = await service.importReport('----VPS融合怪测试----\n分享: https://paste.spiritlhl.net/history\n----系统基础信息----\nCPU: example\n')
+  const second = await service.importReport('----VPS融合怪测试----\n----系统基础信息----\nCPU: second\n')
+  assert.equal((await service.history()).find(item => item.id === imported.id).shareURLs[0], 'https://paste.spiritlhl.net/history')
+  await service.updateRemark(imported.id, 'production host')
+  const persisted = JSON.parse(await readFile(path.join(service.directory, 'report-' + imported.id + '.json'), 'utf8'))
+  assert.equal(persisted.metadata.remark, 'production host')
+  assert.equal((await service.loadHistory(imported.id)).remark, 'production host')
+  await service.deleteHistory([imported.id, second.id])
+  assert.deepEqual(await service.history(), [])
+  await assert.rejects(service.loadHistory(imported.id), error => error.code === 'ENOENT')
+})
+test('remote preparation discovers or uploads an engine before option discovery', async t => {
+  const service = await fixture(t)
+  const target = await service.saveTarget({ name: 'Remote', host: 'example.test', username: 'user' })
+  const remote = { ...service.targets.get(target.id), binaryPath: '' }
+  let installs = 0
+  service.environment = async targetId => ({ target: { ...service.targets.get(targetId), id: targetId }, facts: { ...facts, platform: 'linux', home: '/home/user' }, client: { end() {} } })
+  service.findRemoteBinary = async () => ''
+  service.install = async targetId => { installs++; service.targets.set(targetId, { ...remote, binaryPath: '/home/user/.cache/goecs-dsh/engines/latest/linux-amd64/goecs', engineTag: 'v0.2.26' }); return { binaryPath: service.targets.get(targetId).binaryPath, tag: 'v0.2.26' } }
+  service.inspectEngine = async ({ target: value }) => ({ binaryPath: value.binaryPath, tag: value.engineTag || 'configured', flags: parseHelp(help) })
+  const prepared = await service.prepare(target.id)
+  assert.equal(installs, 1); assert.equal(prepared.binaryPath, '/home/user/.cache/goecs-dsh/engines/latest/linux-amd64/goecs')
+})
 
 const help = '  -basic\n    Enable basic info (default true)\n  -menu\n    Enable menu\n  -json string\n    JSON path\n  -timeout duration\n    Test deadline\n  -log\n    Logging\n  -upload\n    Upload\n  -ut-http-proxy string\n    Proxy\n'
 const facts = { platform: 'linux', arch: 'amd64', home: '/home/example', admin: false, proxies: [] }

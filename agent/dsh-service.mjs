@@ -1,6 +1,6 @@
 import os from 'node:os'
 import path from 'node:path'
-import { mkdir, readFile, writeFile, rename, readdir } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, rename, readdir, unlink } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { localFacts, capture, GoECSError, processEnvironment, safeProxy, redactSecrets, proxyURL } from './dsh-platform.mjs'
 import { installEngine, verifyExecutable, discoverEngines } from './dsh-engine.mjs'
@@ -10,6 +10,7 @@ import { connectSSH, remoteFacts, remotePath, remoteMkdir, uploadEngine, sshCapt
 import { parseReport, exportReport, stripTerminal, shareURLs } from './dsh-report.mjs'
 
 const defaults = { showSidebar: true, requestAdmin: true, networkMode: 'ask', binaryPath: '', maxTaskSeconds: 3600 }
+const PLUGIN_VERSION = '0.2.26'
 const publicTarget = t => ({ id: t.id, name: t.name, ...validateSSH(t), binaryPath: t.binaryPath || '', engineTag: t.engineTag || '' })
 const publicError = error => ({ code: error.code || 'OPERATION_FAILED', message: redactSecrets(error.message || 'Operation failed'), ...(error.details ? { details: error.details } : {}) })
 const ps = value => "'" + String(value).replace(/'/g, "''") + "'"
@@ -45,7 +46,7 @@ export class GoECSService {
   }
   async status(owner) {
     await this.ready
-    return { version: '0.2.25', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
+    return { version: PLUGIN_VERSION, settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
   }
   async saveSettings(input) {
     await this.ready; const previous = this.settings; this.settings = this.validateSettings(input)
@@ -111,9 +112,37 @@ export class GoECSService {
       return { ...engine, binaryPath: this.target(targetId).binaryPath, target: targetId }
     } finally { environment?.client?.end(); this.busy.delete(targetId) }
   }
-  async prepare() {
+  async findRemoteBinary(client, platform) {
+    const command = platform === 'win32'
+      ? powershell("$patterns=@(\"$env:USERPROFILE/.cache/goecs-dsh/engines/*/*/goecs.exe\",\"$env:USERPROFILE/.local/bin/goecs.exe\",\"$env:ProgramFiles/GoECS/goecs.exe\");foreach($pattern in $patterns){$item=Get-ChildItem -Path $pattern -File -ErrorAction SilentlyContinue|Select-Object -First 1;if($item){$item.FullName;exit 0}};exit 1")
+      : 'for p in "$HOME"/.cache/goecs-dsh/engines/*/*/goecs "$HOME"/.local/bin/goecs /usr/local/bin/goecs /usr/bin/goecs; do [ -f "$p" ] && printf "%s\\n" "$p" && exit 0; done; exit 1'
+    const result = await sshCapture(client, command, { timeout: 12000, limit: 8192 })
+    if (result.code !== 0) return ''
+    const candidate = result.stdout.trim().split(/\r?\n/).find(Boolean) || ''
+    if (platform === 'win32' ? !/^[A-Za-z]:[\\/]/.test(candidate) : !candidate.startsWith('/')) return ''
+    return candidate
+  }
+  async prepare(targetId = 'local', signal) {
     await this.ready
     if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
+    if (targetId !== 'local') {
+      const target = this.target(targetId), environment = await this.environment(targetId, signal)
+      try {
+        if (target.binaryPath) {
+          try { return await this.inspectEngine(environment) } catch {}
+        }
+        const discovered = await this.findRemoteBinary(environment.client, environment.facts.platform)
+        if (discovered) {
+          const updated = { ...target, binaryPath: discovered, engineTag: target.engineTag || 'discovered' }
+          this.targets.set(targetId, updated); await this.persist(); this.revision++
+          try { return await this.inspectEngine({ ...environment, target: updated }) } catch {}
+        }
+      } finally { environment.client?.end() }
+      // Download and verify the matching asset on the DSH host, then upload
+      // it through SFTP. Remote nodes therefore work without public egress.
+      await this.install(targetId, 'latest', signal || this.shutdown.signal)
+      return this.options(targetId, signal)
+    }
     if (this.preparations.has('local')) return this.preparations.get('local')
     const work = async () => {
       const facts = await localFacts(), originalPath = this.settings.binaryPath
@@ -123,14 +152,14 @@ export class GoECSService {
           const engine = await this.inspectEngine({ target: { id: 'local', binaryPath }, facts, client: null })
           if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
           // A settings edit while preparation is running takes priority.
-          if (this.settings.binaryPath !== originalPath) return this.options('local')
+          if (this.settings.binaryPath !== originalPath) return this.options('local', signal)
           if (binaryPath !== originalPath) await this.saveSettings({ binaryPath })
           return engine
         } catch (error) { if (this.closed || this.loadWarning) throw error }
       }
-      if (this.settings.binaryPath !== originalPath) return this.options('local')
-      await this.install('local', 'latest', this.shutdown.signal)
-      return this.options('local')
+      if (this.settings.binaryPath !== originalPath) return this.options('local', signal)
+      await this.install('local', 'latest', signal || this.shutdown.signal)
+      return this.options('local', signal)
     }
     const promise = work().finally(() => this.preparations.delete('local'))
     this.preparations.set('local', promise)
@@ -153,15 +182,16 @@ export class GoECSService {
     if (!flags.some(f => f.name === 'json') || !flags.some(f => f.name === 'menu')) throw new GoECSError('ENGINE_INCOMPATIBLE', 'This executable does not expose the required GoECS menu and JSON-file interfaces')
     return { ...descriptor, flags }
   }
-  async options(targetId = 'local') {
-    const environment = await this.environment(targetId)
+  async options(targetId = 'local', signal) {
+    const environment = await this.environment(targetId, signal)
     try { return await this.inspectEngine(environment) } finally { environment.client?.end() }
   }
   async preflight(input, { interactive = false, signal } = {}) {
     await this.ready
-    if ((input.targetId || 'local') === 'local' && !this.settings.binaryPath) await this.prepare()
+    const targetId = input.targetId || 'local'
+    if (!this.target(targetId).binaryPath) await this.prepare(targetId, signal)
     const revision = this.revision
-    const targetId = input.targetId || 'local', environment = await this.environment(targetId, signal)
+    const environment = await this.environment(targetId, signal)
     try {
       const engine = await this.inspectEngine(environment), { facts } = environment
       buildArguments(input, engine.flags, 'report.json')
@@ -216,12 +246,11 @@ export class GoECSService {
       task.finishedAt = new Date().toISOString(); this.busy.delete(targetId)
       task.report ||= parseReport(stripTerminal(task.raw), this.metadata(task))
       task.report.metadata = { ...task.report.metadata, ...this.metadata(task) }
-      const filename = path.join(this.directory, 'report-' + task.id + '.json')
-      await writeFile(filename, JSON.stringify(task.report), { mode: 0o600 }).catch(() => { task.saveWarning = 'Report remains available in memory; saving it failed' })
+      await this.saveReport(task).catch(() => { task.saveWarning = 'Report remains available in memory; saving it failed' })
     })
     return { task: this.view(task) }
   }
-  metadata(task) { return { target: task.targetId, choice: task.choice, language: task.language, networkMode: task.networkMode, admin: task.facts?.admin || false, status: task.status, startedAt: task.startedAt, finishedAt: task.finishedAt || '', engine: task.engine || null, warnings: task.warnings || [] } }
+  metadata(task) { return { target: task.targetId, choice: task.choice, language: task.language, networkMode: task.networkMode, admin: task.facts?.admin || false, status: task.status, startedAt: task.startedAt, finishedAt: task.finishedAt || '', engine: task.engine || null, warnings: task.warnings || [], remark: typeof task.remark === 'string' ? task.remark : '' } }
   async runTask(task, input) {
     const environment = await this.environment(task.targetId, task.controller.signal)
     const { client, target, facts } = environment
@@ -272,8 +301,21 @@ export class GoECSService {
       if (task.status === 'failed' && !task.error) task.error = { code: 'ENGINE_EXIT', message: 'GoECS exited with code ' + outcome.exitCode }
     } finally { client?.end() }
   }
+  async saveReport(task) {
+    const document = task.report || parseReport(stripTerminal(task.raw), this.metadata(task))
+    document.metadata = { ...document.metadata, ...this.metadata(task) }
+    task.report = document
+    const destination = path.join(this.directory, 'report-' + task.id + '.json')
+    const temporary = destination + '.' + randomUUID() + '.tmp'
+    const work = async () => {
+      await writeFile(temporary, JSON.stringify(document), { mode: 0o600, flag: 'wx' })
+      await rename(temporary, destination)
+    }
+    this.writes = this.writes.catch(() => {}).then(work)
+    try { await this.writes } finally { await unlink(temporary).catch(() => {}) }
+  }
   view(task, offset = 0) {
-    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, phase: task.phase || '', nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
+    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, phase: task.phase || '', nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, remark: task.remark || task.report?.metadata?.remark || '', output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
   }
   getTask(id, owner) {
     const task = this.tasks.get(id)
@@ -308,22 +350,53 @@ export class GoECSService {
     if (native?.schema_version) task.report.nativeReport = native
     else if (native?.nativeReport) task.report.nativeReport = native.nativeReport
     task.report.metadata = this.metadata(task)
-    this.tasks.set(task.id, task); return this.view(task)
+    this.tasks.set(task.id, task); await this.saveReport(task); return this.view(task)
   }
   async history() {
     await this.ready
     const files = (await readdir(this.directory)).filter(name => /^report-[\w-]+\.json$/.test(name))
     const output = []
-    for (const filename of files) { try { const doc = JSON.parse(await readFile(path.join(this.directory, filename), 'utf8')); output.push({ id: filename.slice(7, -5), ...doc.metadata }) } catch {} }
-    return output.sort((a, b) => String(b.finishedAt || b.startedAt).localeCompare(String(a.finishedAt || a.startedAt))).slice(0, 30)
+    for (const filename of files) {
+      try {
+        const doc = JSON.parse(await readFile(path.join(this.directory, filename), 'utf8'))
+        output.push({ id: filename.slice(7, -5), ...doc.metadata, remark: doc.metadata?.remark || '', shareURLs: Array.isArray(doc.shareURLs) ? doc.shareURLs : [] })
+      } catch {}
+    }
+    return output.sort((a, b) => String(b.finishedAt || b.startedAt).localeCompare(String(a.finishedAt || a.startedAt)))
   }
   async loadHistory(id) {
+    await this.ready
     if (!/^[\w-]{1,64}$/.test(id)) throw new GoECSError('INVALID_REPORT', 'Invalid report id')
     if (!this.tasks.has(id)) {
       const report = JSON.parse(await readFile(path.join(this.directory, 'report-' + id + '.json'), 'utf8'))
-      this.tasks.set(id, { id, ...report.metadata, targetId: report.metadata.target, raw: report.rawText, report, owner: '' })
+      this.tasks.set(id, { id, ...report.metadata, remark: report.metadata?.remark || '', targetId: report.metadata.target, raw: report.rawText, report, owner: '' })
     }
     return this.view(this.tasks.get(id))
+  }
+  async updateRemark(id, remark) {
+    await this.ready
+    if (!/^[\w-]{1,64}$/.test(id) || typeof remark !== 'string' || remark.length > 128 || /[\x00-\x1f\x7f]/.test(remark)) throw new GoECSError('INVALID_REMARK', 'Remark must be at most 128 characters')
+    const task = await this.loadHistory(id).then(() => this.tasks.get(id))
+    if (['running', 'stopping'].includes(task.status)) throw new GoECSError('TASK_BUSY', 'Stop the active test before editing its remark')
+    task.remark = remark
+    task.report.metadata = { ...task.report.metadata, remark }
+    await this.saveReport(task)
+    return { id, remark }
+  }
+  async deleteHistory(ids) {
+    await this.ready
+    const values = Array.isArray(ids) ? ids : [ids]
+    if (!values.length || values.length > 100 || values.some(id => typeof id !== 'string' || !/^[\w-]{1,64}$/.test(id))) throw new GoECSError('INVALID_REPORT', 'Invalid report selection')
+    const paths = values.map(id => path.join(this.directory, 'report-' + id + '.json'))
+    for (const id of values) {
+      const task = this.tasks.get(id)
+      if (task && ['running', 'stopping'].includes(task.status)) throw new GoECSError('TASK_BUSY', 'Stop an active test before deleting its report')
+    }
+    for (const filename of paths) {
+      try { await unlink(filename) } catch (error) { if (error.code !== 'ENOENT') throw error }
+    }
+    for (const id of values) this.tasks.delete(id)
+    return { removed: values }
   }
   async dispose() {
     this.closed = true

@@ -145,7 +145,10 @@ export function reportHTML(report) {
   return '<!doctype html><html lang="' + (report.metadata.language === 'en' ? 'en' : 'zh') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;"><title>GoECS</title><style>body{color:#1e293b;background:#fff;font:15px/1.7 system-ui,sans-serif;max-width:1080px;margin:auto;padding:28px}section{margin:22px 0}h1,h2{line-height:1.35}h2{font-size:20px;border-bottom:1px solid #e2e8f0;padding-bottom:12px}dl>div{display:flex;gap:20px;border-bottom:1px solid #f1f5f9;padding:8px 0}dt{min-width:140px;color:#64748b}dd{margin:0;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;padding:16px;border-radius:10px}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;text-align:left;padding:9px;white-space:pre-wrap}th{background:#f8fafc}@media(prefers-color-scheme:dark){body{background:#101827;color:#e2e8f0}pre,th{background:#172334}dt{color:#a6b6cb}h2,dl>div,th,td{border-color:#334155}}</style></head><body><h1>GoECS</h1>' + links + body + '</body></html>'
 }
 export function exportReport(report, format) {
-  if (format === 'txt') return report.rawText
+  // Reading mode starts at the actual benchmark report. Keep rawText in the
+  // structured document for audit/export purposes, while omitting the
+  // interactive menu and alternate-screen padding from the TXT view.
+  if (format === 'txt') return report.displayText || report.rawText
   if (format === 'json') return JSON.stringify(report, null, 2)
   if (format === 'md') return reportMarkdown(report)
   if (format === 'html') return reportHTML(report)
