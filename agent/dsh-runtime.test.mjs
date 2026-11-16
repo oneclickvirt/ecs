@@ -13,11 +13,15 @@ import { apply } from './dsh-plugin.mjs'
 import { writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
-test('cancel during preflight remains cancelled', async t => {
+test('cancel during preflight remains cancelled', { timeout: 10000 }, async t => {
+  t.diagnostic('Creating isolated service')
   const service = await fixture(t)
+  t.diagnostic('Starting cancellable preflight')
   service.runTask = async task => new Promise((resolve, reject) => task.controller.signal.addEventListener('abort', () => reject(task.controller.signal.reason), { once: true }))
   const { task } = await service.start({ choice: '2', networkMode: 'direct' })
+  t.diagnostic('Cancelling task')
   const stopped = await service.stop(task.id)
+  t.diagnostic('Task cancellation completed')
   assert.equal(stopped.status, 'cancelled'); assert.equal(stopped.error, null)
 })
 test('headless sessions cannot enumerate another session tasks', async t => {
