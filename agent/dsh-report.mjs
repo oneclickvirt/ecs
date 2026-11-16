@@ -1,7 +1,33 @@
 import { createHash } from 'node:crypto'
 
 export const REPORT_SCHEMA = 'goecs.reader/1'
-export const stripTerminal = value => String(value).replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+export function stripTerminal(value) {
+  const text = String(value).replace(/\x1b\][\s\S]*?(?:\x07|\x1b\\)/g, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  return text.split('\n').map(line => {
+    let column = 0, end = 0, result = ''
+    const append = part => { result += part; for (const char of part) column += char === '\t' ? 8 - column % 8 : /\p{Mark}/u.test(char) ? 0 : /[\u1100-\u115f\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\ufe10-\ufe6f\uff01-\uff60\uffe0-\uffe6]|\p{Extended_Pictographic}/u.test(char) ? 2 : 1 }
+    for (const match of line.matchAll(/(?:\x1b\[|\x9b)([0-?]*)([ -/]*)([@-~])/g)) {
+      append(line.slice(end, match.index)); end = match.index + match[0].length
+      // ConPTY encodes runs of spaces as cursor motion. Keep column padding
+      // when removing colors, otherwise provider names and results run together.
+      if (/^\d*$/.test(match[1])) {
+        const count = Math.min(4096, Number(match[1]) || 1)
+        if (['C', 'a'].includes(match[3])) append(' '.repeat(count))
+        else if (['G', '`'].includes(match[3])) append(' '.repeat(Math.max(0, count - 1 - column)))
+      }
+    }
+    append(line.slice(end))
+    return result.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+  }).join('\n')
+}
+export function liveText(value) {
+  const text = stripTerminal(value)
+  const start = text.search(/[-─━═=*_]{3,}\s*(?:VPS融合怪测试|VPS Fusion Monster Test)\s*[-─━═=*_]{3,}/i)
+  if (start >= 0) return text.slice(start)
+  // Menu repaints are screen updates, not benchmark output. Wait for the
+  // actual report instead of appending the alternate screen as blank lines.
+  return /\x1b\[\?1049h|请选择测试方案|融合怪完全体|Full Suite/i.test(String(value)) ? '' : text
+}
 export const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
 const categoryRules = [
   ['system', /系统|基础信息|system|basic info|virtualization/i], ['cpu', /CPU|geekbench/i],
@@ -11,7 +37,7 @@ const categoryRules = [
   ['backroute', /回程|上游|backtrace|backhaul|upstream/i], ['speed', /测速|speed|iperf|带宽/i],
   ['latency', /延迟|latency|ping|握手|TCP|TGDC/i],
 ]
-const category = title => categoryRules.find(([, re]) => re.test(title))?.[0] || 'other'
+const category = title => /^\[\s*IPV[46]\s/i.test(title) ? 'unlock' : categoryRules.find(([, re]) => re.test(title))?.[0] || 'other'
 export const shareURLs = text => [...new Set((stripTerminal(text).match(/https:\/\/paste\.spiritlhl\.net\/[^\s<>"'\]\)]+/g) || []).filter(value => !value.includes('/api/')))]
 const decoration = /^[\s─━═=*_·.\-+|┌┐└┘├┤┬┴┼╭╮╰╯]{3,}$/u
 function heading(line) {
@@ -37,7 +63,7 @@ const tableDivider = line => /^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*
 export function parseReport(rawText, metadata = {}) {
   if (typeof rawText !== 'string' || Buffer.byteLength(rawText) > 16 * 1024 * 1024) throw new Error('Report must be text of at most 16 MiB')
   const lines = stripTerminal(rawText).split('\n')
-  const result = { schemaVersion: REPORT_SCHEMA, source: { sha256: createHash('sha256').update(rawText).digest('hex'), bytes: Buffer.byteLength(rawText), lines: lines.length }, metadata: { ...metadata }, shareURLs: shareURLs(rawText), sections: [], warnings: [], rawText }
+  const result = { schemaVersion: REPORT_SCHEMA, source: { sha256: createHash('sha256').update(rawText).digest('hex'), bytes: Buffer.byteLength(rawText), lines: lines.length }, metadata: { ...metadata }, shareURLs: shareURLs(rawText), sections: [], warnings: [], rawText, displayText: liveText(rawText) }
   // PTY presets include the interactive menu before the actual report. Keep
   // the transcript byte-exact in TXT/JSON, but start the reader at its report.
   const reportStart = lines.findIndex(line => /^(?:VPS融合怪测试|VPS Fusion Monster Test)$/i.test(heading(line) || ''))
@@ -56,6 +82,11 @@ export function parseReport(rawText, metadata = {}) {
     const title = heading(line)
     if (title) { ensureSection(n, title); continue }
     ensureSection(n); section.sourceEnd = n
+    const unlock = section.category === 'unlock' && line.match(/^\s*(\S(?:.*?\S)?) {2,}(\S.*)$/)
+    if (unlock) {
+      block = { kind: 'fields', sourceStart: n, sourceEnd: n, fields: [{ name: unlock[1], value: unlock[2], sourceLine: n }] }
+      section.blocks.push(block); continue
+    }
     const version = trimmed.match(/(?:融合怪.*?版本|Fusion Monster.*?Version|goecs(?: version)?|版本|Version)\s*[:：]\s*(v?\d[\w.+-]*)/i)
     if (version && !result.metadata.engineVersion) result.metadata.engineVersion = version[1]
     if (/^(?:\[?IPv[46]\]?|测试IP类型\s*[:：]\s*IPv[46])\s*[:：]?$/i.test(trimmed)) {

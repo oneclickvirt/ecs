@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { parseReport, reportHTML, reportMarkdown, exportReport, stripTerminal } from './dsh-report.mjs'
+import { parseReport, reportHTML, reportMarkdown, exportReport, stripTerminal, liveText } from './dsh-report.mjs'
 
 test('source remains byte-exact across four exports; metrics retain units, zero and unknown values', () => {
   const raw = '\x1b[32m----系统基础信息----\x1b[0m\r\nCPU: Example: cache 64 MiB\r\nIPv6: 2001:db8::1\r\n----CPU测试--通过sysbench测试----\n单线程得分: 0\n多线程得分: unavailable\n----硬盘测试-通过fio测试----\n读速度: 921.00 MiB/s\n未知记录 保留: 原始值\n'
@@ -60,4 +60,25 @@ test('live PTY readers start at the actual report while retaining the complete t
   assert.equal(doc.sections[0].sourceStart, 4)
   assert.ok(!reportHTML(doc).includes('请选择测试方案'))
   assert.ok(!reportMarkdown(doc).includes('^[]11;rgb'))
+})
+test('live output omits alternate-screen menu repaints and the gap before the report', () => {
+  const menu = '\x1b[?1049h\x1b[H请选择测试方案:\r\n1. 融合怪完全体\x1b[H' + '\n'.repeat(40)
+  assert.equal(liveText(menu), '')
+  const raw = menu + '\x1b[?1049l-----VPS融合怪测试-----\r\n版本: v0.2.24\r\n----跨国平台解锁----\r\nDisneyPlus\x1b[16C\x1b[31mNO\x1b[0m\r\n'
+  const document = parseReport(raw)
+  assert.ok(document.displayText.startsWith('-----VPS融合怪测试-----\n'))
+  assert.ok(!document.displayText.includes('请选择')); assert.ok(!document.displayText.includes('\n\n\n'))
+  assert.equal(exportReport(document, 'txt'), raw)
+  assert.match(reportMarkdown(document), /\*\*DisneyPlus:\*\* NO/)
+})
+test('Windows color and cursor padding preserve unlock names, statuses and nested annotations', () => {
+  const raw = '-----跨国平台解锁-----\r\nDisneyPlus\x1b[16C\x1b[31mNO\x1b[0m\r\nDiscoveryPlus\x1b[27G\x1b[32mYES\x1b[0m (Region: US)\r\n中文平台\x1b[27G\x1b[33mTIMEOUT\x1b[0m\r\n'
+  const clean = stripTerminal(raw)
+  assert.ok(clean.includes('DisneyPlus                NO')); assert.ok(clean.includes('DiscoveryPlus             YES (Region: US)'))
+  assert.ok(clean.includes('中文平台                  TIMEOUT'))
+  const document = parseReport(raw)
+  const fields = document.sections[0].blocks.flatMap(b => b.fields || [])
+  assert.equal(fields[0].name, 'DisneyPlus'); assert.equal(fields[0].value, 'NO')
+  assert.equal(fields[1].name, 'DiscoveryPlus'); assert.equal(fields[1].value, 'YES (Region: US)')
+  assert.ok(!reportHTML(document).includes('\x1b'))
 })

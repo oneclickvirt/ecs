@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { localFacts, capture, GoECSError, processEnvironment, safeProxy, redactSecrets, proxyURL } from './dsh-platform.mjs'
 import { installEngine, verifyExecutable, discoverEngines } from './dsh-engine.mjs'
 import { parseHelp, buildArguments, MENU } from './dsh-options.mjs'
-import { startLocalProcess } from './dsh-process.mjs'
+import { startLocalProcess, startElevatedProcess } from './dsh-process.mjs'
 import { connectSSH, remoteFacts, remotePath, remoteMkdir, uploadEngine, sshCapture, quotePOSIX, powershell, startRemoteProcess, readRemoteFile, validateSSH } from './dsh-ssh.mjs'
 import { parseReport, exportReport, stripTerminal, shareURLs } from './dsh-report.mjs'
 
@@ -45,7 +45,7 @@ export class GoECSService {
   }
   async status(owner) {
     await this.ready
-    return { version: '0.2.24', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
+    return { version: '0.2.25', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
   }
   async saveSettings(input) {
     await this.ready; const previous = this.settings; this.settings = this.validateSettings(input)
@@ -169,23 +169,25 @@ export class GoECSService {
       if (!['ask', 'direct', 'proxy'].includes(mode)) throw new GoECSError('INVALID_NETWORK', 'Choose direct or proxy')
       const needsProxy = mode === 'ask' && facts.proxies.length > 0
       const needsAdmin = interactive && this.settings.requestAdmin && !facts.admin
+      const canElevate = interactive && this.settings.requestAdmin && targetId === 'local' && Boolean(facts.elevation)
+      const needsFirewall = interactive && this.settings.requestAdmin && targetId === 'local' && facts.platform === 'win32'
       const warnings = []
-      if (!facts.admin) warnings.push('Current user is not root/Administrator. Start DSH as an administrator for permission-dependent probes, or continue the complete suite with the current account. Individual failures remain visible.')
+      if (!facts.admin) warnings.push('The current account is not root/Administrator. Authorize only the local test process when supported, or continue the complete suite with this account. Individual permission failures remain visible.')
       if (mode === 'proxy' || needsProxy) warnings.push(facts.proxyNotice || 'HTTP/SOCKS does not proxy every native TCP/ICMP/route probe. Results retain the target operating-system route for those protocols.')
       if (needsProxy && !interactive) throw new GoECSError('PROXY_CHOICE_REQUIRED', 'A proxy was detected. In CLI/CI explicitly choose --network direct or --network proxy before starting a test')
       if (mode === 'proxy' && !facts.proxies.length && !input.proxyURL) throw new GoECSError('PROXY_UNAVAILABLE', 'No proxy was detected; configure an explicit proxy first')
       if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
       if (revision !== this.revision) throw new GoECSError('PLAN_EXPIRED', 'Settings or target changed. Review the test again')
       const token = randomUUID(), expires = Date.now() + 5 * 60 * 1000
-      this.pending.set(token, { input: { ...input, networkMode: mode }, revision: this.revision, expires })
+      this.pending.set(token, { input: { ...input, networkMode: mode }, revision: this.revision, expires, canElevate, needsFirewall, interactive, engineHash: engine.binarySHA })
       for (const [key, value] of this.pending) if (value.expires < Date.now()) this.pending.delete(key)
-      return { token, needsProxy, needsAdmin, warnings, facts: { ...facts, proxies: facts.proxies.map(safeProxy) }, engine: { ...engine, flags: undefined }, expires }
+      return { token, needsProxy, needsAdmin, canElevate, needsFirewall, warnings, facts: { ...facts, proxies: facts.proxies.map(safeProxy) }, engine: { ...engine, flags: undefined }, expires }
     } finally { environment.client?.end() }
   }
   async start(input, { interactive = false, signal, owner = '' } = {}) {
     if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
     const plan = await this.preflight(input, { interactive, signal })
-    if (interactive && (plan.needsAdmin || plan.needsProxy)) return { decision: plan }
+    if (interactive && (plan.needsAdmin || plan.needsProxy || plan.needsFirewall)) return { decision: plan }
     return this.accept(plan.token, { networkMode: input.networkMode || (plan.facts.proxies.length ? this.settings.networkMode : 'direct') }, { owner, user: false })
   }
   async accept(token, decisions = {}, { owner = '', user = false } = {}) {
@@ -197,6 +199,10 @@ export class GoECSService {
     const mode = decisions.networkMode || input.networkMode
     if (!['direct', 'proxy'].includes(mode)) throw new GoECSError('PROXY_CHOICE_REQUIRED', 'Select direct or proxy')
     input.networkMode = mode
+    if (decisions.privilege !== undefined && !['elevate', 'current'].includes(decisions.privilege)) throw new GoECSError('INVALID_PRIVILEGE', 'Choose administrator or current-account testing')
+    if (decisions.privilege === 'elevate' && (!user || !pending.interactive || (!pending.canElevate && !pending.needsFirewall))) throw new GoECSError('USER_ONLY', 'Administrator authorization is available only through the local test-page decision')
+    input.elevate = decisions.privilege === 'elevate'
+    input.expectedBinarySHA = pending.engineHash
     if (Number.isInteger(decisions.proxyIndex) && decisions.proxyIndex >= 0) input.proxyIndex = decisions.proxyIndex
     const targetId = input.targetId || 'local'
     if (this.busy.has(targetId)) throw new GoECSError('TARGET_BUSY', 'Only one benchmark or installation can run on this target at a time')
@@ -223,9 +229,12 @@ export class GoECSService {
     const secret = this.secrets.get(task.targetId) || {}, secrets = [secret.password, secret.passphrase]
     try {
       const engine = await this.inspectEngine(environment); task.engine = { tag: engine.tag, binarySHA: engine.binarySHA || '', platform: facts.platform, arch: facts.arch }
+      if (input.elevate && input.expectedBinarySHA && input.expectedBinarySHA !== engine.binarySHA) throw new GoECSError('ENGINE_CHANGED', 'The engine changed after the test was reviewed. Review the executable and retry')
       const directory = client ? remotePath(facts.home, '.cache', 'goecs-dsh', 'tasks', task.id) : path.join(this.directory, 'task-' + task.id)
       if (client) await remoteMkdir(client, directory, facts.platform); else await mkdir(directory, { mode: 0o700 })
       const filename = client ? remotePath(directory, 'native-report.json') : path.join(directory, 'native-report.json')
+      // Pre-create reports as the DSH user so root's 0600 writes remain readable.
+      if (input.elevate && !client) for (const file of [filename, path.join(directory, 'goecs.txt')]) await writeFile(file, '', { mode: 0o600, flag: 'wx' })
       const built = buildArguments(input, engine.flags, filename)
       const proxy = input.proxyURL ? { url: proxyURL(input.proxyURL), source: 'explicit' } : facts.proxies[input.proxyIndex || 0]
       if (input.networkMode === 'proxy' && !proxy) throw new GoECSError('PROXY_UNAVAILABLE', 'The selected proxy is no longer available')
@@ -236,14 +245,15 @@ export class GoECSService {
         if (engine.flags.some(f => f.name === key)) built.args.push('-' + key + '=' + proxy.url)
         task.warnings = ['Proxy applies to supported HTTP/SOCKS requests. Native TCP/ICMP/routes can use the OS route; a VPN/TUN can affect that route.']
       }
-      if (!facts.admin) (task.warnings ||= []).push('Complete suite is running without root/Administrator; permission-dependent results can be unavailable or fail individually.')
+      if (!facts.admin && !input.elevate) (task.warnings ||= []).push('Complete suite is running without root/Administrator; permission-dependent results can be unavailable or fail individually.')
       const onData = value => {
         const data = redactSecrets(value, secrets)
         if (Buffer.byteLength(task.raw) + Buffer.byteLength(data) > 16 * 1024 * 1024) { task.error = { code: 'OUTPUT_LIMIT', message: 'Terminal output exceeded 16 MiB; task was stopped' }; task.stopReason = 'failed'; void task.process?.stop().catch(() => {}); return }
         task.raw += data
       }
       const options = { cwd: directory, env, choice: built.choice, onData, deadlineMs: this.settings.maxTaskSeconds * 1000, onDeadline: () => { task.stopReason = 'failed'; task.error = { code: 'TASK_TIMEOUT', message: 'Plugin task deadline reached; available results were preserved' } }, platform: facts.platform }
-      task.process = client ? await startRemoteProcess(client, target.binaryPath, built.args, options) : await startLocalProcess(target.binaryPath, built.args, options)
+      if (input.elevate) task.phase = 'permissions'
+      task.process = client ? await startRemoteProcess(client, target.binaryPath, built.args, options) : input.elevate ? await startElevatedProcess(target.binaryPath, built.args, { ...options, onReady: () => { task.facts.admin = true; task.phase = 'testing' } }, { alreadyAdmin: facts.admin }) : await startLocalProcess(target.binaryPath, built.args, options)
       if (task.controller.signal.aborted) await task.process.stop()
       const outcome = await task.process.done
       task.status = task.stopReason || (outcome.exitCode === 0 ? 'completed' : 'failed')
@@ -263,7 +273,7 @@ export class GoECSService {
     } finally { client?.end() }
   }
   view(task, offset = 0) {
-    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
+    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, phase: task.phase || '', nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
   }
   getTask(id, owner) {
     const task = this.tasks.get(id)

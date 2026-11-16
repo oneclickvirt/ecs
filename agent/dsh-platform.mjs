@@ -90,5 +90,10 @@ export async function localFacts({ env = process.env, platform = process.platfor
     const output = await capture(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', "$p=Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings'; if($p.ProxyEnable -eq 1){$p.ProxyServer}"]).catch(() => null)
     for (const proxy of systemProxies(output?.stdout || '', platform)) if (!proxies.some(p => p.url === proxy.url)) proxies.push(proxy)
   }
-  return { ...target, hostname: os.hostname(), admin, proxies, proxyNotice: 'HTTP/SOCKS selection applies to supported requests. Native TCP/ICMP/routes and transparent VPN/TUN routes may remain direct or use the OS route.' }
+  let elevation = platform === 'win32' ? 'windows-uac' : platform === 'darwin' ? 'macos-authorization' : ''
+  if (platform === 'linux' && (env.DISPLAY || env.WAYLAND_DISPLAY)) {
+    const polkit = await capture(['which', 'pkexec']).catch(() => null)
+    if (polkit?.code === 0) elevation = 'polkit'
+  }
+  return { ...target, hostname: os.hostname(), admin, elevation, proxies, proxyNotice: 'HTTP/SOCKS selection applies to supported requests. Native TCP/ICMP/routes and transparent VPN/TUN routes may remain direct or use the OS route.' }
 }

@@ -7,8 +7,8 @@ import { zipSync } from 'fflate'
 import { GoECSService } from './dsh-service.mjs'
 import { parseHelp, buildArguments, menuDriver } from './dsh-options.mjs'
 import { processEnvironment, safeProxy, redactSecrets, normalizeTarget, systemProxies, capture, localFacts } from './dsh-platform.mjs'
-import { startLocalProcess } from './dsh-process.mjs'
-import { checksumFor, selectAsset, boundedFetch, installEngine, sha256, discoverEngines } from './dsh-engine.mjs'
+import { startLocalProcess, startElevatedProcess, runElevatedWorker, elevationCommand, firewallScript } from './dsh-process.mjs'
+import { checksumFor, selectAsset, boundedFetch, installEngine, sha256, discoverEngines, chinaDownload, releaseSources } from './dsh-engine.mjs'
 import { GoECSError } from './dsh-platform.mjs'
 import { quotePOSIX, powershell, hostFingerprint, validateSSH } from './dsh-ssh.mjs'
 import { apply } from './dsh-plugin.mjs'
@@ -103,13 +103,145 @@ test('a bad archive preserves the old engine; successful install is discoverable
   const release = { tag_name: 'v0.2.21', assets: [asset(filename), asset('checksums.txt')] }
   let damaged = true
   const fetchBytes = async url => url.includes('api.github.com') ? Buffer.from(JSON.stringify(release)) : url.endsWith('checksums.txt') ? Buffer.from(hash + '  ' + filename) : damaged ? Buffer.from('broken archive') : archive
-  await assert.rejects(installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes }), error => error.code === 'CHECKSUM_MISMATCH')
+  await assert.rejects(installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes, detectChina: async () => false }), error => error.code === 'CHECKSUM_MISMATCH')
   assert.equal(await readFile(path.join(directory, 'goecs'), 'utf8'), 'old engine')
   damaged = false
-  const installed = await installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes })
+  const installed = await installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes, detectChina: async () => false })
   assert.equal((await discoverEngines(dir, target, { PATH: '' }))[0], installed.binaryPath)
   await writeFile(installed.binaryPath, 'tampered')
   assert.ok(!(await discoverEngines(dir, target, { PATH: '' })).includes(installed.binaryPath))
+})
+test('download geography honors the shell override and uses a bounded fallback without retaining addresses', async () => {
+  const request = async () => assert.fail('An explicit override must not make a geography request')
+  for (const CN of ['true', '1', 'TRUE']) assert.equal(await chinaDownload(undefined, { env: { CN }, request }), true)
+  for (const CN of ['false', '0']) assert.equal(await chinaDownload(undefined, { env: { CN }, request }), false)
+  let calls = 0
+  assert.equal(await chinaDownload(undefined, { env: {}, request: async () => { calls++; return Buffer.from(calls === 1 ? '{"error":true}' : '{"country":"CN"}') } }), true)
+  assert.equal(calls, 2)
+  assert.equal(await chinaDownload(undefined, { env: {}, request: async () => Buffer.from('当前 IP：[omitted] 来自于：中国 广东 广州') }), true)
+  assert.equal(await chinaDownload(undefined, { env: {}, request: async () => Buffer.from('当前 IP：[omitted] 来自于：美国 加利福尼亚') }), false)
+  assert.equal(await chinaDownload(undefined, { env: {}, request: async () => Buffer.from('{"country_code":"US"}') }), false)
+  assert.equal(await chinaDownload(undefined, { env: {}, request: async () => { throw new Error('offline') } }), false)
+  await assert.rejects(chinaDownload(AbortSignal.abort(new Error('cancel geography')), { env: {} }), /cancel geography/)
+  // Keep this mock's timer alive just as a real HTTPS request would be.
+  assert.equal(await chinaDownload(undefined, { env: {}, timeoutMs: 10, request: (_url, _limit, signal) => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(Buffer.from('{}')), 100)
+    signal.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason) }, { once: true })
+  }) }), false)
+})
+test('China downloads try CDN first and fall back immediately; other networks keep GitHub first', async () => {
+  const url = 'https://github.com/oneclickvirt/ecs/releases/download/v0.2.24/checksums.txt', api = 'https://api.github.com/repos/oneclickvirt/ecs/releases/latest'
+  assert.equal(releaseSources(url)[0], url); assert.equal(releaseSources(api)[0], api)
+  assert.ok(releaseSources(api, true)[0].startsWith('https://githubapi.spiritlhl.top/'))
+  const calls = []
+  assert.equal((await boundedFetch(url, 100, undefined, [], { china: true, retryDelay: 0, request: async source => { calls.push(source); if (calls.length === 1) throw new Error('CDN offline'); return Buffer.from('fallback') } })).toString(), 'fallback')
+  assert.equal(calls[0], 'https://cdn0.spiritlhl.top/' + url); assert.equal(calls[1], url)
+})
+test('one geography decision applies to release metadata, checksums and archive verification', async t => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'goecs-china-install-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const archive = Buffer.from(zipSync({ goecs: Buffer.from('verified engine') })), filename = 'goecs_linux_amd64.zip', options = []
+  const asset = name => ({ name, browser_download_url: 'https://github.com/oneclickvirt/ecs/releases/download/v0.2.24/' + name })
+  let detected = 0
+  const installed = await installEngine(dir, { platform: 'linux', arch: 'amd64' }, 'v0.2.24', undefined, { detectChina: async () => { detected++; return true }, fetchBytes: async (url, _limit, _signal, _proxies, policy) => {
+    options.push(policy)
+    return url.includes('api.github.com') ? Buffer.from(JSON.stringify({ tag_name: 'v0.2.24', assets: [asset(filename), asset('checksums.txt')] })) : url.endsWith('checksums.txt') ? Buffer.from(sha256(archive) + '  ' + filename) : archive
+  } })
+  assert.equal(detected, 1); assert.deepEqual(options, [{ china: true }, { china: true }, { china: true }])
+  assert.equal(await readFile(installed.binaryPath, 'utf8'), 'verified engine')
+})
+test('elevation is a local user decision; agents and remote targets cannot request it', async t => {
+  const service = await fixture(t)
+  service.environment = async () => ({ target: service.target(), facts: { ...facts, platform: 'win32', elevation: 'windows-uac' }, client: null })
+  service.runTask = async () => {}
+  const { decision } = await service.start({ choice: '2', networkMode: 'direct' }, { interactive: true })
+  assert.equal(decision.canElevate, true); assert.equal(decision.needsFirewall, true)
+  await assert.rejects(service.accept(decision.token, { privilege: 'elevate', networkMode: 'direct' }), e => e.code === 'USER_ONLY')
+  const { task } = await service.accept(decision.token, { privilege: 'current', networkMode: 'direct' }, { user: true })
+  await service.getTask(task.id).promise
+  await service.saveSettings({ requestAdmin: false })
+  const disabled = await service.preflight({ choice: '1' }, { interactive: true })
+  assert.equal(disabled.canElevate, false); assert.equal(disabled.needsFirewall, false); assert.equal(disabled.needsAdmin, false)
+  const headless = await service.preflight({ choice: '1', networkMode: 'direct' })
+  await assert.rejects(service.accept(headless.token, { privilege: 'elevate', networkMode: 'direct' }, { user: true }), e => e.code === 'USER_ONLY')
+})
+test('privileged worker streams output before exit and removes only its own firewall rule', { timeout: 15000 }, async t => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'goecs-elevation-')), output = [], commands = []
+  t.after(() => rm(cwd, { recursive: true, force: true }))
+  let ready = false
+  const helper = await startElevatedProcess(process.execPath, ['-e', 'console.log("platform result 中文");setTimeout(()=>console.log("finished"),500)'], { cwd, env: processEnvironment(), choice: 'custom', onData: value => output.push(value), onReady: () => { ready = true }, deadlineMs: 5000 }, { launch: async () => {
+    const planFile = path.join(cwd, 'privileged-plan.json'), plan = JSON.parse(await readFile(planFile, 'utf8'))
+    plan.firewall = true; await writeFile(planFile, JSON.stringify(plan))
+    await runElevatedWorker(planFile, { facts: async () => ({ admin: true }), command: async args => { commands.push(Buffer.from(args.at(-1), 'base64').toString('utf16le')); return { code: 0 } } })
+    return { code: 0 }
+  } })
+  let finished = false; const done = helper.done.then(result => { finished = true; return result })
+  for (let i = 0; i < 80 && !output.length; i++) await new Promise(resolve => setTimeout(resolve, 30))
+  assert.equal(ready, true); assert.equal(finished, false); assert.match(output.join(''), /platform result 中文/)
+  assert.equal((await done).exitCode, 0); assert.match(output.join(''), /finished/)
+  assert.equal(commands.length, 2); assert.match(commands[0], /New-NetFirewallRule/); assert.match(commands[1], /Remove-NetFirewallRule -Name 'GoECS-/)
+  assert.ok(!commands.join('').includes('Set-NetFirewallProfile'))
+})
+test('privileged worker checks the executable again and fails before running when it changes', { timeout: 15000 }, async t => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'goecs-elevation-changed-')), engine = path.join(cwd, 'engine')
+  t.after(() => rm(cwd, { recursive: true, force: true })); await writeFile(engine, 'original')
+  const helper = await startElevatedProcess(engine, [], { cwd, env: {}, choice: 'custom', onData: () => assert.fail('No output expected'), deadlineMs: 5000 }, { launch: async () => {
+    await writeFile(engine, 'changed')
+    await runElevatedWorker(path.join(cwd, 'privileged-plan.json'), { facts: async () => ({ admin: true }), run: () => assert.fail('Changed executable must not run') })
+    return { code: 0 }
+  } })
+  await assert.rejects(helper.done, e => e.code === 'ENGINE_CHANGED')
+})
+test('cancelling an elevated task terminates its real subprocess and removes the temporary rule', { timeout: 15000 }, async t => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'goecs-elevation-stop-')), commands = []
+  t.after(() => rm(cwd, { recursive: true, force: true }))
+  let started = false
+  const helper = await startElevatedProcess(process.execPath, ['-e', 'console.log("started");setInterval(()=>{},1000)'], { cwd, env: processEnvironment(), choice: 'custom', onData: () => { started = true }, deadlineMs: 5000 }, { launch: async () => {
+    const planFile = path.join(cwd, 'privileged-plan.json'), plan = JSON.parse(await readFile(planFile, 'utf8'))
+    plan.firewall = true; await writeFile(planFile, JSON.stringify(plan))
+    await runElevatedWorker(planFile, { facts: async () => ({ admin: true }), command: async args => { commands.push(Buffer.from(args.at(-1), 'base64').toString('utf16le')); return { code: 0 } } })
+    return { code: 0 }
+  } })
+  for (let i = 0; i < 80 && !started; i++) await new Promise(resolve => setTimeout(resolve, 30))
+  assert.equal(started, true)
+  await helper.stop(); await helper.done
+  assert.equal(commands.length, 2); assert.match(commands[1], /Remove-NetFirewallRule/)
+})
+test('network preparation failure prevents every benchmark and authorization decline never starts a process', { timeout: 15000 }, async t => {
+  for (const declined of [false, true]) {
+    const cwd = await mkdtemp(path.join(os.tmpdir(), 'goecs-elevation-denied-'))
+    t.after(() => rm(cwd, { recursive: true, force: true }))
+    const helper = await startElevatedProcess(process.execPath, [], { cwd, env: processEnvironment(), choice: 'custom', onData: () => assert.fail('No benchmark may start'), deadlineMs: 5000 }, { launch: async () => {
+      if (declined) return { code: 1 }
+      const planFile = path.join(cwd, 'privileged-plan.json'), plan = JSON.parse(await readFile(planFile, 'utf8')); plan.firewall = true; await writeFile(planFile, JSON.stringify(plan))
+      await runElevatedWorker(planFile, { facts: async () => ({ admin: true }), command: async () => ({ code: 1 }), run: () => assert.fail('No benchmark may start') })
+      return { code: 0 }
+    } })
+    await assert.rejects(helper.done, e => e.code === (declined ? 'ELEVATION_FAILED' : 'FIREWALL_PREPARATION_FAILED'))
+  }
+})
+test('native Windows firewall and elevated process integration', { skip: process.platform !== 'win32' || process.env.GOECS_FIREWALL_SMOKE !== '1', timeout: 30000 }, async t => {
+  assert.equal((await localFacts()).admin, true, 'This explicit smoke test requires the CI runner administrator account')
+  const cwd = await mkdtemp(path.join(os.tmpdir(), 'goecs-firewall-smoke-'))
+  t.after(() => rm(cwd, { recursive: true, force: true }))
+  let output = '', ready = false
+  const helper = await startElevatedProcess(process.execPath, ['-e', 'console.log("native-firewall-smoke 中文")'], { cwd, env: processEnvironment(), choice: 'custom', onData: value => { output += value }, onReady: () => { ready = true }, deadlineMs: 5000 }, { alreadyAdmin: true })
+  assert.equal((await helper.done).exitCode, 0); assert.equal(ready, true); assert.match(output, /native-firewall-smoke 中文/)
+  const check = "if(Get-NetFirewallRule -Name 'GoECS-" + path.basename(cwd) + "' -ErrorAction SilentlyContinue){exit 1}"
+  assert.equal((await capture(['powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(check, 'utf16le').toString('base64')])).code, 0, 'The temporary firewall rule must be gone after completion')
+})
+test('authorization commands quote paths; firewall scripts parse on Windows without changing firewall state', async () => {
+  const file = "C:/folder with spaces/中文's plan.json"
+  const win = elevationCommand(file, 'win32', 'C:/Program Files/node.exe')
+  assert.equal(win[0], 'powershell.exe')
+  const outer = Buffer.from(win.at(-1), 'base64').toString('utf16le'), inner = Buffer.from(outer.match(/-EncodedCommand ([A-Za-z0-9+/=]+)/)[1], 'base64').toString('utf16le')
+  assert.ok(inner.includes("中文''s plan.json")); assert.match(outer, /-Verb RunAs/)
+  assert.equal(elevationCommand('/tmp/a b', 'darwin')[0], '/usr/bin/osascript')
+  assert.equal(elevationCommand('/tmp/a b', 'linux')[0], 'pkexec')
+  if (process.platform === 'win32') for (const script of [outer, inner, firewallScript(file, 'GoECS-test'), firewallScript(file, 'GoECS-test', true)]) {
+    const parse = '$errors=$null;$tokens=$null;[System.Management.Automation.Language.Parser]::ParseInput(' + "'" + script.replace(/'/g, "''") + "'" + ',[ref]$tokens,[ref]$errors)|Out-Null;if($errors.Count){exit 1}'
+    assert.equal((await capture(['powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(parse, 'utf16le').toString('base64')])).code, 0)
+  }
 })
 test('first-open preparation downloads once, fills the path and reuses it without network', async t => {
   const service = await fixture(t); service.settings.binaryPath = ''; service.findEngines = async () => []
@@ -248,7 +380,7 @@ test('real PTY drives the concurrent menu without requiring a display', { timeou
 })
 test('natural PTY completion releases resources so its host exits without force', { timeout: 15000 }, async () => {
   const moduleURL = new URL('./dsh-process.mjs', import.meta.url).href
-  const program = `import { startLocalProcess } from ${JSON.stringify(moduleURL)};
+  const program = `import { startLocalProcess, startElevatedProcess, runElevatedWorker, elevationCommand, firewallScript } from ${JSON.stringify(moduleURL)};
     for (let run = 0; run < 2; run++) {
       let output = '';
       const child = await startLocalProcess(process.execPath, ['-e', 'console.log("pty-finished")'], {

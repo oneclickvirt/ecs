@@ -55,8 +55,8 @@
   "saved": "Saved",
   "sidebar": "Show GoECS in the sidebar",
   "sidebarHint": "When hidden, reopen it from the sidebar More menu.",
-  "admin": "Remind me to use root / Administrator",
-  "adminHint": "Without administrator privileges, continue the complete suite with the current account. Permission-dependent failures stay visible.",
+  "admin": "Request administrator authorization before testing",
+  "adminHint": "Only the test helper and engine request elevation; DSH stays under your account. Turn this off to run the complete suite without elevation. No prompt appears in CLI/CI.",
   "network": "Network route",
   "ask": "Ask when a proxy is detected",
   "direct": "Direct / current OS route",
@@ -82,7 +82,7 @@
   "continue": "Continue complete test",
   "cancel": "Cancel",
   "review": "Before starting",
-  "adminNotice": "Start DSH as root / Administrator for probes that need elevated permissions. You can continue the complete test with the current account.",
+  "adminNotice": "The operating system will ask permission to run only the local test helper and GoECS as root / Administrator. DSH does not need to restart. You can also run the complete suite with the current account.",
   "proxyNotice": "A proxy is configured on the selected host. Choose the route you intend to test.",
   "elapsed": "Elapsed",
   "seconds": "s",
@@ -190,5 +190,10 @@
     "20": "All",
     "21": "AI only",
     "22": "Southeast Asia only"
-  }
+  },
+  "adminUnavailable": "This target cannot show a local authorization dialog. The complete selected suite can run with its current account; individual probes may require root / Administrator.",
+  "authorize": "Authorize and start test",
+  "authorizing": "Waiting for operating-system authorization and network preparation…",
+  "firewallNotice": "Before testing, allow this GoECS executable through Windows Firewall on the currently connected network profiles. The rule applies only to this engine, is removed after the task, and does not override existing block rules.",
+  "firewallCurrent": "Windows Firewall can still ask permission when a probe first listens for connections. Allow GoECS in that system dialog. Without administrator authorization the plugin cannot prepare the firewall rule in advance."
 }

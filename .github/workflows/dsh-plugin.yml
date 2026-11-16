@@ -32,6 +32,11 @@ jobs:
       - run: npm run build -- --check
       - run: npm run check
       - run: npm test
+      - name: Verify Windows firewall preparation and cleanup
+        if: runner.os == 'Windows'
+        env:
+          GOECS_FIREWALL_SMOKE: '1'
+        run: node --test --test-name-pattern="native Windows firewall" agent/dsh-runtime.test.mjs
       - run: npm pack --dry-run
   native-host:
     runs-on: ubuntu-latest

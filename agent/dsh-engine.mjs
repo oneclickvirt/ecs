@@ -29,9 +29,9 @@ export function checksumFor(text, filename) {
 }
 function requestBytes(url, limit, signal, agent, redirects = 0) {
   const parsed = new URL(url)
-  if (parsed.protocol !== 'https:' || !/^(?:github\.com|api\.github\.com|[\w.-]+\.githubusercontent\.com|githubapi\.spiritlhl\.workers\.dev|githubapi\.spiritlhl\.top|cdn0\.spiritlhl\.top)$/.test(parsed.hostname) || redirects > 5) throw new GoECSError('INVALID_ASSET', 'Unexpected release download redirect')
+  if (parsed.protocol !== 'https:' || !/^(?:github\.com|api\.github\.com|[\w.-]+\.githubusercontent\.com|githubapi\.spiritlhl\.workers\.dev|githubapi\.spiritlhl\.top|cdn0\.spiritlhl\.top|myip\.ipip\.net|api\.ip\.sb|ipapi\.co|api\.country\.is)$/.test(parsed.hostname) || redirects > 5) throw new GoECSError('INVALID_ASSET', 'Unexpected release download redirect')
   return new Promise((resolve, reject) => {
-    const request = https.get(parsed, { agent, signal, headers: { 'User-Agent': 'dsh-plugin-goecs/0.2.24' } }, response => {
+    const request = https.get(parsed, { agent, signal, headers: { 'User-Agent': 'dsh-plugin-goecs/0.2.25' } }, response => {
       if ([301, 302, 303, 307, 308].includes(response.statusCode) && response.headers.location) {
         response.resume()
         try { resolve(requestBytes(new URL(response.headers.location, parsed), limit, signal, agent, redirects + 1)) } catch (error) { reject(error) }
@@ -50,16 +50,44 @@ function requestBytes(url, limit, signal, agent, redirects = 0) {
     request.once('error', reject)
   })
 }
-export function releaseSources(url) {
-  if (url.startsWith('https://api.github.com/repos/oneclickvirt/ecs/releases/')) return [url, url.replace('api.github.com', 'githubapi.spiritlhl.workers.dev'), url.replace('api.github.com', 'githubapi.spiritlhl.top')]
-  if (url.startsWith('https://github.com/oneclickvirt/ecs/releases/download/')) return [url, 'https://cdn0.spiritlhl.top/' + url]
+export async function chinaDownload(signal, { env = process.env, request = requestBytes, timeoutMs = 1500 } = {}) {
+  signal?.throwIfAborted()
+  // Honor the shell installer's override. Locate the downloading DSH host,
+  // independently of the route chosen for benchmarks or an SSH target.
+  const override = String(env.CN || '').trim().toLowerCase()
+  if (['true', '1'].includes(override)) return true
+  if (['false', '0'].includes(override)) return false
+  for (const url of ['https://myip.ipip.net/', 'https://api.ip.sb/geoip', 'https://ipapi.co/json', 'https://api.country.is/']) {
+    const timeout = AbortSignal.timeout(timeoutMs), combined = signal ? AbortSignal.any([signal, timeout]) : timeout
+    try {
+      const body = (await request(url, 65536, combined)).toString()
+      const location = body.match(/来自于[：:]\s*(\S+)/)?.[1]
+      if (location) return location === '中国'
+      const data = JSON.parse(body)
+      if (data.error) continue
+      const code = String(data.country_code || data.country || '').trim().toUpperCase()
+      if (/^[A-Z]{2}$/.test(code)) return code === 'CN'
+      if (data.country_name === 'China') return true
+    } catch (error) { if (signal?.aborted) throw signal.reason }
+  }
+  return false
+}
+export function releaseSources(url, china = false) {
+  if (url.startsWith('https://api.github.com/repos/oneclickvirt/ecs/releases/')) {
+    const workers = url.replace('api.github.com', 'githubapi.spiritlhl.workers.dev'), mirror = url.replace('api.github.com', 'githubapi.spiritlhl.top')
+    return china ? [mirror, workers, url] : [url, workers, mirror]
+  }
+  if (url.startsWith('https://github.com/oneclickvirt/ecs/releases/download/')) {
+    const cdn = 'https://cdn0.spiritlhl.top/' + url
+    return china ? [cdn, url] : [url, cdn]
+  }
   throw new GoECSError('INVALID_ASSET', 'Unexpected release source')
 }
-export async function boundedFetch(url, limit, signal, proxies = [], { request = requestBytes, retryDelay = 250 } = {}) {
+export async function boundedFetch(url, limit, signal, proxies = [], { request = requestBytes, retryDelay = 250, china = false } = {}) {
   let failure
   // Download routing is independent from the route selected for measurements.
   for (let attempt = 0; attempt < 2; attempt++) {
-    for (const source of releaseSources(url)) for (const proxy of [null, ...proxies]) {
+    for (const source of releaseSources(url, china)) for (const proxy of [null, ...proxies]) {
       signal?.throwIfAborted()
       const timeout = AbortSignal.timeout(source.includes('/releases/download/') ? 45000 : 12000), combined = signal ? AbortSignal.any([signal, timeout]) : timeout
       const agent = proxy ? (/^socks/.test(proxy.url) ? new SocksProxyAgent(proxy.url) : new HttpsProxyAgent(proxy.url)) : undefined
@@ -79,10 +107,11 @@ export async function resolveRelease(tag = 'latest', signal, proxies = [], fetch
   const endpoint = 'https://api.github.com/repos/oneclickvirt/ecs/releases/' + (tag === 'latest' ? 'latest' : 'tags/' + tag)
   return JSON.parse((await fetchBytes(endpoint, 2 * 1024 * 1024, signal, proxies)).toString())
 }
-export async function installEngine(cacheRoot, target, tag = 'latest', signal, { fetchBytes = boundedFetch } = {}) {
+export async function installEngine(cacheRoot, target, tag = 'latest', signal, { fetchBytes = boundedFetch, detectChina = chinaDownload } = {}) {
   const { proxies } = await localFacts()
-  const selected = selectAsset(await resolveRelease(tag, signal, proxies, fetchBytes), target)
-  const checksums = (await fetchBytes(selected.checksums.browser_download_url, 1024 * 1024, signal, proxies)).toString()
+  const china = await detectChina(signal), download = (...args) => fetchBytes(...args, { china })
+  const selected = selectAsset(await resolveRelease(tag, signal, proxies, download), target)
+  const checksums = (await download(selected.checksums.browser_download_url, 1024 * 1024, signal, proxies)).toString()
   const archiveSHA = checksumFor(checksums, selected.asset.name)
   if (selected.asset.digest?.startsWith('sha256:') && selected.asset.digest.slice(7) !== archiveSHA) throw new GoECSError('CHECKSUM_MISMATCH', 'Release metadata and checksum disagree; existing engine was preserved')
   const directory = path.join(cacheRoot, selected.tag, target.platform + '-' + target.arch)
@@ -91,7 +120,7 @@ export async function installEngine(cacheRoot, target, tag = 'latest', signal, {
     const record = JSON.parse(await readFile(binaryPath + '.json', 'utf8')), bytes = await readFile(binaryPath)
     if (record.archiveSHA === archiveSHA && record.binarySHA === sha256(bytes) && record.tag === selected.tag) return { ...record, binaryPath }
   } catch {}
-  const archive = await fetchBytes(selected.asset.browser_download_url, 256 * 1024 * 1024, signal, proxies)
+  const archive = await download(selected.asset.browser_download_url, 256 * 1024 * 1024, signal, proxies)
   if (sha256(archive) !== archiveSHA) throw new GoECSError('CHECKSUM_MISMATCH', 'GoECS archive failed SHA-256 verification; existing engine was preserved')
   const allowed = new Set(['goecs', 'goecs.exe', selected.asset.name.slice(0, -4), selected.asset.name.slice(0, -4) + '.exe'])
   const files = unzipSync(archive, { filter: file => {
