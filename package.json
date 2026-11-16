@@ -1,12 +1,12 @@
 {
   "name": "dsh-plugin-goecs",
-  "version": "0.1.0",
+  "version": "0.2.19",
   "description": "Run GoECS locally or over SSH in DeepSeek Harness and read, copy or export faithful TXT, HTML, Markdown and JSON reports.",
   "type": "module",
   "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oneclickvirt/ecs.git"
+    "url": "git+https://github.com/oneclickvirt/ecs.git"
   },
   "homepage": "https://github.com/oneclickvirt/ecs#deepseek-harness-plugin",
   "keywords": [
@@ -27,7 +27,7 @@
     "./icon": "./agent/dsh-icon.svg"
   },
   "bin": {
-    "goecs-dsh": "./scripts/goecs_dsh.mjs"
+    "goecs-dsh": "scripts/goecs_dsh.mjs"
   },
   "files": [
     "agent/dsh-plugin.mjs",
