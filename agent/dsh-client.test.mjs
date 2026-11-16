@@ -81,6 +81,24 @@ test('page preparation, usable parameters, incremental sections and navigation r
   assert.ok(window.document.querySelector('.ge-terminal').textContent.startsWith('----VPS融合怪测试----'))
   assert.ok(!window.document.querySelector('.ge-terminal').textContent.includes('请选择测试方案'))
   assert.ok(!window.document.querySelector('.ge-terminal').textContent.includes('\n\n\n'))
+  await act(async () => button('开始测试').click())
+  // A finished task must leave the next test's selectors usable.  In
+  // particular, privacy is reversible from the public-upload switch even
+  // when the previous test saved that advanced flag.
+  assert.ok([...window.document.querySelectorAll('select')].every(node => !node.disabled))
+  const upload = [...window.document.querySelectorAll('label')].find(node => node.textContent.includes('公开上传并生成分享链接')).querySelector('input')
+  assert.equal(upload.disabled, false)
+  await act(async () => window.document.querySelector('details summary').click())
+  const privacy = window.document.querySelector('[data-goecs-option="privacy"]')
+  await act(async () => { privacy.value = 'true'; privacy.dispatchEvent(new window.Event('change', { bubbles: true })) })
+  assert.equal(upload.checked, false)
+  await act(async () => upload.click())
+  await until(() => privacy.value === '')
+  assert.equal(upload.checked, true)
+  const choices = [...window.document.querySelectorAll('.ge-choice')]
+  await act(async () => choices.find(node => node.textContent.includes('并发')).click())
+  assert.equal(choices.find(node => node.textContent.includes('并发')).getAttribute('aria-pressed'), 'true')
+  await act(async () => button('测试报告').click())
   const viewMode = [...window.document.querySelectorAll('select')].at(-1)
   await act(async () => { viewMode.value = 'txt'; viewMode.dispatchEvent(new window.Event('change', { bubbles: true })) })
   await until(() => window.document.querySelector('.ge-report pre')?.textContent.startsWith('----VPS融合怪测试----'))
