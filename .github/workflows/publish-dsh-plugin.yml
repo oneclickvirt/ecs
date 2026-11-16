@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Existing GoECS release tag to publish, for example v0.2.19
+        description: Existing GoECS release tag to publish, for example v0.2.20
         required: true
         type: string
 

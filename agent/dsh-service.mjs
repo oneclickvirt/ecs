@@ -44,7 +44,7 @@ export class GoECSService {
   }
   async status(owner) {
     await this.ready
-    return { version: '0.2.19', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
+    return { version: '0.2.20', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
   }
   async saveSettings(input) {
     await this.ready; const previous = this.settings; this.settings = this.validateSettings(input)
