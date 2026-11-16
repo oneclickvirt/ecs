@@ -2,12 +2,14 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import os from 'node:os'
 import path from 'node:path'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, mkdir } from 'node:fs/promises'
+import { zipSync } from 'fflate'
 import { GoECSService } from './dsh-service.mjs'
 import { parseHelp, buildArguments, menuDriver } from './dsh-options.mjs'
 import { processEnvironment, safeProxy, redactSecrets, normalizeTarget, systemProxies, capture, localFacts } from './dsh-platform.mjs'
 import { startLocalProcess } from './dsh-process.mjs'
-import { checksumFor, selectAsset } from './dsh-engine.mjs'
+import { checksumFor, selectAsset, boundedFetch, installEngine, sha256, discoverEngines } from './dsh-engine.mjs'
+import { GoECSError } from './dsh-platform.mjs'
 import { quotePOSIX, powershell, hostFingerprint, validateSSH } from './dsh-ssh.mjs'
 import { apply } from './dsh-plugin.mjs'
 import { writeFile } from 'node:fs/promises'
@@ -50,6 +52,7 @@ const facts = { platform: 'linux', arch: 'amd64', home: '/home/example', admin: 
 async function fixture(t, proxy = false) {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'goecs-dsh-test-'))
   const service = new GoECSService({ stateDir: dir }); await service.ready
+  service.settings.binaryPath = '/example/goecs'
   service.environment = async () => ({ target: { id: 'local', binaryPath: '/example/goecs' }, facts: { ...facts, proxies: proxy ? [{ source: 'test', url: 'http://127.0.0.1:10808' }] : [] }, client: null })
   service.inspectEngine = async () => ({ flags: parseHelp(help), tag: 'fixture' })
   t.after(async () => { await service.dispose(); await rm(dir, { recursive: true, force: true }) })
@@ -64,6 +67,72 @@ test('runtime option discovery forwards selected values but protects managed pat
   assert.throws(() => buildArguments({ options: { json: '/etc/config' } }, flags, '/tmp/report'))
   assert.throws(() => buildArguments({ options: { basic: 'false' } }, flags, '/tmp/report'))
   assert.throws(() => buildArguments({ choice: '12' }, flags, '/tmp/report'))
+})
+test('public sharing defaults on and respects explicit opt-out and privacy', () => {
+  const flags = parseHelp(help + '  -privacy\n    Private mode\n')
+  assert.ok(buildArguments({}, flags, 'report').args.includes('-upload=true'))
+  assert.ok(!buildArguments({ options: { upload: false } }, flags, 'report').args.includes('-upload=true'))
+  assert.ok(buildArguments({ options: { privacy: true } }, flags, 'report').args.includes('-upload=false'))
+})
+test('advanced controls expose defaults, choices and canonical aliases from engine help', () => {
+  const flags = parseHelp('  -h\tHelp\n  -cpu-method string\n    Method (default "sysbench")\n  -cpum string\n    Method\n  -nt3-location string\n    Location (default "GZ")\n  -deep\n    Deep probes\n')
+  assert.equal(flags[0].managed, true)
+  assert.equal(flags[1].defaultValue, 'sysbench'); assert.equal(flags[1].group, 'hardware')
+  assert.ok(flags[1].choices.includes('winsat')); assert.equal(flags[2].aliasOf, 'cpu-method')
+  assert.equal(flags[3].defaultValue, 'GZ'); assert.equal(flags[4].group, 'deep')
+})
+test('download retries connection resets and HTTP failures through pinned fallback sources', async () => {
+  const url = 'https://github.com/oneclickvirt/ecs/releases/download/v0.2.21/checksums.txt', calls = []
+  const bytes = await boundedFetch(url, 100, undefined, [], { retryDelay: 0, request: async source => {
+    calls.push(source)
+    if (calls.length === 1) throw Object.assign(new Error('reset'), { code: 'ECONNRESET' })
+    if (calls.length === 2) throw new GoECSError('DOWNLOAD_HTTP', 'HTTP 503')
+    return Buffer.from('verified response')
+  } })
+  assert.equal(bytes.toString(), 'verified response'); assert.equal(calls.length, 3)
+  assert.ok(calls[1].endsWith('/v0.2.21/checksums.txt'))
+  await assert.rejects(boundedFetch(url, 100, AbortSignal.abort(new Error('cancelled')), [], { request: () => assert.fail('cancel must not download') }), /cancelled/)
+})
+test('a bad archive preserves the old engine; successful install is discoverable offline', async t => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'goecs-engine-test-')), target = { platform: 'linux', arch: 'amd64' }
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const directory = path.join(dir, 'v0.2.21', 'linux-amd64'), filename = 'goecs_linux_amd64.zip'
+  await mkdir(directory, { recursive: true }); await writeFile(path.join(directory, 'goecs'), 'old engine')
+  const archive = Buffer.from(zipSync({ goecs: Buffer.from('new engine') })), hash = sha256(archive)
+  const asset = name => ({ name, browser_download_url: 'https://github.com/oneclickvirt/ecs/releases/download/v0.2.21/' + name })
+  const release = { tag_name: 'v0.2.21', assets: [asset(filename), asset('checksums.txt')] }
+  let damaged = true
+  const fetchBytes = async url => url.includes('api.github.com') ? Buffer.from(JSON.stringify(release)) : url.endsWith('checksums.txt') ? Buffer.from(hash + '  ' + filename) : damaged ? Buffer.from('broken archive') : archive
+  await assert.rejects(installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes }), error => error.code === 'CHECKSUM_MISMATCH')
+  assert.equal(await readFile(path.join(directory, 'goecs'), 'utf8'), 'old engine')
+  damaged = false
+  const installed = await installEngine(dir, target, 'v0.2.21', undefined, { fetchBytes })
+  assert.equal((await discoverEngines(dir, target, { PATH: '' }))[0], installed.binaryPath)
+  await writeFile(installed.binaryPath, 'tampered')
+  assert.ok(!(await discoverEngines(dir, target, { PATH: '' })).includes(installed.binaryPath))
+})
+test('first-open preparation downloads once, fills the path and reuses it without network', async t => {
+  const service = await fixture(t); service.settings.binaryPath = ''; service.findEngines = async () => []
+  service.environment = async () => ({ target: service.target(), facts, client: null })
+  let downloads = 0
+  service.downloadEngine = async () => { downloads++; await new Promise(resolve => setTimeout(resolve, 30)); return { binaryPath: path.join(service.directory, 'goecs'), tag: 'v0.2.21' } }
+  const [a, b] = await Promise.all([service.prepare(), service.prepare()])
+  assert.equal(downloads, 1); assert.equal(a.tag, b.tag); assert.ok(service.settings.binaryPath)
+  const persisted = JSON.parse(await readFile(path.join(service.directory, 'settings.json'), 'utf8'))
+  assert.equal(persisted.settings.binaryPath, service.settings.binaryPath)
+  await service.prepare(); assert.equal(downloads, 1)
+})
+test('live reports publish arrived sections in source order while the task is still running', async t => {
+  const service = await fixture(t)
+  const task = { id: 'live-output', targetId: 'local', status: 'running', raw: '----系统基础信息----\nCPU: example\n', startedAt: new Date().toISOString() }
+  service.tasks.set(task.id, task)
+  assert.equal((await service.report(task.id)).document.sections[0].title, '系统基础信息')
+  assert.equal(service.view(task).reportReady, false)
+  task.raw += '----CPU测试----\n分数: 100\n'
+  const doc = (await service.report(task.id)).document
+  assert.equal(doc.metadata.status, 'running'); assert.deepEqual(doc.sections.map(s => s.title), ['系统基础信息', 'CPU测试'])
+  task.status = 'completed'; task.report = doc
+  assert.equal(service.view(task).reportReady, true)
 })
 test('each original preset is selected in the original terminal, without duplicated test presets', () => {
   for (let choice = 1; choice <= 11; choice++) {

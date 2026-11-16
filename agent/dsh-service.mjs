@@ -3,11 +3,11 @@ import path from 'node:path'
 import { mkdir, readFile, writeFile, rename, readdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { localFacts, capture, GoECSError, processEnvironment, safeProxy, redactSecrets, proxyURL } from './dsh-platform.mjs'
-import { installEngine, verifyExecutable } from './dsh-engine.mjs'
+import { installEngine, verifyExecutable, discoverEngines } from './dsh-engine.mjs'
 import { parseHelp, buildArguments, MENU } from './dsh-options.mjs'
 import { startLocalProcess } from './dsh-process.mjs'
 import { connectSSH, remoteFacts, remotePath, remoteMkdir, uploadEngine, sshCapture, quotePOSIX, powershell, startRemoteProcess, readRemoteFile, validateSSH } from './dsh-ssh.mjs'
-import { parseReport, exportReport, stripTerminal } from './dsh-report.mjs'
+import { parseReport, exportReport, stripTerminal, shareURLs } from './dsh-report.mjs'
 
 const defaults = { showSidebar: true, requestAdmin: true, networkMode: 'ask', binaryPath: '', maxTaskSeconds: 3600 }
 const publicTarget = t => ({ id: t.id, name: t.name, ...validateSSH(t), binaryPath: t.binaryPath || '', engineTag: t.engineTag || '' })
@@ -18,6 +18,7 @@ export class GoECSService {
     const profile = (process.env.DSH_PROFILE || process.env.DSH_USER_AGENT_SUFFIX?.match(/dsh-profile\/([\w.-]+)/)?.[1] || 'standalone').replace(/[^\w.-]/g, '_')
     this.directory = config.stateDir || process.env.GOECS_DSH_STATE_DIR || path.join(process.env.DSH_HOME || path.join(os.homedir(), '.dsh'), 'storages', 'oneclickvirt-ecs', profile)
     this.config = config; this.settings = { ...defaults }; this.targets = new Map(); this.secrets = new Map(); this.tasks = new Map(); this.pending = new Map(); this.busy = new Set(); this.revision = 0; this.closed = false; this.writes = Promise.resolve()
+    this.preparations = new Map(); this.downloadEngine = installEngine; this.findEngines = discoverEngines; this.shutdown = new AbortController()
     this.ready = this.init()
   }
   async init() {
@@ -44,7 +45,7 @@ export class GoECSService {
   }
   async status(owner) {
     await this.ready
-    return { version: '0.2.21', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
+    return { version: '0.2.22', settings: this.settings, warning: this.loadWarning || '', menus: MENU, targets: [{ id: 'local', name: 'Local / 本机' }, ...this.targets.values()].map(t => t.id === 'local' ? t : publicTarget(t)), tasks: [...this.tasks.values()].filter(t => owner === undefined || t.owner === owner).map(t => this.view(t)), uiOptional: true, host: this.host || { standalone: true, uiOptional: true } }
   }
   async saveSettings(input) {
     await this.ready; const previous = this.settings; this.settings = this.validateSettings(input)
@@ -87,14 +88,20 @@ export class GoECSService {
   }
   async install(targetId = 'local', version = 'latest', signal) {
     await this.ready
+    if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
+    signal = signal ? AbortSignal.any([signal, this.shutdown.signal]) : this.shutdown.signal
     if (this.busy.has(targetId)) throw new GoECSError('TARGET_BUSY', 'Wait until the active task finishes before upgrading')
     this.busy.add(targetId)
     let environment
     try {
       environment = await this.environment(targetId, signal)
       const { facts, target, client } = environment
-      const engine = await installEngine(path.join(this.directory, 'engines'), facts, version, signal)
-      if (!client) await this.saveSettings({ binaryPath: engine.binaryPath })
+      const engine = await this.downloadEngine(path.join(this.directory, 'engines'), facts, version, signal)
+      if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
+      if (!client) {
+        if (this.settings.binaryPath !== target.binaryPath) throw new GoECSError('PLAN_EXPIRED', 'Executable preference changed while downloading; the verified download remains cached')
+        await this.saveSettings({ binaryPath: engine.binaryPath })
+      }
       else {
         const directory = remotePath(facts.home, '.cache', 'goecs-dsh', 'engines', engine.tag, facts.platform + '-' + facts.arch)
         const binaryPath = remotePath(directory, facts.platform === 'win32' ? 'goecs.exe' : 'goecs')
@@ -103,6 +110,31 @@ export class GoECSService {
       }
       return { ...engine, binaryPath: this.target(targetId).binaryPath, target: targetId }
     } finally { environment?.client?.end(); this.busy.delete(targetId) }
+  }
+  async prepare() {
+    await this.ready
+    if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
+    if (this.preparations.has('local')) return this.preparations.get('local')
+    const work = async () => {
+      const facts = await localFacts(), originalPath = this.settings.binaryPath
+      const candidates = [...new Set([originalPath, ...await this.findEngines(path.join(this.directory, 'engines'), facts)].filter(Boolean))]
+      for (const binaryPath of candidates) {
+        try {
+          const engine = await this.inspectEngine({ target: { id: 'local', binaryPath }, facts, client: null })
+          if (this.closed) throw new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping')
+          // A settings edit while preparation is running takes priority.
+          if (this.settings.binaryPath !== originalPath) return this.options('local')
+          if (binaryPath !== originalPath) await this.saveSettings({ binaryPath })
+          return engine
+        } catch (error) { if (this.closed || this.loadWarning) throw error }
+      }
+      if (this.settings.binaryPath !== originalPath) return this.options('local')
+      await this.install('local', 'latest', this.shutdown.signal)
+      return this.options('local')
+    }
+    const promise = work().finally(() => this.preparations.delete('local'))
+    this.preparations.set('local', promise)
+    return promise
   }
   async inspectEngine(environment) {
     const { target, client, facts } = environment
@@ -127,6 +159,7 @@ export class GoECSService {
   }
   async preflight(input, { interactive = false, signal } = {}) {
     await this.ready
+    if ((input.targetId || 'local') === 'local' && !this.settings.binaryPath) await this.prepare()
     const revision = this.revision
     const targetId = input.targetId || 'local', environment = await this.environment(targetId, signal)
     try {
@@ -219,6 +252,7 @@ export class GoECSService {
       try { native = JSON.parse(client ? await readRemoteFile(client, filename) : await readFile(filename, 'utf8')) } catch {}
       const reportText = typeof native?.text === 'string' && native.text ? redactSecrets(native.text, secrets) : stripTerminal(task.raw)
       task.report = parseReport(reportText, this.metadata(task))
+      task.report.shareURLs = shareURLs(reportText + '\n' + task.raw)
       if (native) {
         const clean = value => typeof value === 'string' ? redactSecrets(value, secrets) : Array.isArray(value) ? value.map(clean) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([k, v]) => [k, clean(v)])) : value
         task.report.nativeReport = clean(native)
@@ -229,7 +263,7 @@ export class GoECSService {
     } finally { client?.end() }
   }
   view(task, offset = 0) {
-    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
+    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
   }
   getTask(id, owner) {
     const task = this.tasks.get(id)
@@ -283,6 +317,8 @@ export class GoECSService {
   }
   async dispose() {
     this.closed = true
+    this.shutdown.abort(new GoECSError('PLUGIN_STOPPING', 'Plugin is stopping'))
+    await Promise.allSettled([...this.preparations.values()])
     await Promise.allSettled([...this.tasks.values()].filter(t => ['running', 'stopping'].includes(t.status)).map(t => this.stop(t.id)))
     this.secrets.clear(); this.pending.clear(); await this.writes.catch(() => {})
   }

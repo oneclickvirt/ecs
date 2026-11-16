@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-goecs",
-  "version": "0.2.21",
+  "version": "0.2.22",
   "description": "Run GoECS locally or over SSH in DeepSeek Harness and read, copy or export faithful TXT, HTML, Markdown and JSON reports.",
   "type": "module",
   "license": "GPL-3.0-only",
@@ -53,17 +53,17 @@
   ],
   "scripts": {
     "build": "node scripts/build_dsh_client.mjs",
-    "test": "node --test agent/dsh-report.test.mjs agent/dsh-runtime.test.mjs",
+    "test": "node --test agent/dsh-report.test.mjs agent/dsh-runtime.test.mjs agent/dsh-client.test.mjs",
     "check": "node scripts/check_dsh_plugin.mjs",
     "prepack": "npm run check"
   },
   "dependencies": {
     "@lydell/node-pty": "1.2.0-beta.18",
+    "asn1": "0.2.6",
+    "bcrypt-pbkdf": "1.0.2",
     "fflate": "0.8.3",
     "https-proxy-agent": "7.0.6",
-    "socks-proxy-agent": "8.0.5",
-    "asn1": "0.2.6",
-    "bcrypt-pbkdf": "1.0.2"
+    "socks-proxy-agent": "8.0.5"
   },
   "publishConfig": {
     "access": "public"
@@ -86,5 +86,10 @@
         "@deepseek-ai/dsh-client-locale"
       ]
     }
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }

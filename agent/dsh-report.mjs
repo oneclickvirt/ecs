@@ -12,6 +12,7 @@ const categoryRules = [
   ['latency', /延迟|latency|ping|握手|TCP|TGDC/i],
 ]
 const category = title => categoryRules.find(([, re]) => re.test(title))?.[0] || 'other'
+export const shareURLs = text => [...new Set((stripTerminal(text).match(/https:\/\/paste\.spiritlhl\.net\/[^\s<>"'\]\)]+/g) || []).filter(value => !value.includes('/api/')))]
 const decoration = /^[\s─━═=*_·.\-+|┌┐└┘├┤┬┴┼╭╮╰╯]{3,}$/u
 function heading(line) {
   const text = line.trim()
@@ -36,7 +37,7 @@ const tableDivider = line => /^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)+\|?\s*
 export function parseReport(rawText, metadata = {}) {
   if (typeof rawText !== 'string' || Buffer.byteLength(rawText) > 16 * 1024 * 1024) throw new Error('Report must be text of at most 16 MiB')
   const lines = stripTerminal(rawText).split('\n')
-  const result = { schemaVersion: REPORT_SCHEMA, source: { sha256: createHash('sha256').update(rawText).digest('hex'), bytes: Buffer.byteLength(rawText), lines: lines.length }, metadata: { ...metadata }, sections: [], warnings: [], rawText }
+  const result = { schemaVersion: REPORT_SCHEMA, source: { sha256: createHash('sha256').update(rawText).digest('hex'), bytes: Buffer.byteLength(rawText), lines: lines.length }, metadata: { ...metadata }, shareURLs: shareURLs(rawText), sections: [], warnings: [], rawText }
   let section, block
   const ensureSection = (line, title = '') => {
     if (!section || title) {
@@ -88,6 +89,7 @@ function fence(text) {
 }
 export function reportMarkdown(report) {
   const out = ['# GoECS', '']
+  for (const url of report.shareURLs || []) out.push('[GoECS](' + url + ')', '')
   for (const section of report.sections) {
     if (section.title) out.push('## ' + md(section.title), '')
     for (const b of section.blocks) {
@@ -104,7 +106,8 @@ export function reportHTML(report) {
     if (b.kind === 'table') return '<div class="table"><table><thead><tr>' + b.columns.map(c => '<th>' + escapeHTML(c) + '</th>').join('') + '</tr></thead><tbody>' + b.rows.map(r => '<tr>' + r.values.map(c => '<td>' + escapeHTML(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>'
     return '<pre>' + escapeHTML(b.lines.join('\n')) + '</pre>'
   }).join('') + '</section>').join('')
-  return '<!doctype html><html lang="' + (report.metadata.language === 'en' ? 'en' : 'zh') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;"><title>GoECS</title><style>body{color:#1e293b;background:#fff;font:15px/1.7 system-ui,sans-serif;max-width:1080px;margin:auto;padding:28px}section{margin:22px 0}h1,h2{line-height:1.35}h2{font-size:20px;border-bottom:1px solid #e2e8f0;padding-bottom:12px}dl>div{display:flex;gap:20px;border-bottom:1px solid #f1f5f9;padding:8px 0}dt{min-width:140px;color:#64748b}dd{margin:0;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;padding:16px;border-radius:10px}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;text-align:left;padding:9px;white-space:pre-wrap}th{background:#f8fafc}@media(prefers-color-scheme:dark){body{background:#101827;color:#e2e8f0}pre,th{background:#172334}dt{color:#a6b6cb}h2,dl>div,th,td{border-color:#334155}}</style></head><body><h1>GoECS</h1>' + body + '</body></html>'
+  const links = (report.shareURLs || []).map(url => '<p><a href="' + escapeHTML(url) + '" rel="noreferrer noopener">' + escapeHTML(url) + '</a></p>').join('')
+  return '<!doctype html><html lang="' + (report.metadata.language === 'en' ? 'en' : 'zh') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;"><title>GoECS</title><style>body{color:#1e293b;background:#fff;font:15px/1.7 system-ui,sans-serif;max-width:1080px;margin:auto;padding:28px}section{margin:22px 0}h1,h2{line-height:1.35}h2{font-size:20px;border-bottom:1px solid #e2e8f0;padding-bottom:12px}dl>div{display:flex;gap:20px;border-bottom:1px solid #f1f5f9;padding:8px 0}dt{min-width:140px;color:#64748b}dd{margin:0;overflow-wrap:anywhere}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8fafc;padding:16px;border-radius:10px}.table{overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #e2e8f0;text-align:left;padding:9px;white-space:pre-wrap}th{background:#f8fafc}@media(prefers-color-scheme:dark){body{background:#101827;color:#e2e8f0}pre,th{background:#172334}dt{color:#a6b6cb}h2,dl>div,th,td{border-color:#334155}}</style></head><body><h1>GoECS</h1>' + links + body + '</body></html>'
 }
 export function exportReport(report, format) {
   if (format === 'txt') return report.rawText

@@ -363,7 +363,7 @@ dsh plugin --profile web add dsh-plugin-goecs
 
 支持的宿主通过 bundle 自动启用页面，更新后重启对应 profile；旧版宿主可执行 `dsh web --patch /完整路径/该profile/node_modules/dsh-plugin-goecs/agent/dsh.patch.yml`，已启用 bundle 时不再附加 `--patch`；Desktop 从插件页面安装。需要 Node.js 22.6+、DSH `>=0.2.2-rc.1 <0.3.0-0`，已核对 rc.1／rc.3。适配 Linux、macOS、Windows，Windows 实机验证待完成。SSH 使用插件随附的纯 JavaScript 回退实现，安装插件时不需要放行 `ssh2`／`cpu-features` 的原生构建脚本。headless／TUI／ACP／SDK 宿主提供 `tools` 服务时可使用 `goecs_info`、`goecs_run`、`goecs_task`，不依赖网页。
 
-侧栏入口与管理员提醒可在设置中关闭；无 root／管理员权限仍提交完整所选测试，不自动提权。检测到代理时需选择代理或直连，原生 TCP／ICMP／路由仍受系统路由控制。SSH 首次连接需核对主机指纹，密码及私钥口令仅保存在进程内存。下载本体使用 GitHub Release 并核对 SHA-256；插件与本体独立更新。
+侧栏入口与管理员提醒可在设置中关闭；无 root／管理员权限仍提交完整所选测试，不自动提权。检测到代理时需选择代理或直连，原生 TCP／ICMP／路由仍受系统路由控制。SSH 首次连接需核对主机指纹，密码及私钥口令仅保存在进程内存。首次打开自动查找可用程序或已校验缓存，未找到时下载 GitHub Release 并填写路径；断线会重试并使用备用源，始终核对 SHA-256。高级参数按测试类型分组；报告随本体输出逐项更新，切换 DSH 页面后仍保留任务与已显示内容。默认公开上传并生成分享链接，可关闭上传或启用隐私模式。
 
 独立 CLI／CI 可在源码目录执行 `npm ci --ignore-scripts` 后使用以下命令，Windows 使用同一脚本并替换为系统路径：
 
