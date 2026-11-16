@@ -26,13 +26,19 @@ export async function startLocalProcess(binary, args, { cwd, env, choice, onData
     try { pty = await import('@lydell/node-pty') } catch { throw new GoECSError('PTY_UNAVAILABLE', 'A terminal provider is required to run original GoECS menu presets on this system') }
     const terminal = (pty.spawn || pty.default?.spawn)(binary, args, { name: 'xterm-256color', cols: 140, rows: 48, cwd, env })
     pid = terminal.pid; write = data => terminal.write(data)
-    done = new Promise(resolve => terminal.onExit(({ exitCode, signal }) => resolve({ exitCode, signal })))
     const drive = menuDriver(choice, write)
-    terminal.onData(data => {
+    const dataListener = terminal.onData(data => {
       // Bubble Tea's terminal queries need a terminal response even in CI.
       if (data.includes('\x1b[6n')) write('\x1b[1;1R')
       if (data.includes('\x1b]11;?')) write('\x1b]11;rgb:1111/1818/2727\x1b\\')
       onData(data); drive(data)
+    })
+    done = new Promise((resolve, reject) => {
+      const exitListener = terminal.onExit(result => {
+        dataListener.dispose(); exitListener.dispose()
+        // ConPTY keeps its output worker alive until the terminal is released.
+        try { if (process.platform === 'win32') terminal.kill(); resolve(result) } catch (error) { reject(error) }
+      })
     })
     terminate = () => terminal.kill()
   } else {

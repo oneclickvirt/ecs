@@ -177,6 +177,21 @@ test('real PTY drives the concurrent menu without requiring a display', { timeou
   assert.equal((await child.done).exitCode, 0)
   assert.ok(output.includes('selected=1b5b420d'), output)
 })
+test('natural PTY completion releases resources so its host exits without force', { timeout: 15000 }, async () => {
+  const moduleURL = new URL('./dsh-process.mjs', import.meta.url).href
+  const program = `import { startLocalProcess } from ${JSON.stringify(moduleURL)};
+    for (let run = 0; run < 2; run++) {
+      let output = '';
+      const child = await startLocalProcess(process.execPath, ['-e', 'console.log("pty-finished")'], {
+        cwd: process.cwd(), env: process.env, choice: '1', onData: value => { output += value }, deadlineMs: 5000
+      });
+      if ((await child.done).exitCode !== 0 || !output.includes('pty-finished')) throw new Error('PTY did not finish');
+    }
+    console.log('host-finished');`
+  const result = await capture([process.execPath, '--input-type=module', '-e', program], { timeout: 12000 })
+  assert.equal(result.code, 0, JSON.stringify(result))
+  assert.ok(result.stdout.includes('host-finished'), JSON.stringify(result))
+})
 test('CLI preserves partial-report exit policy and rejects misspelled switches', { skip: process.platform === 'win32', timeout: 10000 }, async t => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'goecs-cli-exit-')), binary = path.join(dir, 'goecs')
   const mock = '#!/bin/sh\nif [ "$1" = "-h" ]; then printf "  -menu\\n    Menu\\n  -json string\\n    JSON\\n"; exit 0; fi\nfor arg in "$@"; do case "$arg" in -json=*) printf \'{"status":"partial","text":"Example: unavailable"}\' > "' + '$' + '{arg#-json=}";; esac; done\n'
