@@ -172,6 +172,8 @@ test('privileged worker streams output before exit and removes only its own fire
   const helper = await startElevatedProcess(process.execPath, ['-e', 'console.log("platform result 中文");setTimeout(()=>console.log("finished"),500)'], { cwd, env: processEnvironment(), choice: 'custom', onData: value => output.push(value), onReady: () => { ready = true }, deadlineMs: 5000 }, { launch: async () => {
     const planFile = path.join(cwd, 'privileged-plan.json'), plan = JSON.parse(await readFile(planFile, 'utf8'))
     plan.firewall = true; await writeFile(planFile, JSON.stringify(plan))
+    // Heartbeats use file timestamps: an empty lease must not look expired.
+    await writeFile(path.join(cwd, 'privileged-lease'), '')
     await runElevatedWorker(planFile, { facts: async () => ({ admin: true }), command: async args => { commands.push(Buffer.from(args.at(-1), 'base64').toString('utf16le')); return { code: 0 } } })
     return { code: 0 }
   } })

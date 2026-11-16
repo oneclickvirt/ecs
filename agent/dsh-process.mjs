@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { readdir, readFile, writeFile, open, rm } from 'node:fs/promises'
+import { readdir, readFile, writeFile, open, rm, stat, utimes } from 'node:fs/promises'
 import { appendFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -51,7 +51,7 @@ export async function startElevatedProcess(binary, args, options, { launch = cap
     if (reading || settled) return
     reading = true
     try {
-      await writeFile(leaseFile, String(Date.now()))
+      const now = new Date(); await utimes(leaseFile, now, now)
       let bytesRead
       do {
         const buffer = Buffer.alloc(65536)
@@ -96,7 +96,7 @@ export async function runElevatedWorker(planFile, { facts = localFacts, run = st
   try {
     if (!(await facts()).admin) throw new GoECSError('ELEVATION_REQUIRED', 'The operating system did not grant administrator privileges')
     if (createHash('sha256').update(await readFile(plan.binary)).digest('hex') !== plan.hash) throw new GoECSError('ENGINE_CHANGED', 'The engine changed while authorization was pending. Review the executable and retry')
-    if (Date.now() - Number(await readFile(leaseFile, 'utf8')) > 10000 || await readFile(stopFile).then(() => true, () => false)) throw new GoECSError('ELEVATION_CANCELLED', 'Authorization was cancelled before the benchmark started')
+    if (Date.now() - (await stat(leaseFile)).mtimeMs > 10000 || await readFile(stopFile).then(() => true, () => false)) throw new GoECSError('ELEVATION_CANCELLED', 'Authorization was cancelled before the benchmark started')
     if (plan.firewall) {
       const rule = await command(encodedPS(firewallScript(plan.binary, plan.rule)))
       if (rule.code !== 0) throw new GoECSError('FIREWALL_PREPARATION_FAILED', 'Windows firewall preparation failed before testing. Review existing rules or retry without elevation')
@@ -109,7 +109,7 @@ export async function runElevatedWorker(planFile, { facts = localFacts, run = st
       if (checking || cancellation) return
       checking = true
       try {
-        const stale = Date.now() - Number(await readFile(leaseFile, 'utf8')) > 10000
+        const stale = Date.now() - (await stat(leaseFile)).mtimeMs > 10000
         if (stale || await readFile(stopFile).then(() => true, () => false)) { cancellation = child.stop(); void cancellation.catch(() => {}) }
       } catch { cancellation = child.stop(); void cancellation.catch(() => {}) }
       finally { checking = false }
