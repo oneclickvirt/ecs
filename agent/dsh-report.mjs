@@ -38,6 +38,10 @@ export function parseReport(rawText, metadata = {}) {
   if (typeof rawText !== 'string' || Buffer.byteLength(rawText) > 16 * 1024 * 1024) throw new Error('Report must be text of at most 16 MiB')
   const lines = stripTerminal(rawText).split('\n')
   const result = { schemaVersion: REPORT_SCHEMA, source: { sha256: createHash('sha256').update(rawText).digest('hex'), bytes: Buffer.byteLength(rawText), lines: lines.length }, metadata: { ...metadata }, shareURLs: shareURLs(rawText), sections: [], warnings: [], rawText }
+  // PTY presets include the interactive menu before the actual report. Keep
+  // the transcript byte-exact in TXT/JSON, but start the reader at its report.
+  const reportStart = lines.findIndex(line => /^(?:VPS融合怪测试|VPS Fusion Monster Test)$/i.test(heading(line) || ''))
+  const firstLine = reportStart > 0 && lines.slice(0, reportStart).some(line => /请选择测试方案|融合怪完全体|Full Suite/i.test(line)) ? reportStart : 0
   let section, block
   const ensureSection = (line, title = '') => {
     if (!section || title) {
@@ -46,7 +50,7 @@ export function parseReport(rawText, metadata = {}) {
     }
     return section
   }
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = firstLine; i < lines.length; i++) {
     const line = lines[i], n = i + 1, trimmed = line.trim()
     if (!trimmed || decoration.test(trimmed)) { block = null; continue }
     const title = heading(line)

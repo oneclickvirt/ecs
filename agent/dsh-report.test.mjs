@@ -52,3 +52,12 @@ test('upstream routes and TCP throughput are not misclassified as STREAM memory 
   const doc = parseReport('----Upstream routes----\nExample\n----STREAM memory----\nExample\n----TCP speed test----\nExample')
   assert.deepEqual(doc.sections.map(s => s.category), ['backroute', 'memory', 'speed'])
 })
+test('live PTY readers start at the actual report while retaining the complete transcript', () => {
+  const raw = '^[]11;rgb:1111/1818/2727^[\\\n请选择测试方案:\n1. 融合怪完全体\n----VPS融合怪测试----\n版本: v0.2.23\n----系统基础信息----\nCPU: example\n'
+  const doc = parseReport(raw, { status: 'running' })
+  assert.equal(exportReport(doc, 'txt'), raw)
+  assert.deepEqual(doc.sections.map(s => s.title), ['VPS融合怪测试', '系统基础信息'])
+  assert.equal(doc.sections[0].sourceStart, 4)
+  assert.ok(!reportHTML(doc).includes('请选择测试方案'))
+  assert.ok(!reportMarkdown(doc).includes('^[]11;rgb'))
+})
