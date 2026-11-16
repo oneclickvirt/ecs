@@ -22,6 +22,28 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 [English Docs](README.md) | [中文文档](README_ZH.md)
 
+## **DeepSeek Harness Plugin**
+
+`dsh-plugin-goecs` adds local/SSH tests and TXT, HTML, Markdown and JSON report views to DSH. It calls the original GoECS executable and menu presets; menu 2 retains its concurrent mode. Category: Development & Operations.
+
+```bash
+dsh plugin --profile web add github:oneclickvirt/ecs#master
+dsh web --patch /absolute/path/to/profile/node_modules/dsh-plugin-goecs/agent/dsh.patch.yml
+```
+
+If the bundle is already enabled, omit `--patch`; restart the profile after updates. In Desktop, install through the plugin page. Requires Node.js 22.6+ and DSH `>=0.2.2-rc.1 <0.2.3-0` (rc.1/rc.3 checked). Linux, macOS and Windows are supported by the adapter; Windows runtime validation is pending. Headless/TUI/ACP/SDK hosts can use `goecs_info`, `goecs_run` and `goecs_task` when their `tools` service is available, without a Web page.
+
+The sidebar and administrator reminder can be disabled in Settings. Non-root runs keep the complete selected suite without automatic elevation. When a proxy is detected, choose proxy or direct routing; native TCP/ICMP/routes still follow the OS route. SSH requires a verified host fingerprint. Passwords and key passphrases remain in process memory. Downloads use GitHub Releases with SHA-256 verification; the plugin and GoECS engine update independently.
+
+For standalone CLI/CI, run these commands from a checkout after `npm ci --ignore-scripts` (Windows uses the same scripts with native paths):
+
+```bash
+node scripts/goecs_dsh.mjs install --state /absolute/path/goecs-state --version latest
+node scripts/goecs_dsh.mjs run --state /absolute/path/goecs-state --choice 1 --network direct --format json --out result.json
+```
+
+Progress goes to stderr; reports go to stdout or `--out`. Failed, cancelled, timed-out or partial tests return nonzero by default. Presets require a PTY; `--choice custom --option flag=value` uses the original noninteractive flags. The package uses GPL-3.0-only. GitHub source installation is available; an NPM package is required separately for the DSH plugin center.
+
 ---
 
 ## **Supported Systems and Architectures**

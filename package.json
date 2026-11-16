@@ -1,0 +1,83 @@
+{
+  "name": "dsh-plugin-goecs",
+  "version": "0.1.0",
+  "description": "Run GoECS locally or over SSH in DeepSeek Harness and read, copy or export faithful TXT, HTML, Markdown and JSON reports.",
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oneclickvirt/ecs.git"
+  },
+  "homepage": "https://github.com/oneclickvirt/ecs#deepseek-harness-plugin",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "goecs",
+    "benchmark"
+  ],
+  "engines": {
+    "node": ">=22.6.0",
+    "dsh": ">=0.2.2-rc.1 <0.2.3-0"
+  },
+  "exports": {
+    ".": "./agent/dsh-plugin.mjs",
+    "./client": "./agent/dsh-client.js",
+    "./locale/en.json": "./skills/oneclickvirt-ecs/en.json",
+    "./locale/zh.json": "./skills/oneclickvirt-ecs/zh.json",
+    "./icon": "./agent/dsh-icon.svg"
+  },
+  "bin": {
+    "goecs-dsh": "./scripts/goecs_dsh.mjs"
+  },
+  "files": [
+    "agent/dsh-plugin.mjs",
+    "agent/dsh-service.mjs",
+    "agent/dsh-platform.mjs",
+    "agent/dsh-engine.mjs",
+    "agent/dsh-process.mjs",
+    "agent/dsh-ssh.mjs",
+    "agent/dsh-report.mjs",
+    "agent/dsh-options.mjs",
+    "agent/dsh-client.js",
+    "skills/oneclickvirt-ecs/en.json",
+    "skills/oneclickvirt-ecs/zh.json",
+    "agent/dsh-icon.svg",
+    "agent/dsh.patch.yml",
+    "scripts/goecs_dsh.mjs",
+    "scripts/check_dsh_plugin.mjs",
+    "scripts/build_dsh_client.mjs",
+    "README.md",
+    "README_ZH.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build_dsh_client.mjs",
+    "test": "node --test agent/dsh-report.test.mjs agent/dsh-runtime.test.mjs",
+    "check": "node scripts/check_dsh_plugin.mjs",
+    "prepack": "npm run check"
+  },
+  "dependencies": {
+    "@lydell/node-pty": "1.2.0-beta.18",
+    "fflate": "0.8.3",
+    "https-proxy-agent": "7.0.6",
+    "socks-proxy-agent": "8.0.5",
+    "ssh2": "1.17.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./agent/dsh.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  }
+}
