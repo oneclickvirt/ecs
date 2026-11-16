@@ -32,9 +32,9 @@ test('page preparation, usable parameters, incremental sections and navigation r
     return Response.json({ data })
   }
   vm.runInContext(await readFile(new URL('./dsh-client.js', import.meta.url), 'utf8'), dom.getInternalVMContext())
-  plugin.apply({ effect: fn => cleanups.push(fn()), locale: { register: (_key, value) => { dictionaries = value; return () => {} }, bind: () => key => key.split('.').reduce((value, part) => value?.[part], dictionaries.zh) || key }, slots: { inject: (_slot, fn) => fn(), register: (options, component) => { slots.set(options.name, component); return () => {} } }, layout: { selectPanel: () => {} } })
+  plugin.apply({ effect: fn => cleanups.push(fn()), locale: { register: (_key, value) => { dictionaries = value; return () => {} }, bind: () => key => dictionaries.zh[key] || key }, slots: { inject: (_slot, fn) => fn(), register: (options, component) => { slots.set(options.name, component); return () => {} } }, layout: { selectPanel: () => {} } })
   const root = createRoot(window.document.getElementById('root'))
-  const render = () => { const Seat = slots.get('main'), Keeper = slots.get('shell.overlay'); root.render(h(React.Fragment, null, selected ? h(Seat) : h('div', null, 'Other DSH page'), h(Keeper, { t: key => key.split('.').reduce((value, part) => value?.[part], dictionaries.zh) || key }))) }
+  const render = () => { const Seat = slots.get('main'), Keeper = slots.get('shell.overlay'); root.render(h(React.Fragment, null, selected ? h(Seat) : h('div', null, 'Other DSH page'), h(Keeper, { t: key => dictionaries.zh[key] || key }))) }
   t.after(async () => { await act(async () => root.unmount()); for (const cleanup of cleanups) if (typeof cleanup === 'function') cleanup(); window.close(); globalThis.window = oldWindow; globalThis.document = oldDocument; delete globalThis.IS_REACT_ACT_ENVIRONMENT })
   const until = async predicate => { for (let i = 0; i < 100; i++) { await act(async () => { await pause(30) }); if (predicate()) return } assert.fail('UI condition did not become true') }
   const button = text => [...window.document.querySelectorAll('button')].find(node => node.textContent === text)
@@ -47,7 +47,7 @@ test('page preparation, usable parameters, incremental sections and navigation r
   assert.ok(preparationCalls >= 1)
   assert.equal(window.document.querySelector('[data-goecs-binary]').textContent, enginePath)
   const cpu = window.document.querySelector('[data-goecs-option="cpu-method"]')
-  assert.equal(cpu.tagName, 'SELECT'); assert.ok([...cpu.options].some(item => item.value === 'winsat'))
+  assert.equal(cpu.getAttribute('aria-label'), 'CPU 测试方法 (-cpu-method)'); assert.equal(cpu.tagName, 'SELECT'); assert.ok([...cpu.options].some(item => item.value === 'winsat'))
   assert.ok([...window.document.querySelectorAll('label')].find(node => node.textContent === '公开上传并生成分享链接').querySelector('input').checked)
   await act(async () => { cpu.value = 'winsat'; cpu.dispatchEvent(new window.Event('change', { bubbles: true })) })
   await act(async () => window.document.querySelector('button.ge-primary').click())

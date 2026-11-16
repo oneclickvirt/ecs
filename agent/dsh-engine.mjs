@@ -31,7 +31,7 @@ function requestBytes(url, limit, signal, agent, redirects = 0) {
   const parsed = new URL(url)
   if (parsed.protocol !== 'https:' || !/^(?:github\.com|api\.github\.com|[\w.-]+\.githubusercontent\.com|githubapi\.spiritlhl\.workers\.dev|githubapi\.spiritlhl\.top|cdn0\.spiritlhl\.top)$/.test(parsed.hostname) || redirects > 5) throw new GoECSError('INVALID_ASSET', 'Unexpected release download redirect')
   return new Promise((resolve, reject) => {
-    const request = https.get(parsed, { agent, signal, headers: { 'User-Agent': 'dsh-plugin-goecs/0.2.22' } }, response => {
+    const request = https.get(parsed, { agent, signal, headers: { 'User-Agent': 'dsh-plugin-goecs/0.2.23' } }, response => {
       if ([301, 302, 303, 307, 308].includes(response.statusCode) && response.headers.location) {
         response.resume()
         try { resolve(requestBytes(new URL(response.headers.location, parsed), limit, signal, agent, redirects + 1)) } catch (error) { reject(error) }
