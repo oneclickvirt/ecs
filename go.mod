@@ -20,8 +20,6 @@ require (
 	github.com/oneclickvirt/nt3 v0.0.27
 	github.com/oneclickvirt/pingtest v0.0.28
 	github.com/oneclickvirt/portchecker v0.0.7
-	github.com/oneclickvirt/privatespeedtest v0.0.25
-	github.com/oneclickvirt/security v0.0.22
 	github.com/oneclickvirt/speedtest v0.0.37
 	github.com/showwin/speedtest-go v1.8.3
 	golang.org/x/term v0.48.0
