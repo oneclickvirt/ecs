@@ -428,6 +428,7 @@ jobs:
         printf '%s  %s\n' b8dee4728bca1aba0d71a832a17cd0a3799f75372878e7ffa36aef2343bce0bc "$tool_dir/goreleaser.tar.gz" | sha256sum -c -
         tar -xzf "$tool_dir/goreleaser.tar.gz" --no-same-owner -C "$tool_dir" goreleaser
         "$tool_dir/goreleaser" release --clean --parallelism 1 --skip=publish
+        python3 deps/security/.github/audit_credentials.py dist/*.zip
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" verify-assets --assets "dist/*.zip" dist/checksums.txt
         export GH_TOKEN="$GITHUB_TOKEN"
         gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --draft
