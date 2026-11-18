@@ -10,7 +10,7 @@ import { connectSSH, remoteFacts, remotePath, remoteMkdir, uploadEngine, sshCapt
 import { parseReport, exportReport, stripTerminal, shareURLs } from './dsh-report.mjs'
 
 const defaults = { showSidebar: true, requestAdmin: true, networkMode: 'ask', binaryPath: '', maxTaskSeconds: 3600 }
-const PLUGIN_VERSION = '0.2.27'
+const PLUGIN_VERSION = '0.2.28'
 const publicTarget = t => ({ id: t.id, name: t.name, ...validateSSH(t), binaryPath: t.binaryPath || '', engineTag: t.engineTag || '' })
 const publicError = error => ({ code: error.code || 'OPERATION_FAILED', message: redactSecrets(error.message || 'Operation failed'), ...(error.details ? { details: error.details } : {}) })
 const ps = value => "'" + String(value).replace(/'/g, "''") + "'"
