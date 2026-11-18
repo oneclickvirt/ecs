@@ -76,6 +76,11 @@ Shell version: [https://github.com/spiritLHLS/ecs/blob/main/README_EN.md](https:
 
 **One-Click Command** will **Not install Dependencies** by Default, **Not update Package Manager** by Default, **Non-Interactive Mode** by Default.
 
+Use the lowercase `noninteractive=true` flag for unattended execution. The legacy
+`NONINTERACTIVE` alias is accepted; when both are set, the lowercase value,
+including an explicit `noninteractive=false`, takes precedence and the normalized
+value is exported to child processes. Clear both variables before an interactive run.
+
 - **International users without acceleration:**
 
   ```bash

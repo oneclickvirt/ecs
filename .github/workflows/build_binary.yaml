@@ -94,6 +94,8 @@ jobs:
         # not a valid release gate here.
         PRIVATE_STEP
       shell: bash
+    - name: Verify shell automation contracts
+      run: bash tests/noninteractive_mode_test.sh
     - name: Prepare Go build directories
       run: |
         python3 "$RUNNER_TEMP/private-ci-control/private_guard.py" run <<'PRIVATE_STEP'

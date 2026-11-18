@@ -76,6 +76,11 @@ Shell 版本：[https://github.com/spiritLHLS/ecs](https://github.com/spiritLHLS
 
 **一键命令**将默认**不安装依赖**，默认**不更新包管理器**，默认**非互动模式**
 
+非交互开关统一使用小写 `noninteractive=true`。脚本同时兼容旧变量
+`NONINTERACTIVE`；如果同时设置两者，小写变量（包括显式的
+`noninteractive=false`）优先，并会将规范化后的值传递给子进程。需要逐项回答提示时，
+请清除这两个变量后再运行。
+
 - **国际用户无加速：**
 
   ```bash

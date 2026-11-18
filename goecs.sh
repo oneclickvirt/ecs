@@ -29,6 +29,34 @@ reading() {
     read "$2"
 }
 
+# Keep the automation switch consistent with the other OneClickVirt
+# environment repositories.  The lowercase name is canonical; an explicitly
+# supplied value (including false) takes precedence over the legacy alias.
+normalize_noninteractive() {
+    local selected=""
+    if [ "${noninteractive+x}" = "x" ]; then
+        selected="$noninteractive"
+    else
+        selected="${NONINTERACTIVE:-}"
+    fi
+    selected=$(printf '%s' "$selected" | tr '[:upper:]' '[:lower:]')
+    case "$selected" in
+        true|yes|y|1)
+            noninteractive=true
+            ;;
+        false|no|n|0|"")
+            noninteractive=false
+            ;;
+        *)
+            _yellow "Unsupported noninteractive value '$selected'; using interactive mode."
+            noninteractive=false
+            ;;
+    esac
+    export noninteractive NONINTERACTIVE="$noninteractive"
+}
+
+normalize_noninteractive
+
 # curl can bootstrap Cloudflare DoH with fixed public addresses, so downloads
 # still work when the host is online but has no usable local DNS resolver.
 DOH_URL="https://cloudflare-dns.com/dns-query"
