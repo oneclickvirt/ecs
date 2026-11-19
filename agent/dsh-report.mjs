@@ -39,6 +39,11 @@ const categoryRules = [
 ]
 const category = title => /^\[\s*IPV[46]\s/i.test(title) ? 'unlock' : categoryRules.find(([, re]) => re.test(title))?.[0] || 'other'
 export const shareURLs = text => [...new Set((stripTerminal(text).match(/https:\/\/paste\.spiritlhl\.net\/[^\s<>"'\]\)]+/g) || []).filter(value => !value.includes('/api/')))]
+// Only canonical public share routes can host the Pastebin reading mode.
+export function pastebinShareURL(urls) {
+  return urls?.find(url => typeof url === 'string' && /^https:\/\/paste\.spiritlhl\.net\/#\/show\/[\w-]{1,128}(?:\.txt)?$/.test(url)) || ''
+}
+
 const decoration = /^[\s─━═=*_·.\-+|┌┐└┘├┤┬┴┼╭╮╰╯]{3,}$/u
 function heading(line) {
   const text = line.trim()

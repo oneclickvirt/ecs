@@ -26,7 +26,7 @@ export function apply(ctx, config = {}) {
         else if (input.action === 'options') value = await service.options(input.targetId, request.signal)
         else if (input.action === 'start') value = await service.start(input.test || {}, { interactive: true, signal: request.signal })
         else if (input.action === 'continue') value = await service.accept(input.token, input.decisions, { user: true })
-        else if (input.action === 'task') value = service.view(service.getTask(input.id), Number.isInteger(input.offset) && input.offset >= 0 ? input.offset : 0)
+        else if (input.action === 'task') value = service.view(service.getTask(input.id), Number.isInteger(input.offset) && input.offset >= 0 ? input.offset : 0, input.live === true)
         else if (input.action === 'stop') value = await service.stop(input.id)
         else if (input.action === 'report') value = await service.report(input.id, input.format)
         else if (input.action === 'import') value = await service.importReport(input.text)

@@ -7,10 +7,10 @@ import { installEngine, verifyExecutable, discoverEngines } from './dsh-engine.m
 import { parseHelp, buildArguments, MENU } from './dsh-options.mjs'
 import { startLocalProcess, startElevatedProcess } from './dsh-process.mjs'
 import { connectSSH, remoteFacts, remotePath, remoteMkdir, uploadEngine, sshCapture, quotePOSIX, powershell, startRemoteProcess, readRemoteFile, validateSSH } from './dsh-ssh.mjs'
-import { parseReport, exportReport, stripTerminal, shareURLs } from './dsh-report.mjs'
+import { parseReport, exportReport, stripTerminal, liveText, shareURLs, pastebinShareURL } from './dsh-report.mjs'
 
 const defaults = { showSidebar: true, requestAdmin: true, networkMode: 'ask', binaryPath: '', maxTaskSeconds: 3600 }
-const PLUGIN_VERSION = '0.2.28'
+const PLUGIN_VERSION = '0.2.29'
 const publicTarget = t => ({ id: t.id, name: t.name, ...validateSSH(t), binaryPath: t.binaryPath || '', engineTag: t.engineTag || '' })
 const publicError = error => ({ code: error.code || 'OPERATION_FAILED', message: redactSecrets(error.message || 'Operation failed'), ...(error.details ? { details: error.details } : {}) })
 const ps = value => "'" + String(value).replace(/'/g, "''") + "'"
@@ -237,16 +237,21 @@ export class GoECSService {
     const targetId = input.targetId || 'local'
     if (this.busy.has(targetId)) throw new GoECSError('TARGET_BUSY', 'Only one benchmark or installation can run on this target at a time')
     this.pending.delete(token); this.busy.add(targetId)
-    const task = { id: randomUUID(), targetId, choice: input.choice || '1', language: input.language || 'zh', networkMode: mode, status: 'running', startedAt: new Date().toISOString(), raw: '', owner, controller: new AbortController(), error: null }
+    const task = { id: randomUUID(), targetId, choice: input.choice || '1', language: input.language || 'zh', networkMode: mode, status: 'running', reportReady: false, startedAt: new Date().toISOString(), raw: '', owner, controller: new AbortController(), error: null }
+    task.publicUpload = input.options?.upload !== false && input.options?.privacy !== true
     this.tasks.set(task.id, task)
     task.promise = this.runTask(task, input).catch(error => {
       task.status = ['SSH_DISCONNECTED', 'REMOTE_STOP_UNCONFIRMED', 'PROCESS_STOP_UNCONFIRMED'].includes(error.code) ? 'unknown' : task.stopReason || 'failed'
       if (task.status !== 'cancelled') task.error = publicError(error)
     }).finally(async () => {
-      task.finishedAt = new Date().toISOString(); this.busy.delete(targetId)
-      task.report ||= parseReport(stripTerminal(task.raw), this.metadata(task))
-      task.report.metadata = { ...task.report.metadata, ...this.metadata(task) }
-      await this.saveReport(task).catch(() => { task.saveWarning = 'Report remains available in memory; saving it failed' })
+      task.finishedAt = new Date().toISOString()
+      try {
+        task.report ||= parseReport(stripTerminal(task.raw), this.metadata(task))
+        await this.saveReport(task).catch(() => { task.saveWarning = 'Report remains available in memory; saving it failed' })
+      } finally {
+        task.reportReady = Boolean(task.report)
+        this.busy.delete(targetId)
+      }
     })
     return { task: this.view(task) }
   }
@@ -308,14 +313,21 @@ export class GoECSService {
     const destination = path.join(this.directory, 'report-' + task.id + '.json')
     const temporary = destination + '.' + randomUUID() + '.tmp'
     const work = async () => {
-      await writeFile(temporary, JSON.stringify(document), { mode: 0o600, flag: 'wx' })
+      await writeFile(temporary, JSON.stringify({ ...document, publicUpload: task.publicUpload }), { mode: 0o600, flag: 'wx' })
       await rename(temporary, destination)
     }
     this.writes = this.writes.catch(() => {}).then(work)
     try { await this.writes } finally { await unlink(temporary).catch(() => {}) }
   }
-  view(task, offset = 0) {
-    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, phase: task.phase || '', nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, remark: task.remark || task.report?.metadata?.remark || '', output: task.raw.slice(offset, offset + 65536), nextOffset: Math.min(task.raw.length, offset + 65536), length: task.raw.length, reportReady: Boolean(task.report), error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
+  view(task, offset = 0, live = false) {
+    const length = task.raw.length
+    const nextOffset = live ? length : Math.min(length, offset + 65536)
+    // This is a snapshot of the cleaned terminal. A late banner can replace
+    // the interactive preamble, and escape sequences can span process chunks.
+    const output = live ? (offset === length ? '' : liveText(task.raw)) : task.raw.slice(offset, nextOffset)
+    const reportReady = task.reportReady ?? Boolean(task.report && task.finishedAt)
+    const shareURL = reportReady && task.publicUpload !== false ? pastebinShareURL(task.report.shareURLs) : ''
+    return { id: task.id, targetId: task.targetId, choice: task.choice, status: task.status, phase: task.phase || '', nativeStatus: task.nativeStatus || task.report?.nativeReport?.status || '', startedAt: task.startedAt, finishedAt: task.finishedAt || '', networkMode: task.networkMode, admin: task.facts?.admin, remark: task.remark || task.report?.metadata?.remark || '', output, nextOffset, length, reportReady, pastebinShareURL: shareURL, error: task.error, warnings: task.warnings || [], saveWarning: task.saveWarning || '' }
   }
   getTask(id, owner) {
     const task = this.tasks.get(id)
@@ -368,8 +380,8 @@ export class GoECSService {
     await this.ready
     if (!/^[\w-]{1,64}$/.test(id)) throw new GoECSError('INVALID_REPORT', 'Invalid report id')
     if (!this.tasks.has(id)) {
-      const report = JSON.parse(await readFile(path.join(this.directory, 'report-' + id + '.json'), 'utf8'))
-      this.tasks.set(id, { id, ...report.metadata, remark: report.metadata?.remark || '', targetId: report.metadata.target, raw: report.rawText, report, owner: '' })
+      const { publicUpload, ...report } = JSON.parse(await readFile(path.join(this.directory, 'report-' + id + '.json'), 'utf8'))
+      this.tasks.set(id, { id, ...report.metadata, publicUpload, remark: report.metadata?.remark || '', targetId: report.metadata.target, raw: report.rawText, report, owner: '' })
     }
     return this.view(this.tasks.get(id))
   }

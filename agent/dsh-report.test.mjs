@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { parseReport, reportHTML, reportMarkdown, exportReport, stripTerminal, liveText } from './dsh-report.mjs'
+import { parseReport, reportHTML, reportMarkdown, exportReport, stripTerminal, liveText, pastebinShareURL } from './dsh-report.mjs'
 
 test('source remains byte-exact across four exports; metrics retain units, zero and unknown values', () => {
   const raw = '\x1b[32m----系统基础信息----\x1b[0m\r\nCPU: Example: cache 64 MiB\r\nIPv6: 2001:db8::1\r\n----CPU测试--通过sysbench测试----\n单线程得分: 0\n多线程得分: unavailable\n----硬盘测试-通过fio测试----\n读速度: 921.00 MiB/s\n未知记录 保留: 原始值\n'
@@ -85,4 +85,10 @@ test('Windows color and cursor padding preserve unlock names, statuses and neste
   assert.equal(fields[0].name, 'DisneyPlus'); assert.equal(fields[0].value, 'NO')
   assert.equal(fields[1].name, 'DiscoveryPlus'); assert.equal(fields[1].value, 'YES (Region: US)')
   assert.ok(!reportHTML(document).includes('\x1b'))
+})
+
+test('Pastebin mode accepts only the canonical public report link', () => {
+  const valid = 'https://paste.spiritlhl.net/#/show/real-Report_42.txt'
+  assert.equal(pastebinShareURL(['https://paste.spiritlhl.net/#/show/a?password=abc', 'https://paste.spiritlhl.net.example/#/show/a', 'https://paste.spiritlhl.net/#/show/../a', valid]), valid)
+  assert.equal(pastebinShareURL(['https://paste.spiritlhl.net/notes', 'http://paste.spiritlhl.net/#/show/a']), '')
 })

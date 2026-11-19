@@ -281,7 +281,7 @@ test('first-open preparation downloads once, fills the path and reuses it withou
   assert.equal(persisted.settings.binaryPath, service.settings.binaryPath)
   await service.prepare(); assert.equal(downloads, 1)
 })
-test('live reports publish arrived sections in source order while the task is still running', async t => {
+test('the standalone report API still exposes incremental output while the UI waits for finalization', async t => {
   const service = await fixture(t)
   const task = { id: 'live-output', targetId: 'local', status: 'running', raw: '----系统基础信息----\nCPU: example\n', startedAt: new Date().toISOString() }
   service.tasks.set(task.id, task)
@@ -290,7 +290,10 @@ test('live reports publish arrived sections in source order while the task is st
   task.raw += '----CPU测试----\n分数: 100\n'
   const doc = (await service.report(task.id)).document
   assert.equal(doc.metadata.status, 'running'); assert.deepEqual(doc.sections.map(s => s.title), ['系统基础信息', 'CPU测试'])
+  assert.equal(service.view(task, 0, true).output, task.raw)
   task.status = 'completed'; task.report = doc
+  assert.equal(service.view(task).reportReady, false)
+  task.finishedAt = new Date().toISOString()
   assert.equal(service.view(task).reportReady, true)
 })
 test('each original preset is selected in the original terminal, without duplicated test presets', () => {
